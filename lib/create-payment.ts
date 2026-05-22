@@ -84,7 +84,12 @@ export async function createPendingPayment(opts: {
     programmeCode = anchor.programmeCode;
     year = anchor.year;
     semester = anchor.semester;
-    mode = anchor.feeSelectionMode === "year" ? "year" : "semester";
+    mode =
+      anchor.feeSelectionMode === "year"
+        ? "year"
+        : anchor.feeSelectionMode === "programme"
+        ? "programme"
+        : "semester";
     installmentCount = normalizeInstallmentCount(anchor.installmentCount);
     installmentIndex = Math.min(
       Math.max(1, Math.round(opts.installmentIndex ?? 1)),
@@ -164,9 +169,15 @@ export async function createPendingPayment(opts: {
   const tonAmount = ugxToTon(totalUgx, ugxPerTon);
   const installmentLabel =
     installmentCount > 1 ? ` · installment ${installmentIndex}/${installmentCount}` : "";
+  const bundleLabel =
+    mode === "programme"
+      ? " (full programme bundle)"
+      : mode === "year"
+      ? " (year bundle)"
+      : "";
   const memo =
     opts.memo ||
-    `ODEL Hub - ${p.code} Yr${year} Sem ${semester}${mode === "year" ? " (year bundle)" : ""}${installmentLabel}`;
+    `ODEL Hub - ${p.code} Yr${year} Sem ${semester}${bundleLabel}${installmentLabel}`;
 
   const doc = await prisma.payment.create({
     data: {

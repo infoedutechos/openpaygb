@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { ProgrammeFeeRecurrence } from "@prisma/client";
 import {
   listFeeRowsForAcademicYear,
+  listFeeRowsForProgramme,
   listFeeRowsForSemester,
   resolveFeeRowsForSelection,
   sumFeeRows,
@@ -54,7 +55,35 @@ describe("listFeeRowsForAcademicYear", () => {
   });
 });
 
+describe("listFeeRowsForProgramme", () => {
+  it("includes every distinct fee row across all years", () => {
+    const rows = [
+      fee("y1s1", { year: 1, semester: 1, tuitionUgx: 10, recurrence: ProgrammeFeeRecurrence.per_semester }),
+      fee("y1s2", { year: 1, semester: 2, tuitionUgx: 20, recurrence: ProgrammeFeeRecurrence.per_semester }),
+      fee("y2s1", { year: 2, semester: 1, tuitionUgx: 30, recurrence: ProgrammeFeeRecurrence.per_semester }),
+      fee("py", { year: 2, semester: 0, tuitionUgx: 5, recurrence: ProgrammeFeeRecurrence.per_year }),
+    ];
+    const out = listFeeRowsForProgramme(rows);
+    expect(out.map((r) => r.id).sort()).toEqual(["py", "y1s1", "y1s2", "y2s1"]);
+    expect(sumFeeRows(out).tuitionUgx).toBe(65);
+  });
+});
+
 describe("resolveFeeRowsForSelection", () => {
+  it("returns full programme pool in programme mode", () => {
+    const rows = [
+      fee("a", { year: 1, semester: 1, tuitionUgx: 10, recurrence: ProgrammeFeeRecurrence.per_semester }),
+      fee("b", { year: 2, semester: 1, tuitionUgx: 20, recurrence: ProgrammeFeeRecurrence.per_semester }),
+    ];
+    const { rows: picked, pool } = resolveFeeRowsForSelection(rows, {
+      mode: "programme",
+      year: 1,
+      semester: 1,
+    });
+    expect(pool.map((r) => r.id).sort()).toEqual(["a", "b"]);
+    expect(picked.map((r) => r.id).sort()).toEqual(["a", "b"]);
+  });
+
   it("returns subset when selectedIds provided", () => {
     const rows = [
       fee("a", { year: 1, semester: 1, tuitionUgx: 10, recurrence: ProgrammeFeeRecurrence.per_semester }),

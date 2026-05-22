@@ -8,13 +8,15 @@ import {
   type InstallmentSchedule,
 } from "@/lib/installments";
 
+export type PayFeesSelectionMode = "semester" | "year" | "programme";
+
 export type PayFeesQuote = {
   programmeName: string;
   programmeTrackLabel?: string;
   programmeCode: string;
   year: number;
   semester: number;
-  feeSelectionMode: "semester" | "year";
+  feeSelectionMode: PayFeesSelectionMode;
   tuitionUgx: number;
   functionalFeesUgx: number;
   subtotalUgx: number;
@@ -33,6 +35,7 @@ export type PayFeesQuote = {
   }[];
   poolLines?: PayFeesQuote["lines"];
   installmentSchedule?: InstallmentSchedule;
+  programmeDuration?: { durationYears: number; semestersPerYear: number; totalSemesters: number };
 };
 
 type CoveragePreviewLine = {
@@ -44,9 +47,12 @@ type CoveragePreviewLine = {
   lineTotalUgx: number;
 };
 
+type CoverageBucket = { totalUgx: number; itemCount: number; lines: CoveragePreviewLine[] };
+
 type CoveragePreview = {
-  semester: { totalUgx: number; itemCount: number; lines: CoveragePreviewLine[] } | null;
-  year: { totalUgx: number; itemCount: number; lines: CoveragePreviewLine[] } | null;
+  semester: CoverageBucket | null;
+  year: CoverageBucket | null;
+  programme: CoverageBucket | null;
 };
 
 type Props = {
@@ -61,7 +67,7 @@ type Props = {
   installmentCount: InstallmentCountOption;
   onStudentName: (v: string) => void;
   onStudentEmail: (v: string) => void;
-  onCoverageMode: (mode: "semester" | "year") => void;
+  onCoverageMode: (mode: PayFeesSelectionMode) => void;
   onToggleFee: (id: string) => void;
   onSelectAll: () => void;
   onInstallmentCountChange: (count: InstallmentCountOption) => void;
@@ -91,8 +97,14 @@ function CoverageLineList({ lines }: { lines: CoveragePreviewLine[] }) {
   );
 }
 
+function bucketFor(mode: PayFeesSelectionMode, coveragePreview: CoveragePreview): CoverageBucket | null {
+  if (mode === "semester") return coveragePreview.semester;
+  if (mode === "year") return coveragePreview.year;
+  return coveragePreview.programme;
+}
+
 function linesForCoverageMode(
-  mode: "semester" | "year",
+  mode: PayFeesSelectionMode,
   quote: PayFeesQuote,
   coveragePreview: CoveragePreview,
 ): CoveragePreviewLine[] {
@@ -106,20 +118,18 @@ function linesForCoverageMode(
       lineTotalUgx: line.lineTotalUgx,
     }));
   }
-  const bucket = mode === "semester" ? coveragePreview.semester : coveragePreview.year;
-  return bucket?.lines ?? [];
+  return bucketFor(mode, coveragePreview)?.lines ?? [];
 }
 
 function totalForCoverageMode(
-  mode: "semester" | "year",
+  mode: PayFeesSelectionMode,
   quote: PayFeesQuote,
   coveragePreview: CoveragePreview,
 ): number | null {
   if (quote.feeSelectionMode === mode) {
     return quote.subtotalUgx + quote.platformFeeUgx;
   }
-  const bucket = mode === "semester" ? coveragePreview.semester : coveragePreview.year;
-  return bucket?.totalUgx ?? null;
+  return bucketFor(mode, coveragePreview)?.totalUgx ?? null;
 }
 
 export function PayFeesBreakdown({
@@ -146,8 +156,13 @@ export function PayFeesBreakdown({
   const payingInstallments = installmentCount > 1;
   const semesterLines = linesForCoverageMode("semester", quote, coveragePreview);
   const yearLines = linesForCoverageMode("year", quote, coveragePreview);
+  const programmeLines = linesForCoverageMode("programme", quote, coveragePreview);
   const semesterTotal = totalForCoverageMode("semester", quote, coveragePreview);
   const yearTotal = totalForCoverageMode("year", quote, coveragePreview);
+  const programmeTotal = totalForCoverageMode("programme", quote, coveragePreview);
+  const programmeDuration = quote.programmeDuration;
+  const showProgrammeOption =
+    !!programmeDuration && programmeDuration.totalSemesters > 0 ? true : programmeLines.length > 0;
 
   return (
     <>
@@ -167,8 +182,8 @@ export function PayFeesBreakdown({
       <div className="rounded-xl border-2 border-slate-600/70 bg-slate-900/90 p-4 text-sm shadow-lg">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-cyan-200">Coverage</p>
         <p className="mt-1 text-xs text-slate-300">
-          Pay for this semester only, or the whole academic year (all fee lines for Year {year}). Each card lists
-          items and UGX costs for that option.
+          Pay for this semester only, Year {year} with all its semesters, or the whole programme (every year and
+          semester). Each card lists items and UGX costs for that option.
         </p>
         <div className="mt-4 flex flex-col gap-3" role="group" aria-label="Fee coverage">
           <button
@@ -207,7 +222,9 @@ export function PayFeesBreakdown({
                 : "border-slate-500 bg-slate-800 text-slate-100 hover:border-cyan-400/60"
             }`}
           >
-            <span className="block text-sm font-bold uppercase tracking-wide">Pay for the whole academic year</span>
+            <span className="block text-sm font-bold uppercase tracking-wide">
+              Pay for Year {year} with all its semesters
+            </span>
             <span className="mt-1 block text-xs text-slate-300">All applicable lines for Year {year}</span>
             {yearLines.length > 0 && yearTotal != null ? (
               <>
@@ -220,6 +237,41 @@ export function PayFeesBreakdown({
               <span className="mt-2 block text-xs text-slate-400">Loading items…</span>
             )}
           </button>
+          {showProgrammeOption ? (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => onCoverageMode("programme")}
+              className={`min-h-[5rem] rounded-xl border-2 px-4 py-3 text-left transition-all ${
+                quote.feeSelectionMode === "programme"
+                  ? "border-cyan-400 bg-cyan-900/40 text-white ring-2 ring-cyan-400/30"
+                  : "border-slate-500 bg-slate-800 text-slate-100 hover:border-cyan-400/60"
+              }`}
+            >
+              <span className="block text-sm font-bold uppercase tracking-wide">
+                Pay for the whole programme
+                {programmeDuration && programmeDuration.durationYears > 0
+                  ? ` (${programmeDuration.durationYears}-year course)`
+                  : ""}
+              </span>
+              <span className="mt-1 block text-xs text-slate-300">
+                {programmeDuration && programmeDuration.totalSemesters > 0
+                  ? `All ${programmeDuration.totalSemesters} semester(s) across the entire course`
+                  : "All fee lines for every year and semester"}
+              </span>
+              {programmeLines.length > 0 && programmeTotal != null ? (
+                <>
+                  <span className="mt-2 block font-mono text-sm text-cyan-200">
+                    {programmeLines.length} line{programmeLines.length === 1 ? "" : "s"} · UGX{" "}
+                    {programmeTotal.toLocaleString()}
+                  </span>
+                  <CoverageLineList lines={programmeLines} />
+                </>
+              ) : (
+                <span className="mt-2 block text-xs text-slate-400">Loading items…</span>
+              )}
+            </button>
+          ) : null}
         </div>
         <button
           type="button"
@@ -233,7 +285,12 @@ export function PayFeesBreakdown({
 
       <div className="rounded-xl border-2 border-slate-600/70 bg-slate-900/90 p-4 text-sm">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-cyan-200">
-          Fee items — {quote.feeSelectionMode === "year" ? "whole academic year" : "this semester only"}
+          Fee items —{" "}
+          {quote.feeSelectionMode === "programme"
+            ? "whole programme"
+            : quote.feeSelectionMode === "year"
+            ? "whole academic year"
+            : "this semester only"}
         </p>
         <p className="mt-1 text-xs text-slate-300">Each line shows its UGX total. Uncheck to exclude from your payment.</p>
         {feePool.length === 0 ? (

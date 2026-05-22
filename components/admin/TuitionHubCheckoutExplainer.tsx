@@ -20,9 +20,11 @@ export function TuitionHubCheckoutExplainer({ className }: { className?: string 
           recurrence: once / per semester / per year, tuition vs functional).
         </li>
         <li>
-          At pay time, guests and students choose <strong className="font-medium text-slate-300">semester</strong> or{" "}
-          <strong className="font-medium text-slate-300">whole academic year</strong> coverage so the correct pool of
-          lines is quoted.
+          At pay time, guests and students choose{" "}
+          <strong className="font-medium text-slate-300">this semester only</strong>,{" "}
+          <strong className="font-medium text-slate-300">the selected year with all its semesters</strong>, or{" "}
+          <strong className="font-medium text-slate-300">the whole programme</strong> (every year and semester) so the
+          correct pool of fee lines is quoted.
         </li>
         <li>
           They can pay <strong className="font-medium text-slate-300">all</strong> applicable lines in that pool or tick

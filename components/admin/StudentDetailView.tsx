@@ -14,7 +14,13 @@ function programmeLabel(code: string, year: number, semester: number): string {
 
 function paymentProgrammeLabel(p: StudentPaymentRow): string {
   const short = (p.programmeCode.split(/[-/]/)[0] ?? p.programmeCode).trim();
-  return `${short} Yr${p.year} Sem${p.semester}${p.feeSelectionMode === "year" ? " (year bundle)" : ""}`;
+  const bundle =
+    p.feeSelectionMode === "programme"
+      ? " (full programme bundle)"
+      : p.feeSelectionMode === "year"
+      ? " (year bundle)"
+      : "";
+  return `${short} Yr${p.year} Sem${p.semester}${bundle}`;
 }
 
 function abbrevTx(s: string, head = 4, tail = 4): string {

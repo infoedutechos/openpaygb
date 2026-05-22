@@ -16,7 +16,7 @@ const Body = z.object({
   semester: z.number().int().min(1).max(3),
   rail: z.nativeEnum(PaymentRail),
   memo: z.string().max(200).optional(),
-  feeSelectionMode: z.enum(["semester", "year"]).optional(),
+  feeSelectionMode: z.enum(["semester", "year", "programme"]).optional(),
   feeIds: z
     .array(z.string().regex(/^[0-9a-fA-F]{24}$/))
     .max(100)

@@ -156,8 +156,12 @@ export function TuitionBalancePanel({ balance, variant = "student", onPayInstall
               >
                 <p className="font-medium">
                   {periodLabel(plan.programmeCode, plan.year, plan.semester)} ·{" "}
-                  {plan.feeSelectionMode === "year" ? "Year bundle" : "Semester"} · Installments (
-                  {plan.installmentCount})
+                  {plan.feeSelectionMode === "programme"
+                    ? "Full programme bundle"
+                    : plan.feeSelectionMode === "year"
+                    ? "Year bundle"
+                    : "Semester"}{" "}
+                  · Installments ({plan.installmentCount})
                 </p>
                 <p className={`mt-1 ${isAdmin ? "text-slate-600" : "text-slate-400"}`}>
                   Paid UGX {plan.paidTotalUgx.toLocaleString()} of {plan.fullPlanTotalUgx.toLocaleString()} ·
@@ -193,8 +197,12 @@ export function TuitionBalancePanel({ balance, variant = "student", onPayInstall
           {openContexts.map((ctx) => (
             <li key={`${ctx.feeSelectionMode}-${ctx.year}-${ctx.semester}`}>
               {periodLabel(ctx.programmeCode, ctx.year, ctx.semester)} (
-              {ctx.feeSelectionMode === "year" ? "year" : "semester"}): outstanding UGX{" "}
-              {ctx.remainingSubtotalUgx.toLocaleString()}
+              {ctx.feeSelectionMode === "programme"
+                ? "whole programme"
+                : ctx.feeSelectionMode === "year"
+                ? "year"
+                : "semester"}
+              ): outstanding UGX {ctx.remainingSubtotalUgx.toLocaleString()}
               {ctx.remainingFullPayTotalUgx !== ctx.remainingSubtotalUgx ? (
                 <span className={isAdmin ? "text-slate-500" : "text-slate-500"}>
                   {" "}

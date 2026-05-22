@@ -47,7 +47,9 @@ function StatusBadge({ status }: { status: string }) {
 
 function programmeLabel(code: string, year: number, semester: number, mode?: string): string {
   const short = (code.split(/[-/]/)[0] ?? code).trim();
-  return `${short} Yr${year} Sem${semester}${mode === "year" ? " (year bundle)" : ""}`;
+  const bundle =
+    mode === "programme" ? " (full programme bundle)" : mode === "year" ? " (year bundle)" : "";
+  return `${short} Yr${year} Sem${semester}${bundle}`;
 }
 
 function PaymentActions({

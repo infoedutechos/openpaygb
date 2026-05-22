@@ -14,7 +14,7 @@ export type ProgrammeFeeForCheckout = {
 
 export type ProgrammeFeeWithId = ProgrammeFeeForCheckout & { id: string };
 
-export type ProgrammeFeeSelectionMode = "semester" | "year";
+export type ProgrammeFeeSelectionMode = "semester" | "year" | "programme";
 
 export async function findProgrammeByCode(code: string, organizationId?: string) {
   const orgId = organizationId ?? (await getDefaultOrganizationId());
@@ -113,6 +113,22 @@ export function listFeeRowsForAcademicYear(fees: ProgrammeFeeForCheckout[], year
   return out;
 }
 
+/**
+ * Distinct fee rows for the **whole programme duration** — every year and every semester.
+ * Used when a student pays for the entire course up front (full-programme bundle).
+ */
+export function listFeeRowsForProgramme(fees: ProgrammeFeeForCheckout[]): ProgrammeFeeWithId[] {
+  const out: ProgrammeFeeWithId[] = [];
+  const seen = new Set<string>();
+  for (const f of fees) {
+    if (!f.id || typeof f.id !== "string") continue;
+    if (seen.has(f.id)) continue;
+    seen.add(f.id);
+    out.push({ ...f, id: f.id });
+  }
+  return out;
+}
+
 export function sumFeeRows(rows: Array<{ tuitionUgx: number; functionalFeesUgx: number }>) {
   let tuitionUgx = 0;
   let functionalFeesUgx = 0;
@@ -132,10 +148,14 @@ export function resolveFeeRowsForSelection(
     selectedIds?: string[] | null;
   }
 ): { rows: ProgrammeFeeWithId[]; pool: ProgrammeFeeWithId[] } {
-  const pool =
-    opts.mode === "year"
-      ? listFeeRowsForAcademicYear(fees, opts.year)
-      : listFeeRowsForSemester(fees, opts.year, opts.semester);
+  let pool: ProgrammeFeeWithId[];
+  if (opts.mode === "programme") {
+    pool = listFeeRowsForProgramme(fees);
+  } else if (opts.mode === "year") {
+    pool = listFeeRowsForAcademicYear(fees, opts.year);
+  } else {
+    pool = listFeeRowsForSemester(fees, opts.year, opts.semester);
+  }
   if (!opts.selectedIds?.length) {
     return { rows: pool, pool };
   }

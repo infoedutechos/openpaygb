@@ -56,6 +56,8 @@ type QuoteLine = {
   lineTotalUgx: number;
 };
 
+type FeeSelectionMode = "semester" | "year" | "programme";
+
 type Quote = {
   programmeCode: string;
   programmeName: string;
@@ -64,7 +66,7 @@ type Quote = {
   programmeDuration?: ProgrammeDuration;
   year: number;
   semester: number;
-  feeSelectionMode: "semester" | "year";
+  feeSelectionMode: FeeSelectionMode;
   isFullSelection?: boolean;
   poolLineCount?: number;
   poolLines?: QuoteLine[];
@@ -80,6 +82,12 @@ type Quote = {
   destinationWallet: string;
   installmentSchedule?: InstallmentSchedule;
 };
+
+function normalizeFeeSelectionMode(value: unknown): FeeSelectionMode {
+  if (value === "year") return "year";
+  if (value === "programme") return "programme";
+  return "semester";
+}
 
 type MeStudent = {
   id: string;
@@ -232,7 +240,7 @@ export function StudentTuitionFlow() {
   const [year, setYear] = useState(1);
   const [semester, setSemester] = useState(1);
   const [quote, setQuote] = useState<Quote | null>(null);
-  const [feeSelectionMode, setFeeSelectionMode] = useState<"semester" | "year">("semester");
+  const [feeSelectionMode, setFeeSelectionMode] = useState<FeeSelectionMode>("semester");
   const [selectedFeeIds, setSelectedFeeIds] = useState<string[]>([]);
   const [installmentCount, setInstallmentCount] = useState<InstallmentCountOption>(1);
   const [paymentId, setPaymentId] = useState<string | null>(null);
@@ -458,7 +466,7 @@ export function StudentTuitionFlow() {
     if (!semesterOptions.includes(semester)) setSemester(semesterOptions[0] ?? 1);
   }, [selectedProgramme, yearOptions, semesterOptions, year, semester]);
 
-  function quoteUrl(mode: "semester" | "year", feeIds: string[] | null, qCode: string) {
+  function quoteUrl(mode: FeeSelectionMode, feeIds: string[] | null, qCode: string) {
     const qs = new URLSearchParams();
     qs.set("year", String(year));
     qs.set("semester", String(semester));
@@ -496,7 +504,7 @@ export function StudentTuitionFlow() {
   }
 
   async function loadQuote(opts?: {
-    mode?: "semester" | "year";
+    mode?: FeeSelectionMode;
     feeIds?: string[];
     useFullPool?: boolean;
     installmentCount?: InstallmentCountOption;
@@ -532,7 +540,7 @@ export function StudentTuitionFlow() {
         ...j,
         lines,
         poolLines,
-        feeSelectionMode: j.feeSelectionMode === "year" ? "year" : "semester",
+        feeSelectionMode: normalizeFeeSelectionMode(j.feeSelectionMode),
         subtotalUgx: typeof j.subtotalUgx === "number" ? j.subtotalUgx : j.tuitionUgx + j.functionalFeesUgx,
         platformFeeUgx: typeof j.platformFeeUgx === "number" ? j.platformFeeUgx : 0,
         isFullSelection: Boolean(j.isFullSelection),
@@ -581,7 +589,7 @@ export function StudentTuitionFlow() {
     void loadQuote({ mode: quote.feeSelectionMode, useFullPool: true, installmentCount });
   }
 
-  async function setCoverageMode(mode: "semester" | "year") {
+  async function setCoverageMode(mode: FeeSelectionMode) {
     setSelectedFeeIds([]);
     await loadQuote({ mode, useFullPool: true, installmentCount });
   }
@@ -1184,8 +1192,9 @@ export function StudentTuitionFlow() {
           <GlassPanel className="p-5 text-sm">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-200/80">Coverage</p>
             <p className="mt-1 text-xs text-slate-500">
-              Pick <strong className="text-slate-300">this semester only</strong> or{" "}
-              <strong className="text-slate-300">whole academic year</strong> (all fee lines that apply to any semester in Year {year}).
+              Pick <strong className="text-slate-300">this semester only</strong>,{" "}
+              <strong className="text-slate-300">Year {year} with all its semesters</strong>, or{" "}
+              <strong className="text-slate-300">the whole programme</strong> (every year and semester).
             </p>
             <div className="mt-3 flex flex-col gap-2">
               <button
@@ -1211,9 +1220,30 @@ export function StudentTuitionFlow() {
                     : "border-white/10 bg-white/[0.03] text-slate-300 hover:border-cyan-400/30"
                 }`}
               >
-                <span className="font-bold uppercase tracking-wide">Whole academic year</span>
-                <span className="mt-1 block text-slate-500">All semester items for Year {year} combined</span>
+                <span className="font-bold uppercase tracking-wide">Year {year} with all its semesters</span>
+                <span className="mt-1 block text-slate-500">
+                  All fee items that apply to any semester in Year {year}
+                </span>
               </button>
+              {quote.programmeDuration && quote.programmeDuration.totalSemesters > 0 ? (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void setCoverageMode("programme")}
+                  className={`rounded-xl border px-3 py-2.5 text-left text-xs transition-colors ${
+                    quote.feeSelectionMode === "programme"
+                      ? "border-cyan-400/60 bg-cyan-950/40 text-cyan-50"
+                      : "border-white/10 bg-white/[0.03] text-slate-300 hover:border-cyan-400/30"
+                  }`}
+                >
+                  <span className="font-bold uppercase tracking-wide">
+                    Whole programme ({quote.programmeDuration.durationYears}-year course)
+                  </span>
+                  <span className="mt-1 block text-slate-500">
+                    All {quote.programmeDuration.totalSemesters} semester(s) across the entire course
+                  </span>
+                </button>
+              ) : null}
             </div>
             <button
               type="button"

@@ -32,7 +32,7 @@ const Body = z
     programmeCode: z.string().min(2),
     year: z.number().int().min(1).max(6),
     semester: z.number().int().min(1).max(3),
-    feeSelectionMode: z.enum(["semester", "year"]).optional(),
+    feeSelectionMode: z.enum(["semester", "year", "programme"]).optional(),
     feeIds: z.array(z.string().regex(/^[0-9a-fA-F]{24}$/)).max(100).optional(),
     installmentCount: z.number().int().min(1).max(4).optional(),
     installmentPlanId: z.string().min(1).optional(),

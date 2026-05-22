@@ -53,6 +53,8 @@ type QuoteLine = {
   lineTotalUgx: number;
 };
 
+type FeeSelectionMode = "semester" | "year" | "programme";
+
 type Quote = {
   programmeCode: string;
   programmeName: string;
@@ -60,7 +62,7 @@ type Quote = {
   programmeTrackLabel?: string;
   year: number;
   semester: number;
-  feeSelectionMode: "semester" | "year";
+  feeSelectionMode: FeeSelectionMode;
   isFullSelection?: boolean;
   poolLineCount?: number;
   poolLines?: QuoteLine[];
@@ -75,7 +77,14 @@ type Quote = {
   tonAmount: number;
   destinationWallet: string;
   installmentSchedule?: InstallmentSchedule;
+  programmeDuration?: { durationYears: number; semestersPerYear: number; totalSemesters: number };
 };
+
+function normalizeFeeSelectionMode(value: unknown): FeeSelectionMode {
+  if (value === "year") return "year";
+  if (value === "programme") return "programme";
+  return "semester";
+}
 
 type CoveragePreviewLine = {
   id: string;
@@ -128,7 +137,7 @@ export function PayWizard({
   const [year, setYear] = useState(1);
   const [semester, setSemester] = useState(1);
   const [quote, setQuote] = useState<Quote | null>(null);
-  const [feeSelectionMode, setFeeSelectionMode] = useState<"semester" | "year">("semester");
+  const [feeSelectionMode, setFeeSelectionMode] = useState<FeeSelectionMode>("semester");
   const [selectedFeeIds, setSelectedFeeIds] = useState<string[]>([]);
   const [studentName, setStudentName] = useState("");
   const [studentEmail, setStudentEmail] = useState("");
@@ -159,7 +168,8 @@ export function PayWizard({
   const [coveragePreview, setCoveragePreview] = useState<{
     semester: CoveragePreviewBucket | null;
     year: CoveragePreviewBucket | null;
-  }>({ semester: null, year: null });
+    programme: CoveragePreviewBucket | null;
+  }>({ semester: null, year: null, programme: null });
   const wallet = useTonWallet();
   const { pay } = useTonPay();
   const router = useRouter();
@@ -370,7 +380,7 @@ export function PayWizard({
     [],
   );
 
-  const quoteUrl = useCallback((mode: "semester" | "year", feeIds: string[] | null, qCode: string) => {
+  const quoteUrl = useCallback((mode: FeeSelectionMode, feeIds: string[] | null, qCode: string) => {
     const qs = new URLSearchParams();
     qs.set("year", String(year));
     qs.set("semester", String(semester));
@@ -386,7 +396,7 @@ export function PayWizard({
     if (step !== "fees_breakdown" || !code) return;
     let cancelled = false;
     void (async () => {
-      async function preview(mode: "semester" | "year") {
+      async function preview(mode: FeeSelectionMode) {
         try {
           const r = await fetch(quoteUrl(mode, null, code));
           const j = (await r.json()) as Quote & { error?: string };
@@ -396,8 +406,12 @@ export function PayWizard({
           return null;
         }
       }
-      const [semester, year] = await Promise.all([preview("semester"), preview("year")]);
-      if (!cancelled) setCoveragePreview({ semester, year });
+      const [semester, year, programme] = await Promise.all([
+        preview("semester"),
+        preview("year"),
+        preview("programme"),
+      ]);
+      if (!cancelled) setCoveragePreview({ semester, year, programme });
     })();
     return () => {
       cancelled = true;
@@ -405,7 +419,7 @@ export function PayWizard({
   }, [step, code, quoteUrl, buildCoverageBucket]);
 
   async function loadQuote(opts?: {
-    mode?: "semester" | "year";
+    mode?: FeeSelectionMode;
     feeIds?: string[];
     useFullPool?: boolean;
     installmentCount?: InstallmentCountOption;
@@ -450,7 +464,7 @@ export function PayWizard({
         ...j,
         lines,
         poolLines,
-        feeSelectionMode: j.feeSelectionMode === "year" ? "year" : "semester",
+        feeSelectionMode: normalizeFeeSelectionMode(j.feeSelectionMode),
         tuitionUgx: instTuition,
         functionalFeesUgx: instFunctional,
         subtotalUgx: instSubtotal,
@@ -479,23 +493,26 @@ export function PayWizard({
 
   async function prefetchCoveragePreviews(semesterQuote: Quote) {
     const semester = buildCoverageBucket(semesterQuote);
-    setCoveragePreview({ semester, year: null });
-    try {
-      const r = await fetch(quoteUrl("year", null, code));
-      const j = (await r.json()) as Quote & { error?: string };
-      if (r.ok) {
-        setCoveragePreview({ semester, year: buildCoverageBucket(j) });
+    setCoveragePreview({ semester, year: null, programme: null });
+    async function preview(mode: "year" | "programme") {
+      try {
+        const r = await fetch(quoteUrl(mode, null, code));
+        const j = (await r.json()) as Quote & { error?: string };
+        if (!r.ok) return null;
+        return buildCoverageBucket(j);
+      } catch {
+        return null;
       }
-    } catch {
-      /* year card stays loading until useEffect retries */
     }
+    const [year, programme] = await Promise.all([preview("year"), preview("programme")]);
+    setCoveragePreview({ semester, year, programme });
   }
 
   async function onContinueFromProgramme() {
     setFeeSelectionMode("semester");
     setSelectedFeeIds([]);
     setQuote(null);
-    setCoveragePreview({ semester: null, year: null });
+    setCoveragePreview({ semester: null, year: null, programme: null });
     const semesterQuote = await loadQuote({ mode: "semester", useFullPool: true });
     if (!semesterQuote) return;
     void prefetchCoveragePreviews(semesterQuote);
@@ -522,7 +539,7 @@ export function PayWizard({
     void loadQuote({ mode: quote.feeSelectionMode, useFullPool: true });
   }
 
-  async function setCoverageMode(mode: "semester" | "year") {
+  async function setCoverageMode(mode: FeeSelectionMode) {
     setSelectedFeeIds([]);
     const next = await loadQuote({ mode, useFullPool: true });
     if (!next) return;
@@ -530,6 +547,7 @@ export function PayWizard({
     setCoveragePreview((prev) => ({
       semester: mode === "semester" ? bucket : prev.semester,
       year: mode === "year" ? bucket : prev.year,
+      programme: mode === "programme" ? bucket : prev.programme,
     }));
   }
 
@@ -1175,7 +1193,7 @@ export function PayWizard({
             onClick={() => {
               setQuote(null);
               setSelectedFeeIds([]);
-              setCoveragePreview({ semester: null, year: null });
+              setCoveragePreview({ semester: null, year: null, programme: null });
               setStep("select_programme");
             }}
             className="text-sm text-slate-400 hover:text-white"

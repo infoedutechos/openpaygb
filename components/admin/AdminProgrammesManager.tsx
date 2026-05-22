@@ -484,8 +484,11 @@ export default function AdminProgrammesManager() {
           <strong className="text-slate-300">each semester</strong> (year + semester 1–3),{" "}
           <strong className="text-slate-300">each year</strong> (same amount for any semester in that year), or{" "}
           <strong className="text-slate-300">once</strong> (only when paying that exact year and semester). Checkout builds
-          a quote from the pool that matches the payer&apos;s coverage choice (semester vs whole academic year), then they
-          can include every applicable line or pick specific lines, before a separate processing UGX line is applied.
+          a quote from the pool that matches the payer&apos;s coverage choice —{" "}
+          <strong className="text-slate-300">this semester only</strong>,{" "}
+          <strong className="text-slate-300">the chosen year with all its semesters</strong>, or{" "}
+          <strong className="text-slate-300">the whole programme</strong> (every year and semester) — then they can
+          include every applicable line or pick specific lines, before a separate processing UGX line is applied.
         </p>
         <TuitionHubCheckoutExplainer className="mt-4 max-w-4xl" />
         <div className="mt-4 rounded-xl border border-white/10 bg-[#0a101f]/70 px-4 py-3 text-xs text-slate-300">
@@ -620,7 +623,7 @@ export default function AdminProgrammesManager() {
               max={6}
               value={newDurationYears}
               onChange={(e) => setNewDurationYears(Number(e.target.value))}
-              title="Set 0 to infer from fee rows until the full programme length is known."
+              title="Course length, 1–6 years (e.g. 5 for a five-year programme). Set 0 to infer from fee rows. Drives the Year picker and the ‘Whole programme’ bundle at checkout."
               className="mt-1 w-full rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white sm:w-24"
             />
           </div>
@@ -635,7 +638,7 @@ export default function AdminProgrammesManager() {
               max={3}
               value={newSemestersPerYear}
               onChange={(e) => setNewSemestersPerYear(Number(e.target.value))}
-              title="Set 0 to infer from fee rows; checkout supports up to 3 semesters per year."
+              title="Semesters per academic year (1–3). Set 0 to infer from fee rows. Drives the Semester picker and the per-year bundle at checkout."
               className="mt-1 w-full rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white sm:w-28"
             />
           </div>
@@ -952,7 +955,10 @@ export default function AdminProgrammesManager() {
               </div>
               <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
                 Use 0/0 to infer duration from fee rows. Set explicit values when the course length is known, even before
-                every period has fee rows.
+                every period has fee rows — these numbers drive the Year/Semester pickers at checkout and the size of the
+                <span className="font-semibold text-slate-300"> Year with all its semesters</span> and{" "}
+                <span className="font-semibold text-slate-300">Whole programme</span> bundles students see on{" "}
+                <span className="font-mono text-slate-400">/student/pay</span>.
               </p>
             </div>
             <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-white/10 bg-[#0d1526] p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end sm:gap-2 sm:border-t-0 sm:bg-transparent sm:p-0 sm:pb-5 sm:pl-5 sm:pr-5 sm:pt-0">

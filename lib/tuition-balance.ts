@@ -82,6 +82,12 @@ export type StudentBalanceSummary = {
   progress: StudentProgrammeProgress | null;
 };
 
+function normalizeFeeSelectionMode(mode: string): ProgrammeFeeSelectionMode {
+  if (mode === "year") return "year";
+  if (mode === "programme") return "programme";
+  return "semester";
+}
+
 /** Canonical key for matching payments to the same fee obligation. */
 export function obligationFingerprint(opts: {
   programmeCode: string;
@@ -91,9 +97,12 @@ export function obligationFingerprint(opts: {
   includedFeeIds: string[];
 }): string {
   const code = opts.programmeCode.trim().toUpperCase();
-  const mode = opts.feeSelectionMode === "year" ? "year" : "semester";
+  const mode = normalizeFeeSelectionMode(opts.feeSelectionMode);
+  /** Programme bundle covers the whole course — anchor year/semester don't change the obligation. */
+  const year = mode === "programme" ? 0 : opts.year;
+  const semester = mode === "programme" ? 0 : opts.semester;
   const ids = [...opts.includedFeeIds].filter(Boolean).sort().join(",");
-  return `${code}|${opts.year}|${opts.semester}|${mode}|${ids}`;
+  return `${code}|${year}|${semester}|${mode}|${ids}`;
 }
 
 export function normalizeIncludedFeeIds(ids: string[] | null | undefined): string[] {
@@ -272,7 +281,7 @@ export function buildInstallmentPlanBalance(
     programmeCode: anchor.programmeCode,
     year: anchor.year,
     semester: anchor.semester,
-    feeSelectionMode: anchor.feeSelectionMode === "year" ? "year" : "semester",
+    feeSelectionMode: normalizeFeeSelectionMode(anchor.feeSelectionMode),
     includedFeeIds: normalizeIncludedFeeIds(anchor.includedFeeIds),
     installmentCount: count,
     scheduleSubtotalUgx: scheduleSubtotal,
@@ -398,7 +407,7 @@ export async function getStudentBalanceSummary(opts: {
   installmentPlans.sort((a, b) => b.year - a.year || b.semester - a.semester);
 
   const contexts: ContextBalance[] = [];
-  for (const mode of ["semester", "year"] as const) {
+  for (const mode of ["semester", "year", "programme"] as const) {
     const quote = await quoteObligation({
       organizationId: opts.organizationId,
       programmeCode: opts.programmeCode,

@@ -139,6 +139,8 @@ export function getProgrammePeriodDetails(programme: ProgrammeLike): ProgrammePe
 }
 
 function paymentAppliesToPeriod(payment: PaymentLike, year: number, semester: number): boolean {
+  /** Full-programme bundle covers every (year, semester) in the programme. */
+  if (payment.feeSelectionMode === "programme") return true;
   if (payment.year !== year) return false;
   return payment.feeSelectionMode === "year" || payment.semester === semester;
 }

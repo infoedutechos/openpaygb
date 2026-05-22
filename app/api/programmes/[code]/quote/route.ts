@@ -16,7 +16,7 @@ import { getProgrammeDurationSummary, getProgrammePeriodDetails } from "@/lib/tu
 const Query = z.object({
   year: z.coerce.number().int().min(1).max(6),
   semester: z.coerce.number().int().min(1).max(3),
-  feeSelectionMode: z.enum(["semester", "year"]).optional().default("semester"),
+  feeSelectionMode: z.enum(["semester", "year", "programme"]).optional().default("semester"),
 });
 
 function recurrenceLabel(r: ProgrammeFeeRecurrence | null | undefined): string {
@@ -74,7 +74,9 @@ export async function GET(req: Request, ctx: { params: Promise<{ code: string }>
     return NextResponse.json({ error: "Programme not found" }, { status: 404 });
   }
   const programmeDuration = getProgrammeDurationSummary(p);
+  /** Programme bundle covers every period — the anchor year/semester only label the receipt. */
   if (
+    feeSelectionMode !== "programme" &&
     programmeDuration.totalSemesters > 0 &&
     (parsed.data.year > programmeDuration.durationYears || parsed.data.semester > programmeDuration.semestersPerYear)
   ) {

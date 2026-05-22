@@ -159,6 +159,32 @@ describe("buildStudentProgrammeProgress", () => {
     expect(progress.completedPeriods.map((c) => `${c.year}-${c.semester}`)).toEqual(["1-1", "1-2"]);
   });
 
+  it("treats programme-mode confirmed payments as completing every period", () => {
+    const p = programme({
+      durationYears: 2,
+      semestersPerYear: 2,
+      fees: [
+        { id: "f-1", year: 1, semester: 1, tuitionUgx: 100, functionalFeesUgx: 0 },
+        { id: "f-2", year: 1, semester: 2, tuitionUgx: 100, functionalFeesUgx: 0 },
+        { id: "f-3", year: 2, semester: 1, tuitionUgx: 100, functionalFeesUgx: 0 },
+        { id: "f-4", year: 2, semester: 2, tuitionUgx: 100, functionalFeesUgx: 0 },
+      ],
+    });
+    const payments = [
+      payment({
+        year: 1,
+        semester: 1,
+        feeSelectionMode: "programme",
+        includedFeeIds: ["f-1", "f-2", "f-3", "f-4"],
+      }),
+    ];
+
+    const progress = buildStudentProgrammeProgress(p, payments);
+    expect(progress.completedYears).toBe(2);
+    expect(progress.completedSemesters).toBe(4);
+    expect(progress.remainingSemesters).toBe(0);
+  });
+
   it("treats year-mode confirmed payments as completing each semester in that year", () => {
     const p = programme({
       durationYears: 2,
