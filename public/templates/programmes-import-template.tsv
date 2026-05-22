@@ -1,13 +1,13 @@
-code	name
-BEP-ENG/RE	Bachelor in Education Primary (ENG/RE)
-BEP-ENG/SST	Bachelor in Education Primary (ENG/SST)
-BEP-MTC/SCIE	Bachelor in Education Primary (MTC/SCIE)
-BEP-MTC/AGRIC	Bachelor in Education Primary (MTC/AGRIC)
-DEP-ENG/RE	Diploma in Education Primary (ENG/RE)
-DEP-ENG/SST	Diploma in Education Primary (ENG/SST)
-DEP-MTC/SCIE	Diploma in Education Primary (MTC/SCIE)
-DEP-MTC/AGRIC	Diploma in Education Primary (MTC/AGRIC)
-DEP-ECD	DIPLOMA IN EDUCATION –PRIMARY -EARLY CHILDHOOD
-DNT	DIPLOMA IN NURSERY TEACHING
-CECE	CERTIFICATE IN EARLY CHILDHOOD EDUCATION
-CNT	CERTIFICATE IN NURSEY TEACHING
+code	name	durationYears	semestersPerYear
+BEP-ENG/RE	Bachelor in Education Primary (ENG/RE)	3	3
+BEP-ENG/SST	Bachelor in Education Primary (ENG/SST)	3	3
+BEP-MTC/SCIE	Bachelor in Education Primary (MTC/SCIE)	3	3
+BEP-MTC/AGRIC	Bachelor in Education Primary (MTC/AGRIC)	3	3
+DEP-ENG/RE	Diploma in Education Primary (ENG/RE)	2	3
+DEP-ENG/SST	Diploma in Education Primary (ENG/SST)	2	3
+DEP-MTC/SCIE	Diploma in Education Primary (MTC/SCIE)	2	3
+DEP-MTC/AGRIC	Diploma in Education Primary (MTC/AGRIC)	2	3
+DEP-ECD	DIPLOMA IN EDUCATION –PRIMARY -EARLY CHILDHOOD	2	3
+DNT	DIPLOMA IN NURSERY TEACHING	2	3
+CECE	CERTIFICATE IN EARLY CHILDHOOD EDUCATION	1	3
+CNT	CERTIFICATE IN NURSEY TEACHING	1	3

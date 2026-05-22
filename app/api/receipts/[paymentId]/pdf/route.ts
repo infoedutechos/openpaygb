@@ -3,6 +3,7 @@ import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { prisma } from "@/lib/prisma";
 import { getAdminFromCookies } from "@/lib/auth";
 import { isValidObjectId } from "@/lib/object-id";
+import { buildStudentProgrammeProgress, getProgrammeDurationSummary } from "@/lib/tuition-progress";
 
 export async function GET(_req: Request, ctx: { params: Promise<{ paymentId: string }> }) {
   const { paymentId } = await ctx.params;
@@ -13,7 +14,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ paymentId: str
   const admin = await getAdminFromCookies();
   const payment = await prisma.payment.findUnique({
     where: { id: paymentId },
-    include: { student: { select: { name: true } } },
+    include: { student: { select: { id: true, name: true } } },
   });
 
   if (!payment) {
@@ -24,6 +25,23 @@ export async function GET(_req: Request, ctx: { params: Promise<{ paymentId: str
   }
 
   const issuedAt = payment.confirmedAt ?? payment.createdAt;
+
+  const programme = await prisma.programme.findUnique({
+    where: { organizationId_code: { organizationId: payment.organizationId, code: payment.programmeCode } },
+    include: { fees: true },
+  });
+  const studentPayments = programme
+    ? await prisma.payment.findMany({
+        where: {
+          studentId: payment.student.id,
+          programmeCode: payment.programmeCode,
+          organizationId: payment.organizationId,
+        },
+      })
+    : [];
+  const progress = programme ? buildStudentProgrammeProgress(programme, studentPayments) : null;
+  const duration = programme ? getProgrammeDurationSummary(programme) : null;
+
   const pdf = await PDFDocument.create();
   const page = pdf.addPage([420, 595]);
   const font = await pdf.embedFont(StandardFonts.Helvetica);
@@ -40,10 +58,19 @@ export async function GET(_req: Request, ctx: { params: Promise<{ paymentId: str
   line("Tuition waiver program · Official receipt", 9, false, rgb(0.35, 0.35, 0.38));
   y -= 8;
   line(`Student: ${payment.student.name}`, 10, true);
-  line(
-    `Programme: ${payment.programmeCode} · Year ${payment.year} · Semester ${payment.semester}`,
-    10
-  );
+  if (programme?.name) {
+    line(`Programme: ${programme.name} (${payment.programmeCode})`, 10);
+  } else {
+    line(`Programme: ${payment.programmeCode}`, 10);
+  }
+  if (duration && duration.durationYears > 0) {
+    line(
+      `Period: Year ${payment.year} of ${duration.durationYears} · Semester ${payment.semester} of ${duration.semestersPerYear}`,
+      10
+    );
+  } else {
+    line(`Period: Year ${payment.year} · Semester ${payment.semester}`, 10);
+  }
   y -= 4;
   line(`Tuition (UGX): ${payment.tuitionUgx.toLocaleString()}`, 10);
   line(`Functional fees (UGX): ${payment.functionalFeesUgx.toLocaleString()}`, 10);
@@ -56,6 +83,21 @@ export async function GET(_req: Request, ctx: { params: Promise<{ paymentId: str
     `TON paid: ${payment.tonAmount} @ snapshot 1 TON = UGX ${payment.ugxPerTonSnapshot.toLocaleString()}`,
     10
   );
+  y -= 4;
+
+  if (progress && progress.totalSemesters > 0) {
+    line("Programme completion", 11, true);
+    line(
+      `Semesters completed: ${progress.completedSemesters} of ${progress.totalSemesters} · remaining: ${progress.remainingSemesters}`,
+      9
+    );
+    line(
+      `Academic years completed: ${progress.completedYears} of ${progress.durationYears} · remaining: ${progress.remainingYears}`,
+      9
+    );
+    y -= 2;
+  }
+
   line(`Transaction hash: ${payment.txHash || "—"}`, 9, false, rgb(0.25, 0.25, 0.28));
   line(`Issued: ${issuedAt ? new Date(issuedAt).toISOString() : "—"}`, 9);
   line(`Payment id: ${payment.id}`, 8, false, rgb(0.4, 0.4, 0.42));

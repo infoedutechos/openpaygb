@@ -6,6 +6,7 @@ import { organizationWhereForSession } from "@/lib/admin-org-scope";
 import { isValidObjectId } from "@/lib/object-id";
 import { handleFirstTimeConfirmation } from "@/lib/on-payment-confirmed";
 import { isAdminManualPaymentConfirmAllowed } from "@/lib/admin-payment-confirm-policy";
+import { buildStudentProgrammeProgress } from "@/lib/tuition-progress";
 
 const PatchBody = z
   .object({
@@ -31,13 +32,26 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   const p = await prisma.payment.findFirst({
     where: { id, ...orgWhere },
     include: {
-      student: { select: { name: true, email: true } },
+      student: { select: { id: true, name: true, email: true } },
       organization: { select: { slug: true, name: true } },
     },
   });
   if (!p) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
+
+  /** Build per-student programme progress so the admin "view single payment" surface mirrors the list/receipts. */
+  const programme = await prisma.programme.findUnique({
+    where: { organizationId_code: { organizationId: p.organizationId, code: p.programmeCode } },
+    include: { fees: true },
+  });
+  const studentPayments = await prisma.payment.findMany({
+    where: { studentId: p.student.id, programmeCode: p.programmeCode, organizationId: p.organizationId },
+  });
+  const progress = programme
+    ? buildStudentProgrammeProgress(programme, studentPayments)
+    : null;
+
   return NextResponse.json({
     payment: {
       id: p.id,
@@ -45,6 +59,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       organizationSlug: p.organization.slug,
       organizationName: p.organization.name,
       programmeCode: p.programmeCode,
+      programmeName: programme?.name ?? null,
       year: p.year,
       semester: p.semester,
       tuitionUgx: p.tuitionUgx,
@@ -60,6 +75,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       momoReference: p.momoReference,
       createdAt: p.createdAt,
       confirmedAt: p.confirmedAt,
+      progress,
     },
   });
 }

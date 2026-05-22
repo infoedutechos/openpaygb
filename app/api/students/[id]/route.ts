@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getAdminFromCookies } from "@/lib/auth";
 import { organizationWhereForSession } from "@/lib/admin-org-scope";
 import { isValidObjectId } from "@/lib/object-id";
+import { buildStudentProgrammeProgress, getProgrammeDurationSummary } from "@/lib/tuition-progress";
 
 export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
   const admin = await getAdminFromCookies();
@@ -25,6 +26,19 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     where: { studentId: id, ...orgWhere },
     orderBy: { createdAt: "desc" },
   });
+
+  const programme = await prisma.programme.findUnique({
+    where: { organizationId_code: { organizationId: student.organizationId, code: student.programmeCode } },
+    include: { fees: true },
+  });
+  const progress = programme
+    ? buildStudentProgrammeProgress(
+        programme,
+        payments.filter((p) => p.programmeCode === student.programmeCode),
+      )
+    : null;
+  const programmeDuration = programme ? getProgrammeDurationSummary(programme) : null;
+
   return NextResponse.json({
     student: {
       id: student.id,
@@ -33,11 +47,14 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       phone: student.phone,
       telegramId: student.telegramId,
       programmeCode: student.programmeCode,
+      programmeName: programme?.name ?? null,
+      programmeDuration,
       year: student.year,
       semester: student.semester,
       createdAt: student.createdAt,
       organizationSlug: student.organization.slug,
       organizationName: student.organization.name,
+      progress,
     },
     payments: payments.map((p) => ({
       id: p.id,
@@ -46,6 +63,9 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       tonAmount: p.tonAmount,
       txHash: p.txHash,
       rail: p.rail,
+      year: p.year,
+      semester: p.semester,
+      programmeCode: p.programmeCode,
       createdAt: p.createdAt,
       confirmedAt: p.confirmedAt,
     })),

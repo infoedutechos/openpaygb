@@ -11,7 +11,7 @@ import { countCollections, TUITION_BACKUP_COLLECTIONS, type TuitionBackupCollect
 
 export type BackupCollectionCounts = Record<string, number>;
 
-export const BACKUP_VERSION = 2;
+export const BACKUP_VERSION = 3;
 
 export type TuitionBackupSnapshot = {
   meta: {
@@ -114,7 +114,7 @@ export async function buildTuitionBackupSnapshot(): Promise<TuitionBackupSnapsho
       version: BACKUP_VERSION,
       scope: "tuition",
       note:
-        "Point-in-time export via Prisma. Admin password hashes, signup token hashes, partner API key hashes, webhook secrets, and PSP webhook secrets are omitted or redacted. Binary fields are base64-encoded. Re-issue admin passwords and integration secrets after restore.",
+        "Point-in-time export via Prisma. v3 adds Programme.durationYears and Programme.semestersPerYear so payment completion progress (year/semester completed vs remaining) can be reconstructed on restore. Admin password hashes, signup token hashes, partner API key hashes, webhook secrets, and PSP webhook secrets are omitted or redacted. Binary fields are base64-encoded. Re-issue admin passwords and integration secrets after restore.",
       counts,
     },
     data: collections,

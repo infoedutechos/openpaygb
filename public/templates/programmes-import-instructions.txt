@@ -5,17 +5,28 @@ ODEL HUB — Programmes list import
    - programmes-import-template.csv  (comma-separated — works well in Excel)
    - programmes-import-template.tsv  (tab-separated)
 
-2. Keep the first row as the header:  code,name   (or tab between words in the TSV file).
+2. Keep the first row as the header:  code,name,durationYears,semestersPerYear
+   (or tab between words in the TSV file). The two duration columns are OPTIONAL — old
+   "code,name" files keep working unchanged.
 
 3. Each following row is one programme:
-   - code: 2–24 characters, letters, numbers, hyphen (-), underscore (_), or slash (/). Example: BEP, BEP-ENG/RE, DEP-ECD
+   - code: 2–24 characters, letters, numbers, hyphen (-), underscore (_), or slash (/).
+     Example: BEP, BEP-ENG/RE, DEP-ECD
    - name: full programme title (2–200 characters).
+   - durationYears (optional): how many academic years the programme spans (1–6).
+   - semestersPerYear (optional): how many semesters / terms each year (1–3).
 
-4. You may delete the example rows and add your own. Do not leave blank lines between the header and data if possible.
+4. You may delete the example rows and add your own. Do not leave blank lines between the
+   header and data if possible.
 
-5. If a programme name contains a comma, use the CSV template and wrap fields in double quotes, for example:
-   "CODE","Name with, comma inside"
+5. If a programme name contains a comma, use the CSV template and wrap the field in double
+   quotes, for example:
+   "CODE","Name with, comma inside",3,3
 
-6. Save the file, then use Admin → Programs → "Upload programs list" → Choose file.
+6. If you leave durationYears or semestersPerYear blank, the platform will infer them from
+   the fee schedule you set up afterwards. Either path produces correct payment progress.
 
-7. Programmes that already exist for your school (same code) are skipped; the summary shows what was created or skipped.
+7. Save the file, then use Admin → Programs → "Upload programs list" → Choose file.
+
+8. Programmes that already exist for your school (same code) are skipped; the summary shows
+   what was created or skipped.

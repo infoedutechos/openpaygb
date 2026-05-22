@@ -9,6 +9,11 @@ import { feeTotal, ugxToTon, tonToNanotonString } from "@/lib/money";
 import { DEFAULT_TON_WALLET } from "@/lib/constants";
 import { absoluteUrl } from "@/lib/public-url";
 import {
+  buildStudentProgrammeProgress,
+  getProgrammeDurationSummary,
+  type StudentProgrammeProgress,
+} from "@/lib/tuition-progress";
+import {
   answerCallbackQuery,
   editMessageTextHtml,
   sendMessageHtml,
@@ -31,6 +36,7 @@ async function buildFeeSummary(programmeCode: string, year: number, semester: nu
   const totalUgx = feeTotal(line.tuitionUgx, line.functionalFeesUgx);
   const { ugxPerTon } = await getActiveUgxPerTon();
   const tonAmount = ugxToTon(totalUgx, ugxPerTon);
+  const duration = getProgrammeDurationSummary(p);
   return {
     programmeName: p.name,
     programmeCode: p.code,
@@ -41,7 +47,24 @@ async function buildFeeSummary(programmeCode: string, year: number, semester: nu
     totalUgx,
     ugxPerTon,
     tonAmount,
+    duration,
   };
+}
+
+async function loadProgress(
+  studentId: string,
+  programmeCode: string,
+  organizationId: string,
+): Promise<StudentProgrammeProgress | null> {
+  const programme = await prisma.programme.findUnique({
+    where: { organizationId_code: { organizationId, code: programmeCode } },
+    include: { fees: true },
+  });
+  if (!programme) return null;
+  const payments = await prisma.payment.findMany({
+    where: { studentId, programmeCode, organizationId },
+  });
+  return buildStudentProgrammeProgress(programme, payments);
 }
 
 function tonTransferUrl(wallet: string, tonAmount: number, memo: string) {
@@ -196,13 +219,21 @@ async function dispatchCallback(
       );
       return;
     }
+    const progress = await loadProgress(student.id, student.programmeCode, organizationId);
     const text = [
       "<b>My Profile</b>",
       "",
       `<b>Name:</b> ${escapeHtml(student.name)}`,
       `<b>Programme:</b> ${escapeHtml(student.programmeCode)}`,
-      `<b>Year:</b> ${student.year}`,
-      `<b>Semester:</b> ${student.semester}`,
+      progress && progress.totalSemesters > 0
+        ? `<b>Year:</b> ${student.year} of ${progress.durationYears}`
+        : `<b>Year:</b> ${student.year}`,
+      progress && progress.semestersPerYear > 0
+        ? `<b>Semester:</b> ${student.semester} of ${progress.semestersPerYear}`
+        : `<b>Semester:</b> ${student.semester}`,
+      progress && progress.totalSemesters > 0
+        ? `<b>Completed:</b> ${progress.completedSemesters} of ${progress.totalSemesters} semesters (${progress.completedYears} of ${progress.durationYears} year${progress.durationYears === 1 ? "" : "s"})`
+        : "",
       student.email ? `<b>Email:</b> ${escapeHtml(student.email)}` : "",
       student.phone ? `<b>Phone:</b> ${escapeHtml(student.phone)}` : "",
     ]
@@ -228,11 +259,20 @@ async function dispatchCallback(
       orderBy: { createdAt: "desc" },
       take: 8,
     });
+    const progress = await loadProgress(student.id, student.programmeCode, organizationId);
     const lines = payments.map((p) => {
       const st = p.status === "confirmed" ? "✅" : p.status === "pending" ? "⏳" : "⚠️";
       return `${st} <code>${escapeHtml(p.programmeCode)}</code> Y${p.year} S${p.semester} — ${p.tonAmount} TON`;
     });
-    const body = ["<b>Your payments</b>", "", ...lines].join("\n");
+    const summary =
+      progress && progress.totalSemesters > 0
+        ? [
+            "",
+            `<b>${escapeHtml(student.programmeCode)}</b> progress: ${progress.completedSemesters} of ${progress.totalSemesters} semesters confirmed`,
+            `Remaining: ${progress.remainingSemesters} semester${progress.remainingSemesters === 1 ? "" : "s"} · ${progress.remainingYears} year${progress.remainingYears === 1 ? "" : "s"}`,
+          ]
+        : [];
+    const body = ["<b>Your payments</b>", "", ...lines, ...summary].join("\n");
     await editMessageTextHtml(chatId, messageId, body, mainMenuKeyboard());
     return;
   }
@@ -276,17 +316,22 @@ async function dispatchCallback(
       return;
     }
     const memo = `ODEL Hub - ${sum.programmeCode} Yr${year} Sem ${semester}`;
+    const durationLine =
+      sum.duration.durationYears > 0
+        ? `<b>Year:</b> ${year} of ${sum.duration.durationYears} · <b>Semester:</b> ${semester} of ${sum.duration.semestersPerYear}`
+        : `<b>Year:</b> ${year} · <b>Semester:</b> ${semester}`;
     const text = [
       "<b>Fee summary</b>",
       "",
       `<b>Programme:</b> ${escapeHtml(sum.programmeName)} (${escapeHtml(sum.programmeCode)})`,
-      `<b>Year:</b> ${year} · <b>Semester:</b> ${semester}`,
+      durationLine,
       "",
       `<b>Tuition:</b> UGX ${sum.tuitionUgx.toLocaleString()}`,
       `<b>Functional fees:</b> UGX ${sum.functionalFeesUgx.toLocaleString()}`,
       `<b>Total UGX:</b> UGX ${sum.totalUgx.toLocaleString()}`,
       "",
-      `<b>Estimated TON</b> @ 1 TON = UGX ${sum.ugxPerTon.toLocaleString()}: <b>${sum.tonAmount} TON</b>`,      "",
+      `<b>Estimated TON</b> @ 1 TON = UGX ${sum.ugxPerTon.toLocaleString()}: <b>${sum.tonAmount} TON</b>`,
+      "",
       `<i>${escapeHtml(memo)}</i>`,
     ].join("\n");
 

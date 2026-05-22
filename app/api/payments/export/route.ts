@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAdminFromCookies } from "@/lib/auth";
 import { organizationWhereForSession } from "@/lib/admin-org-scope";
+import { buildStudentProgrammeProgress } from "@/lib/tuition-progress";
+import type { Payment, Programme, ProgrammeFee } from "@prisma/client";
 
 function csvEscape(s: string) {
   if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
@@ -47,6 +49,32 @@ export async function GET(req: Request) {
     },
   });
 
+  /** Batch-load programmes and per-student payments so duration + progress columns can be filled in without N+1 queries. */
+  const programmeKeys = Array.from(
+    new Map(rows.map((r) => [`${r.organizationId}::${r.programmeCode}`, { organizationId: r.organizationId, code: r.programmeCode }])).values(),
+  );
+  const programmes = programmeKeys.length
+    ? await prisma.programme.findMany({ where: { OR: programmeKeys }, include: { fees: true } })
+    : [];
+  const programmeByKey = new Map<string, Programme & { fees: ProgrammeFee[] }>(
+    programmes.map((p) => [`${p.organizationId}::${p.code}`, p]),
+  );
+
+  const studentKeys = Array.from(
+    new Map(
+      rows.map((r) => [
+        `${r.studentId}::${r.programmeCode}`,
+        { studentId: r.studentId, programmeCode: r.programmeCode, organizationId: r.organizationId },
+      ]),
+    ).values(),
+  );
+  const studentPayments = studentKeys.length ? await prisma.payment.findMany({ where: { OR: studentKeys } }) : [];
+  const paymentsByStudentProg = new Map<string, Payment[]>();
+  for (const sp of studentPayments) {
+    const key = `${sp.studentId}::${sp.programmeCode}`;
+    paymentsByStudentProg.set(key, [...(paymentsByStudentProg.get(key) ?? []), sp]);
+  }
+
   const header = [
     "organizationSlug",
     "organizationName",
@@ -54,6 +82,7 @@ export async function GET(req: Request) {
     "studentName",
     "studentEmail",
     "programmeCode",
+    "programmeName",
     "year",
     "semester",
     "totalUgx",
@@ -69,16 +98,30 @@ export async function GET(req: Request) {
     "tuitionUgx",
     "functionalFeesUgx",
     "platformFeeUgx",
+    "programmeDurationYears",
+    "programmeSemestersPerYear",
+    "programmeTotalSemesters",
+    "programmeDurationSource",
+    "studentCompletedYears",
+    "studentRemainingYears",
+    "studentCompletedSemesters",
+    "studentRemainingSemesters",
   ].join(",");
 
-  const lines = rows.map((p) =>
-    [
+  const lines = rows.map((p) => {
+    const programme = programmeByKey.get(`${p.organizationId}::${p.programmeCode}`) ?? null;
+    const progress = programme
+      ? buildStudentProgrammeProgress(programme, paymentsByStudentProg.get(`${p.studentId}::${p.programmeCode}`) ?? [])
+      : null;
+
+    return [
       p.organization.slug,
       p.organization.name,
       p.id,
       p.student.name,
       p.student.email ?? "",
       p.programmeCode,
+      programme?.name ?? "",
       String(p.year),
       String(p.semester),
       String(p.totalUgx),
@@ -94,10 +137,18 @@ export async function GET(req: Request) {
       String(p.tuitionUgx),
       String(p.functionalFeesUgx),
       String(p.platformFeeUgx ?? 0),
+      progress ? String(progress.durationYears) : "",
+      progress ? String(progress.semestersPerYear) : "",
+      progress ? String(progress.totalSemesters) : "",
+      progress ? progress.source : "",
+      progress ? String(progress.completedYears) : "",
+      progress ? String(progress.remainingYears) : "",
+      progress ? String(progress.completedSemesters) : "",
+      progress ? String(progress.remainingSemesters) : "",
     ]
       .map((c) => csvEscape(String(c)))
-      .join(",")
-  );
+      .join(",");
+  });
 
   const body = [header, ...lines].join("\r\n");
   const date = new Date().toISOString().slice(0, 10);

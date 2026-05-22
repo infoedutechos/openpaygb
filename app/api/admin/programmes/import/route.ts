@@ -11,6 +11,8 @@ import { programmeCodeSchema } from "@/lib/programme-code-zod";
 const RowSchema = z.object({
   code: programmeCodeSchema,
   name: z.string().min(2).max(200),
+  durationYears: z.number().int().min(1).max(6).optional(),
+  semestersPerYear: z.number().int().min(1).max(3).optional(),
 });
 
 const Body = z.object({
@@ -60,7 +62,13 @@ export async function POST(req: Request) {
     }
 
     const seen = new Set<string>();
-    const validated: { code: string; name: string; line: number }[] = [];
+    const validated: {
+      code: string;
+      name: string;
+      line: number;
+      durationYears?: number;
+      semestersPerYear?: number;
+    }[] = [];
     const parseErrors: { line: number; reason: string }[] = [];
 
     for (const row of parsedLines) {
@@ -70,7 +78,12 @@ export async function POST(req: Request) {
         parseErrors.push({ line: row.line, reason: `Duplicate code ${code} in file (skipped)` });
         continue;
       }
-      const rowCheck = RowSchema.safeParse({ code, name });
+      const rowCheck = RowSchema.safeParse({
+        code,
+        name,
+        durationYears: row.durationYears,
+        semestersPerYear: row.semestersPerYear,
+      });
       if (!rowCheck.success) {
         parseErrors.push({
           line: row.line,
@@ -79,7 +92,13 @@ export async function POST(req: Request) {
         continue;
       }
       seen.add(code);
-      validated.push({ code, name, line: row.line });
+      validated.push({
+        code,
+        name,
+        line: row.line,
+        ...(rowCheck.data.durationYears !== undefined ? { durationYears: rowCheck.data.durationYears } : {}),
+        ...(rowCheck.data.semestersPerYear !== undefined ? { semestersPerYear: rowCheck.data.semestersPerYear } : {}),
+      });
     }
 
     const created: string[] = [];
@@ -93,6 +112,8 @@ export async function POST(req: Request) {
             code: row.code,
             name: row.name,
             track: importTrack,
+            ...(row.durationYears !== undefined ? { durationYears: row.durationYears } : {}),
+            ...(row.semestersPerYear !== undefined ? { semestersPerYear: row.semestersPerYear } : {}),
           },
         });
         created.push(row.code);

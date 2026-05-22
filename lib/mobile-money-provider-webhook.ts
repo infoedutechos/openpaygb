@@ -1,10 +1,15 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import type { MobileMoneyProvider, Payment } from "@prisma/client";
+import type { MobileMoneyProvider, Payment, Programme, ProgrammeFee } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { handleFirstTimeConfirmation } from "@/lib/on-payment-confirmed";
 import { extractFirstField, extractField, isSuccessStatus } from "@/lib/mobile-money-parse";
 import { findPaymentByMomoReference } from "@/lib/momo/find-payment";
 import { isProductionRuntime } from "@/lib/production-secrets";
+import {
+  buildStudentProgrammeProgress,
+  getProgrammeDurationSummary,
+  type StudentProgrammeProgress,
+} from "@/lib/tuition-progress";
 
 export function verifyProviderWebhookAuth(
   provider: Pick<MobileMoneyProvider, "authKind" | "webhookSecret" | "webhookHeaderName">,
@@ -91,13 +96,48 @@ export async function confirmPaymentFromProviderWebhook(opts: {
   return { action: "confirmed", paymentId: payment.id };
 }
 
-export function paymentToPartnerPayload(payment: Payment & { organization?: { slug: string; name: string } | null }) {
+export type PartnerProgrammeContext = {
+  programme: (Programme & { fees: ProgrammeFee[] }) | null;
+  studentPayments?: Payment[];
+};
+
+export function paymentToPartnerPayload(
+  payment: Payment & { organization?: { slug: string; name: string } | null },
+  context?: PartnerProgrammeContext,
+): {
+  id: string;
+  organizationId: string;
+  organizationSlug: string | null;
+  studentId: string;
+  programmeCode: string;
+  programmeName: string | null;
+  programmeDuration: ReturnType<typeof getProgrammeDurationSummary> | null;
+  year: number;
+  semester: number;
+  totalUgx: number;
+  tonAmount: number;
+  rail: Payment["rail"];
+  status: Payment["status"];
+  memo: string;
+  confirmedAt: string | null;
+  createdAt: string;
+  progress: StudentProgrammeProgress | null;
+} {
+  const programme = context?.programme ?? null;
+  const programmeDuration = programme ? getProgrammeDurationSummary(programme) : null;
+  const progress =
+    programme && context?.studentPayments
+      ? buildStudentProgrammeProgress(programme, context.studentPayments)
+      : null;
+
   return {
     id: payment.id,
     organizationId: payment.organizationId,
     organizationSlug: payment.organization?.slug ?? null,
     studentId: payment.studentId,
     programmeCode: payment.programmeCode,
+    programmeName: programme?.name ?? null,
+    programmeDuration,
     year: payment.year,
     semester: payment.semester,
     totalUgx: payment.totalUgx,
@@ -107,5 +147,23 @@ export function paymentToPartnerPayload(payment: Payment & { organization?: { sl
     memo: payment.memo,
     confirmedAt: payment.confirmedAt?.toISOString() ?? null,
     createdAt: payment.createdAt.toISOString(),
+    progress,
   };
+}
+
+/** Helper for partner-facing endpoints: loads programme + student payments and packages the payload with progress. */
+export async function loadPartnerProgrammeContext(payment: Payment): Promise<PartnerProgrammeContext> {
+  const programme = await prisma.programme.findUnique({
+    where: { organizationId_code: { organizationId: payment.organizationId, code: payment.programmeCode } },
+    include: { fees: true },
+  });
+  if (!programme) return { programme: null };
+  const studentPayments = await prisma.payment.findMany({
+    where: {
+      studentId: payment.studentId,
+      programmeCode: payment.programmeCode,
+      organizationId: payment.organizationId,
+    },
+  });
+  return { programme, studentPayments };
 }

@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto";
 import type { Payment } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { paymentToPartnerPayload } from "@/lib/mobile-money-provider-webhook";
+import { loadPartnerProgrammeContext, paymentToPartnerPayload } from "@/lib/mobile-money-provider-webhook";
 
 export type PartnerWebhookEvent = "payment.confirmed" | "payment.failed";
 
@@ -82,7 +82,9 @@ async function dispatchPartnerWebhooks(
 
   if (endpoints.length === 0) return;
 
-  const payload = { payment: paymentToPartnerPayload(payment) };
+  /** Webhooks include programme duration + per-student completion progress so partner systems can route on it. */
+  const context = await loadPartnerProgrammeContext(payment);
+  const payload = { payment: paymentToPartnerPayload(payment, context) };
 
   await Promise.all(endpoints.map((ep) => deliverOne(ep, event, payload)));
 }

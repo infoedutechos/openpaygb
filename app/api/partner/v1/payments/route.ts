@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requirePartnerAuth } from "@/lib/partner-auth";
 import { paymentToPartnerPayload } from "@/lib/mobile-money-provider-webhook";
+import type { Payment, Programme, ProgrammeFee } from "@prisma/client";
 /** Partner API — list payments (scoped to API key organization). */
 export async function GET(req: Request) {
   const gate = await requirePartnerAuth(req, "payments:read");
@@ -38,7 +39,38 @@ export async function GET(req: Request) {
     include: { organization: { select: { slug: true, name: true } } },
   });
 
+  if (rows.length === 0) {
+    return NextResponse.json({ payments: [] });
+  }
+
+  /** Batch-load programmes + per-student payments so we can embed completion progress without N+1. */
+  const programmeKeys = Array.from(
+    new Map(rows.map((r) => [`${r.organizationId}::${r.programmeCode}`, { organizationId: r.organizationId, code: r.programmeCode }])).values(),
+  );
+  const programmes = await prisma.programme.findMany({
+    where: { OR: programmeKeys },
+    include: { fees: true },
+  });
+  const programmeByKey = new Map<string, Programme & { fees: ProgrammeFee[] }>(
+    programmes.map((p) => [`${p.organizationId}::${p.code}`, p]),
+  );
+
+  const studentKeys = Array.from(
+    new Map(rows.map((r) => [`${r.studentId}::${r.programmeCode}`, { studentId: r.studentId, programmeCode: r.programmeCode, organizationId: r.organizationId }])).values(),
+  );
+  const studentPayments = await prisma.payment.findMany({ where: { OR: studentKeys } });
+  const paymentsByStudentProg = new Map<string, Payment[]>();
+  for (const sp of studentPayments) {
+    const key = `${sp.studentId}::${sp.programmeCode}`;
+    paymentsByStudentProg.set(key, [...(paymentsByStudentProg.get(key) ?? []), sp]);
+  }
+
   return NextResponse.json({
-    payments: rows.map((p) => paymentToPartnerPayload(p)),
+    payments: rows.map((p) =>
+      paymentToPartnerPayload(p, {
+        programme: programmeByKey.get(`${p.organizationId}::${p.programmeCode}`) ?? null,
+        studentPayments: paymentsByStudentProg.get(`${p.studentId}::${p.programmeCode}`) ?? [],
+      }),
+    ),
   });
 }

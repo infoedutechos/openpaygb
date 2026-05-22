@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getAdminFromCookies } from "@/lib/auth";
 import { isValidObjectId } from "@/lib/object-id";
 import { absoluteUrl } from "@/lib/public-url";
+import { buildStudentProgrammeProgress, getProgrammeDurationSummary } from "@/lib/tuition-progress";
 
 export default async function ReceiptPage({ params }: { params: Promise<{ paymentId: string }> }) {
   const { paymentId } = await params;
@@ -13,7 +14,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ paymen
   const admin = await getAdminFromCookies();
   const payment = await prisma.payment.findUnique({
     where: { id: paymentId },
-    include: { student: { select: { name: true } } },
+    include: { student: { select: { id: true, name: true } } },
   });
   if (!payment) {
     return <p className="text-sm text-rose-400">Payment not found.</p>;
@@ -29,6 +30,22 @@ export default async function ReceiptPage({ params }: { params: Promise<{ paymen
     );
   }
   const issuedAt = payment.confirmedAt ?? payment.createdAt;
+
+  const programme = await prisma.programme.findUnique({
+    where: { organizationId_code: { organizationId: payment.organizationId, code: payment.programmeCode } },
+    include: { fees: true },
+  });
+  const studentPayments = programme
+    ? await prisma.payment.findMany({
+        where: {
+          studentId: payment.student.id,
+          programmeCode: payment.programmeCode,
+          organizationId: payment.organizationId,
+        },
+      })
+    : [];
+  const duration = programme ? getProgrammeDurationSummary(programme) : null;
+  const progress = programme ? buildStudentProgrammeProgress(programme, studentPayments) : null;
   const verifyUrl = absoluteUrl(`/receipt/${paymentId}`);
   let qrDataUrl: string | null = null;
   if (verifyUrl.startsWith("http")) {
@@ -56,10 +73,26 @@ export default async function ReceiptPage({ params }: { params: Promise<{ paymen
           </div>
           <div className="flex justify-between gap-4">
             <dt className="text-slate-500">Programme</dt>
-            <dd>
-              {payment.programmeCode} · Yr {payment.year} · Sem {payment.semester}
+            <dd className="text-right">
+              {programme?.name ? <span className="block">{programme.name}</span> : null}
+              <span className="block text-slate-300">
+                {payment.programmeCode} ·{" "}
+                {duration && duration.durationYears > 0
+                  ? `Yr ${payment.year} of ${duration.durationYears} · Sem ${payment.semester} of ${duration.semestersPerYear}`
+                  : `Yr ${payment.year} · Sem ${payment.semester}`}
+              </span>
             </dd>
           </div>
+          {progress && progress.totalSemesters > 0 ? (
+            <div className="flex justify-between gap-4">
+              <dt className="text-slate-500">Programme progress</dt>
+              <dd className="text-right text-slate-300">
+                {progress.completedSemesters} of {progress.totalSemesters} semesters ·{" "}
+                {progress.completedYears} of {progress.durationYears} year
+                {progress.durationYears === 1 ? "" : "s"} completed
+              </dd>
+            </div>
+          ) : null}
           <div className="flex justify-between gap-4">
             <dt className="text-slate-500">Tuition</dt>
             <dd>UGX {payment.tuitionUgx.toLocaleString()}</dd>

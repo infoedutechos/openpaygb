@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { absoluteUrl } from "@/lib/public-url";
+import { buildStudentProgrammeProgress } from "@/lib/tuition-progress";
 
 /** Send Resend email when RESEND_API_KEY + RESEND_FROM are set and student has email. */
 export async function sendReceiptEmailIfConfigured(paymentId: string): Promise<void> {
@@ -9,7 +10,7 @@ export async function sendReceiptEmailIfConfigured(paymentId: string): Promise<v
 
   const payment = await prisma.payment.findUnique({
     where: { id: paymentId },
-    include: { student: { select: { name: true, email: true } } },
+    include: { student: { select: { id: true, name: true, email: true } } },
   });
   if (!payment || payment.status !== "confirmed") return;
   const email = payment.student.email?.trim();
@@ -17,6 +18,43 @@ export async function sendReceiptEmailIfConfigured(paymentId: string): Promise<v
 
   const receiptUrl = absoluteUrl(`/receipt/${payment.id}`);
   const pdfUrl = absoluteUrl(`/api/receipts/${payment.id}/pdf`);
+
+  /** Build progress so the e-mail can mirror what the Telegram bot and the receipt page show. */
+  const programme = await prisma.programme.findUnique({
+    where: { organizationId_code: { organizationId: payment.organizationId, code: payment.programmeCode } },
+    include: { fees: true },
+  });
+  const studentPayments = programme
+    ? await prisma.payment.findMany({
+        where: {
+          studentId: payment.student.id,
+          programmeCode: payment.programmeCode,
+          organizationId: payment.organizationId,
+        },
+      })
+    : [];
+  const progress = programme ? buildStudentProgrammeProgress(programme, studentPayments) : null;
+
+  const periodLine =
+    progress && progress.totalSemesters > 0
+      ? `Programme: ${escapeHtml(payment.programmeCode)} · Year ${payment.year} of ${progress.durationYears} · Semester ${payment.semester} of ${progress.semestersPerYear}`
+      : `Programme: ${escapeHtml(payment.programmeCode)} · Year ${payment.year} · Semester ${payment.semester}`;
+
+  const progressBlock = progress
+    ? `<li>Progress: ${progress.completedSemesters} of ${progress.totalSemesters} semesters · ${progress.completedYears} of ${progress.durationYears} year(s) completed</li>`
+    : "";
+
+  const completionBanner = (() => {
+    if (!progress || progress.totalSemesters <= 0) return "";
+    if (progress.remainingSemesters === 0) {
+      return `<p style="margin-top:12px;padding:8px 12px;background:#ecfdf5;border-radius:8px;"><strong>Programme complete!</strong> Every semester is now paid. Congratulations.</p>`;
+    }
+    const yearComplete = progress.completedPeriods.filter((p) => p.year === payment.year);
+    if (yearComplete.length > 0 && yearComplete.length === progress.semestersPerYear) {
+      return `<p style="margin-top:12px;padding:8px 12px;background:#eff6ff;border-radius:8px;"><strong>Year ${payment.year} complete</strong> — ${progress.remainingYears} year(s) to go.</p>`;
+    }
+    return "";
+  })();
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -31,10 +69,12 @@ export async function sendReceiptEmailIfConfigured(paymentId: string): Promise<v
       html: `<p>Hi ${escapeHtml(payment.student.name)},</p>
 <p>Your payment is <strong>confirmed</strong>.</p>
 <ul>
-<li>Programme: ${escapeHtml(payment.programmeCode)} · Year ${payment.year} · Semester ${payment.semester}</li>
+<li>${periodLine}</li>
 <li>TON: ${payment.tonAmount}</li>
 <li>Tx: ${escapeHtml(payment.txHash || "—")}</li>
+${progressBlock}
 </ul>
+${completionBanner}
 <p><a href="${receiptUrl}">View receipt</a> · <a href="${pdfUrl}">Download PDF</a></p>`,
     }),
   });

@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import type { Payment, Programme, ProgrammeFee } from "@prisma/client";
 import { getAdminFromCookies } from "@/lib/auth";
 import { getDefaultOrganizationId } from "@/lib/default-organization";
 import { organizationWhereForSession } from "@/lib/admin-org-scope";
 import { prisma } from "@/lib/prisma";
+import { buildStudentProgrammeProgress } from "@/lib/tuition-progress";
 
 const CreateBody = z
   .object({
@@ -126,19 +128,54 @@ export async function GET(req: Request) {
     include: { organization: { select: { slug: true, name: true } } },
   });
 
+  if (students.length === 0) {
+    return NextResponse.json({ students: [] });
+  }
+
+  /** Batch-load programmes (with fees) + per-student payments so the admin students list shows duration & progress without N+1. */
+  const programmeKeys = Array.from(
+    new Map(students.map((s) => [`${s.organizationId}::${s.programmeCode}`, { organizationId: s.organizationId, code: s.programmeCode }])).values(),
+  );
+  const programmes = programmeKeys.length
+    ? await prisma.programme.findMany({ where: { OR: programmeKeys }, include: { fees: true } })
+    : [];
+  const programmeByKey = new Map<string, Programme & { fees: ProgrammeFee[] }>(
+    programmes.map((p) => [`${p.organizationId}::${p.code}`, p]),
+  );
+
+  const studentIds = students.map((s) => s.id);
+  const payments = studentIds.length
+    ? await prisma.payment.findMany({ where: { studentId: { in: studentIds } } })
+    : [];
+  const paymentsByStudent = new Map<string, Payment[]>();
+  for (const pay of payments) {
+    paymentsByStudent.set(pay.studentId, [...(paymentsByStudent.get(pay.studentId) ?? []), pay]);
+  }
+
   return NextResponse.json({
-    students: students.map((s) => ({
-      id: s.id,
-      name: s.name,
-      email: s.email,
-      phone: s.phone,
-      telegramId: s.telegramId,
-      programmeCode: s.programmeCode,
-      year: s.year,
-      semester: s.semester,
-      createdAt: s.createdAt,
-      organizationSlug: s.organization.slug,
-      organizationName: s.organization.name,
-    })),
+    students: students.map((s) => {
+      const programme = programmeByKey.get(`${s.organizationId}::${s.programmeCode}`) ?? null;
+      const progress = programme
+        ? buildStudentProgrammeProgress(
+            programme,
+            (paymentsByStudent.get(s.id) ?? []).filter((p) => p.programmeCode === s.programmeCode),
+          )
+        : null;
+      return {
+        id: s.id,
+        name: s.name,
+        email: s.email,
+        phone: s.phone,
+        telegramId: s.telegramId,
+        programmeCode: s.programmeCode,
+        programmeName: programme?.name ?? null,
+        year: s.year,
+        semester: s.semester,
+        createdAt: s.createdAt,
+        organizationSlug: s.organization.slug,
+        organizationName: s.organization.name,
+        progress,
+      };
+    }),
   });
 }

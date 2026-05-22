@@ -56,11 +56,11 @@ export function parseTuitionBackupSnapshot(raw: unknown):
       issues.push({ level: "error", code: "wrong_scope", message: `Expected scope "tuition", got ${String(m.scope)}` });
     }
     const version = Number(m.version ?? 1);
-    if (version > 2) {
+    if (version > 3) {
       issues.push({
         level: "warn",
         code: "newer_version",
-        message: `Backup version ${version} is newer than this restore engine (supports ≤2)`,
+        message: `Backup version ${version} is newer than this restore engine (supports ≤3)`,
       });
     }
   }
