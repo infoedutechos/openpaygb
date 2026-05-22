@@ -1,0 +1,331 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { AdminAccountPasswordSection } from "@/components/admin/AdminAccountPasswordSection";
+import { MasterPendingSchoolsBanner } from "@/components/admin/MasterPendingSchoolsBanner";
+import { MasterFxSettings } from "@/components/admin/MasterFxSettings";
+import { MasterBackupPanel } from "@/components/admin/MasterBackupPanel";
+import { MasterPlatformSocialSettings } from "@/components/admin/MasterPlatformSocialSettings";
+import { MasterPartnerIntegrations } from "@/components/admin/MasterPartnerIntegrations";
+import { MasterMobileMoneyProviders } from "@/components/admin/MasterMobileMoneyProviders";
+import { readJsonResponse } from "@/utils/read-json-response";
+
+type MasterSummary = {
+  organizations: { active: number; pending: number; rejected: number; total: number };
+  tuition: { totalStudents: number; totalPayments: number; totalCollectionsTon: number };
+  platformAdmins: { orgAdmins: number };
+};
+
+type UnsetProgrammeCount = { count: number };
+
+export default function MasterManagerOverviewPage() {
+  const [data, setData] = useState<MasterSummary | null>(null);
+  const [unsetProgrammes, setUnsetProgrammes] = useState<UnsetProgrammeCount | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [platformFeeDraft, setPlatformFeeDraft] = useState("-1");
+  const [platformFeeBusy, setPlatformFeeBusy] = useState(false);
+  const [platformFeeMeta, setPlatformFeeMeta] = useState<{
+    envFallbackUgx: number;
+    effectiveDefaultUgx: number;
+  } | null>(null);
+  const [feeSaveError, setFeeSaveError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const r = await fetch("/api/master/summary", { credentials: "include" });
+      const parsed = await readJsonResponse<MasterSummary>(r);
+      if (!parsed.ok) {
+        if (!cancelled) setError(parsed.error);
+        return;
+      }
+      if (!cancelled) setData(parsed.data);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const r = await fetch("/api/master/programmes?onlyUnset=1", { credentials: "include" });
+      if (!r.ok) return;
+      const j = (await r.json()) as { programmes?: unknown[] };
+      if (!cancelled) {
+        setUnsetProgrammes({ count: Array.isArray(j.programmes) ? j.programmes.length : 0 });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const r = await fetch("/api/master/platform-checkout-fee", { credentials: "include" });
+      const parsed = await readJsonResponse<{
+        checkoutPlatformFeeDefaultUgx?: number;
+        envFallbackUgx?: number;
+        effectiveDefaultUgx?: number;
+      }>(r);
+      if (!parsed.ok || cancelled) return;
+      const j = parsed.data;
+      if (typeof j.checkoutPlatformFeeDefaultUgx === "number") {
+        setPlatformFeeDraft(String(j.checkoutPlatformFeeDefaultUgx));
+      }
+      setPlatformFeeMeta({
+        envFallbackUgx: typeof j.envFallbackUgx === "number" ? j.envFallbackUgx : 0,
+        effectiveDefaultUgx: typeof j.effectiveDefaultUgx === "number" ? j.effectiveDefaultUgx : 0,
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function savePlatformDefaultFee(e: React.FormEvent) {
+    e.preventDefault();
+    setPlatformFeeBusy(true);
+    setFeeSaveError(null);
+    try {
+      const raw = platformFeeDraft.trim();
+      const n = parseInt(raw, 10);
+      if (Number.isNaN(n) || n < -1) {
+        throw new Error("Use -1 for environment-only default, or 0+ for a fixed UGX amount.");
+      }
+      const r = await fetch("/api/master/platform-checkout-fee", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ checkoutPlatformFeeDefaultUgx: n }),
+      });
+      const parsed = await readJsonResponse<{
+        checkoutPlatformFeeDefaultUgx?: number;
+        envFallbackUgx: number;
+        effectiveDefaultUgx: number;
+      }>(r);
+      if (!parsed.ok) throw new Error(parsed.error);
+      setPlatformFeeDraft(String(parsed.data.checkoutPlatformFeeDefaultUgx ?? n));
+      setPlatformFeeMeta({
+        envFallbackUgx: parsed.data.envFallbackUgx,
+        effectiveDefaultUgx: parsed.data.effectiveDefaultUgx,
+      });
+    } catch (err) {
+      setFeeSaveError(err instanceof Error ? err.message : "Save failed");
+    } finally {
+      setPlatformFeeBusy(false);
+    }
+  }
+
+  if (error) {
+    return <p className="text-sm text-rose-400">{error}</p>;
+  }
+  if (!data) {
+    return <p className="text-sm text-slate-500">Loading manager overview…</p>;
+  }
+
+  return (
+    <div className="space-y-10 text-slate-200">
+      <MasterPendingSchoolsBanner />
+      <div>
+        <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-400/90">Manager dashboard</p>
+        <h1 className="mt-2 text-2xl font-semibold text-white">Master Admin Console</h1>
+        <p className="mt-2 max-w-2xl text-sm text-slate-400">
+          Platform-wide view across all organizations. Approve tenants, create org admins, and open the tuition hub when
+          you need school-level collections data. Tuition checkout exposes TON Connect and OpenPayGlobal to guests and
+          students;
+          keep <span className="font-mono text-slate-500">NEXT_PUBLIC_APP_URL</span> correct so{" "}
+          <span className="font-mono text-slate-500">/api/webhooks/mbiyo</span> and other callbacks resolve on the public
+          internet.
+        </p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard label="Organizations (active)" value={String(data.organizations.active)} hint="Approved tenants" />
+        <MetricCard label="Pending approval" value={String(data.organizations.pending)} hint="Awaiting master action" accent="amber" />
+        <MetricCard label="Students (all orgs)" value={String(data.tuition.totalStudents)} hint="Registered payers" />
+        <MetricCard label="Payments (all orgs)" value={String(data.tuition.totalPayments)} hint="All rails" />
+      </div>
+
+      {unsetProgrammes && unsetProgrammes.count > 0 ? (
+        <section className="rounded-xl border border-amber-500/35 bg-amber-950/30 p-5">
+          <h2 className="text-sm font-semibold text-amber-100">Programme duration setup pending</h2>
+          <p className="mt-2 max-w-3xl text-sm text-slate-300">
+            <strong className="font-medium text-amber-200">{unsetProgrammes.count}</strong> programme
+            {unsetProgrammes.count === 1 ? " has" : "s have"} no explicit{" "}
+            <span className="text-slate-200">Years</span> or{" "}
+            <span className="text-slate-200">Semesters / year</span>. Until set, completion progress on student
+            payment records falls back to inferring duration from fee rows, which may be incomplete for new tenants.
+          </p>
+          <Link
+            href="/admin/master/programmes"
+            className="mt-3 inline-flex rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-500"
+          >
+            Configure programme durations
+          </Link>
+        </section>
+      ) : null}
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5">
+          <h2 className="text-sm font-semibold text-white">Confirmed collections</h2>
+          <p className="mt-3 text-3xl font-semibold tabular-nums text-amber-100">
+            {data.tuition.totalCollectionsTon.toLocaleString()} <span className="text-lg font-normal text-slate-500">TON</span>
+          </p>
+          <p className="mt-2 text-xs text-slate-500">Sum of confirmed tuition payments platform-wide.</p>
+        </section>
+        <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5">
+          <h2 className="text-sm font-semibold text-white">Administrators</h2>
+          <p className="mt-3 text-3xl font-semibold tabular-nums text-white">{data.platformAdmins.orgAdmins}</p>
+          <p className="mt-2 text-xs text-slate-500">Org-scoped admin accounts (excluding master).</p>
+        </section>
+      </div>
+
+      <div className="flex flex-wrap gap-3">
+        <Link
+          href="/admin/master/organizations"
+          className="inline-flex min-h-[44px] items-center rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-900/30 hover:bg-amber-500"
+        >
+          Manage organizations
+        </Link>
+        <Link
+          href="/admin/master/programmes"
+          className="rounded-xl border border-amber-500/35 bg-amber-950/25 px-5 py-2.5 text-sm font-medium text-amber-100 hover:border-amber-400/55"
+        >
+          Programme durations
+        </Link>
+        <Link
+          href="/admin/master/organizations#checkout-platform-fees"
+          className="rounded-xl border border-amber-500/35 bg-amber-950/25 px-5 py-2.5 text-sm font-medium text-amber-100 hover:border-amber-400/55"
+        >
+          Per-school processing fees
+        </Link>
+        <Link
+          href="/admin/master#ton-ugx-rate"
+          className="rounded-xl border border-cyan-500/35 bg-cyan-950/25 px-5 py-2.5 text-sm font-medium text-cyan-100 hover:border-cyan-400/55"
+        >
+          TON / UGX rate
+        </Link>
+        <Link
+          href="/admin/master#mobile-money-providers"
+          className="rounded-xl border border-teal-500/35 bg-teal-950/25 px-5 py-2.5 text-sm font-medium text-teal-100 hover:border-teal-400/55"
+        >
+          Mobile money
+        </Link>
+        <Link
+          href="/admin/master#partner-integrations"
+          className="rounded-xl border border-violet-500/35 bg-violet-950/25 px-5 py-2.5 text-sm font-medium text-violet-100 hover:border-violet-400/55"
+        >
+          Partner API
+        </Link>
+        <Link
+          href="/admin/master#platform-social"
+          className="rounded-xl border border-cyan-500/35 bg-cyan-950/25 px-5 py-2.5 text-sm font-medium text-cyan-100 hover:border-cyan-400/55"
+        >
+          Social & share
+        </Link>
+        <Link
+          href="/admin"
+          className="rounded-xl border border-cyan-500/30 bg-cyan-950/30 px-5 py-2.5 text-sm font-medium text-cyan-100 hover:border-cyan-400/50"
+        >
+          Open tuition hub
+        </Link>
+      </div>
+
+      <section
+        id="platform-processing-fee"
+        className="rounded-xl border border-amber-500/25 bg-amber-950/20 p-5 shadow-[0_0_0_1px_rgba(245,158,11,0.06)]"
+      >
+        <h2 className="text-sm font-semibold text-amber-100">Default transaction / processing charge (UGX)</h2>
+        <p className="mt-2 max-w-3xl text-xs leading-relaxed text-slate-400">
+          This is the <strong className="font-medium text-slate-300">platform-wide</strong> amount added to tuition quotes
+          and receipts as the processing line when a school&apos;s tenant setting is{" "}
+          <code className="rounded bg-black/35 px-1 text-cyan-200/90">-1</code> (inherit). Set{" "}
+          <code className="rounded bg-black/35 px-1 text-cyan-200/90">-1</code> here to use only the deployment
+          environment value <code className="rounded bg-black/30 px-1 text-slate-500">CHECKOUT_PLATFORM_FEE_UGX</code>.
+          Set <code className="rounded bg-black/35 px-1 text-cyan-200/90">0</code> for no charge for inheriting
+          schools, or a positive integer for a fixed UGX fee. Individual schools can still override under{" "}
+          <span className="text-slate-500">Manager → Organizations</span>.
+        </p>
+        {platformFeeMeta ? (
+          <p className="mt-3 text-xs text-slate-500">
+            <span className="text-slate-400">Effective default now</span> (for inheriting schools):{" "}
+            <strong className="tabular-nums text-white">UGX {platformFeeMeta.effectiveDefaultUgx.toLocaleString()}</strong>
+            {" · "}
+            <span className="text-slate-600">Env fallback:</span>{" "}
+            <span className="tabular-nums text-slate-400">UGX {platformFeeMeta.envFallbackUgx.toLocaleString()}</span>
+          </p>
+        ) : null}
+        {feeSaveError ? <p className="mt-3 text-sm text-rose-400">{feeSaveError}</p> : null}
+        <form onSubmit={savePlatformDefaultFee} className="mt-4 flex flex-wrap items-end gap-3">
+          <div>
+            <label htmlFor="platform-fee-default" className="text-[11px] font-medium text-slate-500">
+              Platform default (UGX)
+            </label>
+            <input
+              id="platform-fee-default"
+              type="number"
+              min={-1}
+              step={1}
+              value={platformFeeDraft}
+              onChange={(e) => setPlatformFeeDraft(e.target.value)}
+              className="mt-1 block w-full max-w-xs rounded-lg border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={platformFeeBusy}
+            className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-500 disabled:opacity-50"
+          >
+            {platformFeeBusy ? "Saving…" : "Save default"}
+          </button>
+        </form>
+      </section>
+
+      <MasterFxSettings />
+
+      <MasterMobileMoneyProviders />
+
+      <MasterPartnerIntegrations />
+
+      <MasterPlatformSocialSettings />
+
+      <MasterBackupPanel />
+
+      <p className="text-xs text-slate-600">
+        Rejected organizations: {data.organizations.rejected} · Total org records: {data.organizations.total}
+      </p>
+
+      <section className="rounded-xl border border-amber-500/20 bg-[var(--card)] p-5">
+        <AdminAccountPasswordSection successHeading="Account password" />
+      </section>
+    </div>
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  hint,
+  accent,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+  accent?: "amber";
+}) {
+  return (
+    <div
+      className={`rounded-xl border bg-[var(--card)] p-4 ${
+        accent === "amber" ? "border-amber-500/25 shadow-[0_0_0_1px_rgba(245,158,11,0.08)]" : "border-[var(--border)]"
+      }`}
+    >
+      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="mt-2 text-2xl font-semibold tabular-nums text-white">{value}</p>
+      <p className="mt-1 text-[11px] text-slate-600">{hint}</p>
+    </div>
+  );
+}

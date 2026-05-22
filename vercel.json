@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "buildCommand": "npm run vercel-build",
+  "crons": [
+    {
+      "path": "/api/cron/confirm-ton",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/expire-pending-payments",
+      "schedule": "0 * * * *"
+    }
+  ]
+}

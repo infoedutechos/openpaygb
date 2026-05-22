@@ -1,0 +1,542 @@
+[
+  {
+    "name": "Abim",
+    "slug": "abim"
+  },
+  {
+    "name": "Adjumani",
+    "slug": "adjumani"
+  },
+  {
+    "name": "Agago",
+    "slug": "agago"
+  },
+  {
+    "name": "Alebtong",
+    "slug": "alebtong"
+  },
+  {
+    "name": "Amolatar",
+    "slug": "amolatar"
+  },
+  {
+    "name": "Amudat",
+    "slug": "amudat"
+  },
+  {
+    "name": "Amuria",
+    "slug": "amuria"
+  },
+  {
+    "name": "Amuru",
+    "slug": "amuru"
+  },
+  {
+    "name": "Apac",
+    "slug": "apac"
+  },
+  {
+    "name": "Arua",
+    "slug": "arua"
+  },
+  {
+    "name": "Budaka",
+    "slug": "budaka"
+  },
+  {
+    "name": "Bududa",
+    "slug": "bududa"
+  },
+  {
+    "name": "Bugiri",
+    "slug": "bugiri"
+  },
+  {
+    "name": "Bugweri",
+    "slug": "bugweri"
+  },
+  {
+    "name": "Buhweju",
+    "slug": "buhweju"
+  },
+  {
+    "name": "Buikwe",
+    "slug": "buikwe"
+  },
+  {
+    "name": "Bukedea",
+    "slug": "bukedea"
+  },
+  {
+    "name": "Bukomansimbi",
+    "slug": "bukomansimbi"
+  },
+  {
+    "name": "Bukwo",
+    "slug": "bukwo"
+  },
+  {
+    "name": "Bulambuli",
+    "slug": "bulambuli"
+  },
+  {
+    "name": "Buliisa",
+    "slug": "buliisa"
+  },
+  {
+    "name": "Bundibugyo",
+    "slug": "bundibugyo"
+  },
+  {
+    "name": "Bunyangabu",
+    "slug": "bunyangabu"
+  },
+  {
+    "name": "Bushenyi",
+    "slug": "bushenyi"
+  },
+  {
+    "name": "Busia",
+    "slug": "busia"
+  },
+  {
+    "name": "Butaleja",
+    "slug": "butaleja"
+  },
+  {
+    "name": "Butambala",
+    "slug": "butambala"
+  },
+  {
+    "name": "Butebo",
+    "slug": "butebo"
+  },
+  {
+    "name": "Buvuma",
+    "slug": "buvuma"
+  },
+  {
+    "name": "Buyende",
+    "slug": "buyende"
+  },
+  {
+    "name": "Dokolo",
+    "slug": "dokolo"
+  },
+  {
+    "name": "Gomba",
+    "slug": "gomba"
+  },
+  {
+    "name": "Gulu",
+    "slug": "gulu"
+  },
+  {
+    "name": "Hoima",
+    "slug": "hoima"
+  },
+  {
+    "name": "Ibanda",
+    "slug": "ibanda"
+  },
+  {
+    "name": "Iganga",
+    "slug": "iganga"
+  },
+  {
+    "name": "Isingiro",
+    "slug": "isingiro"
+  },
+  {
+    "name": "Jinja",
+    "slug": "jinja"
+  },
+  {
+    "name": "Kaabong",
+    "slug": "kaabong"
+  },
+  {
+    "name": "Kabale",
+    "slug": "kabale"
+  },
+  {
+    "name": "Kabarole",
+    "slug": "kabarole"
+  },
+  {
+    "name": "Kaberamaido",
+    "slug": "kaberamaido"
+  },
+  {
+    "name": "Kagadi",
+    "slug": "kagadi"
+  },
+  {
+    "name": "Kakumiro",
+    "slug": "kakumiro"
+  },
+  {
+    "name": "Kalaki",
+    "slug": "kalaki"
+  },
+  {
+    "name": "Kalangala",
+    "slug": "kalangala"
+  },
+  {
+    "name": "Kaliro",
+    "slug": "kaliro"
+  },
+  {
+    "name": "Kalungu",
+    "slug": "kalungu"
+  },
+  {
+    "name": "Kampala",
+    "slug": "kampala"
+  },
+  {
+    "name": "Kamuli",
+    "slug": "kamuli"
+  },
+  {
+    "name": "Kamwenge",
+    "slug": "kamwenge"
+  },
+  {
+    "name": "Kanungu",
+    "slug": "kanungu"
+  },
+  {
+    "name": "Kapchorwa",
+    "slug": "kapchorwa"
+  },
+  {
+    "name": "Kapelebyong",
+    "slug": "kapelebyong"
+  },
+  {
+    "name": "Karenga",
+    "slug": "karenga"
+  },
+  {
+    "name": "Kasese",
+    "slug": "kasese"
+  },
+  {
+    "name": "Kassanda",
+    "slug": "kassanda"
+  },
+  {
+    "name": "Katakwi",
+    "slug": "katakwi"
+  },
+  {
+    "name": "Kayunga",
+    "slug": "kayunga"
+  },
+  {
+    "name": "Kazo",
+    "slug": "kazo"
+  },
+  {
+    "name": "Kibaale",
+    "slug": "kibaale"
+  },
+  {
+    "name": "Kiboga",
+    "slug": "kiboga"
+  },
+  {
+    "name": "Kibuku",
+    "slug": "kibuku"
+  },
+  {
+    "name": "Kikuube",
+    "slug": "kikuube"
+  },
+  {
+    "name": "Kiruhura",
+    "slug": "kiruhura"
+  },
+  {
+    "name": "Kiryandongo",
+    "slug": "kiryandongo"
+  },
+  {
+    "name": "Kisoro",
+    "slug": "kisoro"
+  },
+  {
+    "name": "Kitagwenda",
+    "slug": "kitagwenda"
+  },
+  {
+    "name": "Kitgum",
+    "slug": "kitgum"
+  },
+  {
+    "name": "Koboko",
+    "slug": "koboko"
+  },
+  {
+    "name": "Kole",
+    "slug": "kole"
+  },
+  {
+    "name": "Kotido",
+    "slug": "kotido"
+  },
+  {
+    "name": "Kumi",
+    "slug": "kumi"
+  },
+  {
+    "name": "Kwania",
+    "slug": "kwania"
+  },
+  {
+    "name": "Kween",
+    "slug": "kween"
+  },
+  {
+    "name": "Kyankwanzi",
+    "slug": "kyankwanzi"
+  },
+  {
+    "name": "Kyegegwa",
+    "slug": "kyegegwa"
+  },
+  {
+    "name": "Kyenjojo",
+    "slug": "kyenjojo"
+  },
+  {
+    "name": "Kyotera",
+    "slug": "kyotera"
+  },
+  {
+    "name": "Lamwo",
+    "slug": "lamwo"
+  },
+  {
+    "name": "Lira",
+    "slug": "lira"
+  },
+  {
+    "name": "Luuka",
+    "slug": "luuka"
+  },
+  {
+    "name": "Luwero",
+    "slug": "luwero"
+  },
+  {
+    "name": "Lwengo",
+    "slug": "lwengo"
+  },
+  {
+    "name": "Lyantonde",
+    "slug": "lyantonde"
+  },
+  {
+    "name": "Madi Okollo",
+    "slug": "madi-okollo"
+  },
+  {
+    "name": "Manafwa",
+    "slug": "manafwa"
+  },
+  {
+    "name": "Maracha",
+    "slug": "maracha"
+  },
+  {
+    "name": "Masaka",
+    "slug": "masaka"
+  },
+  {
+    "name": "Masindi",
+    "slug": "masindi"
+  },
+  {
+    "name": "Mayuge",
+    "slug": "mayuge"
+  },
+  {
+    "name": "Mbale",
+    "slug": "mbale"
+  },
+  {
+    "name": "Mbarara",
+    "slug": "mbarara"
+  },
+  {
+    "name": "Mitooma",
+    "slug": "mitooma"
+  },
+  {
+    "name": "Mityana",
+    "slug": "mityana"
+  },
+  {
+    "name": "Moroto",
+    "slug": "moroto"
+  },
+  {
+    "name": "Moyo",
+    "slug": "moyo"
+  },
+  {
+    "name": "Mpigi",
+    "slug": "mpigi"
+  },
+  {
+    "name": "Mubende",
+    "slug": "mubende"
+  },
+  {
+    "name": "Mukono",
+    "slug": "mukono"
+  },
+  {
+    "name": "Nabilatuk",
+    "slug": "nabilatuk"
+  },
+  {
+    "name": "Nakapiripirit",
+    "slug": "nakapiripirit"
+  },
+  {
+    "name": "Nakaseke",
+    "slug": "nakaseke"
+  },
+  {
+    "name": "Nakasongola",
+    "slug": "nakasongola"
+  },
+  {
+    "name": "Namayingo",
+    "slug": "namayingo"
+  },
+  {
+    "name": "Namisindwa",
+    "slug": "namisindwa"
+  },
+  {
+    "name": "Namutumba",
+    "slug": "namutumba"
+  },
+  {
+    "name": "Napak",
+    "slug": "napak"
+  },
+  {
+    "name": "Nebbi",
+    "slug": "nebbi"
+  },
+  {
+    "name": "Ngora",
+    "slug": "ngora"
+  },
+  {
+    "name": "Ntoroko",
+    "slug": "ntoroko"
+  },
+  {
+    "name": "Ntungamo",
+    "slug": "ntungamo"
+  },
+  {
+    "name": "Nwoya",
+    "slug": "nwoya"
+  },
+  {
+    "name": "Obongi",
+    "slug": "obongi"
+  },
+  {
+    "name": "Omoro",
+    "slug": "omoro"
+  },
+  {
+    "name": "Otuke",
+    "slug": "otuke"
+  },
+  {
+    "name": "Oyam",
+    "slug": "oyam"
+  },
+  {
+    "name": "Pader",
+    "slug": "pader"
+  },
+  {
+    "name": "Pakwach",
+    "slug": "pakwach"
+  },
+  {
+    "name": "Pallisa",
+    "slug": "pallisa"
+  },
+  {
+    "name": "Rakai",
+    "slug": "rakai"
+  },
+  {
+    "name": "Rubanda",
+    "slug": "rubanda"
+  },
+  {
+    "name": "Rubirizi",
+    "slug": "rubirizi"
+  },
+  {
+    "name": "Rukiga",
+    "slug": "rukiga"
+  },
+  {
+    "name": "Rukungiri",
+    "slug": "rukungiri"
+  },
+  {
+    "name": "Rwampara",
+    "slug": "rwampara"
+  },
+  {
+    "name": "Serere",
+    "slug": "serere"
+  },
+  {
+    "name": "Sheema",
+    "slug": "sheema"
+  },
+  {
+    "name": "Sironko",
+    "slug": "sironko"
+  },
+  {
+    "name": "Soroti",
+    "slug": "soroti"
+  },
+  {
+    "name": "Ssembabule",
+    "slug": "ssembabule"
+  },
+  {
+    "name": "Tororo",
+    "slug": "tororo"
+  },
+  {
+    "name": "Wakiso",
+    "slug": "wakiso"
+  },
+  {
+    "name": "Yumbe",
+    "slug": "yumbe"
+  },
+  {
+    "name": "Zombo",
+    "slug": "zombo"
+  }
+]

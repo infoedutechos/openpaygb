@@ -1,0 +1,22 @@
+          <GlassPanel className="p-5 text-sm">{/* INSTALLMENTS_UI_STUDENT */}
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-200/80">Installments</p>
+            <p className="mt-1 text-xs text-slate-500">Pay in full or split into 2-4 installments. Each installment has its own processing charge.</p>
+            <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Installment count">
+              {INSTALLMENT_COUNT_OPTIONS.map((n) => (
+                <button key={n} type="button" disabled={busy} onClick={() => void onInstallmentCountChange(n)} className={`rounded-lg border px-3 py-2 text-xs font-semibold ${installmentCount === n ? "border-cyan-400/60 bg-cyan-950/40 text-cyan-50" : "border-white/10 text-slate-300"}`}>
+                  {n === 1 ? "Pay in full" : `${n} installments`}
+                </button>
+              ))}
+            </div>
+            {quote.installmentSchedule && installmentCount > 1 ? (
+              <ul className="mt-4 space-y-2 border-t border-white/10 pt-3 text-xs">
+                {quote.installmentSchedule.slices.map((slice) => (
+                  <li key={slice.index} className={`flex justify-between gap-2 rounded-lg px-2 py-1.5 ${slice.index === 1 ? "bg-cyan-950/40 text-cyan-50" : "text-slate-500"}`}>
+                    <span>Installment {slice.index}{slice.index === 1 ? " (due now)" : ""}</span>
+                    <span className="font-mono text-right">UGX {slice.totalUgx.toLocaleString()}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </GlassPanel>
+

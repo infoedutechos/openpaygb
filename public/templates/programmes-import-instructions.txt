@@ -1,0 +1,21 @@
+ODEL HUB — Programmes list import
+===================================
+
+1. Download either:
+   - programmes-import-template.csv  (comma-separated — works well in Excel)
+   - programmes-import-template.tsv  (tab-separated)
+
+2. Keep the first row as the header:  code,name   (or tab between words in the TSV file).
+
+3. Each following row is one programme:
+   - code: 2–24 characters, letters, numbers, hyphen (-), underscore (_), or slash (/). Example: BEP, BEP-ENG/RE, DEP-ECD
+   - name: full programme title (2–200 characters).
+
+4. You may delete the example rows and add your own. Do not leave blank lines between the header and data if possible.
+
+5. If a programme name contains a comma, use the CSV template and wrap fields in double quotes, for example:
+   "CODE","Name with, comma inside"
+
+6. Save the file, then use Admin → Programs → "Upload programs list" → Choose file.
+
+7. Programmes that already exist for your school (same code) are skipped; the summary shows what was created or skipped.

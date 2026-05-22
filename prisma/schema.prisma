@@ -1,0 +1,1503 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum PaymentRail {
+  telegram
+  web
+  momo_bridge
+  /** OpenPayGlobal mobile money (MbiyoPay infrastructure; https://dashboard.mbiyo.africa). */
+  mbiyo
+}
+
+enum PaymentStatus {
+  pending
+  confirmed
+  failed
+  refunded
+}
+
+enum AdminRole {
+  master
+  org_admin
+}
+
+enum OrganizationTenantStatus {
+  active
+  pending
+  rejected
+}
+
+/** Every programme belongs to one of two school tracks (admin + checkout grouping). */
+enum ProgrammeTrack {
+  inservice
+  regular
+}
+
+/** How a programme fee row is charged at checkout (see `aggregateProgrammeFeesForPeriod` in app code). */
+enum ProgrammeFeeRecurrence {
+  /** Charged only when the student pays for this exact year and semester. */
+  once
+  /** Charged whenever the selected year and semester match this row. */
+  per_semester
+  /** Charged for any semester in the matching year; store `semester` as 0. */
+  per_year
+}
+
+model Organization {
+  id                         String                     @id @default(auto()) @map("_id") @db.ObjectId
+  name                       String
+  slug                       String                     @unique
+  destinationWallet          String                     @default("")
+  tenantStatus               OrganizationTenantStatus   @default(active)
+  registrationContactEmail String                     @default("")
+  registrationNote           String                     @default("")
+  /** Raw favicon.ico (or PNG) bytes; paired with faviconUploadedAt when set via Master Admin. */
+  faviconIco                 Bytes?
+  faviconUploadedAt          DateTime?
+  /**
+   * Fixed UGX added at checkout (processing / platform). **-1** = use deployment env `CHECKOUT_PLATFORM_FEE_UGX`;
+   * **≥ 0** = override for this tenant (UGX, capped server-side).
+   */
+  checkoutPlatformFeeUgx     Int                        @default(-1)
+  /**
+   * TON/UGX checkout rate override for this tenant. **inherit** = use platform master setting;
+   * **none** = live market median; **fixed** / **buffer_pct** = school-specific override (takes precedence over platform).
+   */
+  fxOverrideKind             String                     @default("inherit")
+  fxOverrideUgxPerTon      Float?
+  /** When `fxOverrideKind` is `buffer_pct`, added % on live median (e.g. 2.5 = +2.5%). */
+  fxOverrideBufferPct      Float                      @default(0)
+  createdAt                  DateTime                   @default(now())
+  updatedAt                  DateTime                   @updatedAt
+  programmes                 Programme[]
+  students                   Student[]
+  payments                   Payment[]
+  fxRates                    FxRate[]
+  adminUsers                 AdminUser[]
+  partnerApiKeys             PartnerApiKey[]
+  partnerWebhookEndpoints    PartnerWebhookEndpoint[]
+  mobileMoneyProviders       MobileMoneyProvider[]
+
+  @@index([tenantStatus])
+  @@map("organizations")
+}
+
+enum MobileMoneyProviderAuthKind {
+  shared_secret_header
+  hmac_sha256_body
+}
+
+enum MobileMoneyProviderStatus {
+  active
+  disabled
+}
+
+/** Master-configured mobile-money PSP; inbound callbacks at `/api/webhooks/provider/{code}`. */
+model MobileMoneyProvider {
+  id                  String                      @id @default(auto()) @map("_id") @db.ObjectId
+  code                String                      @unique
+  name                String
+  status              MobileMoneyProviderStatus   @default(disabled)
+  paymentRail         PaymentRail                 @default(momo_bridge)
+  authKind            MobileMoneyProviderAuthKind @default(shared_secret_header)
+  webhookSecret       String                      @default("")
+  webhookHeaderName   String                      @default("x-provider-webhook-secret")
+  orderIdFields       String[]                    @default(["order_id", "paymentId", "payment_id"])
+  statusField         String                      @default("status")
+  statusSuccessValues String[]                    @default(["successful", "SUCCESS", "success", "SUCCESSFUL"])
+  transactionIdField  String                      @default("transaction_id")
+  organizationId      String?                     @db.ObjectId
+  organization        Organization?               @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  notes               String                      @default("")
+  createdAt           DateTime                    @default(now())
+  updatedAt           DateTime                    @updatedAt
+
+  @@index([status])
+  @@index([organizationId])
+  @@map("mobile_money_providers")
+}
+
+/** Partner / SIS machine-to-machine API keys (Bearer `odelhub_live_…`). */
+model PartnerApiKey {
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  keyPrefix      String
+  keyHash        String        @unique
+  organizationId String?       @db.ObjectId
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  scopes         String[]      @default(["payments:read"])
+  enabled        Boolean       @default(true)
+  lastUsedAt     DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+  @@index([keyPrefix])
+  @@map("partner_api_keys")
+}
+
+/** Outbound partner webhooks (payment.confirmed, etc.). */
+model PartnerWebhookEndpoint {
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  url            String
+  secret         String
+  organizationId String?       @db.ObjectId
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  events         String[]      @default(["payment.confirmed"])
+  enabled        Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId, enabled])
+  @@map("partner_webhook_endpoints")
+}
+
+model PartnerWebhookDelivery {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  endpointId String   @db.ObjectId
+  event      String
+  paymentId  String?
+  statusCode Int?
+  success    Boolean  @default(false)
+  error      String   @default("")
+  createdAt  DateTime @default(now())
+
+  @@index([endpointId, createdAt])
+  @@map("partner_webhook_deliveries")
+}
+
+model AdminUser {
+  id                    String                    @id @default(auto()) @map("_id") @db.ObjectId
+  email                 String                    @unique
+  passwordHash          String
+  name                  String                    @default("")
+  role                  AdminRole                 @default(org_admin)
+  organizationId        String?                   @db.ObjectId
+  organization          Organization?             @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  passwordResetTokens   AdminPasswordResetToken[]
+  createdAt             DateTime                  @default(now())
+  updatedAt             DateTime                  @updatedAt
+
+  @@map("adminusers")
+}
+
+model AdminPasswordResetToken {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  adminUserId String    @db.ObjectId
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  tokenHash   String    @unique
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+
+  @@index([adminUserId])
+  @@map("admin_password_reset_tokens")
+}
+
+model FxRate {
+  id               String       @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId   String       @db.ObjectId
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  ugxPerTon        Float
+  source           String       @default("manual")
+  effectiveAt      DateTime     @default(now())
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@index([organizationId])
+  @@map("fxrates")
+}
+
+model Programme {
+  id               String         @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId String         @db.ObjectId
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  code             String
+  name             String
+  track            ProgrammeTrack @default(regular)
+  /** Explicit completion length. 0 = infer from fee rows for legacy/incomplete programmes. */
+  durationYears    Int?
+  /** Semesters per academic year. 0 = infer from fee rows; current checkout supports 1–3. */
+  semestersPerYear Int?
+  fees             ProgrammeFee[]
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([organizationId, track])
+  @@map("programmes")
+}
+
+model ProgrammeFee {
+  id                String                  @id @default(auto()) @map("_id") @db.ObjectId
+  programmeId       String                  @db.ObjectId
+  programme         Programme               @relation(fields: [programmeId], references: [id], onDelete: Cascade)
+  year              Int
+  /** 1–3 for `once` and `per_semester`; use 0 for `per_year` (year-level only). */
+  semester          Int
+  recurrence        ProgrammeFeeRecurrence  @default(per_semester)
+  /** Distinguishes multiple lines in the same period (e.g. separate levy rows). */
+  feeKey            String                  @default("default")
+  tuitionUgx        Int
+  functionalFeesUgx Int
+
+  @@unique([programmeId, recurrence, year, semester, feeKey])
+  @@map("programmefees")
+}
+
+model Student {
+  id                   String       @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId       String       @db.ObjectId
+  organization         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name                 String
+  email                String       @default("")
+  phone                String       @default("")
+  telegramId           String       @default("")
+  /** Google account `sub` when the student uses “Continue with Google”; empty otherwise. */
+  googleSub            String       @default("")
+  /** bcrypt — set by institution admin (or master); required for `/student` portal sign-in. */
+  portalPasswordHash   String?
+  programmeCode        String
+  year                 Int
+  semester             Int
+  payments             Payment[]
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  @@index([organizationId])
+  @@index([organizationId, telegramId])
+  @@index([googleSub])
+  @@map("students")
+}
+
+/** One-time email verification + org pick for self-service student portal registration. */
+model StudentSignupToken {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  tokenHash    String    @unique
+  email        String
+  name         String
+  passwordHash String
+  /** Google `sub` when signup was started with OAuth; null for email/password registration. */
+  googleSub    String?
+  expiresAt    DateTime
+  verifiedAt   DateTime?
+  consumedAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([email])
+  @@map("student_signup_tokens")
+}
+
+/** Singleton row (`key: platform`) — master-editable public shell settings (footer visibility, copy). */
+model SiteUiSettings {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  key              String   @unique @default("platform")
+  /** everywhere | hidden_on_list | only_on_list */
+  footerMode       String   @default("everywhere")
+  /** Path prefixes (e.g. /pay/ , /admin/login) matched against the request path. */
+  footerPathList   String[] @default([])
+  /** Optional plain-text blurb in the footer column (empty = default copy). */
+  footerIntro      String   @default("")
+  /** When false, hide the quick-link row; copyright strip can stay (see footerCopyrightVisible). */
+  footerShowQuickLinks Boolean @default(true)
+  /** When false, hide the bottom copyright / health line entirely. */
+  footerCopyrightVisible Boolean @default(true)
+  /**
+   * Platform-wide default transaction / processing charge (UGX) for tuition checkout when tenants inherit (-1 on org).
+   * **-1** = use deployment env `CHECKOUT_PLATFORM_FEE_UGX` only. **≥ 0** = fixed UGX for all inheriting schools.
+   */
+  checkoutPlatformFeeDefaultUgx Int @default(-1)
+  /**
+   * Platform-wide TON/UGX override for checkout. **none** = live market median;
+   * **fixed** = `fxOverrideUgxPerTon`; **buffer_pct** = live median + `fxOverrideBufferPct` %.
+   */
+  fxOverrideKind             String   @default("none")
+  fxOverrideUgxPerTon        Float?
+  fxOverrideBufferPct        Float    @default(0)
+  /** Master-edited social & community links — array of SocialLink objects (see lib/site-ui-settings). */
+  socialLinks        Json     @default("[]")
+  /** When false, hide global share UI. */
+  shareEnabled       Boolean  @default(true)
+  shareDefaultTitle  String   @default("ODEL HUB")
+  shareDefaultText   String   @default("Check out ODEL HUB — tuition payments, TON settlement, and our ecosystem hubs.")
+  /** Optional overrides; empty string = use deployment env in lib/site-ui-settings. */
+  supportPhone       String   @default("")
+  supportEmail       String   @default("")
+  /** PWA / Add to Home Screen — master-editable install prompt on home page. */
+  homeScreenEnabled       Boolean @default(true)
+  homeScreenShowOnHome    Boolean @default(true)
+  homeScreenTitle         String  @default("ODEL HUB")
+  homeScreenShortName     String  @default("ODEL HUB")
+  homeScreenDescription   String  @default("Tuition, TON payments, Play & Dex — save ODEL HUB to your home screen or desktop.")
+  homeScreenThemeColor    String  @default("#0ea5e9")
+  /** Platform icon/logo (PNG, ICO, JPEG, WebP) — favicon, PWA, share previews. */
+  platformLogo              Bytes?
+  platformLogoUploadedAt    DateTime?
+  /** Per-platform footer/support icons keyed by social link key (see lib/social-link-icons). */
+  socialLinkIcons           Json     @default("{}")
+  updatedAt        DateTime @updatedAt
+  createdAt        DateTime @default(now())
+
+  @@map("site_ui_settings")
+}
+
+model ProcessedWebhook {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  dedupeKey String   @unique
+  provider  String
+  createdAt DateTime @default(now())
+
+  @@map("processed_webhooks")
+}
+
+model Payment {
+  id                String         @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId    String         @db.ObjectId
+  organization      Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  studentId         String         @db.ObjectId
+  student           Student        @relation(fields: [studentId], references: [id])
+  programmeCode     String
+  year              Int
+  semester          Int
+  tuitionUgx        Int
+  functionalFeesUgx Int
+  totalUgx          Int
+  ugxPerTonSnapshot  Float
+  tonAmount         Float
+  destinationWallet String
+  rail              PaymentRail
+  status            PaymentStatus  @default(pending)
+  txHash            String         @default("")
+  momoReference     String         @default("")
+  memo              String         @default("")
+  /** semester: fee lines for selected year+semester; year: all fee lines that apply to any semester in that academic year. */
+  feeSelectionMode  String         @default("semester")
+  /** ProgrammeFee row ids included in this payment (empty = legacy rows before this field existed). */
+  includedFeeIds    String[]       @default([])
+  /** Optional platform / processing fee in UGX (included in totalUgx and tonAmount). */
+  platformFeeUgx    Int            @default(0)
+  /** Installment plan size (1 = paid in full). */
+  installmentCount  Int            @default(1)
+  /** 1-based installment index for this charge. */
+  installmentIndex  Int            @default(1)
+  /** Links payments in the same installment plan (first payment id). */
+  installmentPlanId String?        @db.ObjectId
+  /** Full fee subtotal for the whole installment plan. */
+  installmentScheduleSubtotalUgx Int?
+  confirmedAt       DateTime?
+  cancelledAt       DateTime?
+  /** user | admin | expired | system */
+  cancelReason      String         @default("")
+  refundedAt        DateTime?
+  refundNote        String         @default("")
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@index([studentId])
+  @@index([organizationId])
+  @@index([status])
+  @@index([rail])
+  @@index([createdAt])
+  @@index([status, rail])
+  @@index([status, createdAt])
+  @@index([organizationId, status, confirmedAt])
+  @@index([organizationId, status, createdAt])
+  @@map("payments")
+}
+
+// ========== URA Pearl / merged game (same Mongo DB) ==========
+
+model User {
+  id                        String   @id @default(auto()) @map("_id") @db.ObjectId
+  telegramId                String   @unique
+  name                      String?
+  isPremium                 Boolean  @default(false)
+  points                    Float    @default(0)
+  pointsBalance             Float    @default(0)
+  totalTaps                 Int      @default(0)
+  multitapLevelIndex        Int      @default(0)
+  energy                    Int      @default(100)
+  energyRefillsLeft         Int      @default(6)
+  energyLimitLevelIndex     Int      @default(0)
+  mineLevelIndex            Int      @default(0)
+  lastPointsUpdateTimestamp DateTime @default(now())
+  lastEnergyUpdateTimestamp DateTime @default(now())
+  lastEnergyRefillsTimestamp DateTime @default(now())
+  tonWalletAddress          String?
+  referralPointsEarned      Float    @default(0)
+  offlinePointsEarned       Float    @default(0)
+  lastDailyRewardClaimedAt  DateTime?
+  dailyRewardStreakDay      Int      @default(0)
+
+  // User region (derived from Telegram language_code or set manually)
+  region                    String?
+
+  // Uganda district (canonical slug, e.g. kampala); optional — used for district rankings
+  district                  String?
+
+  // Admin controls
+  isFrozen                  Boolean  @default(false)  // Frozen accounts cannot perform actions
+  isHidden                  Boolean  @default(false)  // Hidden accounts don't appear in rankings
+  suspensionReason          String?  // Shown on game screen when isFrozen (e.g. cheating message)
+  flaggedAsBot              Boolean  @default(false)  // Marked by admin as bot/cheater; shown in Bot Users section
+  botSuspicionCount         Int      @default(0)     // Auto-incremented when sync rejects invalid points (possible automation)
+  createdAt                 DateTime? @default(now())
+
+  // Relation fields
+  referrals                 User[]   @relation("Referrals")
+  referredBy                User?    @relation("Referrals", fields: [referredById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  referredById              String?  @db.ObjectId
+  
+  // Tasks
+  completedTasks UserTask[]
+
+  // Daily Cipher
+  dailyCipherAttempts UserDailyCipherAttempt[]
+
+  // Daily Combo
+  dailyComboAttempts UserDailyComboAttempt[]
+
+  // Collection (cards)
+  ownedCards UserCard[]
+
+  // Mini games
+  miniGameAttempts UserMiniGameAttempt[]
+
+  // Quiz (Earn page)
+  quizAttempts UserQuizAttempt[]
+
+  // Staking
+  stakes Stake[]
+
+  // Weekly Event
+  weeklyProgress UserWeeklyProgress[]
+
+  // Marketplace (points escrowed in active listings)
+  pointsInMarketplace  Float    @default(0)
+  marketplaceListings MarketplaceListing[]
+  marketplaceTradesAsBuyer MarketplaceTrade[] @relation("MarketplaceBuyer")
+
+  // P2P Transfers (Send/Receive ALM)
+  sentTransfers     Transfer[] @relation("TransferSender")
+  receivedTransfers Transfer[] @relation("TransferRecipient")
+
+  // Shop (Match 2 Earn)
+  shopProducts   ShopProduct[]
+  shopPurchases  ShopPurchase[] @relation("ShopBuyer")
+
+  // Treasury credits from upgrades (user paid for multitap/mine/energy_limit)
+  treasuryTransactions TreasuryTransaction[]
+
+  // Charity donations (donation center)
+  totalDonatedPoints   Float    @default(0)
+  charityDonations    CharityDonation[]
+
+  // Leagues (tiered + user-created)
+  leagueTier           String   @default("Bronze")  // Bronze | Silver | Gold | Platinum | Diamond | Legend
+  totalLeaguePoints    Int      @default(0)         // lifetime LP
+  totalTeamPoints      Int      @default(0)        // lifetime TP (team points)
+  leagueWeeks          UserLeagueWeek[]
+  teamWeeks            UserTeamWeek[]
+  createdLeagues       UserCreatedLeague[]          @relation("LeagueCreator")
+  customLeagueMembers  UserCreatedLeagueMember[]
+  leagueJoinRequests   LeagueJoinRequest[]
+  challengeStakes      LeagueChallengeStake[]
+  challengeContributions LeagueChallengeContribution[]
+  challengeSnapshots   UserChallengeSnapshot[]
+
+  // Teams (1M ALM to create; team is lower rank than league; only teams can create leagues)
+  createdTeams        Team[]          @relation("TeamCreator")
+  teamMemberships     TeamMember[]
+  teamJoinRequests    TeamJoinRequest[]
+  teamChallengeStakes TeamChallengeStake[]
+  teamChallengeContributions TeamChallengeContribution[]
+  teamChallengeSnapshots UserTeamChallengeSnapshot[]
+  teamModerations     TeamModeration[]
+  teamAnnouncements   TeamAnnouncement[]
+  teamOpinions        TeamOpinion[]
+  teamOpinionVotes    TeamOpinionVote[]
+  leagueModerations   LeagueModeration[]
+  leagueAnnouncements LeagueAnnouncement[]
+  leagueOpinions      LeagueOpinion[]
+  leagueOpinionVotes  LeagueOpinionVote[]
+
+  // Pearls economy
+  whitePearls              Float @default(0)
+  bluePearlsPending        Float @default(0)
+  bluePearlsApprovedTotal  Float @default(0)
+  goldishPearls            Float @default(0)
+  pearlActivities          PearlActivity[]
+  pearlConversions         PearlConversion[]
+  pearlWithdrawals         PearlWithdrawal[]
+  pearlAudits              PearlAudit[]
+  pearlTransfersSent       PearlTransfer[] @relation("PearlTransferSender")
+  pearlTransfersReceived   PearlTransfer[] @relation("PearlTransferRecipient")
+}
+
+model Transfer {
+  id                 String    @id @default(auto()) @map("_id") @db.ObjectId
+  sender             User      @relation("TransferSender", fields: [senderId], references: [id], onDelete: Cascade)
+  senderId           String    @db.ObjectId
+  recipient          User      @relation("TransferRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  recipientId        String    @db.ObjectId
+  amount             Float
+  feeAmount          Float     @default(0)  // Fee charged (ALM) on this transfer; 0 for fee-transfer records
+  isFeeTransfer      Boolean   @default(false)  // True when this record is the fee going to treasury
+  isDonation         Boolean   @default(false)  // True when this transfer is a charity donation (donor → Treasury)
+  parentTransferId   String?   @db.ObjectId  // Set on fee row: links to the main transfer
+  parentTransfer     Transfer? @relation("TransferFee", fields: [parentTransferId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  feeTransfers       Transfer[] @relation("TransferFee")
+  createdAt          DateTime  @default(now())
+}
+
+// Treasury credits from upgrades (multitap, mine, energy limit) – transfer fees stay in Transfer
+model TreasuryTransaction {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  amount    Float
+  type      String   // 'multitap' | 'mine' | 'energy_limit'
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @db.ObjectId
+  createdAt DateTime @default(now())
+}
+
+// Charity donations – points donated for charity (donation center)
+model CharityDonation {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @db.ObjectId
+  amount    Float
+  createdAt DateTime @default(now())
+}
+
+// Collection cards - unlock by rank, referrals, task, or starter
+model Card {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  slug          String   @unique
+  name          String
+  description   String?
+  image         String   // image key for client
+  category      String   // Markets, PR, Legal, Specials
+  unlockType    String   // starter, rank, referrals, task
+  unlockPayload Json?    // e.g. { rankIndex: 2 }, { referralCount: 5 }, { taskId: "..." }
+  bonusType     String   // profit_percent, max_energy, points_percent, none
+  bonusValue    Float    @default(0) // e.g. 1 = +1%
+  order         Int      @default(0)
+  userCards     UserCard[]
+}
+
+model UserCard {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String   @db.ObjectId
+  card       Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  cardId     String   @db.ObjectId
+  unlockedAt DateTime @default(now())
+
+  @@unique([userId, cardId])
+}
+
+model Task {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  title        String
+  description  String
+  points       Int
+  type         TaskType
+  category     String
+  image        String
+  callToAction String
+  taskData     Json?
+  isActive     Boolean    @default(true)
+  isHidden     Boolean    @default(false)
+  userTasks    UserTask[]
+}
+
+model UserTask {
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  user               User     @relation(fields: [userId], references: [id])
+  userId             String   @db.ObjectId
+  task               Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId             String   @db.ObjectId
+  taskStartTimestamp DateTime @default(now())
+  isCompleted        Boolean  @default(false)
+  updatedAt          DateTime @updatedAt
+
+  @@unique([userId, taskId])
+}
+
+/// Admin-published posts shown under “Activities” on the Earn tab (newest first).
+model PublishedActivity {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  body        String
+  link        String?
+  linkLabel   String?
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum TaskType {
+  VISIT
+  TELEGRAM
+  REFERRAL
+  REDEEM_CODE
+}
+
+model OnchainTask {
+  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
+  smartContractAddress  String
+  price                 String
+  collectionMetadata    Json
+  itemMetadata          Json
+  points                Float
+  isActive              Boolean  @default(true)
+
+  completions           OnchainTaskCompletion[]
+}
+
+model OnchainTaskCompletion {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  onchainTask       OnchainTask @relation(fields: [onchainTaskId], references: [id])
+  onchainTaskId     String   @db.ObjectId
+  userId            String   @db.ObjectId
+  userWalletAddress String
+  completionTime    DateTime @default(now())
+}
+
+// Daily Cipher - Morse code puzzle of the day (Hybrid: auto from word list + admin override)
+model DailyCipher {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  date       DateTime @unique // UTC date (start of day)
+  word       String   // Uppercase letters only, e.g. "ALM"
+  hint       String?
+  isOverride Boolean  @default(false) // true = admin set, false = auto-generated
+  createdAt  DateTime @default(now())
+}
+
+model UserDailyCipherAttempt {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String   @db.ObjectId
+  date         DateTime // UTC date (start of day)
+  attemptsUsed Int      @default(0)
+  claimedAt    DateTime? // null = not solved, set when solved
+  createdAt    DateTime @default(now())
+
+  @@unique([userId, date])
+}
+
+// Word pool for auto-selection (Hybrid mode)
+model CipherWord {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  word  String // Uppercase, letters only
+  order Int    @default(0) // For deterministic ordering
+}
+
+// Daily Combo - pick 3 cards of the day (Hybrid: auto from templates + admin override)
+model ComboCard {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  slug     String @unique // e.g. "binance", "telegram"
+  label    String
+  image    String // image key for client (e.g. "youtube")
+  category String // Markets, PR, Legal, Specials
+  order    Int    @default(0)
+}
+
+model DailyCombo {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  date       DateTime @unique // UTC date (start of day)
+  cardSlugs  String[] // 3 card slugs
+  isOverride Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model DailyComboTemplate {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  cardSlugs String[] // 3 slugs for auto-selection
+  order     Int      @default(0)
+}
+
+model UserDailyComboAttempt {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String     @db.ObjectId
+  date          DateTime
+  attemptsUsed  Int        @default(0)
+  claimedAt     DateTime?
+  createdAt     DateTime   @default(now())
+
+  @@unique([userId, date])
+}
+
+// Daily Pattern - 12-dot grid (4x3), pattern 4-12 dots; reward configurable per day
+model DailyPattern {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  date       DateTime @unique // UTC date (start of day)
+  pattern    String   // e.g. "0-1-2-4-5-6-8" (dot indices 0-11)
+  reward     Float?   // ALM for this day; null = use default 1M
+  isOverride Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+// Daily Pattern - global on/off (single row)
+model DailyPatternSettings {
+  id      String  @id @default(auto()) @map("_id") @db.ObjectId
+  enabled Boolean @default(true) // when false, game is hidden from users
+}
+
+// Shop (Match 2 Earn) - visible in user app when enabled (single row)
+model ShopSettings {
+  id      String  @id @default(auto()) @map("_id") @db.ObjectId
+  enabled Boolean @default(true) // when false, Shop is hidden from Market tab
+}
+
+// Mini games - once per day per game
+model UserMiniGameAttempt {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String    @db.ObjectId
+  miniGameId   String    // tap_challenge, lucky_spin
+  date         DateTime  // UTC date (start of day)
+  claimedAt    DateTime?
+  attemptsUsed Int      @default(0) // tap_challenge: trials used today (max 3)
+  createdAt    DateTime  @default(now())
+
+  @@unique([userId, miniGameId, date])
+}
+
+// Quiz - branches (groups of questions), per-question points, completion bonus when all correct
+model QuizBranch {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String   // e.g. "General", "Technical"
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  questions QuizQuestion[]
+}
+
+model QuizSettings {
+  id                       String   @id @default(auto()) @map("_id") @db.ObjectId
+  completionBonusPoints    Int      @default(0) // extra ALM when user gets all questions correct
+  /// When true, pick a random active set from the pool on scheduled UTC weekdays (see autoRotationWeekdays).
+  autoRotationEnabled      Boolean  @default(false)
+  /// Comma-separated JS getUTCDay() values: 0=Sun … 1=Mon … 4=Thu. Default "1,4" = Monday & Thursday.
+  autoRotationWeekdays     String   @default("1,4")
+  /// UTC calendar date (YYYY-MM-DD) of last automated rotation; avoids double-rotating the same day.
+  lastAutoRotationUtcDate  String?
+  /// How many questions to activate per rotation (capped by pool size).
+  autoRotationQuestionCount Int     @default(5)
+}
+
+model QuizQuestion {
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
+  questionText  String
+  options       Json       // string[] - multiple choice options
+  correctIndex  Int        // 0-based index of correct option
+  points        Int        @default(0) // ALM awarded for correct answer to this question
+  order         Int        @default(0)
+  isActive      Boolean    @default(true)
+  branchId      String?    @db.ObjectId
+  branch        QuizBranch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  createdAt     DateTime   @default(now())
+}
+
+model UserQuizAttempt {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String   @db.ObjectId
+  correctCount   Int
+  totalCount     Int
+  pointsAwarded  Float    @default(0)
+  completedAt    DateTime @default(now())
+}
+
+// Staking - lock points for duration, get bonus on unlock
+model Stake {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String    @db.ObjectId
+  amountLocked Float
+  bonusPercent Float     // e.g. 2, 15, 50
+  duration     String    // 24h, 7d, 30d
+  lockedAt     DateTime  @default(now())
+  unlocksAt    DateTime
+  claimedAt    DateTime?
+}
+
+// Weekly Event - Mon-Sun, hybrid config (default + admin override)
+model WeeklyEventOverride {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  weekKey   String   @unique // e.g. "2025-W05"
+  tiers     Json     // [{ taps: 5000, tasks: 2, reward: 50000 }, ...]
+  createdAt DateTime @default(now())
+}
+
+// User weekly progress - tracked from sync + task completion
+model UserWeeklyProgress {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId           String   @db.ObjectId
+  weekKey          String
+  taps             Int      @default(0)
+  tasksCompleted   Int      @default(0)
+  pointsEarned     Float    @default(0)
+  claimedTier1     Boolean  @default(false)
+  claimedTier2     Boolean  @default(false)
+  claimedTier3     Boolean  @default(false)
+  claimedTier4     Boolean  @default(false)
+  claimedTier5     Boolean  @default(false)
+  claimedTier6     Boolean  @default(false)
+  claimedTier7     Boolean  @default(false)
+  claimedTier8     Boolean  @default(false)
+  claimedTier9     Boolean  @default(false)
+  claimedTier10    Boolean  @default(false)
+  claimedTier11    Boolean  @default(false)
+  claimedTier12    Boolean  @default(false)
+  claimedTier13    Boolean  @default(false)
+  claimedTier14    Boolean  @default(false)
+  claimedTier15    Boolean  @default(false)
+  claimedTier16    Boolean  @default(false)
+  lastUpdatedAt    DateTime @default(now())
+
+  @@unique([userId, weekKey])
+}
+
+// Leagues – weekly LP per user (reset each week)
+model UserLeagueWeek {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String   @db.ObjectId
+  weekKey     String   // e.g. "2025-W08"
+  leaguePoints Int     @default(0)
+  lastUpdatedAt DateTime @default(now())
+
+  @@unique([userId, weekKey])
+}
+
+// Teams – weekly TP per user (reset each week); users in a team earn TP; users in a league also earn LP
+model UserTeamWeek {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String   @db.ObjectId
+  weekKey     String   // e.g. "2025-W08"
+  teamPoints  Int      @default(0)
+  lastUpdatedAt DateTime @default(now())
+
+  @@unique([userId, weekKey])
+}
+
+// Team: users create teams (1M ALM commitment); only teams can create leagues
+model Team {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  creator     User     @relation("TeamCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  creatorId   String   @db.ObjectId
+  inviteCode  String   @unique  // for inviting users to team
+  createdAt   DateTime @default(now())
+
+  members           TeamMember[]
+  joinRequests      TeamJoinRequest[]
+  leaguesCreated    UserCreatedLeague[] @relation("LeagueCreatorTeam")
+  leagueMemberships LeagueTeam[]
+  challengesAsCreator  TeamChallenge[] @relation("TeamChallengeCreator")
+  challengesAsOpponent TeamChallenge[] @relation("TeamChallengeOpponent")
+  moderations       TeamModeration[]
+  announcements     TeamAnnouncement[]
+  opinions          TeamOpinion[]
+}
+
+model TeamMember {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @db.ObjectId
+  joinedAt  DateTime @default(now())
+
+  @@unique([teamId, userId])
+}
+
+// Request to join a team (creator approves or denies). User can only be in one team; on approve, they leave any other team.
+model TeamJoinRequest {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String   @db.ObjectId
+  status      String   @default("pending")  // pending | approved | denied
+  createdAt   DateTime @default(now())
+  reviewedAt  DateTime?
+  denyReason  String?
+
+  @@unique([teamId, userId])
+}
+
+// User-created league (created by a team, 10M ALM; name, invite)
+model UserCreatedLeague {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  creator     User     @relation("LeagueCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  creatorId   String   @db.ObjectId   // user who created (team creator when created via team)
+  creatorTeam Team?    @relation("LeagueCreatorTeam", fields: [creatorTeamId], references: [id], onDelete: SetNull)
+  creatorTeamId String? @db.ObjectId  // team that created this league (required for new leagues)
+  name        String
+  inviteCode  String   @unique  // short code for join link
+  weekKey     String   // league runs for this week
+  maxMembers  Int      @default(50)
+  createdAt   DateTime @default(now())
+
+  members       UserCreatedLeagueMember[]
+  teams         LeagueTeam[]   // teams in this league (for "2+ teams to create task" rule)
+  joinRequests  LeagueJoinRequest[]
+  challengesAsCreator  LeagueChallenge[] @relation("ChallengeCreatorLeague")
+  challengesAsOpponent LeagueChallenge[] @relation("ChallengeOpponentLeague")
+  moderations   LeagueModeration[]
+  announcements LeagueAnnouncement[]
+  opinions      LeagueOpinion[]
+}
+
+// Teams that are in a league (league has 2+ teams to allow task creation)
+model LeagueTeam {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  league    UserCreatedLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId  String   @db.ObjectId
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String   @db.ObjectId
+  joinedAt  DateTime @default(now())
+
+  @@unique([leagueId, teamId])
+}
+
+// Request to join a league (creator approves or denies)
+model LeagueJoinRequest {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  league      UserCreatedLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId    String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String   @db.ObjectId
+  status      String   @default("pending")  // pending | approved | denied
+  createdAt   DateTime @default(now())
+  reviewedAt  DateTime?
+  denyReason  String?
+
+  @@unique([leagueId, userId])
+}
+
+model UserCreatedLeagueMember {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  league    UserCreatedLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId  String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @db.ObjectId
+  joinedAt  DateTime @default(now())
+
+  @@unique([leagueId, userId])
+}
+
+// Team owner management: mute, ban, punishment note per member
+model TeamModeration {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  team            Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId          String    @db.ObjectId
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String    @db.ObjectId
+  mutedUntil      DateTime?
+  banned          Boolean   @default(false)
+  punishmentNote   String?
+
+  @@unique([teamId, userId])
+}
+
+model TeamAnnouncement {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String   @db.ObjectId
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  String   @db.ObjectId
+  text      String
+  createdAt DateTime @default(now())
+}
+
+model TeamOpinion {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String   @db.ObjectId
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  String   @db.ObjectId
+  title     String
+  body      String?
+  createdAt DateTime @default(now())
+  votes     TeamOpinionVote[]
+}
+
+model TeamOpinionVote {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  opinion   TeamOpinion @relation(fields: [opinionId], references: [id], onDelete: Cascade)
+  opinionId String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @db.ObjectId
+  vote      String   // "for" | "against"
+
+  @@unique([opinionId, userId])
+}
+
+// League owner management
+model LeagueModeration {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  league          UserCreatedLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId        String    @db.ObjectId
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String    @db.ObjectId
+  mutedUntil      DateTime?
+  banned          Boolean   @default(false)
+  punishmentNote  String?
+
+  @@unique([leagueId, userId])
+}
+
+model LeagueAnnouncement {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  league    UserCreatedLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId  String   @db.ObjectId
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  String   @db.ObjectId
+  text      String
+  createdAt DateTime @default(now())
+}
+
+model LeagueOpinion {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  league    UserCreatedLeague @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId  String   @db.ObjectId
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  String   @db.ObjectId
+  title     String
+  body      String?
+  createdAt DateTime @default(now())
+  votes     LeagueOpinionVote[]
+}
+
+model LeagueOpinionVote {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  opinion   LeagueOpinion @relation(fields: [opinionId], references: [id], onDelete: Cascade)
+  opinionId String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @db.ObjectId
+  vote      String   // "for" | "against"
+
+  @@unique([opinionId, userId])
+}
+
+// League vs League: challenge between two leagues (first to target ALM in duration wins prize pool)
+model LeagueChallenge {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  creatorLeague    UserCreatedLeague @relation("ChallengeCreatorLeague", fields: [creatorLeagueId], references: [id], onDelete: Cascade)
+  creatorLeagueId  String   @db.ObjectId
+  opponentLeague   UserCreatedLeague? @relation("ChallengeOpponentLeague", fields: [opponentLeagueId], references: [id], onDelete: Cascade)
+  opponentLeagueId String?  @db.ObjectId  // set when challenge is created (who we're challenging)
+  status           String   @default("pending")  // pending | active | completed
+  targetAlm        Float    // e.g. 100_000_000
+  durationDays     Int      // e.g. 7
+  stakePerLeague   Float    // e.g. 30_000_000 each side
+  prizePool        Float    @default(0)  // 2*stakePerLeague + contributions
+  startsAt         DateTime?
+  endsAt           DateTime?
+  winnerLeagueId   String?  @db.ObjectId  // set when completed
+  createdAt        DateTime @default(now())
+
+  stakes       LeagueChallengeStake[]
+  contributions LeagueChallengeContribution[]
+  snapshots    UserChallengeSnapshot[]
+}
+
+// Locked stake from each league (creator of each league pays when creating / accepting)
+model LeagueChallengeStake {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  challenge  LeagueChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  challengeId String  @db.ObjectId
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String   @db.ObjectId
+  leagueId   String   @db.ObjectId  // which league this stake is for
+  amount     Float
+  createdAt  DateTime @default(now())
+}
+
+// External (or any) user contributing to prize pool
+model LeagueChallengeContribution {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  challenge   LeagueChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  challengeId String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String   @db.ObjectId
+  amount      Float
+  createdAt   DateTime @default(now())
+}
+
+// Snapshot of member balance at challenge start (for progress = current - start)
+model UserChallengeSnapshot {
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  challenge          LeagueChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  challengeId        String   @db.ObjectId
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId             String   @db.ObjectId
+  leagueId           String   @db.ObjectId
+  pointsBalanceAtStart Float
+  createdAt          DateTime @default(now())
+
+  @@unique([challengeId, userId])
+}
+
+// Team vs Team: challenge between two teams (first to target ALM in duration wins prize pool)
+model TeamChallenge {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  creatorTeam      Team     @relation("TeamChallengeCreator", fields: [creatorTeamId], references: [id], onDelete: Cascade)
+  creatorTeamId    String   @db.ObjectId
+  opponentTeam     Team?    @relation("TeamChallengeOpponent", fields: [opponentTeamId], references: [id], onDelete: Cascade)
+  opponentTeamId   String?  @db.ObjectId
+  status           String   @default("pending")  // pending | active | completed
+  targetAlm        Float
+  durationDays     Int
+  stakePerTeam     Float
+  prizePool        Float    @default(0)
+  startsAt         DateTime?
+  endsAt           DateTime?
+  winnerTeamId     String?  @db.ObjectId
+  createdAt        DateTime @default(now())
+
+  stakes       TeamChallengeStake[]
+  contributions TeamChallengeContribution[]
+  snapshots    UserTeamChallengeSnapshot[]
+}
+
+model TeamChallengeStake {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  challenge   TeamChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  challengeId String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String   @db.ObjectId
+  teamId      String   @db.ObjectId
+  amount      Float
+  createdAt   DateTime @default(now())
+}
+
+model TeamChallengeContribution {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  challenge   TeamChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  challengeId String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String   @db.ObjectId
+  amount      Float
+  createdAt   DateTime @default(now())
+}
+
+model UserTeamChallengeSnapshot {
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  challenge          TeamChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  challengeId        String   @db.ObjectId
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId             String   @db.ObjectId
+  teamId             String   @db.ObjectId
+  pointsBalanceAtStart Float
+  createdAt          DateTime @default(now())
+
+  @@unique([challengeId, userId])
+}
+
+// Global task template: browseable competitions (taps, referrals, tiers, tasks, points). Invite-based: A invites B, on accept stakes locked, snapshots taken, first to reach target in durationDays wins. Management adds 30% to pool.
+model GlobalTask {
+  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
+  name                  String
+  participantType       String   // "team" | "league"
+  metric                String   // "taps" | "referrals" | "tiers" | "tasks" | "points"
+  targetValue           Int
+  durationDays          Int      // 1-20, max 20
+  managementBonusPercent Int     @default(30)  // 30% added by management
+  createdAt             DateTime @default(now())
+
+  challenges            GlobalTaskChallenge[]
+}
+
+// One match: creator invited opponent; when accepted, both stake, snapshots taken, status=active. No join after commence.
+model GlobalTaskChallenge {
+  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
+  task                GlobalTask @relation(fields: [globalTaskId], references: [id], onDelete: Cascade)
+  globalTaskId        String   @db.ObjectId
+  creatorTeamId       String?  @db.ObjectId
+  creatorLeagueId     String?  @db.ObjectId
+  opponentTeamId      String?  @db.ObjectId
+  opponentLeagueId    String?  @db.ObjectId
+  creatorStake        Float    // ALM locked when accepted
+  opponentStake       Float
+  status              String   @default("pending")  // pending | active | completed
+  startedAt           DateTime?
+  endsAt              DateTime?
+  winnerTeamId        String?  @db.ObjectId
+  winnerLeagueId      String?  @db.ObjectId
+  prizePool           Float    @default(0)   // creatorStake + opponentStake + management 30%
+  managementBonusAmount Float  @default(0)
+  redeemedAt          DateTime?
+  createdAt           DateTime @default(now())
+
+  snapshots           GlobalTaskChallengeSnapshot[]
+}
+
+// Snapshot of metric at challenge start (progress = current - snapshot)
+model GlobalTaskChallengeSnapshot {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  challenge   GlobalTaskChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  challengeId String   @db.ObjectId
+  teamId      String?  @db.ObjectId
+  leagueId    String?  @db.ObjectId
+  metricValue Float    // value when challenge started
+  createdAt   DateTime @default(now())
+}
+
+// Marketplace – P2P sell/buy ALM (points-only now; money coming later)
+model MarketplaceListing {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  seller         User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  sellerId       String   @db.ObjectId
+  amount         Float    // total ALM listed
+  remainingAmount Float   // still available (decremented on buy)
+  pricePerUnit   Float    @default(1)  // for points: 1; for money later: e.g. USD per 1000 ALM
+  currency       String   @default("points") // "points" | "money" (money coming later)
+  status         String   @default("active") // active | cancelled | filled | partial
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  trades         MarketplaceTrade[]
+}
+
+model MarketplaceTrade {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  listing        MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId      String   @db.ObjectId
+  buyer          User     @relation("MarketplaceBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  buyerId        String   @db.ObjectId
+  amount         Float    // ALM bought
+  amountPaid     Float    // what buyer paid (points or future money)
+  sellerReceived Float   // what seller gets after fee
+  fee            Float    @default(0)
+  currency       String   @default("points")
+  status         String   @default("completed") // completed | failed
+  createdAt      DateTime @default(now())
+}
+
+// Shop (Match 2 Earn) – product marketplace: users list products, sell for ALM, admin verifies
+model ShopProduct {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  seller         User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  sellerId       String   @db.ObjectId
+  title          String
+  description    String   // plain text or markdown
+  priceAlm       Float    // price in ALM
+  bannerImageUrl String?  // main banner image URL
+  imageUrls      String[] // 4+ product images (stored in public/uploads/shop)
+  status         String   @default("pending_review") // pending_review | approved | rejected | sold
+  rejectedReason String?  // set by admin when rejecting
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  purchases      ShopPurchase[]
+}
+
+model ShopPurchase {
+  id         String      @id @default(auto()) @map("_id") @db.ObjectId
+  product    ShopProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId  String      @db.ObjectId
+  buyer      User         @relation("ShopBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  buyerId    String       @db.ObjectId
+  amountAlm  Float        // ALM paid
+  createdAt  DateTime     @default(now())
+}
+
+// In-app notifications (created in admin, shown in notification center)
+model Notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  body      String
+  imageUrl  String?  // optional image URL (e.g. CDN or /images/...)
+  videoUrl  String?  // optional video URL
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  deliveries NotificationDelivery[] // stored so we can delete the message from users' chats (recall)
+}
+
+// Per-user Telegram message_id for a broadcast notification (so admin can recall / delete from users' chats)
+model NotificationDelivery {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  notificationId String   @db.ObjectId
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  telegramId     String
+  messageId      Int      // Telegram message_id for deleteMessage
+  createdAt      DateTime @default(now())
+
+  @@unique([notificationId, telegramId])
+  @@index([notificationId])
+}
+
+// One-time congratulations / milestone banners (admin-editable, shown on main screen)
+model MilestoneBanner {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String   // e.g. "Congratulations!"
+  subtitle  String   // e.g. "We've reached the milestone of 6,800 players."
+  body      String   // Main message paragraph
+  isActive  Boolean  @default(false)  // Only one should be active at a time for the main screen
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum PearlType {
+  WHITE
+  BLUE
+  GOLDISH
+}
+
+enum PearlActivityStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PearlAuditEventType {
+  EARN_WHITE
+  EARN_BLUE_PENDING
+  APPROVE_BLUE
+  REJECT_BLUE
+  CONVERT_WHITE_TO_GOLDISH
+  CONVERT_BLUE_TO_GOLDISH
+  CONVERT_GOLDISH_TO_WHITE
+  TRANSFER_OUT_WHITE
+  TRANSFER_IN_WHITE
+  TRANSFER_OUT_GOLDISH
+  TRANSFER_IN_GOLDISH
+  WITHDRAW_REQUEST
+  WITHDRAW_APPROVED
+  WITHDRAW_REJECTED
+}
+
+enum PearlWithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PAID
+}
+
+model PearlActivity {
+  id                   String              @id @default(auto()) @map("_id") @db.ObjectId
+  user                 User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId               String              @db.ObjectId
+  sourceKey            String              // e.g. "karibu_daily", "whistle_blower"
+  sourceLabel          String
+  pearlType            PearlType
+  amount               Float
+  status               PearlActivityStatus @default(PENDING)
+  approvedByAdmin      Boolean             @default(false)
+  approvedAt           DateTime?
+  approvedByAdminLabel String?
+  rejectionReason      String?
+  convertedGoldish     Float               @default(0)
+  createdAt            DateTime            @default(now())
+}
+
+model PearlConversion {
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String    @db.ObjectId
+  fromType       PearlType
+  toType         PearlType
+  fromAmount     Float
+  toAmount       Float
+  trigger        String    // "auto_admin_approval" | "user_request" | "admin_manual"
+  referenceId    String?   @db.ObjectId // optional link to PearlActivity / withdrawal / transfer
+  createdAt      DateTime  @default(now())
+}
+
+model PearlTransfer {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  sender        User      @relation("PearlTransferSender", fields: [senderId], references: [id], onDelete: Cascade)
+  senderId      String    @db.ObjectId
+  recipient     User      @relation("PearlTransferRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  recipientId   String    @db.ObjectId
+  pearlType     PearlType
+  amount        Float
+  note          String?
+  createdAt     DateTime  @default(now())
+}
+
+model PearlWithdrawal {
+  id            String                @id @default(auto()) @map("_id") @db.ObjectId
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String                @db.ObjectId
+  goldishAmount Float
+  cashAmount    Float?                // optional computed payout value if exchange rate is set externally
+  status        PearlWithdrawalStatus @default(PENDING)
+  reviewedAt    DateTime?
+  reviewedBy    String?
+  rejectionReason String?
+  paidAt        DateTime?
+  createdAt     DateTime              @default(now())
+}
+
+model PearlAudit {
+  id            String             @id @default(auto()) @map("_id") @db.ObjectId
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String             @db.ObjectId
+  eventType     PearlAuditEventType
+  pearlType     PearlType?
+  amount        Float?
+  meta          Json?
+  createdAt     DateTime           @default(now())
+}
+
+model TvProgram {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  youtubeUrl  String
+  scheduledAt DateTime?
+  sortOrder   Int      @default(0)
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  comments TvProgramComment[]
+}
+
+model TvProgramComment {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  programId  String    @db.ObjectId
+  program    TvProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  telegramId String
+  authorName String?
+  body       String
+  createdAt  DateTime  @default(now())
+
+  @@index([programId])
+}
+
+/// URA FC fixtures — mirrors club schedule for in-app display ([URA FC official site](https://urafc.co.ug/)).
+model UraFcMatch {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  homeTeam     String
+  awayTeam     String
+  homeLogoUrl  String?
+  awayLogoUrl  String?
+  kickoffAt    DateTime
+  venue        String?
+  competition  String?
+  status       String   @default("upcoming")
+  homeScore    Int?
+  awayScore    Int?
+  highlightUrl String?
+  sortOrder    Int      @default(0)
+  isPublished  Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

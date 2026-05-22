@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>ODEL HUB Pay — Documentation Library</title>
+    <meta
+      name="description"
+      content="Searchable, printable documentation hub for ODEL HUB TON Pay — flows, architecture, APIs, and implementation guides."
+    />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <style>
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      :root {
+        --bg: #0a0f1a;
+        --surface: #111827;
+        --card: #151d2e;
+        --border: rgba(148, 163, 184, 0.2);
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+        --accent: #38bdf8;
+        --accent2: #a78bfa;
+        --print-text: #111;
+        --radius: 12px;
+        --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        font-family: var(--font);
+        background: radial-gradient(1200px 600px at 10% -10%, rgba(56, 189, 248, 0.12), transparent),
+          radial-gradient(800px 400px at 90% 20%, rgba(167, 139, 250, 0.1), transparent), var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+      }
+      .no-print {
+        display: block;
+      }
+
+      /* ——— App shell (hidden when printing) ——— */
+      @media screen {
+        .shell {
+          display: flex;
+          flex-direction: column;
+          min-height: 100dvh;
+          max-width: 1400px;
+          margin: 0 auto;
+          padding: 0 1rem 2rem;
+        }
+        .hero {
+          padding: 1.75rem 0 1rem;
+          border-bottom: 1px solid var(--border);
+          margin-bottom: 1.25rem;
+        }
+        .hero h1 {
+          font-size: clamp(1.5rem, 4vw, 2rem);
+          font-weight: 700;
+          margin: 0 0 0.35rem;
+          background: linear-gradient(120deg, #e0f2fe, var(--accent), var(--accent2));
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+        }
+        .hero p.lead {
+          margin: 0;
+          color: var(--muted);
+          font-size: 0.95rem;
+        }
+        .stats {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+          gap: 0.75rem;
+          margin-top: 1.25rem;
+        }
+        .stat {
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          padding: 0.85rem 1rem;
+        }
+        .stat .label {
+          font-size: 0.7rem;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          color: var(--muted);
+        }
+        .stat .value {
+          font-size: 1.15rem;
+          font-weight: 600;
+          margin-top: 0.2rem;
+        }
+        .toolbar {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.75rem;
+          align-items: center;
+          margin-bottom: 1rem;
+        }
+        .search-wrap {
+          flex: 1;
+          min-width: 200px;
+          position: relative;
+        }
+        .search-wrap input {
+          width: 100%;
+          padding: 0.65rem 0.85rem 0.65rem 2.4rem;
+          border-radius: var(--radius);
+          border: 1px solid var(--border);
+          background: var(--surface);
+          color: var(--text);
+          font-size: 0.95rem;
+        }
+        .search-wrap::before {
+          content: "🔍";
+          position: absolute;
+          left: 0.65rem;
+          top: 50%;
+          transform: translateY(-50%);
+          font-size: 0.9rem;
+          opacity: 0.7;
+          pointer-events: none;
+        }
+        .filters {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.4rem;
+        }
+        .filters button {
+          border: 1px solid var(--border);
+          background: var(--surface);
+          color: var(--muted);
+          padding: 0.45rem 0.85rem;
+          border-radius: 999px;
+          font-size: 0.8rem;
+          cursor: pointer;
+          transition: border-color 0.15s, color 0.15s, background 0.15s;
+        }
+        .filters button:hover,
+        .filters button:focus-visible {
+          color: var(--text);
+          border-color: var(--accent);
+          outline: none;
+        }
+        .filters button.active {
+          background: rgba(56, 189, 248, 0.15);
+          border-color: var(--accent);
+          color: var(--accent);
+        }
+        .layout {
+          display: grid;
+          grid-template-columns: minmax(260px, 320px) 1fr;
+          gap: 1rem;
+          align-items: start;
+        }
+        @media (max-width: 900px) {
+          .layout {
+            grid-template-columns: 1fr;
+          }
+        }
+        .list-panel {
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          max-height: min(70vh, 560px);
+          overflow: auto;
+        }
+        .list-panel h2 {
+          font-size: 0.75rem;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          color: var(--muted);
+          padding: 0.75rem 1rem 0.25rem;
+          margin: 0;
+          position: sticky;
+          top: 0;
+          background: var(--card);
+        }
+        .doc-list {
+          list-style: none;
+          margin: 0;
+          padding: 0.25rem 0 0.5rem;
+        }
+        .doc-list li button {
+          width: 100%;
+          text-align: left;
+          padding: 0.65rem 1rem;
+          border: none;
+          background: transparent;
+          color: var(--text);
+          cursor: pointer;
+          font-size: 0.9rem;
+          border-left: 3px solid transparent;
+        }
+        .doc-list li button:hover,
+        .doc-list li button:focus-visible {
+          background: rgba(56, 189, 248, 0.08);
+          outline: none;
+        }
+        .doc-list li button.active {
+          border-left-color: var(--accent);
+          background: rgba(56, 189, 248, 0.1);
+        }
+        .doc-list .meta {
+          display: block;
+          font-size: 0.7rem;
+          color: var(--muted);
+          margin-top: 0.15rem;
+        }
+        .viewer-card {
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          min-height: 320px;
+          display: flex;
+          flex-direction: column;
+        }
+        .viewer-toolbar {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.75rem;
+          padding: 0.75rem 1rem;
+          border-bottom: 1px solid var(--border);
+          background: rgba(0, 0, 0, 0.2);
+        }
+        .viewer-toolbar h3 {
+          margin: 0;
+          font-size: 1rem;
+          font-weight: 600;
+        }
+        .btn-print {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          padding: 0.45rem 1rem;
+          border-radius: var(--radius);
+          border: 1px solid var(--accent);
+          background: rgba(56, 189, 248, 0.12);
+          color: var(--accent);
+          font-size: 0.85rem;
+          font-weight: 600;
+          cursor: pointer;
+        }
+        .btn-print:hover {
+          background: rgba(56, 189, 248, 0.22);
+        }
+        .viewer-body {
+          padding: 1.25rem 1.35rem 2rem;
+          overflow: auto;
+          flex: 1;
+        }
+        .empty-state {
+          color: var(--muted);
+          text-align: center;
+          padding: 3rem 1rem;
+        }
+        .file-hint {
+          font-size: 0.8rem;
+          color: var(--muted);
+          padding: 0 1rem 1rem;
+          max-width: 720px;
+          line-height: 1.5;
+        }
+        .file-hint code {
+          background: rgba(0, 0, 0, 0.35);
+          padding: 0.1rem 0.35rem;
+          border-radius: 4px;
+        }
+      }
+
+      /* ——— Markdown content (screen) ——— */
+      .md-content {
+        font-size: 0.95rem;
+        max-width: 52rem;
+      }
+      .md-content h1 {
+        font-size: 1.5rem;
+        margin-top: 0;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border);
+      }
+      .md-content h2 {
+        font-size: 1.15rem;
+        margin: 1.5rem 0 0.5rem;
+        color: #f1f5f9;
+      }
+      .md-content h3 {
+        font-size: 1.05rem;
+        margin: 1.25rem 0 0.4rem;
+      }
+      .md-content p {
+        margin: 0.65rem 0;
+      }
+      .md-content ul,
+      .md-content ol {
+        margin: 0.5rem 0;
+        padding-left: 1.35rem;
+      }
+      .md-content li {
+        margin: 0.25rem 0;
+      }
+      .md-content code {
+        background: rgba(0, 0, 0, 0.35);
+        padding: 0.12rem 0.4rem;
+        border-radius: 4px;
+        font-size: 0.88em;
+      }
+      .md-content pre {
+        background: #0d1320;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1rem;
+        overflow: auto;
+        font-size: 0.82rem;
+        line-height: 1.45;
+      }
+      .md-content pre code {
+        background: none;
+        padding: 0;
+      }
+      .md-content blockquote {
+        border-left: 3px solid var(--accent);
+        margin: 1rem 0;
+        padding-left: 1rem;
+        color: var(--muted);
+      }
+      .md-content table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 1rem 0;
+        font-size: 0.88rem;
+      }
+      .md-content th,
+      .md-content td {
+        border: 1px solid var(--border);
+        padding: 0.45rem 0.65rem;
+        text-align: left;
+      }
+      .md-content th {
+        background: rgba(56, 189, 248, 0.08);
+      }
+      .md-content a {
+        color: var(--accent);
+      }
+      .md-content .mermaid {
+        margin: 1.25rem 0;
+        padding: 0.75rem;
+        overflow-x: auto;
+        background: rgba(0, 0, 0, 0.25);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+      }
+      .md-content .mermaid svg {
+        max-width: 100%;
+        height: auto;
+      }
+
+      /* ——— Print: professional, navigation stripped ——— */
+      @media print {
+        @page {
+          margin: 1.2cm;
+        }
+        body {
+          background: #fff !important;
+          color: var(--print-text) !important;
+        }
+        .no-print {
+          display: none !important;
+        }
+        #print-root {
+          display: block !important;
+        }
+        #print-root .md-content-print {
+          font-size: 11pt;
+          line-height: 1.45;
+          max-width: 100%;
+        }
+        #print-root .md-content-print h1 {
+          font-size: 18pt;
+          color: #000;
+          border-bottom: 1px solid #ccc;
+        }
+        #print-root .md-content-print h2 {
+          font-size: 14pt;
+          color: #111;
+        }
+        #print-root .md-content-print h3 {
+          font-size: 12pt;
+        }
+        #print-root .md-content-print a {
+          color: #000;
+          text-decoration: underline;
+        }
+        #print-root .md-content-print code {
+          background: #f4f4f4;
+          color: #111;
+        }
+        #print-root .md-content-print pre {
+          background: #f8f8f8;
+          border: 1px solid #ddd;
+        }
+        #print-root .md-content-print .mermaid {
+          background: #fff;
+          border: 1px solid #ddd;
+          page-break-inside: avoid;
+        }
+        #print-root .md-content-print .mermaid svg {
+          max-width: 100% !important;
+          height: auto !important;
+        }
+      }
+
+      #print-root {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell no-print">
+      <header class="hero">
+        <h1>📚 ODEL HUB Pay — Documentation Library</h1>
+        <p class="lead">
+          Interactive hub: search, filter by category, open any guide, and print with one click. Optimized for screens
+          and paper.
+        </p>
+        <div class="stats" id="stats" aria-live="polite">
+          <div class="stat">
+            <div class="label">Total documents</div>
+            <div class="value" id="stat-count">—</div>
+          </div>
+          <div class="stat">
+            <div class="label">Documentation size</div>
+            <div class="value" id="stat-kb">—</div>
+          </div>
+          <div class="stat">
+            <div class="label">Print capability</div>
+            <div class="value">100%</div>
+          </div>
+          <div class="stat">
+            <div class="label">Search</div>
+            <div class="value">Real-time</div>
+          </div>
+          <div class="stat">
+            <div class="label">Mobile</div>
+            <div class="value">Full</div>
+          </div>
+          <div class="stat">
+            <div class="label">Access</div>
+            <div class="value">24/7</div>
+          </div>
+        </div>
+      </header>
+
+      <p class="file-hint no-print">
+        <strong>Serving:</strong> Use a static server so documents load (e.g.
+        <code>npm run docs:serve</code> or <code>npx serve docs -p 8787</code>, then open the URL shown). Opening
+        <code>index.html</code> as a raw <code>file://</code> URL may block loading <code>.md</code> files in your
+        browser. <strong>Deep link:</strong> append <code>#doc=&lt;id&gt;</code> (e.g. <code>#doc=user-flow</code>) to
+        open a document directly; IDs match the hub manifest.
+      </p>
+
+      <div class="toolbar">
+        <div class="search-wrap">
+          <label for="q" class="visually-hidden">Search documentation</label>
+          <input type="search" id="q" placeholder="Search titles and keywords…" autocomplete="off" />
+        </div>
+        <div class="filters" id="filters" role="group" aria-label="Category filters"></div>
+      </div>
+
+      <div class="layout">
+        <aside class="list-panel no-print">
+          <h2>Browse</h2>
+          <ul class="doc-list" id="doc-list"></ul>
+        </aside>
+        <section class="viewer-card" aria-live="polite">
+          <div class="viewer-toolbar no-print">
+            <h3 id="viewer-title">Select a document</h3>
+            <button type="button" class="btn-print" id="btn-print" title="Print this document" disabled>
+              🖨 Print
+            </button>
+          </div>
+          <div class="viewer-body" id="viewer-body">
+            <p class="empty-state">Choose a document from the list, or use search / filters to narrow down.</p>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Hidden print root: only visible when printing -->
+    <div id="print-root" aria-hidden="true">
+      <article class="md-content-print" id="print-article"></article>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js" crossorigin="anonymous"></script>
+    <script>
+      /** @type {{ id: string, file: string, title: string, category: string, keywords: string }[]} */
+      const MANIFEST = [
+        {
+          id: "flows",
+          file: "FLOWS.md",
+          title: "Flow documentation (index)",
+          category: "flows",
+          keywords: "index flows navigation user admin master multi-tenant",
+        },
+        {
+          id: "user-flow",
+          file: "USER_FLOW.md",
+          title: "User flow — payers & public",
+          category: "flows",
+          keywords: "payer pay checkout ton connect receipt momo telegram web",
+        },
+        {
+          id: "multi-tenant",
+          file: "MULTI_TENANT_FLOW.md",
+          title: "Multi-tenant flow",
+          category: "architecture",
+          keywords: "organization slug tenant isolation pending active registration master",
+        },
+        {
+          id: "admin-flow",
+          file: "ADMIN_FLOW.md",
+          title: "Admin flow — org admin",
+          category: "flows",
+          keywords: "school dashboard students payments csv jwt scope workspace",
+        },
+        {
+          id: "master-flow",
+          file: "MASTER_ADMIN_FLOW.md",
+          title: "Master admin flow",
+          category: "flows",
+          keywords: "platform master console approve organization org admin",
+        },
+        {
+          id: "folder-structure",
+          file: "FOLDER_STRUCTURE.md",
+          title: "Full folder & project structure",
+          category: "implementation",
+          keywords: "tree routes scripts prisma src app api layout npm verify",
+        },
+        {
+          id: "repository-layout",
+          file: "STRUCTURE.md",
+          title: "Repository layout (hub)",
+          category: "implementation",
+          keywords: "folder layout ura pearl pointer flows index",
+        },
+        {
+          id: "user-stories",
+          file: "USER_STORIES.md",
+          title: "User stories & epics",
+          category: "product",
+          keywords: "epic acceptance telegram admin momo receipt",
+        },
+        {
+          id: "openapi",
+          file: "openapi.yaml",
+          title: "OpenAPI (HTTP contract)",
+          category: "api-reference",
+          keywords: "rest api endpoints openapi yaml http",
+        },
+        {
+          id: "economics",
+          file: "ECONOMICS.md",
+          title: "Economics & settlement (UGX, TON, FX)",
+          category: "economics",
+          keywords: "ugx ton fx fees programme mo bridge settlement wallet",
+        },
+      ];
+
+      const CATEGORY_LABEL = {
+        all: "All",
+        flows: "Flows",
+        architecture: "Architecture",
+        implementation: "Implementation",
+        economics: "Economics",
+        product: "Product",
+        "api-reference": "API reference",
+      };
+
+      let activeCategory = "all";
+      let searchQuery = "";
+      let selectedId = null;
+      let rawYamlText = "";
+
+      const elQ = document.getElementById("q");
+      const elList = document.getElementById("doc-list");
+      const elFilters = document.getElementById("filters");
+      const elViewer = document.getElementById("viewer-body");
+      const elTitle = document.getElementById("viewer-title");
+      const elBtnPrint = document.getElementById("btn-print");
+      const elPrintArticle = document.getElementById("print-article");
+      const elStatCount = document.getElementById("stat-count");
+      const elStatKb = document.getElementById("stat-kb");
+
+      function fmtKb(bytes) {
+        return (bytes / 1024).toFixed(1) + " KB+";
+      }
+
+      async function computeStats() {
+        let total = 0;
+        for (const d of MANIFEST) {
+          try {
+            const r = await fetch(d.file, { cache: "no-store" });
+            const t = await r.text();
+            total += t.length;
+          } catch {
+            /* ignore */
+          }
+        }
+        elStatCount.textContent = String(MANIFEST.length);
+        elStatKb.textContent = total > 0 ? fmtKb(total) : "—";
+      }
+
+      function matchesSearch(d) {
+        if (!searchQuery) return true;
+        const q = searchQuery.toLowerCase();
+        return (
+          d.title.toLowerCase().includes(q) ||
+          d.keywords.toLowerCase().includes(q) ||
+          d.file.toLowerCase().includes(q)
+        );
+      }
+
+      function visibleDocs() {
+        return MANIFEST.filter((d) => {
+          if (activeCategory !== "all" && d.category !== activeCategory) return false;
+          return matchesSearch(d);
+        });
+      }
+
+      function renderFilters() {
+        const cats = ["all", ...new Set(MANIFEST.map((m) => m.category))].filter((c, i, a) => a.indexOf(c) === i);
+        elFilters.innerHTML = cats
+          .map((c) => {
+            const label = CATEGORY_LABEL[c] || c;
+            const active = c === activeCategory;
+            return `<button type="button" class="${active ? "active" : ""}" data-cat="${c}">${label}</button>`;
+          })
+          .join("");
+        elFilters.querySelectorAll("button").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            activeCategory = btn.getAttribute("data-cat") || "all";
+            renderFilters();
+            renderList();
+          });
+        });
+      }
+
+      function renderList() {
+        const docs = visibleDocs();
+        elList.innerHTML = docs.length
+          ? docs
+              .map((d) => {
+                const active = d.id === selectedId;
+                const cat = CATEGORY_LABEL[d.category] || d.category;
+                return `<li><button type="button" class="${active ? "active" : ""}" data-id="${d.id}"><span>${escapeHtml(
+                  d.title
+                )}</span><span class="meta">${escapeHtml(cat)} · ${escapeHtml(d.file)}</span></button></li>`;
+              })
+              .join("")
+          : `<li style="padding:1rem;color:var(--muted)">No matches. Try another search or category.</li>`;
+        elList.querySelectorAll("button[data-id]").forEach((btn) => {
+          btn.addEventListener("click", () => openDoc(btn.getAttribute("data-id")));
+        });
+      }
+
+      function escapeHtml(s) {
+        const div = document.createElement("div");
+        div.textContent = s;
+        return div.innerHTML;
+      }
+
+      function syncPrintFromViewer() {
+        const md = elViewer.querySelector(".md-content");
+        if (!md) return;
+        elPrintArticle.innerHTML = `<div class="md-content-print">${md.innerHTML}</div>`;
+      }
+
+      /**
+       * Turn ```mermaid fences into live diagrams (marked emits pre > code.language-mermaid).
+       */
+      async function renderMermaidIn(container) {
+        if (typeof mermaid === "undefined" || !container) return;
+        const scope = container.querySelector(".md-content") || container;
+        scope.querySelectorAll("pre code.language-mermaid").forEach((codeEl) => {
+          const pre = codeEl.parentElement;
+          if (!pre || pre.tagName !== "PRE") return;
+          const div = document.createElement("div");
+          div.className = "mermaid";
+          div.textContent = (codeEl.textContent || "").trim();
+          pre.replaceWith(div);
+        });
+        const nodes = Array.from(scope.querySelectorAll(".mermaid"));
+        if (!nodes.length) return;
+        try {
+          await mermaid.run({ nodes });
+        } catch (e) {
+          console.warn("Mermaid:", e);
+        }
+      }
+
+      async function openDoc(id) {
+        const d = MANIFEST.find((x) => x.id === id);
+        if (!d) return;
+        selectedId = id;
+        elTitle.textContent = d.title;
+        elViewer.innerHTML =
+          '<p class="empty-state" style="padding:2rem">Loading…</p>';
+        elBtnPrint.disabled = true;
+        renderList();
+
+        try {
+          const r = await fetch(d.file, { cache: "no-store" });
+          const text = await r.text();
+          if (d.file.endsWith(".yaml") || d.file.endsWith(".yml")) {
+            rawYamlText = text;
+            elViewer.innerHTML =
+              `<div class="md-content"><p><strong>OpenAPI YAML</strong> — displayed as source. For pretty API explorers, import this file into Swagger UI / Stoplight.</p><pre><code>${escapeHtml(
+                text
+              )}</code></pre></div>`;
+            elPrintArticle.innerHTML =
+              `<h1>${escapeHtml(d.title)}</h1><pre style="white-space:pre-wrap;font-size:9pt;">${escapeHtml(
+                text
+              )}</pre>`;
+          } else {
+            rawYamlText = "";
+            const parse = typeof marked.parse === "function" ? marked.parse : marked;
+            const html = parse(text, { breaks: true, mangle: false, headerIds: true });
+            const clean = DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
+            elViewer.innerHTML = `<div class="md-content">${clean}</div>`;
+            elPrintArticle.innerHTML = `<div class="md-content-print">${clean}</div>`;
+            await renderMermaidIn(elViewer);
+            syncPrintFromViewer();
+          }
+          const shareHash = "#doc=" + id;
+          if (location.hash !== shareHash) history.replaceState(null, "", shareHash);
+          elBtnPrint.disabled = false;
+        } catch (e) {
+          elViewer.innerHTML = `<div class="md-content"><p class="empty-state">Could not load <code>${escapeHtml(
+            d.file
+          )}</code>. Serve this folder over HTTP (see note above). ${escapeHtml(String(e))}</p></div>`;
+        }
+      }
+
+      elQ.addEventListener("input", () => {
+        searchQuery = elQ.value.trim();
+        renderList();
+      });
+
+      elBtnPrint.addEventListener("click", () => {
+        if (!selectedId) return;
+        window.print();
+      });
+
+      function docIdFromHash() {
+        const raw = location.hash.replace(/^#\/?/, "");
+        if (!raw) return null;
+        if (raw.startsWith("doc=")) return raw.slice(4);
+        return raw;
+      }
+
+      if (typeof mermaid !== "undefined" && typeof mermaid.initialize === "function") {
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: "dark",
+          securityLevel: "loose",
+          fontFamily: "system-ui, sans-serif",
+        });
+      }
+
+      renderFilters();
+      renderList();
+      computeStats();
+
+      const initialId = docIdFromHash();
+      if (initialId) {
+        const found = MANIFEST.find((m) => m.id === initialId);
+        if (found) openDoc(found.id);
+      }
+
+      window.addEventListener("hashchange", () => {
+        const id = docIdFromHash();
+        if (!id) return;
+        const found = MANIFEST.find((m) => m.id === id);
+        if (found && found.id !== selectedId) openDoc(found.id);
+      });
+    </script>
+  </body>
+</html>

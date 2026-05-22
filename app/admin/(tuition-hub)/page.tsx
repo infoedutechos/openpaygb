@@ -1,0 +1,283 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useAuthMe } from "@/hooks/useAuthMe";
+import { TenantList } from "@/components/tuition/TenantList";
+
+type Summary = {
+  viewer?: {
+    role: string;
+    organizationName: string | null;
+    organizationSlug: string | null;
+  };
+  totalCollectionsTon: number;
+  totalCollectionsUgx?: number;
+  collectionsByRail?: { rail: string; count: number; totalUgx: number; tonAmount: number }[];
+  totalPayments: number;
+  totalStudents: number;
+  monthlyPending: { m: string; count: number }[];
+  collectionsMomPct: number | null;
+  paymentsMomPct: number | null;
+  studentsMomPct: number | null;
+  recentPayments: {
+    id: string;
+    studentId: string;
+    studentName: string;
+    tonAmount: number;
+    totalUgx?: number;
+    status: string;
+    createdAt: string;
+  }[];
+  pendingPayments: {
+    id: string;
+    studentId: string;
+    studentName: string;
+    tonAmount: number;
+    totalUgx: number;
+    status: string;
+    createdAt: string;
+  }[];
+};
+
+const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
+
+function shortMonthLabel(monthKey: string): string {
+  const parts = monthKey.split("-");
+  const mo = parseInt(parts[1] ?? "", 10);
+  if (mo >= 1 && mo <= 12) return MONTH_SHORT[mo - 1];
+  return monthKey;
+}
+
+function formatMom(p: number | null): string {
+  if (p === null) return "—";
+  const sign = p > 0 ? "+" : "";
+  return `${sign}${p}% this month`;
+}
+
+function PendingPaymentsChart({ rows }: { rows: { m: string; count: number }[] }) {
+  if (rows.length === 0) {
+    return <p className="mt-6 text-sm text-slate-500">No pending payments in this period.</p>;
+  }
+  const w = 560;
+  const h = 180;
+  const padX = 32;
+  const padY = 28;
+  const max = Math.max(...rows.map((r) => r.count), 1);
+  const pts = rows.map((r, i) => {
+    const x = padX + (i / Math.max(rows.length - 1, 1)) * (w - padX * 2);
+    const y = h - padY - (r.count / max) * (h - padY * 2);
+    return { x, y, m: r.m };
+  });
+  const d = `M ${pts.map((p) => `${p.x},${p.y}`).join(" L ")}`;
+
+  return (
+    <div className="mt-4">
+      <svg viewBox={`0 0 ${w} ${h}`} className="w-full" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <linearGradient id="pendingFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="rgb(59 130 246)" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="rgb(59 130 246)" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path
+          d={`${d} L ${w - padX},${h - padY} L ${padX},${h - padY} Z`}
+          fill="url(#pendingFill)"
+        />
+        <path d={d} fill="none" stroke="rgb(59 130 246)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        {pts.map((p) => (
+          <circle key={p.m} cx={p.x} cy={p.y} r="4" fill="rgb(59 130 246)" />
+        ))}
+      </svg>
+      <div className="mt-2 flex justify-between px-2 text-xs text-slate-500">
+        {rows.map((r) => (
+          <span key={r.m}>{shortMonthLabel(r.m)}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ label, value, sub }: { label: string; value: string; sub: string }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="mt-2 text-2xl font-semibold text-slate-900">{value}</p>
+      <p className="mt-1 text-xs font-medium text-emerald-600">{sub}</p>
+    </div>
+  );
+}
+
+export default function AdminDashboardPage() {
+  const { data: authMe, loading: authLoading } = useAuthMe();
+  const [summary, setSummary] = useState<Summary | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!authMe) {
+      setError("Sign in to view the tuition hub dashboard.");
+      return;
+    }
+    if (!authMe.tuitionSession) {
+      setError(
+        authMe.adminShellAccess
+          ? "Sign in with your tuition hub admin account (email and password) to view the dashboard."
+          : "Unauthorized",
+      );
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const r = await fetch("/api/admin/summary", { credentials: "include" });
+      const j = await r.json();
+      if (!r.ok) {
+        if (!cancelled) setError(j.error ?? "Could not load summary");
+        return;
+      }
+      if (!cancelled) setSummary(j as Summary);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, authMe]);
+
+  if (error) {
+    return <p className="text-sm text-rose-600">{error}</p>;
+  }
+  if (authLoading || !summary) {
+    return <p className="text-sm text-slate-500">Loading dashboard…</p>;
+  }
+
+  const orgLabel = summary.viewer?.organizationName;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-white">Dashboard</h1>
+          {orgLabel ? <p className="mt-1 text-sm text-slate-400">{orgLabel}</p> : null}
+        </div>
+        <Link
+          href="/admin/settings"
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 shadow-sm hover:bg-slate-50"
+        >
+          Settings
+        </Link>
+      </div>
+
+      {summary.viewer?.role === "master" ? (
+        <TenantList
+          title="Schools (tenants)"
+          description="Open pay checkout or review data per school."
+          className="rounded-xl border border-white/10 bg-[#0a101f]/50 p-4"
+        />
+      ) : null}
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <StatCard
+          label="Total Collections"
+          value={`${summary.totalCollectionsTon.toLocaleString()} TON`}
+          sub={formatMom(summary.collectionsMomPct)}
+        />
+        <StatCard
+          label="Confirmed (UGX)"
+          value={`UGX ${(summary.totalCollectionsUgx ?? 0).toLocaleString()}`}
+          sub="All confirmed payments"
+        />
+        <StatCard label="Total Students" value={String(summary.totalStudents)} sub={formatMom(summary.studentsMomPct)} />
+      </div>
+
+      {summary.collectionsByRail && summary.collectionsByRail.length > 0 ? (
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="text-base font-semibold text-slate-900">Collections by rail</h2>
+          <ul className="mt-3 divide-y divide-slate-100 text-sm">
+            {summary.collectionsByRail.map((r) => (
+              <li key={r.rail} className="flex justify-between gap-4 py-2">
+                <span className="font-medium capitalize text-slate-800">{r.rail.replace(/_/g, " ")}</span>
+                <span className="text-slate-600">
+                  {r.count} · UGX {r.totalUgx.toLocaleString()} · {r.tonAmount} TON
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-base font-semibold text-slate-900">Pending Payments</h2>
+          <Link
+            href="/admin/payments?status=pending"
+            className="text-xs font-medium text-blue-600 hover:underline"
+          >
+            View all pending
+          </Link>
+        </div>
+        <ul className="mt-4 divide-y divide-slate-100">
+          {(summary.pendingPayments ?? []).length === 0 ? (
+            <li className="py-4 text-sm text-slate-500">No pending payments right now.</li>
+          ) : (
+            summary.pendingPayments.map((p) => (
+              <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
+                <Link
+                  href={`/admin/students/${p.studentId}`}
+                  className="min-w-0 font-medium text-blue-700 hover:underline"
+                >
+                  {p.studentName}
+                </Link>
+                <span className="font-mono text-slate-700">
+                  {p.tonAmount > 0 ? `${p.tonAmount.toFixed(2)} TON` : `UGX ${p.totalUgx.toLocaleString()}`}
+                </span>
+                <Link
+                  href={`/admin/payments?highlight=${p.id}`}
+                  className="shrink-0 text-xs font-medium text-amber-700 hover:underline"
+                >
+                  Pending · {new Date(p.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
+                </Link>
+              </li>
+            ))
+          )}
+        </ul>
+        {(summary.monthlyPending ?? []).length > 0 ? (
+          <div className="mt-6 border-t border-slate-100 pt-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Pending trend (7 months)</p>
+            <PendingPaymentsChart rows={summary.monthlyPending ?? []} />
+          </div>
+        ) : null}
+      </section>
+
+      <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-base font-semibold text-slate-900">Recent Payments</h2>
+          <Link href="/admin/payments" className="text-xs font-medium text-blue-600 hover:underline">
+            View all
+          </Link>
+        </div>
+        <ul className="mt-4 divide-y divide-slate-100">
+          {summary.recentPayments.length === 0 ? (
+            <li className="py-4 text-sm text-slate-500">No payments yet.</li>
+          ) : (
+            summary.recentPayments.map((p) => (
+              <li key={p.id} className="flex items-center justify-between gap-4 py-3 text-sm">
+                <Link
+                  href={`/admin/students/${p.studentId}`}
+                  className="font-medium text-blue-700 hover:underline"
+                >
+                  {p.studentName}
+                </Link>
+                <span className="font-mono text-slate-700">{p.tonAmount.toFixed(2)} TON</span>
+                <span className="shrink-0 text-slate-500">
+                  {new Date(p.createdAt).toLocaleDateString(undefined, {
+                    day: "numeric",
+                    month: "short",
+                  })}
+                </span>
+              </li>
+            ))
+          )}
+        </ul>
+      </section>
+    </div>
+  );
+}

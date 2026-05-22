@@ -1,0 +1,19 @@
+/** Shared shape for `GET /api/auth/me` (client + server typing). */
+
+export type AuthMeAdmin = {
+  id: string;
+  email: string;
+  name: string | null;
+  role: string;
+  organizationId: string | null;
+  organization: { id: string; name: string; slug: string } | null;
+};
+
+export type AuthMeJson = {
+  admin: AuthMeAdmin | null;
+  /** Valid Pay (ODEL HUB tuition) JWT and matching `AdminUser` row. */
+  tuitionSession: boolean;
+  /** URA `admin_session` cookie or local dev `ACCESS_ADMIN` bypass — same gate as admin layout without Pay. */
+  adminShellAccess: boolean;
+  paymentOps?: { manualConfirmAllowed: boolean };
+};

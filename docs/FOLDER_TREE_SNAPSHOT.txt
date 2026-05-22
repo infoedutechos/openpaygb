@@ -1,0 +1,346 @@
+```
+ODELHUB Pay/
+├── .github/
+│   └── workflows/
+│       ├── ci.yml
+│       └── docs-pages.yml
+├── .husky/
+│   └── pre-commit
+├── .vscode/
+│   └── settings.json
+├── app/
+│   ├── admin/
+│   │   ├── accounts/
+│   │   │   └── page.tsx
+│   │   ├── bot-users/
+│   │   │   └── page.tsx
+│   │   ├── cards/
+│   │   │   └── page.tsx
+│   │   ├── daily-cipher/
+│   │   │   └── page.tsx
+│   │   ├── daily-combo/
+│   │   │   └── page.tsx
+│   │   ├── daily-pattern/
+│   │   │   └── page.tsx
+│   │   ├── export/
+│   │   │   └── page.tsx
+│   │   ├── fees-collection/
+│   │   │   └── page.tsx
+│   │   ├── global-tasks/
+│   │   │   └── page.tsx
+│   │   ├── league-management/
+│   │   │   └── page.tsx
+│   │   ├── learn/
+│   │   │   └── page.tsx
+│   │   ├── login/
+│   │   │   └── page.tsx
+│   │   ├── milestone-banners/
+│   │   │   └── page.tsx
+│   │   ├── notifications/
+│   │   │   └── page.tsx
+│   │   ├── onchain-tasks/
+│   │   │   └── page.tsx
+│   │   ├── payments/
+│   │   │   └── page.tsx
+│   │   ├── pearls/
+│   │   │   └── page.tsx
+│   │   ├── published-activities/
+│   │   │   └── page.tsx
+│   │   ├── quiz/
+│   │   │   └── page.tsx
+│   │   ├── shop/
+│   │   │   ├── page.tsx
+│   │   │   ├── ShopPageView.tsx
+│   │   │   └── ShopProductList.tsx
+│   │   ├── staking-audit/
+│   │   │   └── page.tsx
+│   │   ├── students/
+│   │   │   ├── [id]/
+│   │   │   │   └── page.tsx
+│   │   │   └── page.tsx
+│   │   ├── tasks/
+│   │   │   └── page.tsx
+│   │   ├── telegram-broadcast/
+│   │   │   └── page.tsx
+│   │   ├── weekly-event/
+│   │   │   └── page.tsx
+│   │   ├── ItemPasswordGate.tsx
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── api/
+│   │   ├── admin/
+│   │   │   ├── accounts/
+│   │   │   │   └── route.ts
+│   │   │   ├── bot-users/
+│   │   │   │   ├── [id]/
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── weekly-top/
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── route.ts
+│   │   │   ├── cards/
+│   │   │   │   └── route.ts
+│   │   │   ├── clear-item-session/
+│   │   │   │   └── route.ts
+│   │   │   ├── daily-cipher/
+│   │   │   │   └── route.ts
+│   │   │   ├── daily-combo/
+│   │   │   │   └── route.ts
+│   │   │   ├── daily-pattern/
+│   │   │   │   └── route.ts
+│   │   │   ├── export/
+│   │   │   │   └── route.ts
+│   │   │   ├── fees-collection/
+│   │   │   │   └── route.ts
+│   │   │   ├── global-tasks/
+│   │   │   │   └── route.ts
+│   │   │   ├── league-management/
+│   │   │   │   └── route.ts
+│   │   │   ├── learn/
+│   │   │   │   └── route.ts
+│   │   │   ├── login/
+│   │   │   │   └── route.ts
+│   │   │   ├── logout/
+│   │   │   │   └── route.ts
+│   │   │   ├── milestone-banners/
+│   │   │   │   ├── [id]/
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── route.ts
+│   │   │   ├── notifications/
+│   │   │   │   ├── [id]/
+│   │   │   │   │   ├── recall/
+│   │   │   │   │   │   └── route.ts
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── upload/
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── route.ts
+│   │   │   ├── onchain-tasks/
+│   │   │   │   ├── [id]/
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── route.ts
+│   │   │   ├── pearls/
+│   │   │   │   └── route.ts
+│   │   │   ├── published-activities/
+│   │   │   │   ├── [id]/
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── route.ts
+│   │   │   ├── quiz/
+│   │   │   │   └── route.ts
+│   │   │   ├── receipt-rush-image/
+│   │   │   │   └── [activityId]/
+│   │   │   │       └── route.ts
+│   │   │   ├── shop/
+│   │   │   │   ├── products/
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── settings/
+│   │   │   │       └── route.ts
+│   │   │   ├── staking-audit/
+│   │   │   │   └── route.ts
+│   │   │   ├── staking-reset-claim/
+│   │   │   │   └── route.ts
+│   │   │   ├── summary/
+│   │   │   │   └── route.ts
+│   │   │   ├── tasks/
+│   │   │   │   ├── [id]/
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── route.ts
+│   │   │   ├── telegram-broadcast/
+│   │   │   │   └── route.ts
+│   │   │   ├── verify-item-password/
+│   │   │   │   └── route.ts
+│   │   │   └── weekly-event/
+│   │   │       └── route.ts
+│   │   ├── auth/
+│   │   │   ├── login/
+│   │   │   │   └── route.ts
+│   │   │   ├── logout/
+│   │   │   │   └── route.ts
+│   │   │   └── me/
+│   │   │       └── route.ts
+│   │   ├── collect/
+│   │   │   └── momo/
+│   │   │       └── route.ts
+│   │   ├── cron/
+│   │   │   └── confirm-ton/
+│   │   │       └── route.ts
+│   │   ├── fx/
+│   │   │   └── rate/
+│   │   │       └── route.ts
+│   │   ├── health/
+│   │   │   └── route.ts
+│   │   ├── manifest/
+│   │   │   └── tonconnect/
+│   │   │       └── route.ts
+│   │   ├── payments/
+│   │   │   ├── [id]/
+│   │   │   │   ├── public/
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── route.ts
+│   │   │   ├── export/
+│   │   │   │   └── route.ts
+│   │   │   └── route.ts
+│   │   ├── programmes/
+│   │   │   ├── [code]/
+│   │   │   │   └── quote/
+│   │   │   │       └── route.ts
+│   │   │   └── route.ts
+│   │   ├── receipts/
+│   │   │   └── [paymentId]/
+│   │   │       ├── pdf/
+│   │   │       │   └── route.ts
+│   │   │       └── route.ts
+│   │   ├── students/
+│   │   │   ├── [id]/
+│   │   │   │   └── route.ts
+│   │   │   └── route.ts
+│   │   └── webhooks/
+│   │       ├── momo/
+│   │       │   └── route.ts
+│   │       └── telegram/
+│   │           └── route.ts
+│   ├── pay/
+│   │   ├── page.tsx
+│   │   ├── PayProviders.tsx
+│   │   └── PayWizard.tsx
+│   ├── receipt/
+│   │   └── [paymentId]/
+│   │       └── page.tsx
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx
+├── components/
+│   ├── pay/
+│   │   └── SiteHeader.tsx
+│   └── …  (other `components/*` — run `npm run docs:tree` for full tree)
+├── contexts/
+│   └── ToastContext.tsx
+├── data/
+│   ├── learn-defaults.ts
+│   ├── quiz-blockchain-questions.ts
+│   └── ura-services-catalog.ts
+├── docs/
+│   ├── .nojekyll
+│   ├── ADMIN_FLOW.md
+│   ├── DEPLOYMENT_VERSION.txt
+│   ├── ECONOMICS.md
+│   ├── FLOWS.md
+│   ├── FOLDER_STRUCTURE.md
+│   ├── FOLDER_TREE_SNAPSHOT.txt
+│   ├── index.html
+│   ├── MASTER_ADMIN_FLOW.md
+│   ├── MULTI_TENANT_FLOW.md
+│   ├── openapi.yaml
+│   ├── README.md
+│   ├── STRUCTURE_ALIGNMENT_URA_PEARL.md
+│   ├── STRUCTURE.md
+│   ├── USER_FLOW.md
+│   └── USER_STORIES.md
+├── icons/
+│   ├── Angle.tsx
+│   ├── Coins.tsx
+│   ├── Copy.tsx
+│   ├── Cross.tsx
+│   ├── Energy.tsx
+│   ├── Friends.tsx
+│   ├── IceCoin.tsx
+│   ├── IceCube.tsx
+│   ├── IceCubes.tsx
+│   ├── Info.tsx
+│   ├── Mine.tsx
+│   ├── Rocket.tsx
+│   ├── Settings.tsx
+│   ├── Snowflake.tsx
+│   ├── Time.tsx
+│   └── Wallet.tsx
+├── images/  (… run `npm run docs:tree` for full contents)
+├── lib/
+│   ├── __tests__/
+│   │   └── money.test.ts
+│   ├── bridge/
+│   │   └── settlement.ts
+│   ├── momo/
+│   │   ├── collect.ts
+│   │   ├── find-payment.ts
+│   │   └── parse.ts
+│   ├── telegram/
+│   │   ├── client.ts
+│   │   ├── escape.ts
+│   │   ├── flow.ts
+│   │   ├── notify.ts
+│   │   └── types.ts
+│   ├── ton/
+│   │   ├── run-confirm-job.ts
+│   │   ├── text-payload.ts
+│   │   └── tonapi.ts
+│   ├── auth.ts
+│   ├── constants.ts
+│   ├── create-payment.ts
+│   ├── default-organization.ts
+│   ├── fx.ts
+│   ├── money.ts
+│   ├── object-id.ts
+│   ├── on-payment-confirmed.ts
+│   ├── prisma.ts
+│   ├── programmes.ts
+│   ├── public-url.ts
+│   ├── rate-limit.ts
+│   ├── receipt-email.ts
+│   └── webhook-dedupe.ts
+├── prisma/
+│   ├── fix-team-join-request-duplicates.ts
+│   ├── migrate-matrix-cards.ts
+│   ├── migrate-regions.ts
+│   ├── schema.game.prisma
+│   ├── schema.prisma
+│   ├── seed.ts
+│   ├── tsconfig.migrate.json
+│   └── update-matrix-labels.ts
+├── public/
+│   ├── images/
+│   │   └── suspended-bot.png
+│   ├── earn-ecosystem-hub.png
+│   ├── favicon.svg
+│   ├── fiscalfun-ecosystem-hub.png
+│   ├── lucky-spin-wheel2.png
+│   ├── next.svg
+│   ├── pearls-bounce.png
+│   ├── tap-arena-center.png
+│   └── vercel.svg
+├── scripts/
+│   ├── clean-install.ps1
+│   ├── clean-next.cjs
+│   ├── db-push.cjs
+│   ├── deploy.sh
+│   ├── load-env.cjs
+│   ├── migrate-root-layout.mjs
+│   ├── print-folder-tree.cjs
+│   ├── pull-ura-app-admin.mjs
+│   ├── pull-ura-app-api-admin.mjs
+│   ├── run-next-dev.cjs
+│   ├── run-setup-and-dev.ps1
+│   ├── seed.ts
+│   ├── set-master-login.ts
+│   ├── set-telegram-webhook.ts
+│   └── verify.cjs
+├── types/
+│   ├── odelhub.ts
+│   └── telegram-webapp.d.ts
+├── utils/  (… run `npm run docs:tree` for full contents)
+├── .cursorignore
+├── .env.example
+├── .eslintrc.json
+├── .eslintrc2.json
+├── .gitignore
+├── .npmrc
+├── .vercelignore
+├── cursorignore.example
+├── middleware.ts
+├── next-env.d.ts
+├── next.config.ts
+├── package-lock.json
+├── package.json
+├── postcss.config.mjs
+├── tailwind.config.ts
+├── tsconfig.json
+├── vercel.json
+└── vitest.config.ts
+```
