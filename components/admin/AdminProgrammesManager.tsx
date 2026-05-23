@@ -44,6 +44,25 @@ type ProgrammeRow = {
 };
 
 type OrgOption = { id: string; slug: string; name: string; tenantStatus: string };
+type ApiErrorJson = { error?: string; hint?: string };
+
+async function readJsonResponse<T extends object>(
+  response: Response,
+  fallbackError: string
+): Promise<{ ok: true; data: T } | { ok: false; error: string }> {
+  const raw = await response.text();
+  if (!raw.trim()) return { ok: true, data: {} as T };
+
+  try {
+    return { ok: true, data: JSON.parse(raw) as T };
+  } catch {
+    const snippet = raw.slice(0, 120).replace(/\s+/g, " ");
+    return {
+      ok: false,
+      error: response.ok ? `${fallbackError}: invalid server response.` : `${fallbackError} (HTTP ${response.status}). ${snippet}`,
+    };
+  }
+}
 
 export default function AdminProgrammesManager() {
   const { data: authMe, loading: authMeLoading } = useAuthMe();
@@ -108,7 +127,9 @@ export default function AdminProgrammesManager() {
   const loadOrgs = useCallback(async () => {
     const r = await fetch("/api/master/organizations", { credentials: "include" });
     if (!r.ok) return;
-    const j = (await r.json()) as { organizations?: OrgOption[] };
+    const parsed = await readJsonResponse<{ organizations?: OrgOption[] }>(r, "Failed to load schools");
+    if (!parsed.ok) return;
+    const j = parsed.data;
     const list = (j.organizations ?? []).filter((o) => o.tenantStatus === "active");
     setOrgs(list);
     if (list.length) {
@@ -129,9 +150,16 @@ export default function AdminProgrammesManager() {
     }
     const q = role === "master" ? `?${slugParam}` : "";
     const r = await fetch(`/api/admin/programmes${q}`, { credentials: "include" });
-    const j = await r.json();
+    const parsed = await readJsonResponse<{ programmes?: ProgrammeRow[] } & ApiErrorJson>(r, "Failed to load programmes");
+    if (!parsed.ok) {
+      setError(parsed.error);
+      setRows([]);
+      setLoading(false);
+      return;
+    }
+    const j = parsed.data;
     if (!r.ok) {
-      setError((j as { error?: string }).error ?? "Failed to load programmes");
+      setError(j.error ?? "Failed to load programmes");
       setRows([]);
       setLoading(false);
       return;
@@ -213,9 +241,14 @@ export default function AdminProgrammesManager() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    const j = await r.json();
+    const parsed = await readJsonResponse<ApiErrorJson>(r, "Create failed");
+    if (!parsed.ok) {
+      setError(parsed.error);
+      return;
+    }
+    const j = parsed.data;
     if (!r.ok) {
-      setError((j as { error?: string }).error ?? "Create failed");
+      setError(j.error ?? "Create failed");
       return;
     }
     setNewCode("");
@@ -304,9 +337,14 @@ export default function AdminProgrammesManager() {
         semestersPerYear: Math.max(0, Math.min(3, Math.round(Number(editSemestersPerYear)) || 0)),
       }),
     });
-    const j = await r.json();
+    const parsed = await readJsonResponse<ApiErrorJson>(r, "Update failed");
+    if (!parsed.ok) {
+      setError(parsed.error);
+      return;
+    }
+    const j = parsed.data;
     if (!r.ok) {
-      setError((j as { error?: string }).error ?? "Update failed");
+      setError(j.error ?? "Update failed");
       return;
     }
     setEditId(null);
@@ -320,9 +358,14 @@ export default function AdminProgrammesManager() {
       method: "DELETE",
       credentials: "include",
     });
-    const j = await r.json();
+    const parsed = await readJsonResponse<ApiErrorJson>(r, "Delete failed");
+    if (!parsed.ok) {
+      setError(parsed.error);
+      return;
+    }
+    const j = parsed.data;
     if (!r.ok) {
-      setError((j as { error?: string; hint?: string }).error ?? (j as { hint?: string }).hint ?? "Delete failed");
+      setError(j.error ?? j.hint ?? "Delete failed");
       return;
     }
     await loadProgrammes();
@@ -366,9 +409,14 @@ export default function AdminProgrammesManager() {
         functionalFeesUgx,
       }),
     });
-    const j = await r.json();
+    const parsed = await readJsonResponse<ApiErrorJson>(r, "Could not add fee");
+    if (!parsed.ok) {
+      setError(parsed.error);
+      return;
+    }
+    const j = parsed.data;
     if (!r.ok) {
-      setError((j as { error?: string }).error ?? "Could not add fee");
+      setError(j.error ?? "Could not add fee");
       return;
     }
     setFeeAmount("");
@@ -415,7 +463,8 @@ export default function AdminProgrammesManager() {
             functionalFeesUgx,
           }),
         });
-        const j = (await r.json().catch(() => ({}))) as { error?: string };
+        const parsed = await readJsonResponse<ApiErrorJson>(r, "Could not add fee");
+        const j = parsed.ok ? parsed.data : { error: parsed.error };
         if (!r.ok) {
           postErrs.push(`Source line ${row.sourceLine} (${row.feeKey}): ${j.error ?? `HTTP ${r.status}`}`);
         } else {
@@ -449,9 +498,14 @@ export default function AdminProgrammesManager() {
         body: JSON.stringify(patch),
       }
     );
-    const j = await r.json();
+    const parsed = await readJsonResponse<ApiErrorJson>(r, "Update failed");
+    if (!parsed.ok) {
+      setError(parsed.error);
+      return;
+    }
+    const j = parsed.data;
     if (!r.ok) {
-      setError((j as { error?: string }).error ?? "Update failed");
+      setError(j.error ?? "Update failed");
       return;
     }
     await loadProgrammes();
@@ -465,8 +519,8 @@ export default function AdminProgrammesManager() {
       { method: "DELETE", credentials: "include" }
     );
     if (!r.ok) {
-      const j = await r.json();
-      setError((j as { error?: string }).error ?? "Delete failed");
+      const parsed = await readJsonResponse<ApiErrorJson>(r, "Delete failed");
+      setError(parsed.ok ? parsed.data.error ?? "Delete failed" : parsed.error);
       return;
     }
     await loadProgrammes();
