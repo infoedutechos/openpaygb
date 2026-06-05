@@ -2,10 +2,14 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { Suspense, useMemo } from "react";
+import { useMasterOrgSlug } from "@/hooks/useMasterOrgSlug";
 import { OdelShieldIcon } from "@/components/icons/OdelShieldIcon";
+import { AdminWorkspaceBar } from "@/components/admin/AdminWorkspaceBar";
 import { RequestSchoolWorkspaceCta } from "@/components/tuition/RequestSchoolWorkspaceCta";
+import { PUBLIC_SCHOOL_LOGIN_PATH } from "@/lib/admin-auth-entry";
 import { invalidateAuthMeCache, useAuthMe } from "@/hooks/useAuthMe";
+import { DbDegradedBanner } from "@/components/admin/DbDegradedBanner";
 
 const SEGMENTS: { suffix: string; label: string }[] = [
   { suffix: "", label: "Dashboard" },
@@ -25,13 +29,14 @@ function navActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export default function TuitionAdminShell({ children }: { children: React.ReactNode }) {
+function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { hrefWithOrgSlug } = useMasterOrgSlug();
   const base = pathname.startsWith("/school-admin") ? "/school-admin" : "/admin";
   const navItems = useMemo(
-    () => SEGMENTS.map((s) => ({ href: `${base}${s.suffix}`, label: s.label })),
-    [base]
+    () => SEGMENTS.map((s) => ({ href: hrefWithOrgSlug(`${base}${s.suffix}`), label: s.label })),
+    [base, hrefWithOrgSlug]
   );
   const { data: authMe } = useAuthMe();
   const isMaster = authMe?.admin?.role === "master";
@@ -46,7 +51,7 @@ export default function TuitionAdminShell({ children }: { children: React.ReactN
     invalidateAuthMeCache();
     await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
     const next = pathname.startsWith("/school-admin") ? `?next=${encodeURIComponent(pathname)}` : "";
-    router.replace(`/admin/login${next}`);
+    router.replace(`${PUBLIC_SCHOOL_LOGIN_PATH}${next}`);
     router.refresh();
   }
 
@@ -133,8 +138,20 @@ export default function TuitionAdminShell({ children }: { children: React.ReactN
             ))}
           </nav>
         </header>
-        <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 md:py-8">{children}</div>
+        <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 md:py-8">
+          <AdminWorkspaceBar />
+          {authMe?.dbDegraded ? <DbDegradedBanner /> : null}
+          {children}
+        </div>
       </div>
     </div>
+  );
+}
+
+export default function TuitionAdminShell({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<div className="min-h-[40vh] bg-[#070d18]" />}>
+      <TuitionAdminShellInner>{children}</TuitionAdminShellInner>
+    </Suspense>
   );
 }

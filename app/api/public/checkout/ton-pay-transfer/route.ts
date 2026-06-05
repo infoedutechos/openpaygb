@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerTonPayOptions } from "@/lib/ton-pay-options";
 import { assertCheckoutStudentAccess } from "@/lib/checkout-session";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
+import { apiErrorResponse } from "@/lib/api-error";
 
 const Body = z.object({
   paymentId: z.string().min(20).max(30),
@@ -77,8 +78,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ message, reference, bodyBase64Hash });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Could not build transfer";
-    console.error("[checkout/ton-pay-transfer]", e);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return apiErrorResponse(e, {
+      route: "checkout/ton-pay-transfer",
+      fallback: "Could not build transfer",
+    });
   }
 }

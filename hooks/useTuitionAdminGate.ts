@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import type { AuthMeJson } from "@/lib/auth-me";
+import { PUBLIC_SCHOOL_LOGIN_PATH } from "@/lib/admin-auth-entry";
 import { useAuthMe } from "@/hooks/useAuthMe";
 
 const DEFAULT_SIGN_IN_HINT =
@@ -20,12 +21,12 @@ export function useTuitionAdminGate() {
         return { ok: false, error: "", redirecting: false };
       }
       if (!authMe) {
-        router.replace("/admin/login");
+        router.replace(PUBLIC_SCHOOL_LOGIN_PATH);
         return { ok: false, error: "", redirecting: true };
       }
       if (!authMe.tuitionSession) {
         if (!authMe.adminShellAccess) {
-          router.replace("/admin/login");
+          router.replace(PUBLIC_SCHOOL_LOGIN_PATH);
           return { ok: false, error: "", redirecting: true };
         }
         return {

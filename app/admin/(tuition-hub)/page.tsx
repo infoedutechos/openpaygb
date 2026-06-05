@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAuthMe } from "@/hooks/useAuthMe";
+import { clientFetchErrorMessage } from "@/lib/client-fetch-error";
 import { TenantList } from "@/components/tuition/TenantList";
 
 type Summary = {
@@ -108,7 +110,9 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub: st
   );
 }
 
-export default function AdminDashboardPage() {
+function AdminDashboardPageInner() {
+  const searchParams = useSearchParams();
+  const orgSlugFilter = searchParams.get("orgSlug")?.trim().toLowerCase() ?? "";
   const { data: authMe, loading: authLoading } = useAuthMe();
   const [summary, setSummary] = useState<Summary | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -129,18 +133,23 @@ export default function AdminDashboardPage() {
     }
     let cancelled = false;
     void (async () => {
-      const r = await fetch("/api/admin/summary", { credentials: "include" });
-      const j = await r.json();
-      if (!r.ok) {
-        if (!cancelled) setError(j.error ?? "Could not load summary");
-        return;
+      try {
+        const q = orgSlugFilter ? `?organizationSlug=${encodeURIComponent(orgSlugFilter)}` : "";
+        const r = await fetch(`/api/admin/summary${q}`, { credentials: "include" });
+        const j = await r.json();
+        if (!r.ok) {
+          if (!cancelled) setError(j.error ?? "Could not load summary");
+          return;
+        }
+        if (!cancelled) setSummary(j as Summary);
+      } catch (err) {
+        if (!cancelled) setError(clientFetchErrorMessage(err));
       }
-      if (!cancelled) setSummary(j as Summary);
     })();
     return () => {
       cancelled = true;
     };
-  }, [authLoading, authMe]);
+  }, [authLoading, authMe, orgSlugFilter]);
 
   if (error) {
     return <p className="text-sm text-rose-600">{error}</p>;
@@ -150,9 +159,19 @@ export default function AdminDashboardPage() {
   }
 
   const orgLabel = summary.viewer?.organizationName;
+  const scopedSlug =
+    (summary.viewer as { scopedToSlug?: string | null } | undefined)?.scopedToSlug ?? orgSlugFilter;
 
   return (
     <div className="space-y-6">
+      {scopedSlug ? (
+        <p className="rounded-lg border border-amber-500/30 bg-amber-950/25 px-4 py-2 text-sm text-amber-100/95">
+          Viewing dashboard for <strong className="font-mono">{scopedSlug}</strong>.{" "}
+          <Link href="/admin" className="text-cyan-300 underline hover:text-cyan-200">
+            Clear filter
+          </Link>
+        </p>
+      ) : null}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-white">Dashboard</h1>
@@ -279,5 +298,13 @@ export default function AdminDashboardPage() {
         </ul>
       </section>
     </div>
+  );
+}
+
+export default function AdminDashboardPage() {
+  return (
+    <Suspense fallback={<p className="text-sm text-slate-500">Loading dashboard…</p>}>
+      <AdminDashboardPageInner />
+    </Suspense>
   );
 }

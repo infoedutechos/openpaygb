@@ -12,6 +12,8 @@ import {
   signCheckoutSession,
 } from "@/lib/checkout-session";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
+import { sanitizeProviderInstructions } from "@/lib/html-sanitize";
+import { apiErrorResponse, resolveApiError } from "@/lib/api-error";
 import { isMbiyoConfigured, mbiyoMerchantPayin, mbiyoNotConfiguredMessage } from "@/lib/mbiyo/client";
 import { convertUgxToCurrency } from "@/lib/mbiyo/convert-ugx";
 import {
@@ -61,7 +63,7 @@ const Body = z
   });
 
 /**
- * Guest or logged-in student: create pending **mbiyo** payment and initiate OpenPayGlobal payin (MbiyoPay infrastructure).
+ * Guest or logged-in student: create pending **mbiyo** rail payment (MbiyoPay API; OpenPayGB brand at checkout).
  * Webhook: `POST /api/webhooks/mbiyo` (set `NEXT_PUBLIC_APP_URL` for callback_url).
  */
 export async function POST(req: Request) {
@@ -86,7 +88,7 @@ export async function POST(req: Request) {
     if (!isMbiyoCountrySupported(d.countryCode)) {
       return NextResponse.json(
         {
-          error: `Country ${d.countryCode} is not supported for OpenPayGlobal mobile money. Choose: ${mbiyoSupportedCountryCodes().join(", ")}. Uganda (UG) is not on the provider network — use TON or a supported country.`,
+          error: `Country ${d.countryCode} is not supported for the Mbiyo rail. Choose: ${mbiyoSupportedCountryCodes().join(", ")}. Uganda (UG) is not on Mbiyo — use TON, LivePay (UG), or a supported country.`,
           code: "mbiyo_country_unsupported",
         },
         { status: 400 },
@@ -167,8 +169,12 @@ export async function POST(req: Request) {
       collectAmount = await convertUgxToCurrency(doc.totalUgx, settleCurrency);
     } catch (e) {
       await prisma.payment.deleteMany({ where: { id: doc.id, status: "pending" } }).catch(() => {});
-      const msg = e instanceof Error ? e.message : "Could not convert UGX total for mobile money";
-      return NextResponse.json({ error: msg }, { status: 502 });
+      const r = resolveApiError(e, {
+        route: "checkout/mbiyo-start/convert",
+        fallback: "Could not convert UGX total for mobile money",
+      });
+      if (r.shouldLog) console.error("[checkout/mbiyo-start/convert]", e);
+      return NextResponse.json(r.body, { status: 502 });
     }
 
     let payin;
@@ -187,9 +193,21 @@ export async function POST(req: Request) {
       });
     } catch (e) {
       await prisma.payment.deleteMany({ where: { id: doc.id, status: "pending" } }).catch(() => {});
-      const msg = e instanceof Error ? e.message : String(e);
-      const status = msg.includes("not configured") ? 503 : 502;
-      return NextResponse.json({ error: msg, code: status === 503 ? "mbiyo_not_configured" : "mbiyo_payin_failed" }, { status });
+      const r = resolveApiError(e, {
+        route: "checkout/mbiyo-start/payin",
+        fallback: "Could not start mobile money payment",
+      });
+      const notConfigured =
+        e instanceof Error && /not configured/i.test(e.message);
+      const status = notConfigured ? 503 : 502;
+      if (r.shouldLog) console.error("[checkout/mbiyo-start/payin]", e);
+      return NextResponse.json(
+        {
+          ...r.body,
+          code: status === 503 ? "mbiyo_not_configured" : "mbiyo_payin_failed",
+        },
+        { status },
+      );
     }
 
     const data = payin.data;
@@ -230,7 +248,10 @@ export async function POST(req: Request) {
           transactionId: data?.transaction_id ?? null,
           status: data?.status ?? null,
           redirectUrl: data?.redirect_url ?? null,
-          instructions: data?.instructions ?? null,
+          instructions:
+            typeof data?.instructions === "string"
+              ? sanitizeProviderInstructions(data.instructions)
+              : null,
           authMode: data?.auth_mode ?? null,
           chargedAmount: data?.charged_amount ?? null,
           fee: data?.fee ?? null,
@@ -244,17 +265,9 @@ export async function POST(req: Request) {
     if (checkoutToken) attachCheckoutSessionCookie(res, checkoutToken);
     return res;
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Could not start OpenPayGlobal payment";
-    let status = 500;
-    if (msg.includes("not active") || msg.includes("not found")) status = 404;
-    if (
-      msg.includes("Programme not found") ||
-      msg.includes("No fee schedule") ||
-      msg.includes("Invalid") ||
-      msg.includes("Installment plan not found")
-    )
-      status = 400;
-    if (status === 500) console.error("[checkout/mbiyo-start]", e);
-    return NextResponse.json({ error: msg }, { status });
+    return apiErrorResponse(e, {
+      route: "checkout/mbiyo-start",
+      fallback: "Could not start Mbiyo payment",
+    });
   }
 }

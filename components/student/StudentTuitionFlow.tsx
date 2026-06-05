@@ -9,11 +9,19 @@ import { MbiyoPayinFields } from "@/components/pay/MbiyoPayinFields";
 import { TuitionCheckoutStepper } from "@/components/pay/TuitionCheckoutStepper";
 import { toE164FromNational } from "@/lib/mbiyo-checkout-form";
 import {
-  OPEN_PAY_GLOBAL_NAME,
-  openPayGlobalLabel,
-  openPayGlobalMobileMoneyLabel,
+  OPEN_PAY_BRAND,
+  PAYMENT_RAIL_LIVEPAY,
+  PAYMENT_RAIL_MBIYO,
+  PAYMENT_RAIL_OPENPAY_CARD,
+  PAYMENT_RAIL_RELWORX,
+  livepayRailSectionLabel,
+  mbiyoRailSectionLabel,
+  relworxRailSectionLabel,
+  openPayBrandLabel,
+  openPayCardRailSectionLabel,
   withOpenPayGlobal,
 } from "@/lib/open-pay-brand";
+import { ugandaPhoneToE164 } from "@/lib/livepay/uganda-phone";
 import { formatFxRateSource } from "@/lib/fx-rate-label";
 import {
   TuitionBalancePanel,
@@ -28,6 +36,8 @@ import {
   type InstallmentSchedule,
 } from "@/lib/installments";
 import { ugxToTon } from "@/lib/money";
+import { fetchPaymentPublicStatus } from "@/utils/fetch-payment-public";
+import { usePaymentStatusPoll } from "@/hooks/usePaymentStatusPoll";
 
 type ProgrammeDuration = {
   durationYears: number;
@@ -251,7 +261,17 @@ export function StudentTuitionFlow() {
   const [paymentTonAmount, setPaymentTonAmount] = useState<number | null>(null);
   const [chainStatus, setChainStatus] = useState<"pending" | "confirmed">("pending");
   const [confirmedTxHash, setConfirmedTxHash] = useState<string | null>(null);
-  const [payChannel, setPayChannel] = useState<"ton" | "mbiyo" | null>(null);
+  const [payChannel, setPayChannel] = useState<
+    "ton" | "mbiyo" | "livepay" | "relworx" | "openpay_card" | null
+  >(null);
+  const [livepayEnabled, setLivepayEnabled] = useState(false);
+  const [relworxEnabled, setRelworxEnabled] = useState(false);
+  const [openPayCardPlatformEnabled, setOpenPayCardPlatformEnabled] = useState(false);
+  const [openPayCardBalanceUgx, setOpenPayCardBalanceUgx] = useState(0);
+  const [openPayCardCanPay, setOpenPayCardCanPay] = useState(false);
+  const [useOpenPayCardAtCheckout, setUseOpenPayCardAtCheckout] = useState(false);
+  const [livepayPhone, setLivepayPhone] = useState("");
+  const [livepayNetwork, setLivepayNetwork] = useState<"mtn" | "airtel">("mtn");
   const [mbiyoCountryCode, setMbiyoCountryCode] = useState("SN");
   const [mbiyoNetwork, setMbiyoNetwork] = useState("orange");
   const [mbiyoPhone, setMbiyoPhone] = useState("");
@@ -285,6 +305,38 @@ export function StudentTuitionFlow() {
       setYear(j.student.year || 1);
       setSemester(j.student.semester || 1);
     })();
+  }, []);
+
+  useEffect(() => {
+    void fetch("/api/student/openpay-card", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then(
+        (j: {
+          platform?: { enabled?: boolean };
+          card?: { status?: string; balanceUgx?: number };
+          canPayTuition?: boolean;
+        } | null) => {
+          if (!j) return;
+          setOpenPayCardPlatformEnabled(Boolean(j.platform?.enabled));
+          setOpenPayCardCanPay(Boolean(j.canPayTuition && j.card?.status === "active"));
+          setOpenPayCardBalanceUgx(j.card?.balanceUgx ?? 0);
+        },
+      )
+      .catch(() => {
+        setOpenPayCardPlatformEnabled(false);
+        setOpenPayCardCanPay(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    void fetch("/api/public/livepay-config")
+      .then((r) => r.json())
+      .then((j: { enabled?: boolean }) => setLivepayEnabled(Boolean(j.enabled)))
+      .catch(() => setLivepayEnabled(false));
+    void fetch("/api/public/relworx-config")
+      .then((r) => r.json())
+      .then((j: { enabled?: boolean }) => setRelworxEnabled(Boolean(j.enabled)))
+      .catch(() => setRelworxEnabled(false));
   }, []);
 
   useEffect(() => {
@@ -340,72 +392,63 @@ export function StudentTuitionFlow() {
     return { inserviceRows, regularRows };
   }, [programmes]);
 
-  const pollPayment = useCallback(async () => {
-    if (!paymentId) return;
-    const r = await fetch(`/api/payments/${paymentId}/public`);
-    const j = (await r.json()) as {
-      payment?: { status: string; memo?: string; txHash?: string };
-      error?: string;
-    };
-    if (r.status === 404 || r.status === 400) {
-      setPaymentId(null);
-      setPaymentMemo(null);
-      setPaymentTonAmount(null);
-      setChainStatus("pending");
-      setConfirmedTxHash(null);
-      setWalletNote(null);
-      setError(
-        r.status === 400
-          ? "Invalid payment reference. Go back to fees and create a new payment."
-          : "This payment no longer exists (for example after a database reset). Go back to fees and create a new payment.",
-      );
-      setStep((prev) =>
-        prev === "choose_pay_method" ||
-        prev === "mbiyo_waiting" ||
-        prev === "connect_wallet" ||
-        prev === "confirm_payment" ||
-        prev === "processing" ||
-        prev === "success"
-          ? "fees_breakdown"
-          : prev,
-      );
-      return;
-    }
-    if (!r.ok || !j.payment) return;
-    if (j.payment.status === "confirmed") {
+  const applyPaymentStatus = useCallback(
+    (payment: { status: string; memo?: string | null; txHash?: string }) => {
+      if (payment.status !== "confirmed") return;
       setChainStatus("confirmed");
-      if (typeof j.payment.memo === "string") setPaymentMemo(j.payment.memo);
-      if (typeof j.payment.txHash === "string" && j.payment.txHash.trim()) {
-        setConfirmedTxHash(j.payment.txHash.trim());
+      if (typeof payment.memo === "string") setPaymentMemo(payment.memo);
+      if (typeof payment.txHash === "string" && payment.txHash.trim()) {
+        setConfirmedTxHash(payment.txHash.trim());
       }
-    }
-  }, [paymentId]);
+    },
+    [],
+  );
 
-  useEffect(() => {
+  const handlePollInvalid = useCallback((status: 400 | 404) => {
+    setPaymentId(null);
+    setPaymentMemo(null);
+    setPaymentTonAmount(null);
+    setChainStatus("pending");
+    setConfirmedTxHash(null);
+    setWalletNote(null);
+    setError(
+      status === 400
+        ? "Invalid payment reference. Go back to fees and create a new payment."
+        : "This payment no longer exists (for example after a database reset). Go back to fees and create a new payment.",
+    );
+    setStep((prev) =>
+      prev === "choose_pay_method" ||
+      prev === "mbiyo_waiting" ||
+      prev === "connect_wallet" ||
+      prev === "confirm_payment" ||
+      prev === "processing" ||
+      prev === "success"
+        ? "fees_breakdown"
+        : prev,
+    );
+  }, []);
+
+  usePaymentStatusPoll({
+    paymentId,
+    step,
+    chainStatus,
+    onUpdate: applyPaymentStatus,
+    onInvalid: handlePollInvalid,
+    onRateLimited: () => {
+      setWalletNote((prev) =>
+        prev?.includes("slowed down")
+          ? prev
+          : "Status checks were slowed down to avoid rate limits. This page will keep trying.",
+      );
+    },
+  });
+
+  const pollPaymentOnce = useCallback(async () => {
     if (!paymentId) return;
-    let cancelled = false;
-    let ticks = 0;
-    const mbiyoPoll = step === "mbiyo_waiting";
-    const maxTicks = step === "processing" ? 240 : mbiyoPoll ? 300 : 180;
-    const intervalMs = step === "processing" ? 2500 : mbiyoPoll ? 3000 : 5000;
-
-    const tick = async () => {
-      if (cancelled) return;
-      await pollPayment();
-    };
-
-    void tick();
-    const iv = setInterval(() => {
-      ticks++;
-      if (ticks >= maxTicks) clearInterval(iv);
-      else void tick();
-    }, intervalMs);
-
-    return () => {
-      cancelled = true;
-      clearInterval(iv);
-    };
-  }, [paymentId, pollPayment, step]);
+    const result = await fetchPaymentPublicStatus(paymentId);
+    if (result.ok) applyPaymentStatus(result.payment);
+    else if (result.status === 400 || result.status === 404) handlePollInvalid(result.status);
+  }, [paymentId, applyPaymentStatus, handlePollInvalid]);
 
   useEffect(() => {
     if (chainStatus !== "confirmed" || !paymentId) return;
@@ -696,8 +739,8 @@ export function StudentTuitionFlow() {
           authMode?: string | null;
         };
       };
-      if (!r.ok) throw new Error(j.error ?? `Could not start ${OPEN_PAY_GLOBAL_NAME} payment`);
-      if (!j.payment?.id) throw new Error(`Invalid ${OPEN_PAY_GLOBAL_NAME} response`);
+      if (!r.ok) throw new Error(j.error ?? `Could not start ${PAYMENT_RAIL_MBIYO} payment`);
+      if (!j.payment?.id) throw new Error(`Invalid ${PAYMENT_RAIL_MBIYO} response`);
       setPayChannel("mbiyo");
       setPaymentId(j.payment.id);
       setPaymentMemo(j.payment.memo ?? null);
@@ -710,6 +753,47 @@ export function StudentTuitionFlow() {
       setStep("mbiyo_waiting");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not start installment payment");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function payTuitionWithOpenPayCard() {
+    if (!me || !quote) return;
+    if (!openPayCardCanPay || openPayCardBalanceUgx < quote.totalUgx) {
+      setError("Insufficient OpenPayGB card balance. Top up your card on the student home page.");
+      return;
+    }
+    setError(null);
+    setBusy(true);
+    try {
+      const body: Record<string, unknown> = {
+        organizationSlug: orgSlug,
+        studentId: me.id,
+        programmeCode: code,
+        year,
+        semester,
+        feeSelectionMode: quote.feeSelectionMode,
+        installmentCount,
+      };
+      if (quote.isFullSelection !== true && quote.lines.length > 0) {
+        body.feeIds = [...quote.lines.map((l) => l.id)].sort();
+      }
+      const rp = await fetch("/api/public/checkout/openpay-card-pay", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body),
+      });
+      const pj = await rp.json();
+      if (!rp.ok) throw new Error(pj.error ?? "OpenPayGB card payment failed");
+      setPayChannel("openpay_card");
+      setPaymentId(pj.payment.id);
+      setChainStatus("confirmed");
+      setOpenPayCardBalanceUgx(pj.openPayCard?.balanceUgx ?? 0);
+      setStep("success");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not pay with OpenPayGB card");
     } finally {
       setBusy(false);
     }
@@ -808,8 +892,8 @@ export function StudentTuitionFlow() {
           authMode?: string | null;
         };
       };
-      if (!r.ok) throw new Error(j.error ?? `Could not start ${OPEN_PAY_GLOBAL_NAME} payment`);
-      if (!j.payment?.id) throw new Error(`Invalid ${OPEN_PAY_GLOBAL_NAME} response`);
+      if (!r.ok) throw new Error(j.error ?? `Could not start ${PAYMENT_RAIL_MBIYO} payment`);
+      if (!j.payment?.id) throw new Error(`Invalid ${PAYMENT_RAIL_MBIYO} response`);
       setPayChannel("mbiyo");
       setPaymentId(j.payment.id);
       setPaymentMemo(j.payment.memo ?? null);
@@ -827,7 +911,126 @@ export function StudentTuitionFlow() {
       );
       setStep("mbiyo_waiting");
     } catch (e) {
-      setError(e instanceof Error ? e.message : `Could not start ${OPEN_PAY_GLOBAL_NAME} payment`);
+      setError(e instanceof Error ? e.message : `Could not start ${PAYMENT_RAIL_MBIYO} payment`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function startStudentRelworx() {
+    if (!me) return;
+    setError(null);
+    if (!quote) {
+      setError("Load quote first.");
+      return;
+    }
+    const phone = ugandaPhoneToE164(livepayPhone.trim());
+    if (!phone) {
+      setError("Enter a valid Uganda mobile number (e.g. 0777123456).");
+      return;
+    }
+    setBusy(true);
+    try {
+      const body: Record<string, unknown> = {
+        organizationSlug: orgSlug,
+        studentId: me.id,
+        programmeCode: code,
+        year,
+        semester,
+        phone,
+        feeSelectionMode: quote.feeSelectionMode,
+        installmentCount,
+      };
+      if (quote.isFullSelection !== true && quote.lines.length > 0) {
+        body.feeIds = [...quote.lines.map((l) => l.id)].sort();
+      }
+      const r = await fetch("/api/public/checkout/relworx-start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body),
+      });
+      const j = (await r.json()) as {
+        error?: string;
+        payment?: { id: string; memo?: string | null };
+        relworx?: { message?: string };
+      };
+      if (!r.ok) throw new Error(j.error ?? `Could not start ${PAYMENT_RAIL_RELWORX} payment`);
+      if (!j.payment?.id) throw new Error(`Invalid ${PAYMENT_RAIL_RELWORX} response`);
+      setPayChannel("relworx");
+      setPaymentId(j.payment.id);
+      setPaymentMemo(j.payment.memo ?? null);
+      setPaymentTonAmount(null);
+      setChainStatus("pending");
+      setConfirmedTxHash(null);
+      setWalletNote(j.relworx?.message ?? "Approve the mobile money prompt on your phone.");
+      setMbiyoRedirectUrl(null);
+      setMbiyoInstructions(null);
+      setMbiyoAuthMode(null);
+      setMbiyoCollect({ amount: quote.totalUgx, currency: "UGX" });
+      setStep("mbiyo_waiting");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : `Could not start ${PAYMENT_RAIL_RELWORX} payment`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function startStudentLivepay() {
+    if (!me) return;
+    setError(null);
+    if (!quote) {
+      setError("Load quote first.");
+      return;
+    }
+    const phone = ugandaPhoneToE164(livepayPhone.trim());
+    if (!phone) {
+      setError("Enter a valid Uganda mobile number (e.g. 0777123456).");
+      return;
+    }
+    setBusy(true);
+    try {
+      const body: Record<string, unknown> = {
+        organizationSlug: orgSlug,
+        studentId: me.id,
+        programmeCode: code,
+        year,
+        semester,
+        phone,
+        network: livepayNetwork,
+        feeSelectionMode: quote.feeSelectionMode,
+        installmentCount,
+      };
+      if (quote.isFullSelection !== true && quote.lines.length > 0) {
+        body.feeIds = [...quote.lines.map((l) => l.id)].sort();
+      }
+      const r = await fetch("/api/public/checkout/livepay-start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body),
+      });
+      const j = (await r.json()) as {
+        error?: string;
+        payment?: { id: string; memo?: string | null };
+        livepay?: { message?: string };
+      };
+      if (!r.ok) throw new Error(j.error ?? `Could not start ${PAYMENT_RAIL_LIVEPAY} payment`);
+      if (!j.payment?.id) throw new Error(`Invalid ${PAYMENT_RAIL_LIVEPAY} response`);
+      setPayChannel("livepay");
+      setPaymentId(j.payment.id);
+      setPaymentMemo(j.payment.memo ?? null);
+      setPaymentTonAmount(null);
+      setChainStatus("pending");
+      setConfirmedTxHash(null);
+      setWalletNote(j.livepay?.message ?? "Approve the MTN/Airtel prompt on your phone.");
+      setMbiyoRedirectUrl(null);
+      setMbiyoInstructions(null);
+      setMbiyoAuthMode(null);
+      setMbiyoCollect({ amount: quote.totalUgx, currency: "UGX" });
+      setStep("mbiyo_waiting");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : `Could not start ${PAYMENT_RAIL_LIVEPAY} payment`);
     } finally {
       setBusy(false);
     }
@@ -860,7 +1063,7 @@ export function StudentTuitionFlow() {
         return { message: j.message, reference: j.reference };
       });
       setStep("processing");
-      void pollPayment();
+      void pollPaymentOnce();
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Wallet action cancelled or failed.";
       setWalletNote(msg);
@@ -952,7 +1155,7 @@ export function StudentTuitionFlow() {
               </h1>
               <p className="relative mt-4 text-sm leading-relaxed text-slate-400">
                 Pay with <span className="text-cyan-300">TON</span> on-chain or{" "}
-                <span className="text-cyan-300">{openPayGlobalLabel}</span>{" "}
+                <span className="text-cyan-300">{openPayBrandLabel}</span>{" "}
                 mobile money (UGX) at the same quoted totals.
               </p>
             </div>
@@ -1258,7 +1461,7 @@ export function StudentTuitionFlow() {
           <GlassPanel className="p-5 text-sm">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-200/80">Fee items</p>
             <p className="mt-1 text-xs text-slate-500">
-              Tick or untick lines; subtotal, transaction charge, TON estimate, and {OPEN_PAY_GLOBAL_NAME} all use the same
+              Tick or untick lines; subtotal, transaction charge, TON estimate, and {OPEN_PAY_BRAND} rails all use the same
               UGX total.
             </p>
             <ul className="mt-3 max-h-[min(50vh,22rem)] space-y-2 overflow-y-auto overscroll-contain pr-1">
@@ -1384,7 +1587,7 @@ export function StudentTuitionFlow() {
             </div>
           </GlassPanel>
           <GlassPanel className="p-5">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">{openPayGlobalMobileMoneyLabel}</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">{mbiyoRailSectionLabel}</p>
             <p className="mt-2 text-sm text-slate-400">
               Approve UGX on your phone. Your school record phone is prefilled when we have it; you can change it for this
               payment.
@@ -1407,10 +1610,102 @@ export function StudentTuitionFlow() {
             </div>
             <div className="mt-4">
               <BtnGhost onClick={() => void startStudentMbiyo()} disabled={busy}>
-                Start {OPEN_PAY_GLOBAL_NAME}
+                Pay with {PAYMENT_RAIL_MBIYO}
               </BtnGhost>
             </div>
           </GlassPanel>
+          {openPayCardPlatformEnabled ? (
+            <GlassPanel className="border-violet-500/30 bg-violet-950/20 p-5">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-violet-200/85">
+                {openPayCardRailSectionLabel}
+              </p>
+              <p className="mt-2 text-sm text-slate-400">
+                Card balance UGX {openPayCardBalanceUgx.toLocaleString()}. Total due UGX{" "}
+                {quote.totalUgx.toLocaleString()}.
+              </p>
+              <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={useOpenPayCardAtCheckout}
+                  onChange={(e) => setUseOpenPayCardAtCheckout(e.target.checked)}
+                  className="h-4 w-4 rounded border-white/20"
+                />
+                Pay with {PAYMENT_RAIL_OPENPAY_CARD}
+              </label>
+              {useOpenPayCardAtCheckout ? (
+                <div className="mt-4">
+                  <BtnGhost
+                    onClick={() => void payTuitionWithOpenPayCard()}
+                    disabled={busy || !openPayCardCanPay || openPayCardBalanceUgx < quote.totalUgx}
+                  >
+                    Pay from card balance
+                  </BtnGhost>
+                  {!openPayCardCanPay ? (
+                    <p className="mt-2 text-xs text-amber-300/90">
+                      Activate your card on the{" "}
+                      <Link href="/student" className="underline">
+                        student home
+                      </Link>{" "}
+                      first.
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+            </GlassPanel>
+          ) : null}
+          {livepayEnabled ? (
+            <GlassPanel className="border-emerald-500/25 p-5">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/85">{livepayRailSectionLabel}</p>
+              <p className="mt-2 text-sm text-slate-400">Uganda MTN or Airtel — UGX {quote.totalUgx.toLocaleString()}.</p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <label className="block text-xs text-slate-500">
+                  Network
+                  <select
+                    value={livepayNetwork}
+                    onChange={(e) => setLivepayNetwork(e.target.value as "mtn" | "airtel")}
+                    className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"
+                  >
+                    <option value="mtn">MTN</option>
+                    <option value="airtel">Airtel</option>
+                  </select>
+                </label>
+                <label className="block text-xs text-slate-500">
+                  Mobile number
+                  <input
+                    value={livepayPhone}
+                    onChange={(e) => setLivepayPhone(e.target.value)}
+                    placeholder="0777123456"
+                    className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"
+                  />
+                </label>
+              </div>
+              <div className="mt-4">
+                <BtnGhost onClick={() => void startStudentLivepay()} disabled={busy}>
+                  Pay with {PAYMENT_RAIL_LIVEPAY}
+                </BtnGhost>
+              </div>
+            </GlassPanel>
+          ) : null}
+          {relworxEnabled ? (
+            <GlassPanel className="border-sky-500/25 p-5">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-sky-200/85">{relworxRailSectionLabel}</p>
+              <p className="mt-2 text-sm text-slate-400">Uganda MTN/Airtel via Relworx — UGX {quote.totalUgx.toLocaleString()}.</p>
+              <label className="mt-4 block text-xs text-slate-500">
+                Mobile number
+                <input
+                  value={livepayPhone}
+                  onChange={(e) => setLivepayPhone(e.target.value)}
+                  placeholder="0777123456"
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"
+                />
+              </label>
+              <div className="mt-4">
+                <BtnGhost onClick={() => void startStudentRelworx()} disabled={busy}>
+                  Pay with {PAYMENT_RAIL_RELWORX}
+                </BtnGhost>
+              </div>
+            </GlassPanel>
+          ) : null}
         </div>
       )}
 
@@ -1450,7 +1745,13 @@ export function StudentTuitionFlow() {
                 </>
               ) : (
                 <>
-                  Pay with {OPEN_PAY_GLOBAL_NAME}. Tuition quoted as UGX {quote.totalUgx.toLocaleString()}; approve the wallet
+                  Pay with{" "}
+                  {payChannel === "livepay"
+                    ? PAYMENT_RAIL_LIVEPAY
+                    : payChannel === "relworx"
+                      ? PAYMENT_RAIL_RELWORX
+                      : PAYMENT_RAIL_MBIYO}{" "}
+                  ({OPEN_PAY_BRAND}). Tuition quoted as UGX {quote.totalUgx.toLocaleString()}; approve the wallet
                   amount shown on your phone. This page updates when your payment confirms.
                 </>
               )}
@@ -1467,8 +1768,8 @@ export function StudentTuitionFlow() {
             </a>
           ) : null}
           {mbiyoInstructions ? (
-            <GlassPanel className="p-4 text-left text-sm text-slate-200 [&_a]:text-cyan-300 [&_a]:underline">
-              <div dangerouslySetInnerHTML={{ __html: mbiyoInstructions }} />
+            <GlassPanel className="p-4 text-left text-sm text-slate-200 whitespace-pre-wrap">
+              {mbiyoInstructions}
             </GlassPanel>
           ) : (
             <p className="text-sm text-slate-500">Follow the prompt on your handset if no extra instructions appear here.</p>
@@ -1601,12 +1902,22 @@ export function StudentTuitionFlow() {
           <div>
             <h1 className="text-lg font-black uppercase tracking-[0.18em] text-white">Payment success</h1>
             <p className="mt-3 text-sm text-slate-400">
-              {payChannel === "mbiyo" ? (
+              {payChannel === "openpay_card" ? (
                 <>
                   Your payment of{" "}
                   <span className="font-bold text-cyan-200">UGX {quote.totalUgx.toLocaleString()}</span> via{" "}
-                  {OPEN_PAY_GLOBAL_NAME} has
-                  been confirmed.
+                  {PAYMENT_RAIL_OPENPAY_CARD} has been confirmed.
+                </>
+              ) : payChannel === "mbiyo" || payChannel === "livepay" || payChannel === "relworx" ? (
+                <>
+                  Your payment of{" "}
+                  <span className="font-bold text-cyan-200">UGX {quote.totalUgx.toLocaleString()}</span> via{" "}
+                  {payChannel === "livepay"
+                    ? PAYMENT_RAIL_LIVEPAY
+                    : payChannel === "relworx"
+                      ? PAYMENT_RAIL_RELWORX
+                      : PAYMENT_RAIL_MBIYO}{" "}
+                  has been confirmed.
                 </>
               ) : (
                 <>

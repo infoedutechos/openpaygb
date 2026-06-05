@@ -31,6 +31,23 @@ export function buildInstallmentSchedule(
   platformFeeUgx: number,
   count: InstallmentCountOption,
 ): InstallmentSchedule {
+  const { slices, fullSubtotalUgx, platformFeePerInstallmentUgx, fullPlanTotalUgx, count: c } =
+    buildInstallmentScheduleFromFixedFee(subtotalUgx, platformFeeUgx, count);
+  return {
+    count: c,
+    slices,
+    fullSubtotalUgx,
+    platformFeePerInstallmentUgx,
+    fullPlanTotalUgx,
+  };
+}
+
+/** Fixed UGX fee on each installment (legacy behaviour). */
+function buildInstallmentScheduleFromFixedFee(
+  subtotalUgx: number,
+  platformFeeUgx: number,
+  count: InstallmentCountOption,
+): InstallmentSchedule {
   const fee = Math.max(0, Math.round(platformFeeUgx));
   const parts = splitSubtotalUgx(subtotalUgx, count);
   const slices: InstallmentSlice[] = parts.map((sub, i) => ({

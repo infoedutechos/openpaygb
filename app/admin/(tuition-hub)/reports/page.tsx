@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTuitionAdminGate } from "@/hooks/useTuitionAdminGate";
+import { useMasterOrgSlug } from "@/hooks/useMasterOrgSlug";
 
 type Summary = {
   totalCollectionsTon: number;
@@ -100,6 +101,7 @@ function CollectionsBarChart({ rows }: { rows: { m: string; ton: number }[] }) {
 
 export default function AdminReportsPage() {
   const router = useRouter();
+  const { orgSlug } = useMasterOrgSlug();
   const { loading: authLoading, ensureTuitionSession } = useTuitionAdminGate();
   const [summary, setSummary] = useState<Summary | null>(null);
   const [range, setRange] = useState<"year" | "all">("year");
@@ -120,7 +122,8 @@ export default function AdminReportsPage() {
         setLoading(false);
         return;
       }
-      const r = await fetch("/api/admin/summary", { credentials: "include" });
+      const q = orgSlug ? `?organizationSlug=${encodeURIComponent(orgSlug)}` : "";
+      const r = await fetch(`/api/admin/summary${q}`, { credentials: "include" });
       const j = await r.json();
       if (!r.ok) {
         setError(j.error ?? "Could not load reports");
@@ -130,7 +133,7 @@ export default function AdminReportsPage() {
       setSummary(j);
       setLoading(false);
     })();
-  }, [authLoading, ensureTuitionSession]);
+  }, [authLoading, ensureTuitionSession, orgSlug]);
 
   const year = new Date().getFullYear();
 

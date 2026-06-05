@@ -30,6 +30,17 @@ export async function readJsonResponse<T = unknown>(res: Response): Promise<Read
     };
   }
 
+  if (trimmed.startsWith("<") || trimmed.startsWith("<!")) {
+    return {
+      ok: false,
+      status,
+      error:
+        status >= 500
+          ? `Server error (${status}). The app may still be compiling — wait a moment and retry.`
+          : `Unexpected HTML response (${status})`,
+    };
+  }
+
   try {
     const data = JSON.parse(trimmed) as T;
     if (!res.ok) {

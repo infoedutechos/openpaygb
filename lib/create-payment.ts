@@ -4,8 +4,11 @@ import { getActiveUgxPerTonForOrganization } from "@/lib/fx";
 import { feeTotal, ugxToTon } from "@/lib/money";
 import { DEFAULT_TON_WALLET } from "@/lib/constants";
 import { findProgrammeByCode, resolveFeeRowsForSelection, sumFeeRows, type ProgrammeFeeSelectionMode } from "@/lib/programmes";
-import { getCheckoutPlatformFeeUgxForOrganization } from "@/lib/checkout-platform-fee";
-import { buildInstallmentSchedule, normalizeInstallmentCount } from "@/lib/installments";
+import {
+  buildInstallmentScheduleFromRule,
+  resolveCheckoutPlatformFeeRule,
+} from "@/lib/checkout-platform-fee";
+import { normalizeInstallmentCount } from "@/lib/installments";
 
 export type CreatedPaymentResult = {
   id: string;
@@ -154,8 +157,8 @@ export async function createPendingPayment(opts: {
     throw new Error("Programme not found");
   }
 
-  const platformFeeUgx = await getCheckoutPlatformFeeUgxForOrganization(student.organizationId);
-  const schedule = buildInstallmentSchedule(fullSubtotalUgx, platformFeeUgx, installmentCount);
+  const feeRule = await resolveCheckoutPlatformFeeRule(student.organizationId);
+  const schedule = buildInstallmentScheduleFromRule(fullSubtotalUgx, feeRule, installmentCount);
   const slice = schedule.slices[installmentIndex - 1];
   if (!slice) {
     throw new Error("Invalid installment selection");

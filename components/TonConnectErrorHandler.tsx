@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useToast } from '@/contexts/ToastContext';
+import { isClientFetchNetworkError } from '@/lib/client-fetch-error';
 import { isTonConnectBridgeConsoleNoise } from '@/lib/tonconnect-ui-options';
 
 const MANIFEST_HELP =
@@ -35,8 +36,17 @@ export function TonConnectErrorHandler({ children, onManifestError }: Props) {
   useEffect(() => {
     const handler = (event: PromiseRejectionEvent) => {
       const msg = event.reason?.message ?? String(event.reason ?? '');
-      if (!msg || isBenignTonConnectAbort(msg) || isTonConnectBridgeConsoleNoise(msg)) {
-        if (isBenignTonConnectAbort(msg) || isTonConnectBridgeConsoleNoise(msg)) {
+      if (
+        !msg ||
+        isBenignTonConnectAbort(msg) ||
+        isTonConnectBridgeConsoleNoise(msg) ||
+        (process.env.NODE_ENV === "development" && isClientFetchNetworkError(event.reason))
+      ) {
+        if (
+          isBenignTonConnectAbort(msg) ||
+          isTonConnectBridgeConsoleNoise(msg) ||
+          (process.env.NODE_ENV === "development" && isClientFetchNetworkError(event.reason))
+        ) {
           event.preventDefault();
           event.stopPropagation();
         }

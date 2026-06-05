@@ -1,29 +1,65 @@
 /**
- * ODELHUB mobile-money brand (payer-facing).
- * Collections run on MbiyoPay infrastructure — see MBIYO_PAY_INFRA_NAME and admin copy helpers.
+ * OpenPayGB — payer-facing mobile-money brand on ODEL HUB Pay.
+ * Technical payment rails (ledger + APIs): Mbiyo, LivePay, Relworx (East Africa MoMo).
+ * TON is a separate on-chain rail, not under OpenPayGB.
  */
 
-export const OPEN_PAY_GLOBAL_NAME = "OpenPayGlobal";
-export const OPEN_PAY_GLOBAL_SHORT = "OpenPayGb";
+export const OPEN_PAY_BRAND = "OpenPayGB";
 
-/** MbiyoPay merchant API / webhooks (infrastructure; not shown to payers). */
+/** @deprecated Prefer OPEN_PAY_BRAND — kept for existing imports */
+export const OPEN_PAY_GLOBAL_NAME = OPEN_PAY_BRAND;
+export const OPEN_PAY_GLOBAL_SHORT = "OpenPayGB";
+
+/** Ledger rail `mbiyo` — MbiyoPay merchant API */
+export const PAYMENT_RAIL_MBIYO = "Mbiyo";
+/** Ledger rail `livepay` — LivePay REST API (UG MTN/Airtel) */
+export const PAYMENT_RAIL_LIVEPAY = "LivePay";
+/** Ledger rail `relworx` — Relworx Payments API v2 (MoMo collect) */
+export const PAYMENT_RAIL_RELWORX = "Relworx";
+/** Ledger rail `openpay_card` — closed-loop platform virtual card (UGX balance) */
+export const PAYMENT_RAIL_OPENPAY_CARD = "OpenPayGB card";
+
+/** Checkout UI section for platform card rail */
+export const openPayCardRailSectionLabel = `${PAYMENT_RAIL_OPENPAY_CARD} (${OPEN_PAY_BRAND})`;
+
+/** Provider name (ops/docs); not the payer-facing brand */
 export const MBIYO_PAY_INFRA_NAME = "MbiyoPay";
 
-/** Primary payer-facing label, e.g. section headers */
-export const openPayGlobalLabel = `${OPEN_PAY_GLOBAL_NAME} (${OPEN_PAY_GLOBAL_SHORT})`;
+export const openPayBrandLabel = OPEN_PAY_BRAND;
+export const openPayGlobalLabel = OPEN_PAY_BRAND;
 
-export const openPayGlobalMobileMoneyLabel = `${openPayGlobalLabel} · mobile money`;
+/** Checkout UI section for Mbiyo rail */
+export const mbiyoRailSectionLabel = `${PAYMENT_RAIL_MBIYO} (${OPEN_PAY_BRAND})`;
+/** Checkout UI section for LivePay rail */
+export const livepayRailSectionLabel = `${PAYMENT_RAIL_LIVEPAY} (${OPEN_PAY_BRAND})`;
+/** Checkout UI section for Relworx rail */
+export const relworxRailSectionLabel = `${PAYMENT_RAIL_RELWORX} (${OPEN_PAY_BRAND})`;
 
-/** Admin / ops: brand vs provider */
+/** Legacy header — Mbiyo rail under OpenPayGB brand */
+export const openPayGlobalMobileMoneyLabel = mbiyoRailSectionLabel;
+
+/** e.g. pay method picker subtitle */
+export const mobileMoneyRailsLabel = `${PAYMENT_RAIL_MBIYO} or ${PAYMENT_RAIL_LIVEPAY}`;
+
+/** Admin / ops */
 export const openPayGlobalInfrastructureNote =
-  `${openPayGlobalLabel} is the checkout brand payers see; mobile-money payins use ${MBIYO_PAY_INFRA_NAME} infrastructure (ledger rail \`mbiyo\`).`;
+  `${OPEN_PAY_BRAND} is the payer-facing brand. Mobile-money rails are ${PAYMENT_RAIL_MBIYO} (ledger \`mbiyo\`, ${MBIYO_PAY_INFRA_NAME} API) and ${PAYMENT_RAIL_LIVEPAY} (ledger \`livepay\`, Uganda).`;
 
-/** e.g. "TON or OpenPayGlobal" */
+/** e.g. "TON or Mbiyo / LivePay (OpenPayGB)" */
 export function withOpenPayGlobal(alternative: string): string {
-  return `${alternative} or ${OPEN_PAY_GLOBAL_NAME}`;
+  return `${alternative} or ${mobileMoneyRailsLabel} via ${OPEN_PAY_BRAND}`;
+}
+
+export function withMobileMoneyRails(alternative: string): string {
+  return `${alternative}, ${PAYMENT_RAIL_MBIYO}, ${PAYMENT_RAIL_LIVEPAY}, or ${PAYMENT_RAIL_RELWORX}`;
 }
 
 /** e.g. stepper / status lines */
 export function openPayGlobalStatus(suffix: string): string {
-  return `${OPEN_PAY_GLOBAL_NAME} — ${suffix}`;
+  return `${OPEN_PAY_BRAND} — ${suffix}`;
+}
+
+/** Mbiyo API / config error messages (rail name, not brand alone) */
+export function mbiyoRailError(prefix: string): string {
+  return `${PAYMENT_RAIL_MBIYO} ${prefix}`;
 }

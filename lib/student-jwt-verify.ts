@@ -1,4 +1,5 @@
 import { jwtVerify } from "jose";
+import { jwtSecretStudentBytes } from "@/lib/jwt-secrets";
 
 export type StudentJwtPayload = {
   sub: string;
@@ -11,9 +12,8 @@ export type StudentJwtPayload = {
  */
 export async function verifyStudentJwt(token: string): Promise<StudentJwtPayload | null> {
   try {
-    const s = process.env.JWT_SECRET;
-    if (!s || s.length < 16) return null;
-    const secret = new TextEncoder().encode(s);
+    const secret = jwtSecretStudentBytes();
+    if (!secret) return null;
     const { payload } = await jwtVerify(token, secret);
     const sub = typeof payload.sub === "string" ? payload.sub : null;
     const organizationId =

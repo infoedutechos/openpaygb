@@ -4,9 +4,12 @@ This document explains how **school staff** (org admins) sign in to the **School
 
 **Related docs:**
 
-- [ORGANIZATION_REGISTRATION.md](./ORGANIZATION_REGISTRATION.md) — pending workspace → approval → org admin creation  
+- [LOCAL_DEV_AND_CREDENTIALS.md](./LOCAL_DEV_AND_CREDENTIALS.md) — seed URLs, guest pay, demo logins  
+- [ORGANIZATION_REGISTRATION.md](./ORGANIZATION_REGISTRATION.md) — pending workspace → email verify → approval → org admin creation  
+- [SCHOOL_ADMIN_PROGRAMMES.md](./SCHOOL_ADMIN_PROGRAMMES.md) — programme/fee customization for org admins  
 - [ADMIN_FLOW.md](./ADMIN_FLOW.md) — org admin dashboard routes and APIs after sign-in  
 - [MASTER_ADMIN_FLOW.md](./MASTER_ADMIN_FLOW.md) — platform master console  
+- [APP_STATUS_AUDIT.md](./APP_STATUS_AUDIT.md) — holistic scan and deployment checklist  
 
 ---
 
@@ -46,23 +49,31 @@ Redirect logic: `lib/admin-dashboard.ts` → `adminDashboardHref()`, and `app/ad
 
 ```mermaid
 flowchart TD
-  A[School submits /admin/register] --> B[Organization: pending]
-  B --> C[Master approves tenant]
-  C --> D[Organization: active]
-  D --> E[Master: Create org admin]
-  E --> F[Share email + password with school]
-  F --> G[School: /school/login]
-  G --> H[POST /api/auth/login]
-  H --> I[/admin School Admin Dashboard]
+  A[School submits /admin/register] --> B[ODEL HUB verification email]
+  B --> C[Applicant clicks link]
+  C --> D["/school/login?workspaceVerified=1"]
+  D --> E{Master approval required?}
+  E -->|Yes default| F[Master approves tenant]
+  E -->|Auto mode| G[Workspace may activate on verify]
+  F --> H[Organization: active]
+  G --> H
+  H --> I[Master: Create org admin]
+  I --> J[Share email + password with school]
+  J --> K[School: /school/login]
+  K --> L[POST /api/auth/login]
+  L --> M[/admin School Admin Dashboard]
 ```
 
 ### Step 1 — Request workspace (self-service)
 
 1. Open **`/admin/register`**.
-2. Submit school name, URL slug, optional contact email and notes.
-3. API: **`POST /api/public/organization-register`** → org with `tenantStatus: pending`.
+2. Submit school name, URL slug, **contact email** (required), and optional notes.
+3. API: **`POST /api/public/organization-register`** → org with `tenantStatus: pending` and an ODEL HUB **verification email** (registration details + submitted time).
+4. Applicant clicks the link → **`GET /api/public/organization-register/verify`** → redirect **`/school/login?workspaceVerified=1`**.
 
-**Important:** This step does **not** create a login account. The success message explains that a platform administrator will review the request and later provide school admin credentials.
+**Important:** This step does **not** create a dashboard login account. After email confirmation, a platform master still must **approve** the workspace and **create org admin** credentials.
+
+**Expired link:** use **Resend verification email** on `/admin/register` (same contact email).
 
 ### Step 2 — Master approves
 

@@ -14,9 +14,13 @@ export function invalidateAuthMeCache() {
 }
 
 async function loadAuthMe(): Promise<AuthMeJson | null> {
-  const r = await fetch("/api/auth/me", { credentials: "include" });
-  if (!r.ok) return null;
-  return (await r.json()) as AuthMeJson;
+  try {
+    const r = await fetch("/api/auth/me", { credentials: "include" });
+    if (!r.ok) return null;
+    return (await r.json()) as AuthMeJson;
+  } catch {
+    return null;
+  }
 }
 
 function getAuthMe(): Promise<AuthMeJson | null> {
@@ -25,11 +29,16 @@ function getAuthMe(): Promise<AuthMeJson | null> {
     return Promise.resolve(cached.data);
   }
   if (inflight) return inflight;
-  inflight = loadAuthMe().then((data) => {
-    cached = { at: Date.now(), data };
-    inflight = null;
-    return data;
-  });
+  inflight = loadAuthMe()
+    .then((data) => {
+      cached = { at: Date.now(), data };
+      inflight = null;
+      return data;
+    })
+    .catch(() => {
+      inflight = null;
+      return null;
+    });
   return inflight;
 }
 
@@ -41,10 +50,15 @@ export function useAuthMe() {
   const refresh = useCallback(() => {
     invalidateAuthMeCache();
     setLoading(true);
-    void getAuthMe().then((j) => {
-      setData(j);
-      setLoading(false);
-    });
+    void getAuthMe()
+      .then((j) => {
+        setData(j);
+        setLoading(false);
+      })
+      .catch(() => {
+        setData(null);
+        setLoading(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -55,12 +69,19 @@ export function useAuthMe() {
       return;
     }
     setLoading(true);
-    void getAuthMe().then((j) => {
-      if (!cancelled) {
-        setData(j);
-        setLoading(false);
-      }
-    });
+    void getAuthMe()
+      .then((j) => {
+        if (!cancelled) {
+          setData(j);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setData(null);
+          setLoading(false);
+        }
+      });
     return () => {
       cancelled = true;
     };

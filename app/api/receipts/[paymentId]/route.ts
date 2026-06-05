@@ -3,9 +3,18 @@ import { prisma } from "@/lib/prisma";
 import { getAdminFromCookies } from "@/lib/auth";
 import { isValidObjectId } from "@/lib/object-id";
 import { buildStudentProgrammeProgress, getProgrammeDurationSummary } from "@/lib/tuition-progress";
+import { buildReceiptBreakdown } from "@/lib/receipt-lines";
+import { createReceiptAccessToken } from "@/lib/receipt-access";
+import { receiptAccessFromRequest } from "@/lib/receipt-request-auth";
+import { clientIp, rateLimitHit } from "@/lib/rate-limit";
+import { apiErrorResponse } from "@/lib/api-error";
 
-/** Public receipt for confirmed payments; admins may preview any status. */
-export async function GET(_req: Request, ctx: { params: Promise<{ paymentId: string }> }) {
+/** Receipt JSON — confirmed payments need admin, student owner, or signed `?t=` token. */
+export async function GET(req: Request, ctx: { params: Promise<{ paymentId: string }> }) {
+  try {
+  if (rateLimitHit(`receipt-json:${clientIp(req)}`, 60, 60 * 60 * 1000)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
   const { paymentId } = await ctx.params;
   if (!isValidObjectId(paymentId)) {
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
@@ -19,6 +28,9 @@ export async function GET(_req: Request, ctx: { params: Promise<{ paymentId: str
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
   if (payment.status !== "confirmed" && !admin) {
+    return NextResponse.json({ error: "Receipt not available" }, { status: 404 });
+  }
+  if (payment.status === "confirmed" && !(await receiptAccessFromRequest(payment, req))) {
     return NextResponse.json({ error: "Receipt not available" }, { status: 404 });
   }
   const issuedAt = payment.confirmedAt ?? payment.createdAt;
@@ -38,6 +50,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ paymentId: str
     : [];
   const progress = programme ? buildStudentProgrammeProgress(programme, studentPayments) : null;
   const programmeDuration = programme ? getProgrammeDurationSummary(programme) : null;
+  const breakdown = buildReceiptBreakdown(payment, programme?.fees ?? []);
 
   return NextResponse.json({
     receipt: {
@@ -58,8 +71,16 @@ export async function GET(_req: Request, ctx: { params: Promise<{ paymentId: str
       destinationWallet: payment.destinationWallet,
       issuedAt,
       progress,
+      feeBreakdown: breakdown,
       verificationUrl: `/receipt/${payment.id}`,
-      note: "QR and PDF delivery can be wired to this payload.",
+      receiptAccessToken: createReceiptAccessToken({
+        id: payment.id,
+        studentId: payment.studentId,
+        confirmedAt: payment.confirmedAt,
+      }),
     },
   });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "receipts", fallback: "Could not load receipt" });
+  }
 }

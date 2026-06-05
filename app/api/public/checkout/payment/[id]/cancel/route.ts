@@ -4,6 +4,7 @@ import { assertActiveOrganizationSlug } from "@/lib/organizations";
 import { failPendingPayment } from "@/lib/cancel-pending-payment";
 import { assertCheckoutStudentAccess } from "@/lib/checkout-session";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
+import { apiErrorResponse } from "@/lib/api-error";
 import { isValidObjectId } from "@/lib/object-id";
 
 const Body = z.object({
@@ -54,9 +55,9 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
 
     return NextResponse.json({ ok: true });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Could not cancel payment";
-    const status = msg.includes("not active") || msg.includes("not found") ? 404 : 500;
-    if (status === 500) console.error("[checkout/payment/cancel]", e);
-    return NextResponse.json({ error: msg }, { status });
+    return apiErrorResponse(e, {
+      route: "checkout/payment/cancel",
+      fallback: "Could not cancel payment",
+    });
   }
 }

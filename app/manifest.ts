@@ -3,13 +3,14 @@ import { getPlatformSiteUiSettings } from "@/lib/site-ui-settings";
 
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
   const s = await getPlatformSiteUiSettings();
-  const startUrl = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "") || "/";
 
   return {
     name: s.homeScreenTitle,
     short_name: s.homeScreenShortName,
     description: s.homeScreenDescription,
-    start_url: startUrl.endsWith("/") ? startUrl : `${startUrl}/`,
+    /** Relative — resolved with layout metadataBase (request origin, not stale NEXT_PUBLIC_APP_URL). */
+    start_url: "/",
+    scope: "/",
     display: "standalone",
     background_color: "#08070a",
     theme_color: s.homeScreenThemeColor,

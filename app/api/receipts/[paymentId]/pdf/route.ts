@@ -4,8 +4,16 @@ import { prisma } from "@/lib/prisma";
 import { getAdminFromCookies } from "@/lib/auth";
 import { isValidObjectId } from "@/lib/object-id";
 import { buildStudentProgrammeProgress, getProgrammeDurationSummary } from "@/lib/tuition-progress";
+import { buildReceiptBreakdown } from "@/lib/receipt-lines";
+import { receiptAccessFromRequest } from "@/lib/receipt-request-auth";
+import { clientIp, rateLimitHit } from "@/lib/rate-limit";
+import { apiErrorResponse } from "@/lib/api-error";
 
-export async function GET(_req: Request, ctx: { params: Promise<{ paymentId: string }> }) {
+export async function GET(req: Request, ctx: { params: Promise<{ paymentId: string }> }) {
+  try {
+  if (rateLimitHit(`receipt-pdf:${clientIp(req)}`, 40, 60 * 60 * 1000)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
   const { paymentId } = await ctx.params;
   if (!isValidObjectId(paymentId)) {
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
@@ -22,6 +30,9 @@ export async function GET(_req: Request, ctx: { params: Promise<{ paymentId: str
   }
   if (payment.status !== "confirmed" && !admin) {
     return NextResponse.json({ error: "Receipt not available until confirmed" }, { status: 404 });
+  }
+  if (payment.status === "confirmed" && !(await receiptAccessFromRequest(payment, req))) {
+    return NextResponse.json({ error: "Receipt not available" }, { status: 404 });
   }
 
   const issuedAt = payment.confirmedAt ?? payment.createdAt;
@@ -41,9 +52,10 @@ export async function GET(_req: Request, ctx: { params: Promise<{ paymentId: str
     : [];
   const progress = programme ? buildStudentProgrammeProgress(programme, studentPayments) : null;
   const duration = programme ? getProgrammeDurationSummary(programme) : null;
+  const breakdown = buildReceiptBreakdown(payment, programme?.fees ?? []);
 
   const pdf = await PDFDocument.create();
-  const page = pdf.addPage([420, 595]);
+  const page = pdf.addPage([420, Math.max(595, 320 + breakdown.lines.length * 14)]);
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
 
@@ -72,16 +84,35 @@ export async function GET(_req: Request, ctx: { params: Promise<{ paymentId: str
     line(`Period: Year ${payment.year} · Semester ${payment.semester}`, 10);
   }
   y -= 4;
-  line(`Tuition (UGX): ${payment.tuitionUgx.toLocaleString()}`, 10);
-  line(`Functional fees (UGX): ${payment.functionalFeesUgx.toLocaleString()}`, 10);
-  const platformUgx = payment.platformFeeUgx ?? 0;
-  if (platformUgx > 0) {
-    line(`Processing / transaction fee (UGX): ${platformUgx.toLocaleString()}`, 10);
+  line("Fee breakdown", 11, true);
+  if (breakdown.installmentLabel) {
+    line(breakdown.installmentLabel, 9, false, rgb(0.45, 0.35, 0.1));
   }
-  line(`Total (UGX): ${payment.totalUgx.toLocaleString()}`, 10, true);
+  for (const feeLine of breakdown.lines) {
+    const meta =
+      feeLine.semester > 0
+        ? `${feeLine.recurrenceLabel} · Yr ${feeLine.year} Sem ${feeLine.semester}`
+        : feeLine.recurrenceLabel;
+    line(
+      `${feeLine.label} — tuition ${feeLine.tuitionUgx.toLocaleString()} · functional ${feeLine.functionalFeesUgx.toLocaleString()} · line ${feeLine.lineTotalUgx.toLocaleString()}`,
+      8,
+      false,
+      rgb(0.2, 0.2, 0.24),
+    );
+    if (meta.trim()) {
+      line(`  ${meta}`, 7, false, rgb(0.45, 0.45, 0.48));
+    }
+  }
+  y -= 2;
+  line(`Fees subtotal (UGX): ${breakdown.subtotalUgx.toLocaleString()}`, 9);
+  line(`  Tuition: ${breakdown.subtotalTuitionUgx.toLocaleString()} · Functional: ${breakdown.subtotalFunctionalUgx.toLocaleString()}`, 8, false, rgb(0.35, 0.35, 0.38));
+  if (breakdown.platformFeeUgx > 0) {
+    line(`Processing / transaction fee (UGX): ${breakdown.platformFeeUgx.toLocaleString()}`, 9);
+  }
+  line(`Total (UGX): ${breakdown.totalUgx.toLocaleString()}`, 10, true);
   line(
-    `TON paid: ${payment.tonAmount} @ snapshot 1 TON = UGX ${payment.ugxPerTonSnapshot.toLocaleString()}`,
-    10
+    `TON paid: ${breakdown.tonAmount.toFixed(4)} @ snapshot 1 TON = UGX ${payment.ugxPerTonSnapshot.toLocaleString()}`,
+    10,
   );
   y -= 4;
 
@@ -111,4 +142,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ paymentId: str
       "Content-Disposition": `attachment; filename="odelhub-receipt-${paymentId}.pdf"`,
     },
   });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "receipts/pdf", fallback: "Could not generate receipt PDF" });
+  }
 }

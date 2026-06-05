@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { absoluteUrl } from "@/lib/public-url";
+import { createReceiptAccessToken } from "@/lib/receipt-access";
+import { receiptBreakdownHtml } from "@/lib/receipt-breakdown-html";
+import { buildReceiptBreakdown } from "@/lib/receipt-lines";
 import { buildStudentProgrammeProgress } from "@/lib/tuition-progress";
 
 /** Send Resend email when RESEND_API_KEY + RESEND_FROM are set and student has email. */
@@ -16,8 +19,14 @@ export async function sendReceiptEmailIfConfigured(paymentId: string): Promise<v
   const email = payment.student.email?.trim();
   if (!email || !email.includes("@")) return;
 
-  const receiptUrl = absoluteUrl(`/receipt/${payment.id}`);
-  const pdfUrl = absoluteUrl(`/api/receipts/${payment.id}/pdf`);
+  const receiptToken = createReceiptAccessToken({
+    id: payment.id,
+    studentId: payment.studentId,
+    confirmedAt: payment.confirmedAt,
+  });
+  const tokenQs = receiptToken ? `?t=${encodeURIComponent(receiptToken)}` : "";
+  const receiptUrl = absoluteUrl(`/receipt/${payment.id}${tokenQs}`);
+  const pdfUrl = absoluteUrl(`/api/receipts/${payment.id}/pdf${tokenQs}`);
 
   /** Build progress so the e-mail can mirror what the Telegram bot and the receipt page show. */
   const programme = await prisma.programme.findUnique({
@@ -34,6 +43,8 @@ export async function sendReceiptEmailIfConfigured(paymentId: string): Promise<v
       })
     : [];
   const progress = programme ? buildStudentProgrammeProgress(programme, studentPayments) : null;
+  const breakdown = buildReceiptBreakdown(payment, programme?.fees ?? []);
+  const feeBreakdownBlock = receiptBreakdownHtml(breakdown);
 
   const periodLine =
     progress && progress.totalSemesters > 0
@@ -70,10 +81,10 @@ export async function sendReceiptEmailIfConfigured(paymentId: string): Promise<v
 <p>Your payment is <strong>confirmed</strong>.</p>
 <ul>
 <li>${periodLine}</li>
-<li>TON: ${payment.tonAmount}</li>
 <li>Tx: ${escapeHtml(payment.txHash || "—")}</li>
 ${progressBlock}
 </ul>
+${feeBreakdownBlock}
 ${completionBanner}
 <p><a href="${receiptUrl}">View receipt</a> · <a href="${pdfUrl}">Download PDF</a></p>`,
     }),

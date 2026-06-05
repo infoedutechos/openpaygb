@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { ProgrammeFeeRecurrence } from "@prisma/client";
 import { findProgrammeByCode, resolveFeeRowsForSelection, sumFeeRows, type ProgrammeFeeSelectionMode } from "@/lib/programmes";
+import { recurrenceLabel } from "@/lib/programme-fee-labels";
 import { getCheckoutPlatformFeeUgxForOrganization } from "@/lib/checkout-platform-fee";
 import { getActiveUgxPerTonForOrganization } from "@/lib/fx";
 import { feeTotal, ugxToTon } from "@/lib/money";
@@ -12,6 +13,8 @@ import { prisma } from "@/lib/prisma";
 import { isValidObjectId } from "@/lib/object-id";
 import { PROGRAMME_TRACK_LABEL } from "@/lib/programme-track";
 import { getProgrammeDurationSummary, getProgrammePeriodDetails } from "@/lib/tuition-progress";
+import { clientIp, rateLimitHit } from "@/lib/rate-limit";
+import { apiErrorResponse } from "@/lib/api-error";
 
 const Query = z.object({
   year: z.coerce.number().int().min(1).max(6),
@@ -19,13 +22,10 @@ const Query = z.object({
   feeSelectionMode: z.enum(["semester", "year", "programme"]).optional().default("semester"),
 });
 
-function recurrenceLabel(r: ProgrammeFeeRecurrence | null | undefined): string {
-  if (r === ProgrammeFeeRecurrence.once) return "Paid once";
-  if (r === ProgrammeFeeRecurrence.per_year) return "Per year";
-  return "Per semester";
-}
-
 export async function GET(req: Request, ctx: { params: Promise<{ code: string }> }) {
+  if (rateLimitHit(`programme-quote:${clientIp(req)}`, 90, 60 * 60 * 1000)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
   const { code } = await ctx.params;
   const url = new URL(req.url);
   const feeIdsRaw = url.searchParams.get("feeIds");
@@ -100,8 +100,11 @@ export async function GET(req: Request, ctx: { params: Promise<{ code: string }>
     rows = resolved.rows;
     pool = resolved.pool;
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Invalid selection";
-    return NextResponse.json({ error: msg }, { status: 400 });
+    return apiErrorResponse(e, {
+      route: "programmes/quote",
+      fallback: "Invalid fee selection",
+      defaultStatus: 400,
+    });
   }
 
   const isFullSelection = rows.length === pool.length && pool.length > 0;
@@ -112,7 +115,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ code: string }>
   }
 
   const subtotalUgx = feeTotal(tuitionUgx, functionalFeesUgx);
-  const platformFeeUgx = await getCheckoutPlatformFeeUgxForOrganization(organizationId);
+  const platformFeeUgx = await getCheckoutPlatformFeeUgxForOrganization(organizationId, subtotalUgx);
   const totalUgx = subtotalUgx + platformFeeUgx;
   const { ugxPerTon, source } = await getActiveUgxPerTonForOrganization(organizationId);
   const tonAmount = ugxToTon(totalUgx, ugxPerTon);

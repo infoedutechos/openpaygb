@@ -4,7 +4,15 @@ import { isProductionRuntime } from "@/lib/production-secrets";
 
 export async function GET(req: Request) {
   const healthSecret = process.env.HEALTH_CHECK_SECRET?.trim();
-  if (isProductionRuntime() && healthSecret) {
+  if (isProductionRuntime()) {
+    if (!healthSecret) {
+      return NextResponse.json({ ok: false }, { status: 503 });
+    }
+    const auth = req.headers.get("authorization");
+    if (auth !== `Bearer ${healthSecret}`) {
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
+  } else if (healthSecret) {
     const auth = req.headers.get("authorization");
     if (auth !== `Bearer ${healthSecret}`) {
       return NextResponse.json({ ok: false }, { status: 401 });

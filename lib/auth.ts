@@ -2,15 +2,16 @@ import type { AdminRole } from "@prisma/client";
 import { SignJWT } from "jose";
 import { cookies } from "next/headers";
 import { verifyPayAdminJwt } from "@/lib/admin-jwt-verify";
+import { jwtSecretAdminBytes } from "@/lib/jwt-secrets";
 
 const COOKIE = "odelhub_admin";
 
 function getSecret(): Uint8Array {
-  const s = process.env.JWT_SECRET;
-  if (!s || s.length < 16) {
-    throw new Error("JWT_SECRET must be set (min 16 chars)");
+  const secret = jwtSecretAdminBytes();
+  if (!secret) {
+    throw new Error("JWT_SECRET_ADMIN or JWT_SECRET must be set (min 16 chars)");
   }
-  return new TextEncoder().encode(s);
+  return secret;
 }
 
 export type AdminJwtPayload = {

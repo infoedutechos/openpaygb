@@ -13,8 +13,13 @@ An `Organization` row must exist; it starts as **`tenantStatus: pending`**.
 ### Self-service
 
 1. Open **`/admin/register`** (“Request a school workspace”).
-2. Submit **school name**, URL **slug** (unique), optional contact email and note.
-3. The form calls **`POST /api/public/organization-register`**, which uses `createPendingOrganization` in `lib/organization-intake.ts` and creates the org with **`tenantStatus: pending`**.
+2. Submit **school name**, URL **slug** (unique), **contact email** (required), and optional note.
+3. The form calls **`POST /api/public/organization-register`**, which creates the org with **`tenantStatus: pending`** and emails an ODEL HUB **verification link** (registration details + timestamp). **`GET /api/public/organization-register/verify?token=…`** marks the email confirmed and redirects to **`/school/login`**.
+4. Resend: **`POST /api/public/organization-register/resend`** with `{ "email": "…" }` (rate-limited), or the button on `/admin/register`.
+
+**Email content:** ODEL HUB branding, product summary, table of school name, slug, contact email, **submitted date/time** (Africa/Kampala), optional notes, and a **Confirm email** button. Plain-text part included for mail clients without HTML.
+
+**Production:** requires `RESEND_API_KEY` and `RESEND_FROM`. If email cannot be sent after the org is saved, the API returns **503** with `resendAvailable: true` so the applicant can use resend without re-registering.
 
 ### Master-created (same outcome)
 
@@ -27,13 +32,29 @@ A **platform master** can create a pending tenant from **Manager → Organizatio
 
 ---
 
-## 2. Approve or reject (master only)
+## 2. Platform setting — master approval vs auto-registration
 
-Only a **platform master** (`role: master`) completes provisioning:
+On **Master Admin Console** (`/admin/master`), section **School workspace registration**:
+
+| Mode | Behavior |
+|------|----------|
+| **Master approval required** (default) | Workspace stays **pending** until a master approves (after email verification). |
+| **Auto-registration** | After the applicant verifies email, the workspace becomes **active** automatically (programmes/FX cloned from `default`). Master still creates org admin credentials. |
+
+API: `GET` / `PATCH` **`/api/master/school-workspace-registration`** with `{ "requireMasterApproval": true \| false }`.  
+Public read: **`GET /api/public/school-workspace-registration-policy`**.
+
+Prisma: `SiteUiSettings.schoolWorkspaceRequireMasterApproval` (default `true`). Run `npm run db:push` after pulling.
+
+---
+
+## 3. Approve or reject (master only)
+
+When **master approval required**, only a **platform master** (`role: master`) completes provisioning:
 
 1. Go to **`/admin/master/organizations`**.
 2. Find the tenant in **pending** status.
-3. **Approve** or **Reject**.
+3. **Approve workspace** or **Reject** (approve is disabled until the applicant verifies their registration email, when a contact email was provided).
 
 **Approve** — **`PATCH /api/master/organizations/[id]`** with `{ "action": "approve" }`:
 
@@ -46,7 +67,7 @@ The template org **slug `default`** is reserved and is not approved/rejected thr
 
 ---
 
-## 3. Org admin account (dashboard sign-in)
+## 4. Org admin account (dashboard sign-in)
 
 The **School & organization dashboard** (`TuitionAdminShell`, routes under `/admin` with the tuition-hub group) is used by **`AdminUser`** records with:
 
@@ -64,18 +85,19 @@ The API **returns 400** if the organization is not **active** (“Organization m
 
 ---
 
-## 4. Summary flow
+## 5. Summary flow
 
 | Step | Who | Result |
 |------|-----|--------|
 | Request workspace | School (self-serve) or master | `Organization` with **`pending`** |
-| Approve | Master | **`active`**, programmes/FX cloned from **`default`** |
+| Confirm email | Applicant (link in inbox) | **`registrationEmailVerifiedAt`** set; redirect to **`/school/login`** |
+| Approve workspace | Master | **`active`**, programmes/FX cloned from **`default`** |
 | Create org admin | Master | **`AdminUser`** `org_admin` linked to org |
 | Operate school | Org admin | Dashboard at **`/admin`**, pay at **`/pay/<slug>`** when configured |
 
 ---
 
-## 5. Local / demo: seed
+## 6. Local / demo: seed
 
 For development, **`npm run seed`** (`scripts/seed.ts`) can create an **`active`** default organization and admin users according to environment variables — this bypasses the pending → approve flow for that environment only.
 
@@ -87,9 +109,13 @@ For development, **`npm run seed`** (`scripts/seed.ts`) can create an **`active`
 |------|----------|
 | Public registration UI | `app/admin/register/page.tsx` |
 | Public register API | `app/api/public/organization-register/route.ts` |
+| Verify email (redirect) | `app/api/public/organization-register/verify/route.ts` |
+| Resend verification | `app/api/public/organization-register/resend/route.ts` |
+| Verification email | `lib/organization-registration-email.ts` |
+| Tokens + approval gate | `lib/organization-workspace-verify.ts` |
 | Pending org creation | `lib/organization-intake.ts` |
 | Master org list / create / approve | `app/admin/master/organizations/page.tsx`, `app/api/master/organizations/**`, `app/api/master/organizations/[id]/route.ts` |
 | Master creates org admin | `app/api/master/admins/route.ts` |
 | Master overview | `app/admin/master/page.tsx` |
 
-See also: **[FOLDER_STRUCTURE.md](./FOLDER_STRUCTURE.md)** (admin routes), **[PRISMA_COMMANDS.md](./PRISMA_COMMANDS.md)** (schema/DB).
+See also: **[LOCAL_DEV_AND_CREDENTIALS.md](./LOCAL_DEV_AND_CREDENTIALS.md)** (dev URLs and seed logins), **[APP_STATUS_AUDIT.md](./APP_STATUS_AUDIT.md)** (holistic scan), **[FOLDER_STRUCTURE.md](./FOLDER_STRUCTURE.md)** (admin routes), **[PRISMA_COMMANDS.md](./PRISMA_COMMANDS.md)** (schema/DB).

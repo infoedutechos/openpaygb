@@ -84,7 +84,7 @@ Custom providers require `webhookSecret` set in Master Admin before activation.
 
 | Item | Severity | Mitigation |
 |------|----------|------------|
-| No automatic webhook retry | Medium | Partner should accept idempotent `payment.confirmed`; poll `GET /api/partner/v1/payments/:id` as backup |
+| Partner webhook delivery | Medium | Outbound webhooks retry up to 3 times with backoff; partners should still poll `GET /api/partner/v1/payments/:id` as backup |
 | In-memory rate limits | Medium | Edge firewall at scale |
 | `GET /api/admin/notifications` unauthenticated | Low | Read-only public announcements |
 | Dual admin auth (tuition JWT + URA session) | Low | Document which shell operators use |

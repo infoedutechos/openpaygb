@@ -45,11 +45,11 @@ export function SiteFooter({ settings, bottomNavClearance }: Props) {
               <Link href="/" className={choiceCompactNav}>
                 Home
               </Link>
-              <Link href="/pay/default" className={choiceCompactNav}>
+              <Link href="/pay" className={choiceCompactNav}>
                 Pay tuition
               </Link>
-              <Link href="/student" className={choiceCompactNav}>
-                Student
+              <Link href="/student/login" className={choiceCompactNav}>
+                Student sign in
               </Link>
               <Link href="/admin/register" className={choiceCompactNav} title="Self-register on our platform">
                 Request school workspace

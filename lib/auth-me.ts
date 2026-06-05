@@ -16,4 +16,6 @@ export type AuthMeJson = {
   /** URA `admin_session` cookie or local dev `ACCESS_ADMIN` bypass — same gate as admin layout without Pay. */
   adminShellAccess: boolean;
   paymentOps?: { manualConfirmAllowed: boolean };
+  /** Profile/org loaded from JWT only — Atlas unreachable. */
+  dbDegraded?: boolean;
 };

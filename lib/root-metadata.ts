@@ -8,8 +8,8 @@ export function appBaseUrl(): string {
 }
 
 /** Root layout metadata — uses master-uploaded platform logo when set. */
-export function buildRootMetadata(siteUi: PublicSiteUiSettings): Metadata {
-  const base = appBaseUrl();
+export function buildRootMetadata(siteUi: PublicSiteUiSettings, baseUrl?: string): Metadata {
+  const base = (baseUrl ?? appBaseUrl()).replace(/\/$/, "") || "http://localhost:3000";
   const iconPath = siteUi.platformLogoUrl ?? DEFAULT_ICON;
   const iconAbsolute = iconPath.startsWith("http") ? iconPath : `${base}${iconPath}`;
 

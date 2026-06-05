@@ -1,6 +1,9 @@
 /**
- * Empty stub for resolve aliases — prevents `@prisma/client` from entering browser bundles.
- * Server code must never import this module directly.
+ * @deprecated Use Prisma's `index-browser.js` via `next.config.ts` resolve aliases instead.
+ * Kept so old absolute-path Turbopack configs do not break if referenced elsewhere.
  */
-const clientNoop = {};
-export default clientNoop;
+export class PrismaClient {
+  constructor() {
+    throw new Error("@prisma/client must not run in the browser");
+  }
+}

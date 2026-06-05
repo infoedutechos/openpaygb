@@ -1,6 +1,9 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { getAdminFromCookies } from "@/lib/auth";
+import { adminCanAccessStudentOrganization } from "@/lib/admin-org-scope";
 import { getStudentFromCookies } from "@/lib/student-auth";
+import { jwtSecretCheckoutBytes } from "@/lib/jwt-secrets";
 
 const COOKIE = "odelhub_checkout";
 const HEADER = "x-checkout-token";
@@ -11,11 +14,11 @@ export type CheckoutSessionPayload = {
 };
 
 function getSecret(): Uint8Array {
-  const s = process.env.JWT_SECRET;
-  if (!s || s.length < 16) {
-    throw new Error("JWT_SECRET must be set (min 16 chars)");
+  const secret = jwtSecretCheckoutBytes();
+  if (!secret) {
+    throw new Error("JWT_SECRET_CHECKOUT or JWT_SECRET must be set (min 16 chars)");
   }
-  return new TextEncoder().encode(s);
+  return secret;
 }
 
 export async function signCheckoutSession(
@@ -82,6 +85,19 @@ export async function assertCheckoutStudentAccess(opts: {
     portal = null;
   }
   if (portal && portal.sub === opts.studentId && portal.organizationId === opts.organizationId) {
+    return { ok: true };
+  }
+
+  let admin: Awaited<ReturnType<typeof getAdminFromCookies>> = null;
+  try {
+    admin = await getAdminFromCookies();
+  } catch {
+    admin = null;
+  }
+  if (
+    admin &&
+    (await adminCanAccessStudentOrganization(admin.sub, admin.role, opts.organizationId))
+  ) {
     return { ok: true };
   }
 

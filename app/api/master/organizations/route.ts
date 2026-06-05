@@ -1,42 +1,59 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { apiErrorResponse } from "@/lib/api-error";
 import { requireMaster } from "@/lib/master-session";
-import { pendingOrgBodySchema, createPendingOrganization } from "@/lib/organization-intake";
+import { withPrismaRetry } from "@/lib/prisma-retry";
+import {
+  createPendingOrganization,
+  normalizeRegistrationContactEmail,
+  pendingOrgBodySchema,
+} from "@/lib/organization-intake";
 
 export async function GET() {
-  const gate = await requireMaster();
-  if (!gate.ok) return gate.response;
+  try {
+    const gate = await requireMaster();
+    if (!gate.ok) return gate.response;
 
-  const orgs = await prisma.organization.findMany({
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      tenantStatus: true,
-      registrationContactEmail: true,
-      registrationNote: true,
-      destinationWallet: true,
-      faviconUploadedAt: true,
-      checkoutPlatformFeeUgx: true,
-      fxOverrideKind: true,
-      fxOverrideUgxPerTon: true,
-      fxOverrideBufferPct: true,
-      createdAt: true,
-      _count: { select: { programmes: true, students: true, payments: true } },
-    },
-  });
+    const orgs = await withPrismaRetry(() =>
+      prisma.organization.findMany({
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          tenantStatus: true,
+          registrationContactEmail: true,
+          registrationNote: true,
+          registrationEmailVerifiedAt: true,
+          destinationWallet: true,
+          faviconUploadedAt: true,
+          checkoutPlatformFeeUgx: true,
+          fxOverrideKind: true,
+          fxOverrideUgxPerTon: true,
+          fxOverrideBufferPct: true,
+          createdAt: true,
+          _count: { select: { programmes: true, students: true, payments: true } },
+        },
+      }),
+    );
 
-  const organizations = orgs.map((o) => {
-    const { faviconUploadedAt, ...rest } = o;
-    return {
-      ...rest,
-      hasFavicon: Boolean(faviconUploadedAt),
-      faviconUploadedAt: faviconUploadedAt?.toISOString() ?? null,
-    };
-  });
+    const organizations = orgs.map((o) => {
+      const { faviconUploadedAt, registrationEmailVerifiedAt, ...rest } = o;
+      return {
+        ...rest,
+        hasFavicon: Boolean(faviconUploadedAt),
+        faviconUploadedAt: faviconUploadedAt?.toISOString() ?? null,
+        registrationEmailVerifiedAt: registrationEmailVerifiedAt?.toISOString() ?? null,
+      };
+    });
 
-  return NextResponse.json({ organizations });
+    return NextResponse.json({ organizations });
+  } catch (e) {
+    return apiErrorResponse(e, {
+      route: "GET /api/master/organizations",
+      fallback: "Could not load organizations",
+    });
+  }
 }
 
 export async function POST(req: Request) {
@@ -50,15 +67,35 @@ export async function POST(req: Request) {
   }
 
   try {
-    const org = await createPendingOrganization(parsed.data);
+    const body = {
+      ...parsed.data,
+      registrationContactEmail: parsed.data.registrationContactEmail
+        ? normalizeRegistrationContactEmail(parsed.data.registrationContactEmail)
+        : "",
+    };
+    const org = await createPendingOrganization(body);
+    const contactEmail = body.registrationContactEmail;
+    const verifiedAt = contactEmail ? new Date() : null;
+    const saved =
+      verifiedAt != null
+        ? await prisma.organization.update({
+            where: { id: org.id },
+            data: { registrationEmailVerifiedAt: verifiedAt },
+          })
+        : org;
+
     return NextResponse.json(
       {
         organization: {
-          id: org.id,
-          name: org.name,
-          slug: org.slug,
-          tenantStatus: org.tenantStatus,
+          id: saved.id,
+          name: saved.name,
+          slug: saved.slug,
+          tenantStatus: saved.tenantStatus,
+          registrationEmailVerifiedAt: saved.registrationEmailVerifiedAt?.toISOString() ?? null,
         },
+        message: contactEmail
+          ? "Pending tenant created. Contact email marked verified (master-provisioned)."
+          : "Pending tenant created.",
       },
       { status: 201 }
     );

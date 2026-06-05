@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
 :root {
+  /** System stack only — avoids Turbopack/Google Fonts network failures in dev. */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --background: #070b14;
   --background-mid: #0c1528;
   --foreground: #e8eef7;
@@ -22,6 +24,7 @@
 }
 
 body {
+  font-family: var(--font-sans);
   color: var(--foreground);
   background-color: var(--background);
   background-image:

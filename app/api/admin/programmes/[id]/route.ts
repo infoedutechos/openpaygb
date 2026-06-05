@@ -34,6 +34,21 @@ async function assertProgrammeAccess(
   if (!("organizationId" in w) || w.organizationId !== programmeOrgId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+  const org = await prisma.organization.findFirst({
+    where: { id: programmeOrgId },
+    select: { tenantStatus: true },
+  });
+  if (!org || org.tenantStatus !== "active") {
+    return NextResponse.json(
+      {
+        error:
+          org?.tenantStatus === "pending"
+            ? "Your school workspace is pending master approval."
+            : "Your school workspace is not active.",
+      },
+      { status: 403 },
+    );
+  }
   return null;
 }
 

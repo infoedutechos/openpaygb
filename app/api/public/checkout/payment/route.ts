@@ -7,6 +7,7 @@ import { createPendingPayment } from "@/lib/create-payment";
 import { assertCanStartCheckoutPayment } from "@/lib/tuition-balance";
 import { assertCheckoutStudentAccess } from "@/lib/checkout-session";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
+import { apiErrorResponse } from "@/lib/api-error";
 
 const Body = z.object({
   organizationSlug: z.string().min(2),
@@ -112,17 +113,9 @@ export async function POST(req: Request) {
       { status: 201 }
     );
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Could not create payment";
-    let status = 500;
-    if (msg.includes("not active") || msg.includes("not found")) status = 404;
-    else     if (
-      msg.includes("Programme not found") ||
-      msg.includes("No fee schedule") ||
-      msg.includes("Invalid") ||
-      msg.includes("Installment plan not found")
-    )
-      status = 400;
-    if (status === 500) console.error("[checkout/payment]", e);
-    return NextResponse.json({ error: msg }, { status });
+    return apiErrorResponse(e, {
+      route: "checkout/payment",
+      fallback: "Could not create payment",
+    });
   }
 }

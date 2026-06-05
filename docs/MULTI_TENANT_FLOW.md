@@ -56,18 +56,30 @@ Central helper: **`resolveOrganizationForRead(req, admin)`** in `lib/resolve-org
 sequenceDiagram
   participant U as Institution
   participant API as POST organization-register
+  participant Mail as ODEL HUB email
+  participant V as GET verify
   participant DB as MongoDB
   participant M as Master console
   U->>API: name, slug, contact email
   API->>DB: Organization tenantStatus=pending
-  M->>DB: PATCH approve
+  API->>Mail: verification link + registration details
+  U->>V: click link
+  V->>DB: registrationEmailVerifiedAt
+  V-->>U: redirect /school/login
+  M->>DB: PATCH approve (after email verified)
   DB->>DB: tenantStatus=active + clone from default
+  M->>DB: POST master/admins org_admin
   Note over DB: Programmes + FX copied from slug default if present
 ```
 
-1. **`POST /api/public/organization-register`** creates org **`pending`** (rate limited).
-2. Master **approves** via **`PATCH /api/master/organizations/:id`** (`action: approve`) or **reject**.
-3. **Approve** sets **`active`** and runs **`provisionOrganizationFromTemplate`** (clone programmes + FX from **`default`** when it exists).
+1. **`POST /api/public/organization-register`** creates org **`pending`** (rate limited) and emails a **verification link** (registration details + timestamp).
+2. Applicant opens **`GET /api/public/organization-register/verify?token=…`** → **`registrationEmailVerifiedAt`** → redirect **`/school/login`**.
+3. **`POST /api/public/organization-register/resend`** if the link expired (rate limited).
+4. Master **approves** via **`PATCH /api/master/organizations/:id`** (`action: approve`) — blocked until email verified when contact email was provided — or **reject**.
+5. **Approve** sets **`active`** and runs **`provisionOrganizationFromTemplate`** (clone programmes + FX from **`default`** when it exists).
+6. Master creates **`org_admin`** via **`POST /api/master/admins`**; school signs in at **`/school/login`**.
+
+Detail: [ORGANIZATION_REGISTRATION.md](./ORGANIZATION_REGISTRATION.md).
 
 ---
 

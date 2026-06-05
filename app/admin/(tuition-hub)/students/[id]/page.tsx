@@ -4,8 +4,10 @@ import { getAdminFromCookies } from "@/lib/auth";
 import { organizationWhereForSession } from "@/lib/admin-org-scope";
 import { isValidObjectId } from "@/lib/object-id";
 import { StudentDetailView } from "@/components/admin/StudentDetailView";
+import { ServerDbUnavailable } from "@/components/ui/ServerDbUnavailable";
 import { getStudentBalanceSummary } from "@/lib/tuition-balance";
 import { serializeStudentBalance } from "@/lib/tuition-balance-json";
+import { tryServerDb } from "@/lib/run-server-db";
 
 export default async function AdminStudentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getAdminFromCookies();
@@ -15,21 +17,39 @@ export default async function AdminStudentDetailPage({ params }: { params: Promi
     return <p className="text-sm text-rose-600">Invalid student id</p>;
   }
   const orgWhere = await organizationWhereForSession(session.sub, session.role);
-  const student = await prisma.student.findFirst({
-    where: { id, ...orgWhere },
-    include: { organization: { select: { slug: true, name: true } } },
-  });
+  const studentResult = await tryServerDb(() =>
+    prisma.student.findFirst({
+      where: { id, ...orgWhere },
+      include: { organization: { select: { slug: true, name: true } } },
+    }),
+  );
+  if (!studentResult.ok) {
+    return <ServerDbUnavailable title="Student record unavailable" />;
+  }
+  const student = studentResult.data;
   if (!student) {
     return <p className="text-sm text-rose-600">Student not found</p>;
   }
-  const payments = await prisma.payment.findMany({
-    where: { studentId: id, ...orgWhere },
-    orderBy: { createdAt: "desc" },
-  });
-  const agg = await prisma.payment.aggregate({
-    where: { studentId: id, status: "confirmed", ...orgWhere },
-    _sum: { tonAmount: true, totalUgx: true },
-  });
+  const paymentsResult = await tryServerDb(() =>
+    prisma.payment.findMany({
+      where: { studentId: id, ...orgWhere },
+      orderBy: { createdAt: "desc" },
+    }),
+  );
+  if (!paymentsResult.ok) {
+    return <ServerDbUnavailable title="Payment history unavailable" />;
+  }
+  const payments = paymentsResult.data;
+  const aggResult = await tryServerDb(() =>
+    prisma.payment.aggregate({
+      where: { studentId: id, status: "confirmed", ...orgWhere },
+      _sum: { tonAmount: true, totalUgx: true },
+    }),
+  );
+  if (!aggResult.ok) {
+    return <ServerDbUnavailable title="Payment totals unavailable" />;
+  }
+  const agg = aggResult.data;
   const totalTon = agg._sum.tonAmount ?? 0;
   const totalUgx = agg._sum.totalUgx ?? 0;
 

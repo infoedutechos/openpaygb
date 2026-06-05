@@ -26,6 +26,11 @@ const nav: { href: string; label: string; desc?: string }[] = [
     desc: "Live JSON export",
   },
   {
+    href: "/admin/master#deployment-environment",
+    label: "Environment",
+    desc: "Deployment env audit",
+  },
+  {
     href: "/admin/master#mobile-money-providers",
     label: "Mobile money",
     desc: "PSP webhooks",
@@ -42,7 +47,13 @@ function navActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export default function MasterManagerShell({ children }: { children: React.ReactNode }) {
+export default function MasterManagerShell({
+  children,
+  dbUnavailable = false,
+}: {
+  children: React.ReactNode;
+  dbUnavailable?: boolean;
+}) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -53,7 +64,17 @@ export default function MasterManagerShell({ children }: { children: React.React
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-1px)] bg-[#08070a] text-slate-200">
+    <div className="flex min-h-[calc(100vh-1px)] flex-col bg-[#08070a] text-slate-200">
+      {dbUnavailable ? (
+        <div
+          role="status"
+          className="border-b border-amber-500/30 bg-amber-950/50 px-4 py-2 text-center text-xs text-amber-100"
+        >
+          Database is temporarily unreachable (MongoDB Atlas). Retry in a few seconds or check your network / IP
+          allowlist. Pages may load with limited data until the connection recovers.
+        </div>
+      ) : null}
+      <div className="flex min-h-0 flex-1">
       <aside className="hidden w-56 shrink-0 flex-col border-r border-amber-500/15 bg-gradient-to-b from-[#15100c] to-[#0a0806] py-6 pl-4 pr-2 md:flex">
         <div className="px-2 pb-6">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-400/90">Master</p>
@@ -141,6 +162,7 @@ export default function MasterManagerShell({ children }: { children: React.React
           </nav>
         </header>
         <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 md:py-8">{children}</div>
+      </div>
       </div>
     </div>
   );

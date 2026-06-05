@@ -8,11 +8,29 @@ const path = require("path");
 
 const root = path.resolve(__dirname, "..");
 
+function quoteWinArg(s) {
+  if (!/[\s"]/u.test(s)) return s;
+  return `"${String(s).replace(/"/g, '""')}"`;
+}
+
 function run(cmd, args) {
+  /** `shell: true` breaks when *script paths in argv* contain spaces; `cwd` with spaces is fine with `shell: false`. */
+  if (process.platform === "win32") {
+    const line = [cmd, ...args].map(quoteWinArg).join(" ");
+    const r = spawnSync(process.env.ComSpec || "cmd.exe", ["/d", "/s", "/c", line], {
+      cwd: root,
+      stdio: "inherit",
+      shell: false,
+      windowsHide: true,
+      env: process.env,
+    });
+    return r.status ?? 1;
+  }
   const r = spawnSync(cmd, args, {
     cwd: root,
     stdio: "inherit",
-    shell: true,
+    shell: false,
+    windowsHide: true,
     env: process.env,
   });
   return r.status ?? 1;

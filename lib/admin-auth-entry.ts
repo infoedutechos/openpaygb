@@ -1,5 +1,7 @@
 /** Shared URLs and copy helpers for tuition / school admin sign-in. */
 
+/** Public-friendly URL (rewrites to {@link SCHOOL_ADMIN_LOGIN_PATH}). */
+export const PUBLIC_SCHOOL_LOGIN_PATH = "/school/login";
 export const SCHOOL_ADMIN_LOGIN_PATH = "/admin/login?school=1";
 export const PLATFORM_MASTER_LOGIN_PATH = "/admin/login?master=1";
 export const ADMIN_LOGIN_PATH = "/admin/login";

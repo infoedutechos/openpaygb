@@ -4,8 +4,10 @@
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { PUBLIC_SCHOOL_LOGIN_PATH, PLATFORM_MASTER_LOGIN_PATH } from "@/lib/admin-auth-entry";
 import { verifyPayAdminJwt } from "@/lib/admin-jwt-verify";
 import { verifyStudentJwt } from "@/lib/student-jwt-verify";
+import { verifyAdminSessionTokenEdge } from "@/lib/admin-session-edge";
 
 const PAY_ADMIN_COOKIE = "odelhub_admin";
 const URA_ADMIN_SESSION = "admin_session";
@@ -32,8 +34,18 @@ function hasStudentCookie(req: NextRequest): boolean {
   return Boolean(req.cookies.get(STUDENT_COOKIE)?.value);
 }
 
+async function hasValidUraAdminSession(req: NextRequest): Promise<boolean> {
+  return verifyAdminSessionTokenEdge(req.cookies.get(URA_ADMIN_SESSION)?.value);
+}
+
 function redirectAdminLogin(req: NextRequest, nextPath: string) {
-  const login = new URL("/admin/login", req.url);
+  const isMasterArea =
+    nextPath === "/admin/master" ||
+    nextPath.startsWith("/admin/master/") ||
+    nextPath === "/school-admin/master" ||
+    nextPath.startsWith("/school-admin/master/");
+  const loginPath = isMasterArea ? PLATFORM_MASTER_LOGIN_PATH : PUBLIC_SCHOOL_LOGIN_PATH;
+  const login = new URL(loginPath, req.url);
   login.searchParams.set("next", nextPath);
   const res = NextResponse.redirect(login);
   res.cookies.delete(PAY_ADMIN_COOKIE);
@@ -96,7 +108,7 @@ export async function middleware(req: NextRequest) {
   if (pathname === "/school-admin" || pathname.startsWith("/school-admin/")) {
     const payTok = req.cookies.get(PAY_ADMIN_COOKIE)?.value;
     const payOk = payTok ? await verifyPayAdminJwt(payTok) : null;
-    const hasUra = req.cookies.has(URA_ADMIN_SESSION);
+    const hasUra = await hasValidUraAdminSession(req);
     const nextPath = pathname + req.nextUrl.search;
     if (!payOk && !hasUra) {
       return redirectAdminLogin(req, nextPath);
@@ -122,13 +134,9 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
-  if (pathname === "/admin/notifications" || pathname.startsWith("/admin/notifications/")) {
-    return NextResponse.next({ request: { headers: requestHeaders } });
-  }
-
   const payTok = req.cookies.get(PAY_ADMIN_COOKIE)?.value;
   const payOk = payTok ? await verifyPayAdminJwt(payTok) : null;
-  const hasUra = req.cookies.has(URA_ADMIN_SESSION);
+  const hasUra = await hasValidUraAdminSession(req);
   if (!payOk && !hasUra) {
     return redirectAdminLogin(req, pathname + req.nextUrl.search);
   }

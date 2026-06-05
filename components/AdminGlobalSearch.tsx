@@ -139,7 +139,7 @@ export function AdminGlobalSearch() {
                     {data.payments.map((p) => (
                       <li key={p.id}>
                         <Link
-                          href={`/admin/payments${orgQ(p.orgSlug)}`}
+                          href={`/admin/payments${orgQ(p.orgSlug) ? `${orgQ(p.orgSlug)}&` : "?"}highlight=${encodeURIComponent(p.id)}`}
                           className="block rounded px-2 py-1 font-mono text-xs hover:bg-white/5"
                           onClick={() => setOpen(false)}
                         >

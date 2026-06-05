@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { withPrismaRetry } from "@/lib/prisma-retry";
 
 export async function generateMetadata({
   params,
@@ -11,10 +12,12 @@ export async function generateMetadata({
   if (!slug) return { title: "Tuition checkout" };
 
   try {
-    const org = await prisma.organization.findFirst({
-      where: { slug, tenantStatus: "active" },
-      select: { name: true, faviconUploadedAt: true },
-    });
+    const org = await withPrismaRetry(() =>
+      prisma.organization.findFirst({
+        where: { slug, tenantStatus: "active" },
+        select: { name: true, faviconUploadedAt: true },
+      }),
+    );
 
     const title = org?.name ? `${org.name} — Tuition checkout` : "Tuition checkout";
     const hasFavicon = Boolean(org?.faviconUploadedAt);

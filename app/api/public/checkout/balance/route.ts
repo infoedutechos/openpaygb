@@ -6,6 +6,7 @@ import { getStudentBalanceSummary } from "@/lib/tuition-balance";
 import { serializeStudentBalance } from "@/lib/tuition-balance-json";
 import { assertCheckoutStudentAccess } from "@/lib/checkout-session";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
+import { apiErrorResponse } from "@/lib/api-error";
 
 const Query = z.object({
   organizationSlug: z.string().min(2),
@@ -64,9 +65,9 @@ export async function GET(req: Request) {
       balance: summary ? serializeStudentBalance(summary) : null,
     });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Could not load balance";
-    const status = msg.includes("not active") || msg.includes("not found") ? 404 : 500;
-    if (status === 500) console.error("[checkout/balance]", e);
-    return NextResponse.json({ error: msg }, { status });
+    return apiErrorResponse(e, {
+      route: "checkout/balance",
+      fallback: "Could not load balance",
+    });
   }
 }

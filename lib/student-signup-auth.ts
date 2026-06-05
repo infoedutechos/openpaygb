@@ -1,15 +1,17 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
+import { jwtSecretStudentBytes } from "@/lib/jwt-secrets";
+
 const COOKIE = "odelhub_student_signup";
 const TYP = "student_signup_v1";
 
 function getSecret(): Uint8Array {
-  const s = process.env.JWT_SECRET;
-  if (!s || s.length < 16) {
-    throw new Error("JWT_SECRET must be set (min 16 chars)");
+  const secret = jwtSecretStudentBytes();
+  if (!secret) {
+    throw new Error("JWT_SECRET_STUDENT or JWT_SECRET must be set (min 16 chars)");
   }
-  return new TextEncoder().encode(s);
+  return secret;
 }
 
 export function studentSignupCookieName() {

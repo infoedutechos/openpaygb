@@ -11,8 +11,14 @@ enum PaymentRail {
   telegram
   web
   momo_bridge
-  /** OpenPayGlobal mobile money (MbiyoPay infrastructure; https://dashboard.mbiyo.africa). */
+  /** Mbiyo rail — MbiyoPay API (OpenPayGB brand at checkout). */
   mbiyo
+  /** LivePay rail — Uganda UGX MTN/Airtel (OpenPayGB brand at checkout). */
+  livepay
+  /** Relworx rail — East Africa MoMo collect (https://payments.relworx.com/docs/). */
+  relworx
+  /** Closed-loop OpenPayGB platform virtual card balance (UGX ledger). */
+  openpay_card
 }
 
 enum PaymentStatus {
@@ -57,6 +63,8 @@ model Organization {
   tenantStatus               OrganizationTenantStatus   @default(active)
   registrationContactEmail String                     @default("")
   registrationNote           String                     @default("")
+  /** Set when the applicant confirms their registration email (workspace request). */
+  registrationEmailVerifiedAt DateTime?
   /** Raw favicon.ico (or PNG) bytes; paired with faviconUploadedAt when set via Master Admin. */
   faviconIco                 Bytes?
   faviconUploadedAt          DateTime?
@@ -64,7 +72,14 @@ model Organization {
    * Fixed UGX added at checkout (processing / platform). **-1** = use deployment env `CHECKOUT_PLATFORM_FEE_UGX`;
    * **≥ 0** = override for this tenant (UGX, capped server-side).
    */
+  /**
+   * Processing charge override: **inherit** (use platform default), **fixed_ugx**, or **percent** of subtotal.
+   * Legacy: `checkoutPlatformFeeUgx` ≥ 0 without kind still treated as fixed UGX.
+   */
+  checkoutPlatformFeeKind    String                     @default("inherit")
   checkoutPlatformFeeUgx     Int                        @default(-1)
+  /** When kind is **percent**, e.g. 3 = 3% of tuition subtotal per charge. */
+  checkoutPlatformFeePercent Float                      @default(0)
   /**
    * TON/UGX checkout rate override for this tenant. **inherit** = use platform master setting;
    * **none** = live market median; **fixed** / **buffer_pct** = school-specific override (takes precedence over platform).
@@ -83,9 +98,24 @@ model Organization {
   partnerApiKeys             PartnerApiKey[]
   partnerWebhookEndpoints    PartnerWebhookEndpoint[]
   mobileMoneyProviders       MobileMoneyProvider[]
+  workspaceVerifyToken     OrganizationWorkspaceVerifyToken?
 
   @@index([tenantStatus])
+  @@index([registrationContactEmail])
   @@map("organizations")
+}
+
+/** One-time email verification after a school workspace self-registration request. */
+model OrganizationWorkspaceVerifyToken {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId String       @unique @db.ObjectId
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  tokenHash      String       @unique
+  expiresAt      DateTime
+  verifiedAt     DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@map("organization_workspace_verify_tokens")
 }
 
 enum MobileMoneyProviderAuthKind {
@@ -268,6 +298,7 @@ model Student {
   year                 Int
   semester             Int
   payments             Payment[]
+  openPayCard          OpenPayCard?
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
 
@@ -275,6 +306,47 @@ model Student {
   @@index([organizationId, telegramId])
   @@index([googleSub])
   @@map("students")
+}
+
+/** Platform OpenPayGB virtual card (closed-loop UGX balance; issue fee paid in TON). */
+model OpenPayCard {
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
+  studentId        String    @unique @db.ObjectId
+  student          Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  organizationId   String    @db.ObjectId
+  /** pending_issue | active */
+  status           String    @default("pending_issue")
+  balanceUgx       Int       @default(0)
+  maskedPan        String    @default("")
+  issueFeeTon      Float?
+  issueMemo        String    @default("")
+  issueTxHash      String    @default("")
+  issuedAt         DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  topups               OpenPayCardTopup[]
+
+  @@index([organizationId])
+  @@index([status])
+  @@map("openpay_cards")
+}
+
+/** TON top-up crediting OpenPayGB card UGX balance. */
+model OpenPayCardTopup {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  cardId    String     @db.ObjectId
+  card      OpenPayCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  amountUgx Int
+  tonAmount Float
+  memo      String     @unique
+  status    String     @default("pending")
+  txHash    String     @default("")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([cardId, status])
+  @@map("openpay_card_topups")
 }
 
 /** One-time email verification + org pick for self-service student portal registration. */
@@ -310,10 +382,13 @@ model SiteUiSettings {
   /** When false, hide the bottom copyright / health line entirely. */
   footerCopyrightVisible Boolean @default(true)
   /**
-   * Platform-wide default transaction / processing charge (UGX) for tuition checkout when tenants inherit (-1 on org).
-   * **-1** = use deployment env `CHECKOUT_PLATFORM_FEE_UGX` only. **≥ 0** = fixed UGX for all inheriting schools.
+   * Platform default processing charge when orgs inherit: **env** | **fixed_ugx** | **percent**.
+   * Legacy rows without kind: `checkoutPlatformFeeDefaultUgx` ≥ 0 ⇒ fixed, **-1** ⇒ env.
    */
-  checkoutPlatformFeeDefaultUgx Int @default(-1)
+  checkoutPlatformFeeDefaultKind    String @default("env")
+  checkoutPlatformFeeDefaultUgx     Int    @default(-1)
+  /** When kind is **percent**, e.g. 3 = 3% of tuition subtotal. */
+  checkoutPlatformFeeDefaultPercent Float  @default(0)
   /**
    * Platform-wide TON/UGX override for checkout. **none** = live market median;
    * **fixed** = `fxOverrideUgxPerTon`; **buffer_pct** = live median + `fxOverrideBufferPct` %.
@@ -342,6 +417,16 @@ model SiteUiSettings {
   platformLogoUploadedAt    DateTime?
   /** Per-platform footer/support icons keyed by social link key (see lib/social-link-icons). */
   socialLinkIcons           Json     @default("{}")
+  /**
+   * When true (default), self-serve school workspaces stay **pending** until a platform master approves
+   * (after the applicant verifies their registration email). When false, the workspace is activated
+   * automatically after email verification (programmes/FX cloned from template `default`).
+   */
+  schoolWorkspaceRequireMasterApproval Boolean @default(true)
+  /** When false, students cannot opt in to OpenPayGB platform card or pay tuition with it. */
+  openPayCardEnabled     Boolean @default(true)
+  /** TON charged once to activate the platform virtual card (master-editable). */
+  openPayCardIssueFeeTon Float   @default(5)
   updatedAt        DateTime @updatedAt
   createdAt        DateTime @default(now())
 

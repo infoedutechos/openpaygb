@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { getAdminFromCookies } from "@/lib/auth";
+import { adminCanAccessStudentOrganization } from "@/lib/admin-org-scope";
 import { assertActiveOrganizationSlug } from "@/lib/organizations";
 import {
   attachCheckoutSessionCookie,
   signCheckoutSession,
 } from "@/lib/checkout-session";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
+import { apiErrorResponse } from "@/lib/api-error";
 
 const Body = z.object({
   organizationSlug: z.string().min(2),
@@ -41,12 +44,37 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Student not found" }, { status: 404 });
     }
 
+    let admin: Awaited<ReturnType<typeof getAdminFromCookies>> = null;
+    try {
+      admin = await getAdminFromCookies();
+    } catch {
+      admin = null;
+    }
+    const adminMayResume =
+      admin &&
+      (await adminCanAccessStudentOrganization(admin.sub, admin.role, student.organizationId));
+
     const recordEmail = student.email.trim().toLowerCase();
-    if (recordEmail) {
+    if (!recordEmail && !adminMayResume) {
+      return NextResponse.json(
+        {
+          error:
+            "This student has no email on file. Contact your school for a secure checkout link, or sign in as school admin to resume payment.",
+        },
+        { status: 403 },
+      );
+    }
+    if (recordEmail && !adminMayResume) {
       const provided = (parsed.data.email ?? "").trim().toLowerCase();
-      if (!provided || provided !== recordEmail) {
+      if (!provided) {
+        return NextResponse.json({
+          needsEmail: true,
+          error: "Enter the email on file for this student to resume checkout",
+        });
+      }
+      if (provided !== recordEmail) {
         return NextResponse.json(
-          { error: "Enter the email on file for this student to resume checkout" },
+          { error: "That email does not match our records for this student" },
           { status: 403 },
         );
       }
@@ -57,13 +85,13 @@ export async function POST(req: Request) {
       organizationId: student.organizationId,
     });
 
-    const res = NextResponse.json({ ok: true, checkoutToken });
+    const res = NextResponse.json({ ok: true, ...(adminMayResume ? { checkoutToken } : {}) });
     attachCheckoutSessionCookie(res, checkoutToken);
     return res;
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Could not start checkout session";
-    const status = msg.includes("not active") || msg.includes("not found") ? 404 : 500;
-    if (status === 500) console.error("[checkout/session]", e);
-    return NextResponse.json({ error: msg }, { status });
+    return apiErrorResponse(e, {
+      route: "checkout/session",
+      fallback: "Could not start checkout session",
+    });
   }
 }

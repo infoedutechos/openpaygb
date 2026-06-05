@@ -6,6 +6,7 @@ import { SchoolDetailModal } from "@/components/admin/SchoolDetailModal";
 import { TuitionHubCheckoutExplainerCompact } from "@/components/admin/TuitionHubCheckoutExplainer";
 import { TenantList } from "@/components/tuition/TenantList";
 import { useTuitionAdminGate } from "@/hooks/useTuitionAdminGate";
+import { useMasterOrgSlug } from "@/hooks/useMasterOrgSlug";
 
 type StudentRow = {
   id: string;
@@ -22,9 +23,11 @@ type StudentRow = {
 };
 
 export default function AdminStudentsPage() {
+  const { orgSlug, setOrgSlug } = useMasterOrgSlug();
   const { loading: authLoading, ensureTuitionSession } = useTuitionAdminGate();
   const [q, setQ] = useState("");
-  const [organizationSlugFilter, setOrganizationSlugFilter] = useState("");
+  const organizationSlugFilter = orgSlug;
+  const setOrganizationSlugFilter = setOrgSlug;
   const [rows, setRows] = useState<StudentRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isMaster, setIsMaster] = useState(false);

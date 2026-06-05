@@ -1,7 +1,9 @@
 import {
   MBIYO_PAY_INFRA_NAME,
-  openPayGlobalLabel,
-  openPayGlobalMobileMoneyLabel,
+  OPEN_PAY_BRAND,
+  PAYMENT_RAIL_LIVEPAY,
+  PAYMENT_RAIL_MBIYO,
+  openPayBrandLabel,
 } from "@/lib/open-pay-brand";
 
 /**
@@ -46,16 +48,19 @@ export function TuitionHubCheckoutExplainer({ className }: { className?: string 
         </li>
         <li>
           Guest checkout lives at <span className="font-mono text-cyan-200/85">/pay/&lt;orgSlug&gt;</span>; signed-in
-          students use the student pay route with the same quote and rail choice (TON or {openPayGlobalLabel}).
+          students use the student pay route with the same quote and rail choice (TON, {PAYMENT_RAIL_MBIYO}, or{" "}
+          {PAYMENT_RAIL_LIVEPAY}).
         </li>
         <li>
-          <strong className="font-medium text-slate-300">{openPayGlobalMobileMoneyLabel}</strong> is your payer-facing
-          brand; payins run on <strong className="font-medium text-slate-300">{MBIYO_PAY_INFRA_NAME}</strong>{" "}
-          infrastructure (stored rail{" "}
-          <span className="font-mono text-cyan-200/85">mbiyo</span>). Configure{" "}
-          <span className="font-mono text-slate-500">MBIYO_SECRET_KEY</span> (merchant API) and{" "}
-          <span className="font-mono text-slate-500">NEXT_PUBLIC_APP_URL</span> for{" "}
-          <span className="font-mono text-slate-500">/api/webhooks/mbiyo</span>.
+          <strong className="font-medium text-slate-300">{OPEN_PAY_BRAND}</strong> is the payer-facing mobile-money
+          brand. Rails: <strong className="font-medium text-slate-300">{PAYMENT_RAIL_MBIYO}</strong> (ledger{" "}
+          <span className="font-mono text-cyan-200/85">mbiyo</span>, {MBIYO_PAY_INFRA_NAME} API —{" "}
+          <span className="font-mono text-slate-500">MBIYO_SECRET_KEY</span>, webhook{" "}
+          <span className="font-mono text-slate-500">/api/webhooks/mbiyo</span>) and{" "}
+          <strong className="font-medium text-slate-300">{PAYMENT_RAIL_LIVEPAY}</strong> (ledger{" "}
+          <span className="font-mono text-cyan-200/85">livepay</span>, Uganda UGX —{" "}
+          <span className="font-mono text-slate-500">LIVEPAY_*</span>, webhook{" "}
+          <span className="font-mono text-slate-500">/api/webhooks/livepay</span>).
         </li>
         <li>
           Payment CSV exports keep the original columns, then append feeSelectionMode, includedFeeIds (semicolon-separated),
@@ -70,7 +75,8 @@ export function TuitionHubCheckoutExplainerCompact({ className }: { className?: 
   return (
     <p className={`text-xs leading-relaxed text-slate-500 ${className ?? ""}`}>
       Recorded UGX on payments is the quoted total, including the checkout processing line when your school has one.
-      TON checkout and {openPayGlobalLabel} ({MBIYO_PAY_INFRA_NAME} mobile money) use the same ledger once confirmed.
+      TON, {PAYMENT_RAIL_MBIYO}, and {PAYMENT_RAIL_LIVEPAY} ({openPayBrandLabel} brand for mobile money) share the same
+      tuition ledger once confirmed.
     </p>
   );
 }

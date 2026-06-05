@@ -65,6 +65,24 @@ export type StudentProgrammeProgress = ProgrammeDurationSummary & {
   remainingPeriods: ProgrammePeriodDetail[];
 };
 
+type PeriodWithProgress = ProgrammePeriodDetail & {
+  isCompleted: boolean;
+  paidSubtotalUgx: number;
+  paidTotalUgx: number;
+};
+
+function toPeriodDetail(period: PeriodWithProgress): ProgrammePeriodDetail {
+  return {
+    year: period.year,
+    semester: period.semester,
+    feeLineCount: period.feeLineCount,
+    tuitionUgx: period.tuitionUgx,
+    functionalFeesUgx: period.functionalFeesUgx,
+    totalUgx: period.totalUgx,
+    hasFeeSchedule: period.hasFeeSchedule,
+  };
+}
+
 function positiveInt(value: number | null | undefined): number {
   return Number.isInteger(value) && Number(value) > 0 ? Number(value) : 0;
 }
@@ -218,12 +236,8 @@ export function buildStudentProgrammeProgress(
     periods.filter((period) => period.year === year).every((period) => period.isCompleted),
   ).length;
 
-  const completedPeriods = periods
-    .filter((period) => period.isCompleted)
-    .map(({ isCompleted: _isCompleted, paidSubtotalUgx: _paidSubtotalUgx, paidTotalUgx: _paidTotalUgx, ...period }) => period);
-  const remainingPeriods = periods
-    .filter((period) => !period.isCompleted)
-    .map(({ isCompleted: _isCompleted, paidSubtotalUgx: _paidSubtotalUgx, paidTotalUgx: _paidTotalUgx, ...period }) => period);
+  const completedPeriods = periods.filter((period) => period.isCompleted).map(toPeriodDetail);
+  const remainingPeriods = periods.filter((period) => !period.isCompleted).map(toPeriodDetail);
 
   return {
     programmeCode: programme.code,

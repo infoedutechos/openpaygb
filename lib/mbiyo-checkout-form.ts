@@ -1,4 +1,4 @@
-/** Shared OpenPayGlobal pay-in form helpers (MbiyoPay API metadata). */
+/** Shared OpenPayGB / Mbiyo pay-in form helpers (MbiyoPay API metadata). */
 
 import {
   MBIYO_SUPPORTED_COUNTRIES,

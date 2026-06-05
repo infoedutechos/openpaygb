@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { canMasterApproveWorkspace, workspaceEmailVerifyStatus } from "@/lib/organization-workspace-verify";
 
 export type MasterOrgRow = {
   id: string;
@@ -9,6 +10,7 @@ export type MasterOrgRow = {
   slug: string;
   tenantStatus: string;
   registrationContactEmail: string;
+  registrationEmailVerifiedAt: string | null;
   destinationWallet: string;
   checkoutPlatformFeeUgx: number;
   fxOverrideKind: string;
@@ -44,6 +46,7 @@ type Props = {
   onRemoveFavicon: () => void;
   onApprove: () => void;
   onReject: () => void;
+  onReopen: () => void;
 };
 
 export function MasterOrgMobileCard({
@@ -71,6 +74,7 @@ export function MasterOrgMobileCard({
   onRemoveFavicon,
   onApprove,
   onReject,
+  onReopen,
 }: Props) {
   return (
     <article className="rounded-lg border border-[var(--border)] bg-black/20 p-4 text-sm text-slate-300">
@@ -87,6 +91,11 @@ export function MasterOrgMobileCard({
       {o.registrationContactEmail ? (
         <p className="mt-2 truncate text-xs text-slate-400" title={o.registrationContactEmail}>
           {o.registrationContactEmail}
+          {workspaceEmailVerifyStatus(o) === "verified" ? (
+            <span className="ml-2 text-emerald-400">· verified</span>
+          ) : workspaceEmailVerifyStatus(o) === "pending" ? (
+            <span className="ml-2 text-amber-300">· email pending</span>
+          ) : null}
         </p>
       ) : null}
 
@@ -219,14 +228,18 @@ export function MasterOrgMobileCard({
         {o.slug === "default" ? (
           <span className="text-xs text-slate-500">template org</span>
         ) : o.tenantStatus === "pending" ? (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col gap-2">
+            {!canMasterApproveWorkspace(o) ? (
+              <p className="text-[11px] text-amber-300/90">Applicant must verify their ODEL HUB email before approval.</p>
+            ) : null}
+            <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              disabled={busyId === o.id}
+              disabled={busyId === o.id || !canMasterApproveWorkspace(o)}
               onClick={onApprove}
               className="min-h-[44px] flex-1 rounded-lg bg-emerald-700/80 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
             >
-              Approve
+              Approve workspace
             </button>
             <button
               type="button"
@@ -236,6 +249,7 @@ export function MasterOrgMobileCard({
             >
               Reject
             </button>
+            </div>
           </div>
         ) : o.tenantStatus === "active" ? (
           <Link
@@ -244,6 +258,15 @@ export function MasterOrgMobileCard({
           >
             Open tuition dashboard
           </Link>
+        ) : o.tenantStatus === "rejected" ? (
+          <button
+            type="button"
+            disabled={busyId === o.id}
+            onClick={onReopen}
+            className="min-h-[44px] w-full rounded-lg bg-amber-700/80 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
+          >
+            Reopen for review
+          </button>
         ) : null}
       </div>
     </article>

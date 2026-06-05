@@ -3,6 +3,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { hashAdminResetToken, newAdminResetTokenPlain } from "@/lib/admin-password-reset";
 import { sendAdminPasswordResetEmail } from "@/lib/admin-password-reset-email";
+import { clientIp, rateLimitHit } from "@/lib/rate-limit";
+import { apiErrorResponse } from "@/lib/api-error";
 
 const Body = z.object({
   email: z.string().email(),
@@ -12,6 +14,9 @@ const GENERIC = "If an account exists for this email, password reset instruction
 
 export async function POST(req: Request) {
   try {
+    if (rateLimitHit(`auth-forgot:${clientIp(req)}`, 5, 60 * 60 * 1000)) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
     const json = await req.json();
     const parsed = Body.safeParse(json);
     if (!parsed.success) {
@@ -43,8 +48,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true, message: GENERIC });
   } catch (e) {
-    console.error("[auth/forgot-password]", e);
-    const message = e instanceof Error ? e.message : "Server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiErrorResponse(e, { route: "auth/forgot-password", fallback: "Server error" });
   }
 }

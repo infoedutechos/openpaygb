@@ -2,22 +2,60 @@ import Link from "next/link";
 import QRCode from "qrcode";
 import { prisma } from "@/lib/prisma";
 import { getAdminFromCookies } from "@/lib/auth";
+import { getStudentFromCookies } from "@/lib/student-auth";
+import { canAccessConfirmedReceipt } from "@/lib/receipt-access";
 import { isValidObjectId } from "@/lib/object-id";
 import { absoluteUrl } from "@/lib/public-url";
 import { buildStudentProgrammeProgress, getProgrammeDurationSummary } from "@/lib/tuition-progress";
+import { buildReceiptBreakdown } from "@/lib/receipt-lines";
+import { ReceiptFeeBreakdown } from "@/components/receipt/ReceiptFeeBreakdown";
+import { ServerDbUnavailable } from "@/components/ui/ServerDbUnavailable";
+import { tryServerDb } from "@/lib/run-server-db";
 
-export default async function ReceiptPage({ params }: { params: Promise<{ paymentId: string }> }) {
+export default async function ReceiptPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ paymentId: string }>;
+  searchParams: Promise<{ t?: string }>;
+}) {
   const { paymentId } = await params;
+  const { t: tokenParam } = await searchParams;
   if (!isValidObjectId(paymentId)) {
     return <p className="text-sm text-rose-400">Invalid receipt id.</p>;
   }
-  const admin = await getAdminFromCookies();
-  const payment = await prisma.payment.findUnique({
-    where: { id: paymentId },
-    include: { student: { select: { id: true, name: true } } },
-  });
+  const [admin, student] = await Promise.all([getAdminFromCookies(), getStudentFromCookies()]);
+  const paymentResult = await tryServerDb(() =>
+    prisma.payment.findUnique({
+      where: { id: paymentId },
+      include: { student: { select: { id: true, name: true } } },
+    }),
+  );
+  if (!paymentResult.ok) {
+    return <ServerDbUnavailable title="Receipt unavailable" />;
+  }
+  const payment = paymentResult.data;
   if (!payment) {
     return <p className="text-sm text-rose-400">Payment not found.</p>;
+  }
+  if (
+    payment.status === "confirmed" &&
+    !canAccessConfirmedReceipt({
+      payment,
+      token: tokenParam ?? null,
+      isAdmin: Boolean(admin),
+      studentUserId: student?.sub ?? null,
+    })
+  ) {
+    return (
+      <div className="space-y-3">
+        <p className="text-sm text-rose-400">This receipt link is invalid or has expired.</p>
+        <p className="text-sm text-slate-400">Open the link from your payment confirmation email, or sign in as the student or school admin.</p>
+        <Link href="/student/login" className="text-sm text-sky-400 hover:underline">
+          Student sign in
+        </Link>
+      </div>
+    );
   }
   if (payment.status !== "confirmed" && !admin) {
     return (
@@ -46,6 +84,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ paymen
     : [];
   const duration = programme ? getProgrammeDurationSummary(programme) : null;
   const progress = programme ? buildStudentProgrammeProgress(programme, studentPayments) : null;
+  const breakdown = buildReceiptBreakdown(payment, programme?.fees ?? []);
   const verifyUrl = absoluteUrl(`/receipt/${paymentId}`);
   let qrDataUrl: string | null = null;
   if (verifyUrl.startsWith("http")) {
@@ -93,22 +132,12 @@ export default async function ReceiptPage({ params }: { params: Promise<{ paymen
               </dd>
             </div>
           ) : null}
-          <div className="flex justify-between gap-4">
-            <dt className="text-slate-500">Tuition</dt>
-            <dd>UGX {payment.tuitionUgx.toLocaleString()}</dd>
-          </div>
-          <div className="flex justify-between gap-4">
-            <dt className="text-slate-500">Functional</dt>
-            <dd>UGX {payment.functionalFeesUgx.toLocaleString()}</dd>
-          </div>
-          <div className="flex justify-between gap-4 border-t border-[var(--border)] pt-3 font-semibold">
-            <dt className="text-slate-400">Total UGX</dt>
-            <dd>UGX {payment.totalUgx.toLocaleString()}</dd>
-          </div>
-          <div className="flex justify-between gap-4 text-sky-300">
-            <dt>TON paid</dt>
-            <dd className="font-mono">{payment.tonAmount} TON</dd>
-          </div>
+        </dl>
+        <div className="mt-6 border-t border-[var(--border)] pt-4">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Fee breakdown</p>
+          <ReceiptFeeBreakdown breakdown={breakdown} variant="dark" />
+        </div>
+        <dl className="mt-6 space-y-2 text-sm text-slate-200">
           <div className="flex justify-between gap-4 text-xs">
             <dt className="text-slate-500">Rate snapshot</dt>
             <dd className="font-mono">1 TON = UGX {payment.ugxPerTonSnapshot.toLocaleString()}</dd>

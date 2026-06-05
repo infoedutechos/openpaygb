@@ -35,7 +35,7 @@ flowchart TD
 
 ## 3. Workspace filter (`?orgSlug=`)
 
-When a master uses the **tenant dropdown** in **`AdminWorkspaceBar`**, the query **`?orgSlug=<slug>`** is applied to:
+When a master uses the **tenant picker** in **`AdminWorkspaceBar`** (tuition shell header), the query **`?orgSlug=<slug>`** is applied to:
 
 - **`GET /api/admin/summary`**
 - **`GET /api/students`**, **`GET /api/payments`**, **`GET /api/payments/export`**

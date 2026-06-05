@@ -1,13 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AdminPaymentsMobileList } from "@/components/admin/AdminPaymentsMobileList";
 import { ReceiptPreviewModal } from "@/components/admin/ReceiptPreviewModal";
 import { TenantList } from "@/components/tuition/TenantList";
 import type { BalanceProgrammeProgress } from "@/components/tuition/TuitionBalancePanel";
 import { useTuitionAdminGate } from "@/hooks/useTuitionAdminGate";
+import { useMasterOrgSlug } from "@/hooks/useMasterOrgSlug";
 
 type PaymentRow = {
   id: string;
@@ -30,7 +31,7 @@ type PaymentRow = {
 };
 
 type FilterStatus = "" | "pending" | "confirmed" | "failed" | "refunded";
-type FilterRail = "" | "telegram" | "web" | "momo_bridge" | "mbiyo";
+type FilterRail = "" | "telegram" | "web" | "momo_bridge" | "mbiyo" | "livepay";
 
 function abbrevTx(s: string, head = 4, tail = 4): string {
   const t = s.trim();
@@ -92,8 +93,9 @@ function DownloadIcon({ className }: { className?: string }) {
   );
 }
 
-export default function AdminPaymentsPage() {
+function AdminPaymentsPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { loading: authLoading, ensureTuitionSession } = useTuitionAdminGate();
   const [rows, setRows] = useState<PaymentRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -105,9 +107,26 @@ export default function AdminPaymentsPage() {
   const [receiptId, setReceiptId] = useState<string | null>(null);
   const [manualConfirmAllowed, setManualConfirmAllowed] = useState(true);
   const [isMaster, setIsMaster] = useState(false);
-  const [organizationSlugFilter, setOrganizationSlugFilter] = useState("");
+  const { orgSlug, setOrgSlug } = useMasterOrgSlug();
+  const organizationSlugFilter = orgSlug;
+  const setOrganizationSlugFilter = setOrgSlug;
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [refundingId, setRefundingId] = useState<string | null>(null);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const status = searchParams.get("status");
+    if (
+      status === "pending" ||
+      status === "confirmed" ||
+      status === "failed" ||
+      status === "refunded"
+    ) {
+      setFilterStatus(status);
+    }
+    const highlight = searchParams.get("highlight")?.trim();
+    if (highlight) setHighlightId(highlight);
+  }, [searchParams]);
 
   const load = useCallback(async () => {
     if (authLoading) return;
@@ -141,9 +160,14 @@ export default function AdminPaymentsPage() {
       setLoading(false);
       return;
     }
-    setRows(j.payments ?? []);
+    const payments = (j.payments ?? []) as PaymentRow[];
+    setRows(payments);
+    if (highlightId) {
+      const match = payments.find((p) => p.id === highlightId);
+      if (match) setSelected(match);
+    }
     setLoading(false);
-  }, [authLoading, ensureTuitionSession, filterStatus, filterRail, organizationSlugFilter]);
+  }, [authLoading, ensureTuitionSession, filterStatus, filterRail, organizationSlugFilter, highlightId]);
 
   useEffect(() => {
     void load();
@@ -157,7 +181,7 @@ export default function AdminPaymentsPage() {
     const qs = q.toString();
     const r = await fetch(`/api/payments/export${qs ? `?${qs}` : ""}`, { credentials: "include" });
     if (r.status === 401) {
-      router.replace("/admin/login");
+      router.replace("/school/login");
       return;
     }
     if (!r.ok) return;
@@ -288,7 +312,8 @@ export default function AdminPaymentsPage() {
             <option value="telegram">Telegram</option>
             <option value="web">Web</option>
             <option value="momo_bridge">MoMo</option>
-            <option value="mbiyo">OpenPayGlobal</option>
+            <option value="mbiyo">Mbiyo (OpenPayGB)</option>
+            <option value="livepay">LivePay (OpenPayGB)</option>
           </select>
         </label>
         {isMaster ? (
@@ -474,5 +499,13 @@ export default function AdminPaymentsPage() {
         </div>
       ) : null}
     </div>
+  );
+}
+
+export default function AdminPaymentsPage() {
+  return (
+    <Suspense fallback={<p className="text-sm text-slate-500">Loading payments…</p>}>
+      <AdminPaymentsPageInner />
+    </Suspense>
   );
 }

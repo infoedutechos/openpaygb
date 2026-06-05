@@ -4,11 +4,18 @@
  */
 
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import {
   createAdminItemSessionToken,
   ADMIN_ITEM_COOKIE_NAME,
   isAdminAuthorized,
 } from '@/utils/admin-session';
+import { clientIp, rateLimitHit } from '@/lib/rate-limit';
+
+const Body = z.object({
+  password: z.string().min(1).max(200),
+  pathname: z.string().min(1).max(300),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -42,10 +49,17 @@ export async function POST(req: Request) {
   if (!isAdminAuthorized(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
+  if (rateLimitHit(`admin-item-pw:${clientIp(req)}`, 20, 15 * 60 * 1000)) {
+    return NextResponse.json({ error: 'Too many attempts' }, { status: 429 });
+  }
   try {
-    const body = await req.json().catch(() => ({}));
-    const password = typeof body?.password === 'string' ? body.password.trim() : '';
-    const pathname = typeof body?.pathname === 'string' ? body.pathname.trim() : '';
+    const json = await req.json().catch(() => null);
+    const parsed = Body.safeParse(json);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
+    }
+    const password = parsed.data.password.trim();
+    const pathname = parsed.data.pathname.trim();
     const expected = process.env.ADMIN_ITEM_PASSWORD?.trim();
 
     if (!expected) {

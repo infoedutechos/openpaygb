@@ -1,9 +1,12 @@
 /**
  * Admin session cookie: create and verify signed session for password-based admin login.
  * Used by /api/admin/login and admin layout. Session expires in 7 days.
+ *
+ * Do NOT import from `middleware.ts` (Node `crypto` is not Edge-safe). Use `@/lib/admin-session-edge`.
  */
 
 import { createHmac, timingSafeEqual } from 'crypto';
+import { isProductionRuntime } from '@/lib/production-secrets';
 
 const COOKIE_NAME = 'admin_session';
 const TTL_SEC = 7 * 24 * 60 * 60; // 7 days
@@ -30,8 +33,10 @@ export function createAdminSessionToken(): string | null {
  * (matches non–Pay-JWT paths in `app/admin/layout.tsx`).
  */
 export function hasAdminShellAccess(sessionCookieValue: string | undefined, host: string): boolean {
-  const isLocalhost = host.includes("localhost");
-  if (isLocalhost && process.env.ACCESS_ADMIN === "true") return true;
+  if (!isProductionRuntime()) {
+    const isLocalhost = host.includes("localhost");
+    if (isLocalhost && process.env.ACCESS_ADMIN === "true") return true;
+  }
   return verifyAdminSessionToken(sessionCookieValue);
 }
 
@@ -76,10 +81,12 @@ function getCookieFromHeader(cookieHeader: string | null, name: string): string 
  * Use this in admin API routes so they work in both localhost and production.
  */
 export function isAdminAuthorized(req: Request): boolean {
-  const host = req.headers.get('host') ?? '';
-  const isLocalhost = host.includes('localhost');
-  const isAdminEnabled = process.env.ACCESS_ADMIN === 'true';
-  if (isLocalhost && isAdminEnabled) return true;
+  if (!isProductionRuntime()) {
+    const host = req.headers.get('host') ?? '';
+    const isLocalhost = host.includes('localhost');
+    const isAdminEnabled = process.env.ACCESS_ADMIN === 'true';
+    if (isLocalhost && isAdminEnabled) return true;
+  }
   const cookieHeader = req.headers.get('cookie');
   const sessionValue = getCookieFromHeader(cookieHeader, COOKIE_NAME);
   return verifyAdminSessionToken(sessionValue);

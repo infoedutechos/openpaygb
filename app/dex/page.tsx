@@ -10,7 +10,7 @@ export default function DexHubPage() {
         <h1 className="mt-2 text-2xl font-semibold text-white md:text-3xl">Onramp &amp; offramp</h1>
         <p className="mt-3 text-sm leading-relaxed text-slate-400">
           Move between <span className="text-slate-200">TON</span>,{" "}
-          <span className="text-slate-200">OpenPayGlobal</span> (MbiyoPay rails), and tuition checkout — one ecosystem,
+          <span className="text-slate-200">OpenPayGB</span> (Mbiyo / LivePay rails), and tuition checkout — one ecosystem,
           extensible modules.
         </p>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">

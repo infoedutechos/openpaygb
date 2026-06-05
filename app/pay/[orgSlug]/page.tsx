@@ -49,8 +49,6 @@ function PayLoadError({ orgSlug }: { orgSlug: string }) {
 }
 
 function PayOrgUnavailable({ orgSlug }: { orgSlug: string }) {
-  const programmesHref = `/pay/${encodeURIComponent(orgSlug)}?programmes=1`;
-
   return (
     <div className="mx-auto min-h-[55vh] max-w-lg px-4 pb-28 pt-12 text-center text-slate-300">
       <h1 className="text-xl font-semibold text-white">School workspace not available</h1>
@@ -82,12 +80,26 @@ function PayOrgUnavailable({ orgSlug }: { orgSlug: string }) {
           </Link>
         )}
         <Link
-          href={programmesHref}
+          href="/admin/register"
           className="inline-flex justify-center rounded-xl border-2 border-cyan-400/60 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-50 hover:border-cyan-300 hover:bg-cyan-500/20"
         >
-          Programmes (this slug)
+          Request school workspace
+        </Link>
+        <Link
+          href="/pay"
+          className="inline-flex justify-center rounded-xl border border-white/15 bg-white/[0.06] px-5 py-3 text-sm font-semibold text-white hover:border-cyan-400/35"
+        >
+          Choose active school
         </Link>
       </div>
+      <p className="mt-4 text-xs text-slate-500">
+        Guest checkout opens only after a platform master approves the workspace. Pending schools can confirm email from
+        the registration page, then sign in at{" "}
+        <Link href="/school/login" className="text-cyan-400/90 underline">
+          /school/login
+        </Link>{" "}
+        while awaiting approval.
+      </p>
       <RequestSchoolWorkspaceCta className="mt-8 text-left" />
     </div>
   );

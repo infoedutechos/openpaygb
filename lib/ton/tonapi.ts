@@ -67,9 +67,15 @@ export function txHash(tx: TonApiTx): string | null {
 
 /** Detect `ref:<paymentObjectId>` anywhere in the transaction JSON (comment / decoded fields). */
 export function txReferencesPayment(tx: TonApiTx, paymentId: string): boolean {
-  const marker = `ref:${paymentId}`;
+  return txReferencesMarker(tx, `ref:${paymentId}`);
+}
+
+/** Detect an arbitrary memo marker in transaction JSON (TON comment / payload). */
+export function txReferencesMarker(tx: TonApiTx, marker: string): boolean {
+  const m = marker.trim();
+  if (!m) return false;
   try {
-    return JSON.stringify(tx).includes(marker);
+    return JSON.stringify(tx).includes(m);
   } catch {
     return false;
   }

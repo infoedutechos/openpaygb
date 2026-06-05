@@ -3,11 +3,13 @@ import { z } from "zod";
 import { OrganizationTenantStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireMaster } from "@/lib/master-session";
-import { cloneProgrammesAndFxFromTemplate } from "@/lib/org-provision";
+import { activatePendingOrganizationWorkspace } from "@/lib/org-activate-pending";
 import { revalidateOrganizationCaches } from "@/lib/revalidate-organizations";
+import { workspaceEmailVerificationRequired } from "@/lib/organization-workspace-verify";
+import { apiErrorResponse } from "@/lib/api-error";
 
 const PatchBody = z.object({
-  action: z.enum(["approve", "reject"]),
+  action: z.enum(["approve", "reject", "reopen"]),
 });
 
 export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }> }) {
@@ -49,7 +51,36 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
     return NextResponse.json({ organization: updated });
   }
 
+  if (parsed.data.action === "reopen") {
+    if (org.tenantStatus !== OrganizationTenantStatus.rejected) {
+      return NextResponse.json(
+        { error: "Only rejected tenants can be reopened to pending review" },
+        { status: 400 },
+      );
+    }
+    const updated = await prisma.organization.update({
+      where: { id },
+      data: { tenantStatus: OrganizationTenantStatus.pending },
+    });
+    revalidateOrganizationCaches(org.slug);
+    return NextResponse.json({
+      organization: updated,
+      message:
+        "Workspace reopened as pending. Applicant may need to verify email again if not already verified; you can approve when ready.",
+    });
+  }
+
   // approve
+  if (workspaceEmailVerificationRequired(org)) {
+    return NextResponse.json(
+      {
+        error:
+          "Applicant has not verified their registration email yet. They must click the ODEL HUB link in their inbox before workspace approval.",
+      },
+      { status: 400 },
+    );
+  }
+
   if (org.tenantStatus !== OrganizationTenantStatus.pending) {
     if (org.tenantStatus === OrganizationTenantStatus.active) {
       return NextResponse.json({ organization: org });
@@ -61,16 +92,12 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   }
 
   try {
-    await cloneProgrammesAndFxFromTemplate(id);
-    const updated = await prisma.organization.update({
-      where: { id },
-      data: { tenantStatus: OrganizationTenantStatus.active },
-    });
-    revalidateOrganizationCaches(updated.slug, updated.id);
+    const updated = await activatePendingOrganizationWorkspace(id);
     return NextResponse.json({ organization: updated });
   } catch (e) {
-    console.error("[master/organizations PATCH approve]", e);
-    const message = e instanceof Error ? e.message : "Provision failed";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiErrorResponse(e, {
+      route: "master/organizations",
+      fallback: "Provision failed",
+    });
   }
 }

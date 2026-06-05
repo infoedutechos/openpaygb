@@ -8,7 +8,7 @@ export default function DexOnrampPage() {
       <div>
         <h1 className="text-2xl font-semibold text-white">Onramp</h1>
         <p className="mt-2 text-sm leading-relaxed text-slate-400">
-          Bring funds in via <strong className="text-slate-200">OpenPayGlobal</strong> (MbiyoPay mobile-money where
+          Bring funds in via <strong className="text-slate-200">OpenPayGB</strong> (Mbiyo mobile-money where
           supported) or <strong className="text-slate-200">TON Connect</strong>. Tuition checkout already quotes UGX,
           converts for collection, and records the ledger per organization.
         </p>

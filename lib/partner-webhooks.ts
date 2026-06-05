@@ -9,6 +9,12 @@ export function signPartnerWebhookPayload(secret: string, rawBody: string): stri
   return createHmac("sha256", secret).update(rawBody, "utf8").digest("hex");
 }
 
+const MAX_DELIVERY_ATTEMPTS = 3;
+
+function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
 async function deliverOne(
   endpoint: { id: string; url: string; secret: string },
   event: PartnerWebhookEvent,
@@ -26,23 +32,32 @@ async function deliverOne(
   let success = false;
   let error = "";
 
-  try {
-    const res = await fetch(endpoint.url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Odelhub-Signature": signature,
-        "X-Odelhub-Event": event,
-      },
-      body,
-    });
-    statusCode = res.status;
-    success = res.ok;
-    if (!res.ok) {
-      error = await res.text().catch(() => `HTTP ${res.status}`);
+  for (let attempt = 1; attempt <= MAX_DELIVERY_ATTEMPTS; attempt++) {
+    statusCode = null;
+    success = false;
+    error = "";
+    try {
+      const res = await fetch(endpoint.url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Odelhub-Signature": signature,
+          "X-Odelhub-Event": event,
+        },
+        body,
+      });
+      statusCode = res.status;
+      success = res.ok;
+      if (!res.ok) {
+        error = await res.text().catch(() => `HTTP ${res.status}`);
+      }
+    } catch (e) {
+      error = e instanceof Error ? e.message : "delivery_failed";
     }
-  } catch (e) {
-    error = e instanceof Error ? e.message : "delivery_failed";
+    if (success) break;
+    if (attempt < MAX_DELIVERY_ATTEMPTS) {
+      await sleep(400 * attempt);
+    }
   }
 
   await prisma.partnerWebhookDelivery.create({

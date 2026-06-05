@@ -36,7 +36,7 @@ export default async function HomePage() {
               <span className="text-sky-100">Play Hub</span> for engagement.
             </h1>
             <p className="max-w-xl text-lg leading-relaxed text-slate-400">
-              Tuition Hub keeps multi-tenant programmes, OpenPayGlobal / Mbiyo rails where configured, receipts, and admin
+              Tuition Hub keeps multi-tenant programmes, OpenPayGB brand with Mbiyo and LivePay rails where configured, receipts, and admin
               tooling. Dex Hub is the dedicated liquidity layer—extend <code className="rounded bg-black/35 px-1 text-sm">lib/ecosystem/hubs.ts</code> to plug new rails without rewiring the other hubs. Play Hub remains the GamiFi surface.
             </p>
             <div className="flex flex-wrap gap-3 pt-1">
@@ -187,7 +187,7 @@ export default async function HomePage() {
         <div className="rounded-2xl border border-violet-500/30 bg-violet-950/25 p-6 shadow-lg shadow-black/20 md:col-span-1">
           <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-violet-300/95">Dex Hub</h2>
           <p className="mt-3 text-sm leading-relaxed text-slate-300">
-            Onramp and offramp between mobile money, OpenPayGlobal rails, and TON. Register additional venues in the hub
+            Onramp and offramp between mobile money (Mbiyo / LivePay under OpenPayGB), and TON. Register additional venues in the hub
             manifest and wire APIs without touching Tuition or Play shells.
           </p>
           <Link

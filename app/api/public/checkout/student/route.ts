@@ -7,6 +7,7 @@ import {
   signCheckoutSession,
 } from "@/lib/checkout-session";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
+import { apiErrorResponse } from "@/lib/api-error";
 
 const Body = z.object({
   organizationSlug: z.string().min(2),
@@ -64,10 +65,9 @@ export async function POST(req: Request) {
     attachCheckoutSessionCookie(res, checkoutToken);
     return res;
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Could not create student";
-    const status =
-      msg.includes("not active") || msg.includes("not found") ? 404 : msg.includes("Invalid") ? 400 : 500;
-    if (status === 500) console.error("[checkout/student]", e);
-    return NextResponse.json({ error: msg }, { status });
+    return apiErrorResponse(e, {
+      route: "checkout/student",
+      fallback: "Could not create student",
+    });
   }
 }

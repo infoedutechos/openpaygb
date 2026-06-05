@@ -92,10 +92,10 @@ export function MbiyoPayinFields({
           className={field}
           autoComplete="tel"
         />
-        <p className={hintCls}>OpenPayGlobal expects E.164; we normalize from local digits when possible.</p>
+        <p className={hintCls}>Mbiyo rail expects E.164; we normalize from local digits when possible.</p>
         <p className={`${hintCls} text-amber-200/75`}>
-          Tuition is quoted in UGX at checkout; OpenPayGlobal converts at pay-in to the settlement currency shown. Uganda is
-          not on this provider network — use TON here or choose a listed country/wallet.
+          Tuition is quoted in UGX at checkout; Mbiyo converts at pay-in to the settlement currency shown. Uganda is not on
+          the Mbiyo network — use TON, LivePay (UG), or choose a listed country/wallet.
         </p>
       </div>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">

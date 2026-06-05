@@ -2,12 +2,20 @@
 // Admin: list all notifications, create new. Optionally post to Telegram channel and/or send to each user's bot chat.
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import prisma from '@/utils/prisma';
 import { isAdminAuthorized } from '@/utils/admin-session';
+import { getAdminFromCookies } from '@/lib/auth';
 import { sendAnnouncementToChannel, broadcastNotificationToUserBotChats } from '@/utils/telegram-notify';
 
-export async function GET() {
-  // Notifications panel is public (no admin password); allow read without auth
+function adminNotificationsAuthorized(req: Request): Promise<boolean> {
+  return getAdminFromCookies().then((pay) => Boolean(pay) || isAdminAuthorized(req));
+}
+
+export async function GET(req: Request) {
+  if (!(await adminNotificationsAuthorized(req))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
     const notifications = await prisma.notification.findMany({
       orderBy: { createdAt: 'desc' },
@@ -22,30 +30,37 @@ export async function GET() {
   }
 }
 
+const CreateNotificationBody = z.object({
+  title: z.string().min(1).max(200),
+  body: z.string().max(5000).optional().default(''),
+  imageUrl: z.string().max(2000).optional().nullable(),
+  videoUrl: z.string().max(2000).optional().nullable(),
+  isActive: z.boolean().optional().default(true),
+  postToTelegram: z.boolean().optional().default(true),
+  sendToUserBotChats: z.boolean().optional().default(true),
+});
+
 export async function POST(req: NextRequest) {
-  if (!isAdminAuthorized(req)) {
+  if (!(await adminNotificationsAuthorized(req))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
   try {
-    const body = await req.json();
-    const { title, body: bodyText, imageUrl, videoUrl, isActive } = body;
-    if (!title || typeof title !== 'string' || !title.trim()) {
-      return NextResponse.json(
-        { error: 'Title is required' },
-        { status: 400 }
-      );
+    const json = await req.json().catch(() => null);
+    const parsed = CreateNotificationBody.safeParse(json);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid body', details: parsed.error.flatten() }, { status: 400 });
     }
+    const body = parsed.data;
     const notification = await prisma.notification.create({
       data: {
-        title: title.trim(),
-        body: typeof bodyText === 'string' ? bodyText.trim() : '',
-        imageUrl: typeof imageUrl === 'string' && imageUrl.trim() ? imageUrl.trim() : null,
-        videoUrl: typeof videoUrl === 'string' && videoUrl.trim() ? videoUrl.trim() : null,
-        isActive: isActive !== false,
+        title: body.title.trim(),
+        body: body.body.trim(),
+        imageUrl: body.imageUrl?.trim() ? body.imageUrl.trim() : null,
+        videoUrl: body.videoUrl?.trim() ? body.videoUrl.trim() : null,
+        isActive: body.isActive !== false,
       },
     });
 
-    // Optionally post to Telegram channel
     const postToChannel = body.postToTelegram !== false;
     if (postToChannel) {
       sendAnnouncementToChannel(

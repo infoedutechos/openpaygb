@@ -3,7 +3,9 @@ import { z } from "zod";
 import { PaymentRail } from "@prisma/client";
 import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/prisma";
+import { apiErrorResponse } from "@/lib/api-error";
 import { requireMaster } from "@/lib/master-session";
+import { withPrismaRetry } from "@/lib/prisma-retry";
 import { getBuiltinMobileMoneyProviders } from "@/lib/builtin-mobile-money";
 
 const CreateBody = z.object({
@@ -32,10 +34,12 @@ export async function GET() {
 
   try {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || "";
-  const custom = await prisma.mobileMoneyProvider.findMany({
-    orderBy: { createdAt: "desc" },
-    include: { organization: { select: { slug: true, name: true } } },
-  });
+  const custom = await withPrismaRetry(() =>
+    prisma.mobileMoneyProvider.findMany({
+      orderBy: { createdAt: "desc" },
+      include: { organization: { select: { slug: true, name: true } } },
+    }),
+  );
 
   return NextResponse.json({
     builtin: getBuiltinMobileMoneyProviders(),
@@ -58,11 +62,13 @@ export async function GET() {
       notes: p.notes,
       createdAt: p.createdAt,
     })),
-    paymentRails: ["telegram", "web", "momo_bridge", "mbiyo"],
+    paymentRails: ["telegram", "web", "momo_bridge", "mbiyo", "livepay"],
   });
   } catch (e) {
-    console.error("[master/mobile-money-providers GET]", e);
-    return NextResponse.json({ error: "Could not load mobile money providers" }, { status: 500 });
+    return apiErrorResponse(e, {
+      route: "GET /api/master/mobile-money-providers",
+      fallback: "Could not load mobile money providers",
+    });
   }
 }
 

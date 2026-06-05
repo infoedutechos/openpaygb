@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { signAdminToken, cookieName } from "@/lib/auth";
 import { ADMIN_REMEMBER_MAX_AGE_SEC, ADMIN_SESSION_MAX_AGE_SEC } from "@/lib/admin-password-reset";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
+import { apiErrorResponse } from "@/lib/api-error";
 
 const Body = z.object({
   email: z.string().email(),
@@ -76,7 +77,6 @@ export async function POST(req: Request) {
     });
     return res;
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiErrorResponse(e, { route: "auth/login", fallback: "Server error" });
   }
 }

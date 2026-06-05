@@ -10,6 +10,7 @@ import {
   StudentPaymentsHistory,
   type StudentPaymentRow,
 } from "@/components/student/StudentPaymentsHistory";
+import { OpenPayCardPanel } from "@/components/student/OpenPayCardPanel";
 
 type Me = {
   student: {
@@ -82,6 +83,8 @@ export default function StudentDashboardPage() {
           </Link>
         </p>
       </header>
+
+      <OpenPayCardPanel />
 
       {balance ? (
         <TuitionBalancePanel

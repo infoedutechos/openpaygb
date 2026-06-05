@@ -74,3 +74,31 @@ export function isMomoSuccessStatus(body: unknown): boolean {
 
   return false;
 }
+
+/** Best-effort UGX amount from MoMo callback payloads (shape varies by provider). */
+export function extractMomoAmountUgx(body: unknown): number | null {
+  if (!body || typeof body !== "object") return null;
+  const o = body as Record<string, unknown>;
+
+  const tryVal = (v: unknown): number | null => {
+    if (typeof v === "number" && Number.isFinite(v)) return Math.round(v);
+    if (typeof v === "string" && /^\d+(\.\d+)?$/.test(v.trim())) return Math.round(Number(v.trim()));
+    return null;
+  };
+
+  for (const k of ["amount", "Amount", "totalAmount", "transactionAmount", "value"]) {
+    const n = tryVal(o[k]);
+    if (n != null) return n;
+  }
+
+  const data = o.data;
+  if (data && typeof data === "object") {
+    const d = data as Record<string, unknown>;
+    for (const k of ["amount", "Amount", "totalAmount"]) {
+      const n = tryVal(d[k]);
+      if (n != null) return n;
+    }
+  }
+
+  return null;
+}

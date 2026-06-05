@@ -7,6 +7,7 @@ import { findProgrammeByCode, getFeeLineFromProgramme } from "@/lib/programmes";
 import { getActiveUgxPerTon } from "@/lib/fx";
 import { feeTotal, ugxToTon, tonToNanotonString } from "@/lib/money";
 import { DEFAULT_TON_WALLET } from "@/lib/constants";
+import { createReceiptAccessToken } from "@/lib/receipt-access";
 import { absoluteUrl } from "@/lib/public-url";
 import {
   buildStudentProgrammeProgress,
@@ -449,7 +450,13 @@ async function dispatchCallback(
       );
       return;
     }
-    const receiptUrl = absoluteUrl(`/receipt/${pay.id}`);
+    const receiptToken = createReceiptAccessToken({
+      id: pay.id,
+      studentId: pay.studentId,
+      confirmedAt: pay.confirmedAt,
+    });
+    const receiptQs = receiptToken ? `?t=${encodeURIComponent(receiptToken)}` : "";
+    const receiptUrl = absoluteUrl(`/receipt/${pay.id}${receiptQs}`);
     const note = [
       "<b>Thanks — recorded</b>",
       "",

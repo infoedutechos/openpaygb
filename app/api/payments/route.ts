@@ -8,6 +8,7 @@ import { createPendingPayment } from "@/lib/create-payment";
 import { isValidObjectId } from "@/lib/object-id";
 import { requirePartnerAuth } from "@/lib/partner-auth";
 import { buildStudentProgrammeProgress } from "@/lib/tuition-progress";
+import { apiErrorResponse } from "@/lib/api-error";
 
 const CreateBody = z.object({
   studentId: z.string().min(1),
@@ -46,6 +47,14 @@ export async function POST(req: Request) {
   if (partnerOrgId && partnerOrgId !== student.organizationId) {
     return NextResponse.json({ error: "Student not in API key organization scope" }, { status: 403 });
   }
+
+  if (admin) {
+    const scope = await organizationWhereForSession(admin.sub, admin.role);
+    if ("organizationId" in scope && scope.organizationId !== student.organizationId) {
+      return NextResponse.json({ error: "Student is outside your organization" }, { status: 403 });
+    }
+  }
+
   try {
     const doc = await createPendingPayment({
       studentId: student.id,
@@ -81,9 +90,10 @@ export async function POST(req: Request) {
       { status: 201 }
     );
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Could not create payment";
-    const status = msg === "Programme not found" || msg === "No fee schedule for year/semester" ? 404 : 400;
-    return NextResponse.json({ error: msg }, { status });
+    return apiErrorResponse(e, {
+      route: "payments",
+      fallback: "Could not create payment",
+    });
   }
 }
 

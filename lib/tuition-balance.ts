@@ -1,6 +1,9 @@
 import { PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getCheckoutPlatformFeeUgxForOrganization } from "@/lib/checkout-platform-fee";
+import {
+  buildInstallmentScheduleFromRule,
+  resolveCheckoutPlatformFeeRule,
+} from "@/lib/checkout-platform-fee";
 import { buildInstallmentSchedule, type InstallmentCountOption, type InstallmentSlice } from "@/lib/installments";
 import { feeTotal } from "@/lib/money";
 import {
@@ -209,8 +212,9 @@ export async function quoteObligation(opts: {
   if (tuitionUgx === 0 && functionalFeesUgx === 0) return null;
 
   const subtotalUgx = feeTotal(tuitionUgx, functionalFeesUgx);
-  const platformFeeUgx = await getCheckoutPlatformFeeUgxForOrganization(opts.organizationId);
-  const schedule = buildInstallmentSchedule(subtotalUgx, platformFeeUgx, 1);
+  const feeRule = await resolveCheckoutPlatformFeeRule(opts.organizationId);
+  const schedule = buildInstallmentScheduleFromRule(subtotalUgx, feeRule, 1);
+  const platformFeeUgx = schedule.slices[0]?.platformFeeUgx ?? 0;
 
   return {
     includedFeeIds: rows.map((r) => r.id),

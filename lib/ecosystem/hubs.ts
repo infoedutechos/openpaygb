@@ -28,7 +28,7 @@ export const HUBS: Record<HubKey, HubDefinition> = {
     id: "tuition",
     label: "Tuition Hub",
     shortLabel: "Tuition",
-    description: "Programme fees, receipts, OpenPayGlobal mobile money, TON settlement.",
+    description: "Programme fees, receipts, OpenPayGB (Mbiyo / LivePay rails), TON settlement.",
     homeQueryValue: "tuition",
     basePath: "/pay/default",
     routes: {
@@ -58,7 +58,7 @@ export const HUBS: Record<HubKey, HubDefinition> = {
     id: "dex",
     label: "Dex Hub",
     shortLabel: "Dex",
-    description: "Onramp & offramp between fiat / mobile money and TON — extends OpenPayGlobal & wallet flows.",
+    description: "Onramp & offramp between fiat / mobile money and TON — extends OpenPayGB rails & wallet flows.",
     homeQueryValue: "dex",
     basePath: "/dex",
     routes: {

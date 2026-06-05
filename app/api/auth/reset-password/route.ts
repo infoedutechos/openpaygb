@@ -3,6 +3,8 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { hashAdminResetToken } from "@/lib/admin-password-reset";
+import { clientIp, rateLimitHit } from "@/lib/rate-limit";
+import { apiErrorResponse } from "@/lib/api-error";
 
 const Body = z.object({
   token: z.string().min(16),
@@ -11,6 +13,9 @@ const Body = z.object({
 
 export async function POST(req: Request) {
   try {
+    if (rateLimitHit(`auth-reset:${clientIp(req)}`, 10, 60 * 60 * 1000)) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
     const json = await req.json();
     const parsed = Body.safeParse(json);
     if (!parsed.success) {
@@ -40,8 +45,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (e) {
-    console.error("[auth/reset-password]", e);
-    const message = e instanceof Error ? e.message : "Server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiErrorResponse(e, { route: "auth/reset-password", fallback: "Server error" });
   }
 }

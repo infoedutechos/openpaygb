@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
+import { isTransientMongoError, withPrismaRetry } from "@/lib/prisma-retry";
 import { platformLogoUrl } from "@/lib/platform-logo";
 import { parseSocialLinkIcons, socialLinkIconUrl } from "@/lib/social-link-icons";
 import {
@@ -114,19 +115,36 @@ export function isUnknownSocialLinkIconsFieldError(err: unknown): boolean {
   return msg.includes("socialLinkIcons") && msg.includes("Unknown field");
 }
 
+function isTransientPrismaIoError(err: unknown): boolean {
+  const msg = String((err as { message?: string })?.message ?? "");
+  return (
+    msg.includes("connection was forcibly closed") ||
+    msg.includes("RetryableWriteError") ||
+    msg.includes("I/O error")
+  );
+}
+
 async function loadSiteUiRow() {
   try {
-    return await prisma.siteUiSettings.findUnique({
-      where: { key: PLATFORM_SITE_UI_KEY },
-      select: siteUiSelect,
-    });
+    return await withPrismaRetry(() =>
+      prisma.siteUiSettings.findUnique({
+        where: { key: PLATFORM_SITE_UI_KEY },
+        select: siteUiSelect,
+      }),
+    );
   } catch (err) {
+    if (isTransientPrismaIoError(err) || isTransientMongoError(err)) {
+      console.warn("[site-ui-settings] transient DB error, using defaults");
+      return null;
+    }
     if (!isUnknownSocialLinkIconsFieldError(err)) throw err;
     // Stale Prisma client in a running dev server — omit field until `npx prisma generate` + restart.
-    return prisma.siteUiSettings.findUnique({
-      where: { key: PLATFORM_SITE_UI_KEY },
-      select: siteUiSelectBase,
-    });
+    return withPrismaRetry(() =>
+      prisma.siteUiSettings.findUnique({
+        where: { key: PLATFORM_SITE_UI_KEY },
+        select: siteUiSelectBase,
+      }),
+    ).catch(() => null);
   }
 }
 

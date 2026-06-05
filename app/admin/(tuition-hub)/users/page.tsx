@@ -1,19 +1,33 @@
 import { redirect } from "next/navigation";
+import { AdminUsersInvitePanel } from "@/components/admin/AdminUsersInvitePanel";
 import { TuitionHubCheckoutExplainerCompact } from "@/components/admin/TuitionHubCheckoutExplainer";
+import { ServerDbUnavailable } from "@/components/ui/ServerDbUnavailable";
 import { prisma } from "@/lib/prisma";
 import { getAdminFromCookies } from "@/lib/auth";
 import { organizationWhereForSession } from "@/lib/admin-org-scope";
+import { tryServerDb } from "@/lib/run-server-db";
 
 export default async function AdminUsersPage() {
   const session = await getAdminFromCookies();
   if (!session) redirect("/admin/login");
-  const orgWhere = await organizationWhereForSession(session.sub, session.role);
-  const users = await prisma.adminUser.findMany({
-    where: "organizationId" in orgWhere ? { organizationId: orgWhere.organizationId } : undefined,
-    orderBy: { createdAt: "desc" },
-    take: 80,
-    select: { id: true, email: true, name: true, role: true, createdAt: true },
+  const usersResult = await tryServerDb(async () => {
+    const orgWhere = await organizationWhereForSession(session.sub, session.role);
+    return prisma.adminUser.findMany({
+      where: "organizationId" in orgWhere ? { organizationId: orgWhere.organizationId } : undefined,
+      orderBy: { createdAt: "desc" },
+      take: 80,
+      select: { id: true, email: true, name: true, role: true, createdAt: true },
+    });
   });
+  if (!usersResult.ok) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-semibold text-white">Users</h1>
+        <ServerDbUnavailable />
+      </div>
+    );
+  }
+  const users = usersResult.data;
 
   return (
     <div className="space-y-6">
@@ -28,6 +42,8 @@ export default async function AdminUsersPage() {
         </p>
         <TuitionHubCheckoutExplainerCompact className="mt-2 max-w-3xl" />
       </div>
+
+      {session.role === "org_admin" ? <AdminUsersInvitePanel /> : null}
 
       <div className="space-y-3 md:hidden">
         {users.length === 0 ? (

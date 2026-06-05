@@ -1,4 +1,5 @@
 import { jwtVerify } from "jose";
+import { jwtSecretAdminBytes } from "@/lib/jwt-secrets";
 
 export type PayAdminJwtRole = "master" | "org_admin";
 
@@ -21,9 +22,8 @@ function normalizeJwtRole(raw: unknown): PayAdminJwtRole | null {
  */
 export async function verifyPayAdminJwt(token: string): Promise<PayAdminJwtPayload | null> {
   try {
-    const s = process.env.JWT_SECRET;
-    if (!s || s.length < 16) return null;
-    const secret = new TextEncoder().encode(s);
+    const secret = jwtSecretAdminBytes();
+    if (!secret) return null;
     const { payload } = await jwtVerify(token, secret);
     const sub = typeof payload.sub === "string" ? payload.sub : null;
     const email = typeof payload.email === "string" ? payload.email : null;

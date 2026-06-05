@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { PAYMENT_RAIL_OPENPAY_CARD } from "@/lib/open-pay-brand";
 
 export type StudentPaymentRow = {
   id: string;
@@ -26,6 +27,16 @@ function formatDate(iso: string): string {
     month: "short",
     year: "numeric",
   });
+}
+
+function railLabel(rail: string): string {
+  if (rail === "openpay_card") return PAYMENT_RAIL_OPENPAY_CARD;
+  if (rail === "mbiyo") return "Mbiyo";
+  if (rail === "livepay") return "LivePay";
+  if (rail === "relworx") return "Relworx";
+  if (rail === "web") return "TON";
+  if (rail === "telegram") return "Telegram TON";
+  return rail;
 }
 
 function statusLabel(status: string): string {
@@ -63,7 +74,7 @@ export function StudentPaymentsHistory({
                 </p>
                 <p className="mt-1 text-xs text-slate-400">
                   {formatDate(p.createdAt)}
-                  {p.rail ? ` · ${p.rail}` : ""}
+                  {p.rail ? ` · ${railLabel(p.rail)}` : ""}
                   {" · "}
                   <span
                     className={

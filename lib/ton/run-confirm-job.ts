@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { DEFAULT_TON_WALLET } from "@/lib/constants";
 import { tonToNanotonString } from "@/lib/money";
 import { handleFirstTimeConfirmation } from "@/lib/on-payment-confirmed";
+import { runOpenPayCardTonConfirmJob } from "@/lib/openpay-card-ton-confirm";
 import {
   fetchAccountTransactionsRecent,
   txHash,
@@ -16,6 +17,8 @@ export type TonConfirmJobResult = {
   confirmed: number;
   pendingScanned: number;
   walletsScanned?: number;
+  openPayCardsActivated?: number;
+  openPayCardTopupsConfirmed?: number;
   message?: string;
 };
 
@@ -122,7 +125,22 @@ async function matchAmountPass(
  * 1) transaction JSON contains `ref:<paymentId>`,
  * 2) else exact incoming nanoTON + timestamp after `createdAt` (FIFO).
  */
+function mergeCardOps(
+  base: TonConfirmJobResult,
+  cardOps: Awaited<ReturnType<typeof runOpenPayCardTonConfirmJob>>,
+): TonConfirmJobResult {
+  return {
+    ...base,
+    ok: base.ok && cardOps.ok !== false,
+    openPayCardsActivated: cardOps.cardsActivated,
+    openPayCardTopupsConfirmed: cardOps.topupsConfirmed,
+    message: base.message ?? cardOps.message,
+  };
+}
+
 export async function runTonInboundConfirmJob(): Promise<TonConfirmJobResult> {
+  const cardOps = await runOpenPayCardTonConfirmJob();
+
   const pending = await prisma.payment.findMany({
     where: pendingWhere(),
     orderBy: { createdAt: "asc" },
@@ -137,13 +155,16 @@ export async function runTonInboundConfirmJob(): Promise<TonConfirmJobResult> {
 
   const addresses = watchAddressesForPending(pending);
   if (addresses.length === 0) {
-    return {
-      ok: false,
-      confirmed: 0,
-      pendingScanned: pending.length,
-      walletsScanned: 0,
-      message: "No settlement wallets configured (set ODELHUB_TON_WALLET_ADDRESS or org destinationWallet)",
-    };
+    return mergeCardOps(
+      {
+        ok: false,
+        confirmed: 0,
+        pendingScanned: pending.length,
+        walletsScanned: 0,
+        message: "No settlement wallets configured (set ODELHUB_TON_WALLET_ADDRESS or org destinationWallet)",
+      },
+      cardOps,
+    );
   }
 
   const usedHashes = new Set<string>();
@@ -154,7 +175,10 @@ export async function runTonInboundConfirmJob(): Promise<TonConfirmJobResult> {
     const fetched = await fetchAccountTransactionsRecent(address, 100);
     if (!fetched.ok) {
       if (addresses.length === 1) {
-        return { ok: false, confirmed: 0, pendingScanned: pending.length, message: fetched.error };
+        return mergeCardOps(
+          { ok: false, confirmed: 0, pendingScanned: pending.length, message: fetched.error },
+          cardOps,
+        );
       }
       continue;
     }
@@ -187,10 +211,13 @@ export async function runTonInboundConfirmJob(): Promise<TonConfirmJobResult> {
   }
 
   const count = await prisma.payment.count({ where: pendingWhere() });
-  return {
-    ok: true,
-    confirmed,
-    pendingScanned: count,
-    walletsScanned,
-  };
+  return mergeCardOps(
+    {
+      ok: true,
+      confirmed,
+      pendingScanned: count,
+      walletsScanned,
+    },
+    cardOps,
+  );
 }

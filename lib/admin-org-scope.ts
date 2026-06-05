@@ -1,6 +1,7 @@
 import type { AdminRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getDefaultOrganizationId } from "@/lib/default-organization";
+import { withPrismaRetry } from "@/lib/prisma-retry";
 
 /**
  * Prisma `where` fragment for tenant-scoped models (`Student`, `Payment`, …).
@@ -15,10 +16,24 @@ export async function organizationWhereForSession(
   role: AdminRole
 ): Promise<Record<string, never> | { organizationId: string }> {
   if (role === "master") return {};
-  const row = await prisma.adminUser.findUnique({
-    where: { id: adminId },
-    select: { organizationId: true },
-  });
+  const row = await withPrismaRetry(() =>
+    prisma.adminUser.findUnique({
+      where: { id: adminId },
+      select: { organizationId: true },
+    }),
+  );
   const organizationId = row?.organizationId ?? (await getDefaultOrganizationId());
   return { organizationId };
+}
+
+/** Tuition admin (master or org_admin for the same tenant) may resume guest checkout for a student. */
+export async function adminCanAccessStudentOrganization(
+  adminId: string,
+  role: AdminRole,
+  studentOrganizationId: string,
+): Promise<boolean> {
+  if (role === "master") return true;
+  const scope = await organizationWhereForSession(adminId, role);
+  if (!("organizationId" in scope)) return true;
+  return scope.organizationId === studentOrganizationId;
 }

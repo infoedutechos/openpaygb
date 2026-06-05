@@ -1,8 +1,8 @@
-import { OPEN_PAY_GLOBAL_NAME } from "@/lib/open-pay-brand";
+import { mbiyoRailError } from "@/lib/open-pay-brand";
 import { isMbiyoConfigured, mbiyoNotConfiguredMessage } from "@/lib/mbiyo/config";
 
 /**
- * MbiyoPay merchant API (infrastructure for OpenPayGlobal checkout).
+ * MbiyoPay merchant API (Mbiyo payment rail; OpenPayGB brand at checkout).
  * @see https://dashboard.mbiyo.africa/docs/reference/merchant/payin
  */
 
@@ -61,10 +61,10 @@ function formatMbiyoError(
   json: MbiyoWrappedResponse<unknown> | null,
 ): string {
   if (!json || typeof json !== "object") {
-    return `${OPEN_PAY_GLOBAL_NAME} invalid response (HTTP ${res.status})`;
+    return mbiyoRailError(`invalid response (HTTP ${res.status})`);
   }
   if (json.status !== "error") {
-    return `${OPEN_PAY_GLOBAL_NAME} payin failed (HTTP ${res.status})`;
+    return mbiyoRailError(`payin failed (HTTP ${res.status})`);
   }
   let msg = json.message ?? `HTTP ${res.status}`;
   const data = json.data;
@@ -76,7 +76,7 @@ function formatMbiyoError(
     }
     if (parts.length) msg = `${msg} — ${parts.join("; ")}`;
   }
-  return `${OPEN_PAY_GLOBAL_NAME} payin failed: ${msg}`;
+  return mbiyoRailError(`payin failed: ${msg}`);
 }
 
 export async function mbiyoMerchantPayin(body: MbiyoPayinRequest): Promise<MbiyoWrappedResponse<MbiyoPayinData>> {
@@ -98,7 +98,7 @@ export async function mbiyoMerchantPayin(body: MbiyoPayinRequest): Promise<Mbiyo
   });
   const json = (await res.json().catch(() => null)) as MbiyoWrappedResponse<MbiyoPayinData> | null;
   if (!json || typeof json !== "object") {
-    throw new Error(`${OPEN_PAY_GLOBAL_NAME} invalid response (${res.status})`);
+    throw new Error(mbiyoRailError(`invalid response (${res.status})`));
   }
   if (!res.ok || json.status === "error") {
     throw new Error(formatMbiyoError(res, json));
@@ -118,7 +118,7 @@ export async function mbiyoGetTransaction(transactionId: string): Promise<MbiyoW
   });
   const json = (await res.json().catch(() => null)) as MbiyoWrappedResponse<MbiyoPayinData> | null;
   if (!json || typeof json !== "object") {
-    throw new Error(`${OPEN_PAY_GLOBAL_NAME} invalid response (${res.status})`);
+    throw new Error(mbiyoRailError(`invalid response (${res.status})`));
   }
   if (!res.ok || json.status === "error") {
     throw new Error(formatMbiyoError(res, json));

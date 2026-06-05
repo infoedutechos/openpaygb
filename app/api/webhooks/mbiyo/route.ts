@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { handleFirstTimeConfirmation } from "@/lib/on-payment-confirmed";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
 import { mbiyoWebhookSignatureOk } from "@/lib/mbiyo/verify-webhook-signature";
-import { requireConfiguredSecret } from "@/lib/production-secrets";
+import { requireConfiguredSecret, isProductionRuntime } from "@/lib/production-secrets";
+import { webhookAmountMatchesPayment } from "@/lib/webhook-payment-confirm";
 import { mbiyoGetTransaction } from "@/lib/mbiyo/client";
 
 const Payload = z.object({
@@ -62,6 +63,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, action: "no_order_id" });
   }
 
+  if (isProductionRuntime() && !process.env.MBIYO_SECRET_KEY?.trim()) {
+    return NextResponse.json({ ok: false, error: "MBIYO_SECRET_KEY required in production" }, { status: 503 });
+  }
+
   if (process.env.MBIYO_SECRET_KEY?.trim()) {
     try {
       const remote = await mbiyoGetTransaction(transaction_id);
@@ -87,6 +92,10 @@ export async function POST(req: Request) {
 
   if (payment.status === "confirmed") {
     return NextResponse.json({ ok: true, action: "already_confirmed", paymentId: payment.id });
+  }
+
+  if (!webhookAmountMatchesPayment(payment.totalUgx, parsed.data.amount, parsed.data.currency)) {
+    return NextResponse.json({ ok: true, action: "amount_mismatch", paymentId: payment.id });
   }
 
   const n = await prisma.payment.updateMany({

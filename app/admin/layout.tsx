@@ -1,5 +1,6 @@
 import { headers, cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { PUBLIC_SCHOOL_LOGIN_PATH } from "@/lib/admin-auth-entry";
 import { getAdminFromCookies } from "@/lib/auth";
 import {
   verifyAdminSessionToken,
@@ -47,21 +48,22 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const isResetPasswordPage =
     pathname === "/admin/reset-password" || pathname.startsWith("/admin/reset-password/");
   const isRegisterPage = pathname === "/admin/register" || pathname.startsWith("/admin/register/");
-  const isNotificationsPanel =
-    pathname === "/admin/notifications" || pathname.startsWith("/admin/notifications/");
-
-  if (isLoginPage || isResetPasswordPage || isRegisterPage || isNotificationsPanel) {
+  if (isLoginPage || isResetPasswordPage || isRegisterPage) {
     return <>{children}</>;
   }
 
   const payAdmin = await getAdminFromCookies();
   const uraSession = cookieStore.get(ADMIN_SESSION_COOKIE_NAME)?.value;
   const uraOk = verifyAdminSessionToken(uraSession);
-  const localhostAuth = host.includes("localhost") && process.env.ACCESS_ADMIN === "true";
+  const localhostAuth =
+    process.env.NODE_ENV !== "production" &&
+    host.includes("localhost") &&
+    process.env.ACCESS_ADMIN === "true";
 
   const isAuthorized = Boolean(payAdmin) || uraOk || localhostAuth;
   if (!isAuthorized) {
-    redirect("/admin/login");
+    const normalized = pathname.replace(/^\/school-admin(\/|$)/, "/admin$1") || "/admin";
+    redirect(`${PUBLIC_SCHOOL_LOGIN_PATH}?next=${encodeURIComponent(normalized)}`);
   }
 
   if (

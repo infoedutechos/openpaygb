@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAdminFromCookies } from "@/lib/auth";
-import { organizationWhereForSession } from "@/lib/admin-org-scope";
+import { resolveSummaryScope } from "@/lib/admin-summary-scope";
+import { apiErrorResponse } from "@/lib/api-error";
 
 function monthKey(d: Date): string {
   const y = d.getFullYear();
@@ -18,12 +19,22 @@ function pctChange(current: number, previous: number): number | null {
   return Math.round(((current - previous) / previous) * 1000) / 10;
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
   const session = await getAdminFromCookies();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const url = new URL(req.url);
+  const organizationSlug = url.searchParams.get("organizationSlug");
+
+  const scopeResult = await resolveSummaryScope(session.sub, session.role, organizationSlug);
+  if (!scopeResult.ok) {
+    return NextResponse.json({ error: scopeResult.error }, { status: scopeResult.status });
+  }
+  const payScoped = scopeResult.payScoped;
+  const studentScoped = scopeResult.studentScoped;
 
   const adminProfile = await prisma.adminUser.findUnique({
     where: { id: session.sub },
@@ -32,10 +43,6 @@ export async function GET() {
       organization: { select: { name: true, slug: true } },
     },
   });
-
-  const orgWhere = await organizationWhereForSession(session.sub, session.role);
-  const payScoped = { ...orgWhere };
-  const studentScoped = { ...orgWhere };
 
   const now = new Date();
   const thisMonthStart = startOfMonth(now);
@@ -158,11 +165,14 @@ export async function GET() {
   const tonTm = tonThisMonth._sum.tonAmount ?? 0;
   const tonLm = tonLastMonth._sum.tonAmount ?? 0;
 
+  const scopedOrg = scopeResult.viewerOrg;
+
   return NextResponse.json({
     viewer: {
       role: adminProfile?.role ?? session.role,
-      organizationName: adminProfile?.organization?.name ?? null,
-      organizationSlug: adminProfile?.organization?.slug ?? null,
+      organizationName: scopedOrg?.name ?? adminProfile?.organization?.name ?? null,
+      organizationSlug: scopedOrg?.slug ?? adminProfile?.organization?.slug ?? null,
+      scopedToSlug: scopedOrg?.slug ?? null,
     },
     totalCollectionsTon: Math.round(totalTon * 10_000) / 10_000,
     totalCollectionsUgx: ugxAgg._sum.totalUgx ?? 0,
@@ -202,8 +212,9 @@ export async function GET() {
     })),
   });
   } catch (e) {
-    console.error("[admin/summary]", e);
-    const msg = e instanceof Error ? e.message : "Could not load dashboard summary";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return apiErrorResponse(e, {
+      route: "GET /api/admin/summary",
+      fallback: "Could not load dashboard summary",
+    });
   }
 }

@@ -12,22 +12,17 @@ import {
   adminLoginPathForMode,
   type AdminLoginMode,
 } from "@/lib/admin-auth-entry";
+import { clientFetchErrorMessage, isClientFetchNetworkError } from "@/lib/client-fetch-error";
 
 const LS_EMAIL = "odelhub_admin_email";
 const LS_REMEMBER = "odelhub_admin_remember";
 
-function isLikelyNetworkFailure(err: unknown): boolean {
-  if (!(err instanceof Error)) return false;
-  const m = err.message.toLowerCase();
-  return (
-    err.name === "TypeError" &&
-    (m.includes("fetch") || m.includes("failed to fetch") || m.includes("networkerror") || m.includes("load failed"))
-  );
-}
-
 function describeLoginError(err: unknown): string {
-  if (isLikelyNetworkFailure(err)) {
-    return "Could not reach the server. Start or restart the dev server (for example npm run dev), wait until it is ready, then try again.";
+  if (isClientFetchNetworkError(err)) {
+    return clientFetchErrorMessage(
+      err,
+      "Could not reach the server. Start or restart the dev server (for example npm run dev:clean), wait until it is ready, then try again.",
+    );
   }
   return err instanceof Error ? err.message : "Login failed";
 }
@@ -99,6 +94,20 @@ function AdminLoginForm() {
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const workspaceVerified = searchParams.get("workspaceVerified") === "1";
+  const workspaceActivated = searchParams.get("workspaceActivated") === "1";
+  const workspaceVerifyExpired = searchParams.get("workspaceVerifyExpired") === "1";
+  const workspaceVerifyErrorRaw = searchParams.get("workspaceVerifyError");
+  const workspaceVerifyError = workspaceVerifyErrorRaw
+    ? (() => {
+        try {
+          return decodeURIComponent(workspaceVerifyErrorRaw);
+        } catch {
+          return workspaceVerifyErrorRaw;
+        }
+      })()
+    : null;
 
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
@@ -194,7 +203,6 @@ function AdminLoginForm() {
       const role = j.admin?.role ?? "org_admin";
       const next = safeNextParam(searchParams.get("next"), role);
       router.replace(next);
-      router.refresh();
     } catch (err) {
       setError(describeLoginError(err));
     } finally {
@@ -217,7 +225,7 @@ function AdminLoginForm() {
       if (!r.ok) throw new Error(j.error ?? "Request failed");
       setForgotMsg(j.message ?? "Check your inbox for reset instructions.");
     } catch (err) {
-      setForgotErr(isLikelyNetworkFailure(err) ? describeLoginError(err) : err instanceof Error ? err.message : "Request failed");
+      setForgotErr(describeLoginError(err));
     } finally {
       setForgotBusy(false);
     }
@@ -248,6 +256,36 @@ function AdminLoginForm() {
             }}
           />
 
+          {workspaceVerified ? (
+            <p className="rounded-lg border border-emerald-500/30 bg-emerald-950/30 px-4 py-3 text-sm text-emerald-200/95">
+              {workspaceActivated ? (
+                <>
+                  Your school workspace email is confirmed and your tuition workspace is now{" "}
+                  <strong className="text-emerald-100">active</strong>. Guest pay is available at your school slug once
+                  configured. A platform operator still needs to create your school admin login — you will receive those
+                  credentials separately.
+                </>
+              ) : (
+                <>
+                  Your school workspace email is confirmed. A platform master will review your request and share admin
+                  login credentials when approved.
+                </>
+              )}
+            </p>
+          ) : null}
+          {workspaceVerifyError ? (
+            <div className="rounded-lg border border-rose-500/30 bg-rose-950/25 px-4 py-3 text-sm text-rose-200/95">
+              <p>{workspaceVerifyError}</p>
+              {workspaceVerifyExpired ? (
+                <p className="mt-2 text-xs text-rose-200/80">
+                  <Link href="/admin/register" className="font-medium text-cyan-300 underline hover:text-cyan-200">
+                    Resend verification email
+                  </Link>{" "}
+                  on the workspace request page (same contact email).
+                </p>
+              ) : null}
+            </div>
+          ) : null}
           {copy.hint ? (
             <p className="rounded-lg border border-cyan-500/20 bg-cyan-950/25 px-4 py-3 text-xs leading-relaxed text-slate-400">
               {copy.hint}

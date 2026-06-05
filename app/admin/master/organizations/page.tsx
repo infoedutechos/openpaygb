@@ -5,6 +5,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { PasswordRevealInput } from "@/components/PasswordRevealInput";
 import { MasterOrgMobileCard } from "@/components/admin/MasterOrgMobileCard";
+import {
+  canMasterApproveWorkspace,
+  workspaceEmailVerifyStatus,
+} from "@/lib/organization-workspace-verify";
 
 type OrgRow = {
   id: string;
@@ -13,6 +17,7 @@ type OrgRow = {
   tenantStatus: string;
   registrationContactEmail: string;
   registrationNote: string;
+  registrationEmailVerifiedAt: string | null;
   destinationWallet: string;
   checkoutPlatformFeeUgx: number;
   fxOverrideKind: string;
@@ -28,6 +33,13 @@ function statusTone(s: string) {
   if (s === "active") return "text-emerald-300";
   if (s === "pending") return "text-amber-300";
   return "text-rose-300";
+}
+
+function emailVerifyBadge(o: OrgRow) {
+  const s = workspaceEmailVerifyStatus(o);
+  if (s === "none") return <span className="text-slate-600">—</span>;
+  if (s === "verified") return <span className="font-medium text-emerald-400">Verified</span>;
+  return <span className="font-medium text-amber-300">Awaiting email</span>;
 }
 
 export default function MasterOrganizationsPage() {
@@ -49,6 +61,7 @@ export default function MasterOrganizationsPage() {
   const [adminPassword, setAdminPassword] = useState("");
   const [adminName, setAdminName] = useState("");
   const [adminOrgId, setAdminOrgId] = useState("");
+  const [adminSendInviteEmail, setAdminSendInviteEmail] = useState(true);
   const [adminMsg, setAdminMsg] = useState<string | null>(null);
 
   const [feeBusyId, setFeeBusyId] = useState<string | null>(null);
@@ -172,7 +185,7 @@ export default function MasterOrganizationsPage() {
     };
   }, [load]);
 
-  async function patchOrg(id: string, action: "approve" | "reject") {
+  async function patchOrg(id: string, action: "approve" | "reject" | "reopen") {
     setBusyId(id);
     setError(null);
     try {
@@ -295,7 +308,9 @@ export default function MasterOrganizationsPage() {
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error ?? "Create failed");
-      setCreateMsg(`Created tenant "${j.organization?.slug ?? slug}".`);
+      setCreateMsg(
+        (j as { message?: string }).message ?? `Created tenant "${j.organization?.slug ?? slug}".`,
+      );
       setName("");
       setSlug("");
       setContact("");
@@ -320,12 +335,16 @@ export default function MasterOrganizationsPage() {
           password: adminPassword,
           name: adminName,
           organizationId: adminOrgId,
+          sendInviteEmail: adminSendInviteEmail,
         }),
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error ?? "Could not create admin");
+      const sent = (j as { emailSent?: boolean }).emailSent;
       setAdminMsg(
-        `School admin created (${j.admin?.email ?? adminEmail}). Share that email and password with the school — they sign in at /school/login.`,
+        sent
+          ? `School admin created (${j.admin?.email ?? adminEmail}). An ODEL HUB invite email was sent with sign-in instructions.`
+          : `School admin created (${j.admin?.email ?? adminEmail}). Email was not sent — share /school/login credentials manually (check RESEND_*).`,
       );
       setAdminEmail("");
       setAdminPassword("");
@@ -344,8 +363,10 @@ export default function MasterOrganizationsPage() {
           <p className="mt-2 max-w-2xl text-sm text-slate-400">
             Create pending workspaces, approve them to clone programmes and FX from the{" "}
             <code className="text-cyan-200/90">default</code> template, reject unwanted requests, and create org-scoped
-            admin logins. Active slugs power public checkout at{" "}
-            <span className="font-mono text-slate-400">/pay/&lt;slug&gt;</span> (TON + OpenPayGlobal); MbiyoPay webhooks
+            admin logins. Self-serve schools must <strong className="text-slate-300">verify their registration email</strong>{" "}
+            before you can approve the workspace.             Active slugs power public checkout at{" "}
+            <span className="font-mono text-slate-400">/pay/&lt;slug&gt;</span> (TON + OpenPayGB: Mbiyo / LivePay rails); Mbiyo
+            webhooks
             are
             shared across tenants via <span className="font-mono text-slate-500">NEXT_PUBLIC_APP_URL</span>.
           </p>
@@ -390,6 +411,10 @@ export default function MasterOrganizationsPage() {
               onChange={(e) => setContact(e.target.value)}
               className="mt-1 w-full rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
             />
+            <p className="mt-1 text-[11px] text-slate-600">
+              If provided, marked verified immediately (master-provisioned). Self-serve schools must click the ODEL HUB
+              email link before you can approve.
+            </p>
           </div>
           <div className="sm:col-span-2">
             <label className="text-xs text-slate-500">Note (optional)</label>
@@ -464,6 +489,17 @@ export default function MasterOrganizationsPage() {
                 className="w-full rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
               />
             </div>
+          </div>
+          <div className="flex items-end sm:col-span-2">
+            <label className="flex items-center gap-2 text-sm text-slate-300">
+              <input
+                type="checkbox"
+                checked={adminSendInviteEmail}
+                onChange={(e) => setAdminSendInviteEmail(e.target.checked)}
+                className="rounded border-slate-600"
+              />
+              Email password-set link (Resend)
+            </label>
           </div>
           <div className="sm:col-span-2">
             <button
@@ -559,6 +595,7 @@ export default function MasterOrganizationsPage() {
                   onRemoveFavicon={() => void removeFavicon(o)}
                   onApprove={() => void patchOrg(o.id, "approve")}
                   onReject={() => void patchOrg(o.id, "reject")}
+                  onReopen={() => void patchOrg(o.id, "reopen")}
                 />
               ))}
             </div>
@@ -574,6 +611,7 @@ export default function MasterOrganizationsPage() {
                   <th className="py-2 pr-3">Processing UGX</th>
                   <th className="py-2 pr-3">FX override</th>
                   <th className="py-2 pr-3">Contact</th>
+                  <th className="py-2 pr-3">Email verify</th>
                   <th className="py-2 pr-3">Favicon</th>
                   <th className="py-2">Actions</th>
                 </tr>
@@ -692,6 +730,7 @@ export default function MasterOrganizationsPage() {
                     <td className="max-w-[180px] truncate py-2 pr-3 text-slate-400" title={o.registrationContactEmail}>
                       {o.registrationContactEmail || "—"}
                     </td>
+                    <td className="py-2 pr-3 text-xs">{emailVerifyBadge(o)}</td>
                     <td className="py-2 pr-3 align-middle">
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                         {o.hasFavicon ? (
@@ -744,14 +783,25 @@ export default function MasterOrganizationsPage() {
                       {o.slug === "default" ? (
                         <span className="text-xs text-slate-500">template</span>
                       ) : o.tenantStatus === "pending" ? (
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex flex-col gap-1">
+                          {!canMasterApproveWorkspace(o) ? (
+                            <span className="max-w-[140px] text-[10px] leading-snug text-amber-300/90">
+                              School must verify email first
+                            </span>
+                          ) : null}
+                          <div className="flex flex-wrap gap-1">
                           <button
                             type="button"
-                            disabled={busyId === o.id}
+                            disabled={busyId === o.id || !canMasterApproveWorkspace(o)}
+                            title={
+                              canMasterApproveWorkspace(o)
+                                ? "Approve workspace"
+                                : "Applicant must click the ODEL HUB verification email first"
+                            }
                             onClick={() => void patchOrg(o.id, "approve")}
                             className="rounded bg-emerald-700/80 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
                           >
-                            Approve
+                            Approve workspace
                           </button>
                           <button
                             type="button"
@@ -761,6 +811,7 @@ export default function MasterOrganizationsPage() {
                           >
                             Reject
                           </button>
+                          </div>
                         </div>
                       ) : o.tenantStatus === "active" ? (
                         <Link
@@ -769,6 +820,15 @@ export default function MasterOrganizationsPage() {
                         >
                           Open tuition dashboard
                         </Link>
+                      ) : o.tenantStatus === "rejected" ? (
+                        <button
+                          type="button"
+                          disabled={busyId === o.id}
+                          onClick={() => void patchOrg(o.id, "reopen")}
+                          className="rounded bg-amber-700/80 px-2 py-1 text-xs font-semibold text-white hover:bg-amber-600 disabled:opacity-50"
+                        >
+                          Reopen for review
+                        </button>
                       ) : (
                         <span className="text-xs text-slate-500">—</span>
                       )}

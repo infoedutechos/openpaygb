@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import QRCode from "qrcode";
+import { ReceiptFeeBreakdown } from "@/components/receipt/ReceiptFeeBreakdown";
+import type { ReceiptBreakdown } from "@/lib/receipt-lines";
 
 type Receipt = {
   paymentId: string;
@@ -14,6 +16,7 @@ type Receipt = {
   txHash: string;
   issuedAt: string;
   verificationUrl: string;
+  feeBreakdown?: ReceiptBreakdown;
 };
 
 function programmeShort(code: string): string {
@@ -144,8 +147,16 @@ export function ReceiptPreviewModal({
                 <ReceiptRow label="Programme" value={programmeShort(receipt.programmeCode)} />
                 <ReceiptRow label="Year" value={`YR${receipt.year}`} />
                 <ReceiptRow label="Semester" value={`Sem ${receipt.semester}`} />
-                <ReceiptRow label="Amount (UGX)" value={receipt.totalUgx.toLocaleString()} />
-                <ReceiptRow label="Amount (TON)" value={receipt.tonAmount.toFixed(2)} />
+                {receipt.feeBreakdown ? (
+                  <div className="w-full pt-2">
+                    <ReceiptFeeBreakdown breakdown={receipt.feeBreakdown} variant="light" />
+                  </div>
+                ) : (
+                  <>
+                    <ReceiptRow label="Amount (UGX)" value={receipt.totalUgx.toLocaleString()} />
+                    <ReceiptRow label="Amount (TON)" value={receipt.tonAmount.toFixed(4)} />
+                  </>
+                )}
                 <ReceiptRow
                   label="Tx Hash"
                   value={abbrevTx(receipt.txHash)}

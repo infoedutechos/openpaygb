@@ -3,7 +3,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { handleFirstTimeConfirmation } from "@/lib/on-payment-confirmed";
 import { findPaymentByMomoReference } from "@/lib/momo/find-payment";
-import { extractMomoReference, isMomoSuccessStatus } from "@/lib/momo/parse";
+import { extractMomoAmountUgx, extractMomoReference, isMomoSuccessStatus } from "@/lib/momo/parse";
+import { webhookAmountMatchesPayment } from "@/lib/webhook-payment-confirm";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
 import { requireConfiguredSecret } from "@/lib/production-secrets";
 
@@ -69,6 +70,11 @@ export async function POST(req: Request) {
 
   if (payment.status === "confirmed") {
     return NextResponse.json({ ok: true, action: "already_confirmed", paymentId: payment.id });
+  }
+
+  const momoAmount = extractMomoAmountUgx(body);
+  if (!webhookAmountMatchesPayment(payment.totalUgx, momoAmount ?? undefined, "UGX")) {
+    return NextResponse.json({ ok: true, action: "amount_mismatch", paymentId: payment.id });
   }
 
   const momoRef = payment.momoReference?.trim() ? payment.momoReference : ref;

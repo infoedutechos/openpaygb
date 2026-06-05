@@ -77,7 +77,10 @@ function ensurePrismaClientFresh() {
   const schemaDrift = needsRegenerate(root);
   const cacheStale = prismaNextCacheStale();
   try {
-    const { regenerated } = ensurePrismaClient(root);
+    const { regenerated, skippedDueToLock } = ensurePrismaClient(root);
+    if (skippedDueToLock) {
+      console.warn("[dev] Continuing with existing Prisma client (generate was file-locked).");
+    }
     if ((regenerated || schemaDrift || cacheStale) && fs.existsSync(path.join(root, ".next"))) {
       console.warn("[dev] Prisma/schema sync — clearing .next (Turbopack caches old Prisma DMMF)…");
       cleanNext({ killDevPort: false });

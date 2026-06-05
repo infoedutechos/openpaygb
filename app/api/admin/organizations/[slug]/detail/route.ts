@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { getAdminFromCookies } from "@/lib/auth";
 import { organizationWhereForSession } from "@/lib/admin-org-scope";
-import { getCheckoutPlatformFeeUgxForOrganization } from "@/lib/checkout-platform-fee";
+import {
+  PLATFORM_FEE_PREVIEW_SUBTOTAL_UGX,
+  getCheckoutPlatformFeeUgxForOrganization,
+  resolveCheckoutPlatformFeeRule,
+  describeCheckoutFeeRule,
+} from "@/lib/checkout-platform-fee";
 import { normalizeProgrammeTrack } from "@/lib/programme-track";
 import { prisma } from "@/lib/prisma";
 import { getProgrammeDurationSummary } from "@/lib/tuition-progress";
@@ -29,7 +34,9 @@ export async function GET(_req: Request, ctx: RouteCtx) {
       destinationWallet: true,
       registrationContactEmail: true,
       registrationNote: true,
+      checkoutPlatformFeeKind: true,
       checkoutPlatformFeeUgx: true,
+      checkoutPlatformFeePercent: true,
       faviconUploadedAt: true,
       createdAt: true,
       updatedAt: true,
@@ -53,6 +60,7 @@ export async function GET(_req: Request, ctx: RouteCtx) {
     programmes,
     recentPayments,
     latestFx,
+    checkoutFeeRule,
     effectivePlatformFeeUgx,
   ] = await Promise.all([
     prisma.student.count({ where: { organizationId: org.id } }),
@@ -85,7 +93,8 @@ export async function GET(_req: Request, ctx: RouteCtx) {
       orderBy: { effectiveAt: "desc" },
       select: { ugxPerTon: true, source: true, effectiveAt: true },
     }),
-    getCheckoutPlatformFeeUgxForOrganization(org.id),
+    resolveCheckoutPlatformFeeRule(org.id),
+    getCheckoutPlatformFeeUgxForOrganization(org.id, PLATFORM_FEE_PREVIEW_SUBTOTAL_UGX),
   ]);
 
   return NextResponse.json({
@@ -97,8 +106,12 @@ export async function GET(_req: Request, ctx: RouteCtx) {
       destinationWallet: org.destinationWallet,
       registrationContactEmail: org.registrationContactEmail,
       registrationNote: org.registrationNote,
+      checkoutPlatformFeeKind: org.checkoutPlatformFeeKind,
       checkoutPlatformFeeUgx: org.checkoutPlatformFeeUgx,
+      checkoutPlatformFeePercent: org.checkoutPlatformFeePercent,
+      checkoutPlatformFeeRule: describeCheckoutFeeRule(checkoutFeeRule),
       effectivePlatformFeeUgx,
+      effectivePlatformFeePreviewSubtotalUgx: PLATFORM_FEE_PREVIEW_SUBTOTAL_UGX,
       hasFavicon: Boolean(org.faviconUploadedAt),
       createdAt: org.createdAt,
       updatedAt: org.updatedAt,

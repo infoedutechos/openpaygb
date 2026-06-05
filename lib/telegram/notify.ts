@@ -3,6 +3,7 @@ import { absoluteUrl } from "@/lib/public-url";
 import { sendMessageHtml } from "@/lib/telegram/client";
 import { escapeHtml } from "@/lib/telegram/escape";
 import { buildStudentProgrammeProgress } from "@/lib/tuition-progress";
+import { createReceiptAccessToken } from "@/lib/receipt-access";
 
 /** Fire-and-forget: tell a payer on Telegram that a payment was confirmed. */
 export function notifyTelegramPaymentConfirmed(paymentId: string): void {
@@ -38,7 +39,13 @@ export function notifyTelegramPaymentConfirmed(paymentId: string): void {
         : [];
       const progress = programme ? buildStudentProgrammeProgress(programme, studentPayments) : null;
 
-      const receiptUrl = absoluteUrl(`/receipt/${payment.id}`);
+      const token = createReceiptAccessToken({
+        id: payment.id,
+        studentId: payment.studentId,
+        confirmedAt: payment.confirmedAt,
+      });
+      const tokenQs = token ? `?t=${encodeURIComponent(token)}` : "";
+      const receiptUrl = absoluteUrl(`/receipt/${payment.id}${tokenQs}`);
       const periodLine =
         progress && progress.totalSemesters > 0
           ? `${escapeHtml(payment.programmeCode)} · Year ${payment.year} of ${progress.durationYears} · Sem ${payment.semester} of ${progress.semestersPerYear}`

@@ -1,8 +1,14 @@
 import path from "node:path";
 import type { NextConfig } from "next";
 
-/** Client-only: keep Prisma out of browser bundles (webpack production + dev without turbo). */
-const prismaClientStubWebpack = path.join(__dirname, "lib/client-noop.ts");
+/**
+ * Browser-only Prisma stubs (relative paths — Turbopack on Windows cannot resolve absolute drive paths).
+ * Uses Prisma's generated `index-browser.js` so `PrismaClient` and enums resolve in client graphs.
+ */
+const prismaBrowserStub = "./node_modules/@prisma/client/index-browser.js";
+const prismaBrowserClientStub = "./node_modules/.prisma/client/index-browser.js";
+const prismaBrowserStubAbs = path.join(__dirname, "node_modules", "@prisma", "client", "index-browser.js");
+const prismaBrowserClientStubAbs = path.join(__dirname, "node_modules", ".prisma", "client", "index-browser.js");
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -18,11 +24,13 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@tonconnect/ui-react", "@tonconnect/sdk"],
   /** File tracing root = this app (see README if Next still warns about a lockfile under your user profile). */
   outputFileTracingRoot: path.resolve(process.cwd()),
-  /**
-   * Do not alias `@prisma/client` here — Turbopack applies resolveAlias to RSC too, which breaks
-   * server layouts/API routes that import Prisma enums. Client bundles are guarded via webpack
-   * `!isServer` below; keep UI free of `@prisma/client` imports (see lib/programme-track.ts).
-   */
+  /** Dev (`next dev --turbo`): browser-only Prisma stub; server/RSC keep real `@prisma/client`. */
+  turbopack: {
+    resolveAlias: {
+      "@prisma/client": { browser: prismaBrowserStub },
+      ".prisma/client": { browser: prismaBrowserClientStub },
+    },
+  },
   async rewrites() {
     return [
       { source: "/favicon.ico", destination: "/playhub/favicon.svg" },
@@ -40,13 +48,21 @@ const nextConfig: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          { key: "X-DNS-Prefetch-Control", value: "off" },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
+          {
+            key: "Content-Security-Policy",
+            value:
+              "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:; font-src 'self' data: https:; connect-src 'self' https: wss:; frame-src 'self' https:",
+          },
         ],
       },
     ];
   },
-  /**
-   * Production `next build` still uses Webpack. Dev with `--turbo` ignores this, but builds need it.
-   */
+  /** Production `next build` (Webpack). `NEXT_DEV_TURBO=0` dev also uses this for Prisma stubs + chunk timeout. */
   webpack: (config, { dev, isServer }) => {
     if (dev && !isServer && config.output && typeof config.output === "object") {
       (config.output as { chunkLoadTimeout?: number }).chunkLoadTimeout = 300_000;
@@ -55,8 +71,8 @@ const nextConfig: NextConfig = {
       config.resolve = config.resolve ?? {};
       config.resolve.alias = {
         ...(config.resolve.alias as Record<string, string | false | string[]> | undefined),
-        "@prisma/client": prismaClientStubWebpack,
-        ".prisma/client": prismaClientStubWebpack,
+        "@prisma/client": prismaBrowserStubAbs,
+        ".prisma/client": prismaBrowserClientStubAbs,
       };
     }
     return config;
