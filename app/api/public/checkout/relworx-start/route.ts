@@ -13,6 +13,7 @@ import {
 } from "@/lib/checkout-session";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
 import { apiErrorResponse, resolveApiError } from "@/lib/api-error";
+import { warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 import {
   isRelworxConfigured,
   RelworxApiError,
@@ -49,6 +50,7 @@ const Body = z
 /** Mobile money collect via Relworx v2. Webhook: POST /api/webhooks/relworx */
 export async function POST(req: Request) {
   try {
+    await warmDeploymentEnvCache();
     if (!isRelworxConfigured()) {
       return NextResponse.json(
         { error: relworxNotConfiguredMessage(), code: "relworx_not_configured" },

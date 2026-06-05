@@ -1,3 +1,4 @@
+import { deploymentEnv, warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 import { absoluteUrl } from "@/lib/public-url";
 
 function escapeHtml(s: string): string {
@@ -9,8 +10,9 @@ function escapeHtml(s: string): string {
  * @returns true if an email was sent
  */
 export async function sendAdminPasswordResetEmail(toEmail: string, plainToken: string): Promise<boolean> {
-  const apiKey = process.env.RESEND_API_KEY?.trim();
-  const from = process.env.RESEND_FROM?.trim();
+  await warmDeploymentEnvCache();
+  const apiKey = deploymentEnv("RESEND_API_KEY");
+  const from = deploymentEnv("RESEND_FROM");
   const resetUrl = absoluteUrl(`/admin/reset-password?token=${encodeURIComponent(plainToken)}`);
 
   if (!apiKey || !from) {

@@ -1,3 +1,4 @@
+import { deploymentEnv, warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 import { prisma } from "@/lib/prisma";
 import { absoluteUrl } from "@/lib/public-url";
 import { createReceiptAccessToken } from "@/lib/receipt-access";
@@ -7,8 +8,9 @@ import { buildStudentProgrammeProgress } from "@/lib/tuition-progress";
 
 /** Send Resend email when RESEND_API_KEY + RESEND_FROM are set and student has email. */
 export async function sendReceiptEmailIfConfigured(paymentId: string): Promise<void> {
-  const apiKey = process.env.RESEND_API_KEY?.trim();
-  const from = process.env.RESEND_FROM?.trim();
+  await warmDeploymentEnvCache();
+  const apiKey = deploymentEnv("RESEND_API_KEY");
+  const from = deploymentEnv("RESEND_FROM");
   if (!apiKey || !from) return;
 
   const payment = await prisma.payment.findUnique({

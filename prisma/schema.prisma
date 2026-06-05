@@ -55,6 +55,14 @@ enum ProgrammeFeeRecurrence {
   per_year
 }
 
+/** Knowledge articles, notifications, and copilot context by hub. */
+enum PlatformAudience {
+  all
+  tuition
+  play
+  admin
+}
+
 model Organization {
   id                         String                     @id @default(auto()) @map("_id") @db.ObjectId
   name                       String
@@ -431,6 +439,18 @@ model SiteUiSettings {
   createdAt        DateTime @default(now())
 
   @@map("site_ui_settings")
+}
+
+/** Master-editable deployment env overrides (encrypted at rest). Process env used when no override row exists. */
+model DeploymentEnvOverride {
+  name       String   @id @map("_id")
+  valueEnc   String
+  sensitive  Boolean  @default(true)
+  updatedBy  String   @default("")
+  updatedAt  DateTime @updatedAt
+  createdAt  DateTime @default(now())
+
+  @@map("deployment_env_overrides")
 }
 
 model ProcessedWebhook {
@@ -1408,6 +1428,8 @@ model Notification {
   body      String
   imageUrl  String?  // optional image URL (e.g. CDN or /images/...)
   videoUrl  String?  // optional video URL
+  href      String?  // optional deep link
+  audience  PlatformAudience @default(all)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
@@ -1585,4 +1607,67 @@ model UraFcMatch {
   isPublished  Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+/** Extensible knowledge base — powers KB search and the zero-API-cost copilot. */
+model KnowledgeArticle {
+  id        String           @id @default(auto()) @map("_id") @db.ObjectId
+  slug      String           @unique
+  title     String
+  summary   String           @default("")
+  body      String
+  category  String           @default("general")
+  tags      String[]         @default([])
+  audience  PlatformAudience @default(all)
+  published Boolean          @default(true)
+  sortOrder Int              @default(0)
+  source    String           @default("manual")
+  updatedAt DateTime         @updatedAt
+  createdAt DateTime         @default(now())
+
+  @@index([audience, published, category])
+  @@map("knowledge_articles")
+}
+
+/** Persisted support / copilot chat threads (browser session or authenticated user). */
+model ChatConversation {
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  sessionKey  String
+  studentId   String?       @db.ObjectId
+  adminEmail  String?
+  topic       String        @default("support")
+  hub         String        @default("all")
+  status      String        @default("open")
+  updatedAt   DateTime      @updatedAt
+  createdAt   DateTime      @default(now())
+  messages    ChatMessage[]
+
+  @@index([sessionKey])
+  @@index([updatedAt])
+  @@map("chat_conversations")
+}
+
+model ChatMessage {
+  id             String           @id @default(auto()) @map("_id") @db.ObjectId
+  conversationId String           @db.ObjectId
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String
+  content        String
+  kbCitations    String[]         @default([])
+  createdAt      DateTime         @default(now())
+
+  @@index([conversationId, createdAt])
+  @@map("chat_messages")
+}
+
+/** Server-side read state for in-app notifications (replaces localStorage-only seen ids). */
+model NotificationRead {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  notificationId String   @db.ObjectId
+  readerKey      String
+  readAt         DateTime @default(now())
+
+  @@unique([notificationId, readerKey])
+  @@index([readerKey])
+  @@map("notification_reads")
 }

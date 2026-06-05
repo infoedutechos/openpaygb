@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { DEFAULT_UGX_PER_TON } from "@/lib/constants";
+import { defaultUgxPerTon } from "@/lib/constants";
 import { getDefaultOrganizationId } from "@/lib/default-organization";
 import { getCachedLiveUgxPerTon } from "@/lib/fx-live";
 import {
@@ -45,7 +45,7 @@ async function dbFallbackUgxPerTon(organizationId: string): Promise<{ ugxPerTon:
   if (latest && latest.ugxPerTon > 0) {
     return { ugxPerTon: latest.ugxPerTon, source: latest.source ?? "db" };
   }
-  return { ugxPerTon: DEFAULT_UGX_PER_TON, source: "env_default" };
+  return { ugxPerTon: defaultUgxPerTon(), source: "env_default" };
 }
 
 /** Latest FX for an organization: master override, then live market, then DB, then env default. */

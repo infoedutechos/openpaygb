@@ -1,7 +1,8 @@
 import { OPEN_PAY_BRAND, PAYMENT_RAIL_MBIYO } from "@/lib/open-pay-brand";
+import { deploymentEnv } from "@/lib/deployment-env-resolve";
 
 export function isMbiyoConfigured(): boolean {
-  return Boolean(process.env.MBIYO_SECRET_KEY?.trim());
+  return Boolean(deploymentEnv("MBIYO_SECRET_KEY"));
 }
 
 export function mbiyoNotConfiguredMessage(): string {

@@ -5,9 +5,11 @@
 const BASE = process.env.TEST_BASE_URL || "http://localhost:3000";
 
 const ROUTES = [
-  { name: "clicker", path: "/clicker", layoutChunk: "/_next/static/chunks/app/clicker/layout.js" },
+  { name: "root-layout", path: "/" },
+  { name: "clicker", path: "/clicker" },
   { name: "pay-default", path: "/pay/default" },
-  { name: "dex", path: "/dex", layoutChunk: "/_next/static/chunks/app/dex/layout.js" },
+  { name: "dex", path: "/dex" },
+  { name: "student", path: "/student" },
 ];
 
 async function fetchText(url, opts) {
@@ -70,7 +72,7 @@ async function testManifest() {
   if (body.url?.replace(/\/$/, "") !== BASE.replace(/\/$/, "")) {
     throw new Error(`manifest url mismatch: ${body.url} vs ${BASE}`);
   }
-  if (!body.iconUrl?.endsWith("/tonconnect-icon.png")) {
+  if (!body.iconUrl?.includes("/manifest/tonconnect-icon")) {
     throw new Error(`bad iconUrl: ${body.iconUrl}`);
   }
   const icon = await fetch(body.iconUrl);
@@ -85,28 +87,8 @@ async function testManifestHost() {
 }
 
 async function testPage(route) {
-  const { res, text } = await fetchText(`${BASE}${route.path}`);
-  if (res.status !== 200) throw new Error(`status ${res.status}`);
-
-  if (route.layoutChunk) {
-    const chunk = await fetchText(`${BASE}${route.layoutChunk}`);
-    if (!hasTonConnect(chunk.text)) {
-      throw new Error(`layout chunk missing TonConnect: ${route.layoutChunk}`);
-    }
-    return { via: "layout-chunk" };
-  }
-
-  const scripts = [...text.matchAll(/\/_next\/static\/[^"'\\s]+\.js/g)].map((m) => m[0]);
-  for (const s of scripts) {
-    try {
-      const { text: js } = await fetchText(`${BASE}${s}`);
-      if (hasTonConnect(js)) return { via: s };
-    } catch {
-      /* skip failed chunk */
-    }
-  }
-  if (/PayProviders/i.test(text)) return { via: "rsc-PayProviders" };
-  throw new Error("no TonConnect in page chunks or RSC");
+  const info = await assertInPageBundle(route.path, /tonconnect|TonConnectShell|TonConnectAppProvider|TonConnectUIProvider|TonConnectButton/i, "TonConnect");
+  return { via: info.via };
 }
 
 async function main() {

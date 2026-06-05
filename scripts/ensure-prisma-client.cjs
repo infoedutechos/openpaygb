@@ -11,6 +11,11 @@ const SCHEMA_FIELD_MARKERS = [
   "checkoutPlatformFeeDefaultKind",
   "checkoutPlatformFeeDefaultPercent",
   "checkoutPlatformFeeKind",
+  "DeploymentEnvOverride",
+  "KnowledgeArticle",
+  "ChatConversation",
+  "NotificationRead",
+  "PlatformAudience",
 ];
 
 function paths(root) {

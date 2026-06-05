@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { deploymentEnv } from "@/lib/deployment-env-resolve";
 
 /** True on Vercel production or NODE_ENV=production. */
 export function isProductionRuntime(): boolean {
@@ -28,10 +29,11 @@ export function requireConfiguredSecret(
 }
 
 export function requireCronAuth(req: Request): { ok: true } | { ok: false; response: NextResponse } {
-  const secretCheck = requireConfiguredSecret("CRON_SECRET", process.env.CRON_SECRET);
+  const cronSecret = deploymentEnv("CRON_SECRET");
+  const secretCheck = requireConfiguredSecret("CRON_SECRET", cronSecret);
   if (!secretCheck.ok) return secretCheck;
 
-  const secret = process.env.CRON_SECRET!.trim();
+  const secret = cronSecret;
   const auth = req.headers.get("authorization");
   if (auth !== `Bearer ${secret}`) {
     return { ok: false, response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };

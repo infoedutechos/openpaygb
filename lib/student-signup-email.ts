@@ -30,8 +30,10 @@ export function studentSignupVerifyUrlForRequest(req: Request, plainToken: strin
  * Link hits GET `/api/auth/student-signup/verify` which sets the signup session cookie and redirects to `/student/guest`.
  */
 export async function sendStudentSignupEmail(toEmail: string, plainToken: string): Promise<boolean> {
-  const apiKey = process.env.RESEND_API_KEY?.trim();
-  const from = process.env.RESEND_FROM?.trim();
+  const { deploymentEnv, warmDeploymentEnvCache } = await import("@/lib/deployment-env-resolve");
+  await warmDeploymentEnvCache();
+  const apiKey = deploymentEnv("RESEND_API_KEY");
+  const from = deploymentEnv("RESEND_FROM");
   const verifyUrl = absoluteUrl(studentSignupVerifyPath(plainToken));
 
   if (!apiKey || !from) {

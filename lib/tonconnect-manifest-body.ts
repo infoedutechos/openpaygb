@@ -11,7 +11,7 @@ export function buildTonConnectManifest(origin: string): TonConnectManifestBody 
   return {
     url: base,
     name: "ODEL HUB Pay",
-    iconUrl: `${base}/tonconnect-icon.png`,
+    iconUrl: `${base}/api/manifest/tonconnect-icon`,
     termsOfUseUrl: `${base}/clicker/terms`,
     privacyPolicyUrl: `${base}/clicker/privacy`,
   };

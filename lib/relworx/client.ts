@@ -2,6 +2,8 @@
  * Relworx Payments API v2 — https://payments.relworx.com/docs/
  */
 
+import { deploymentEnv } from "@/lib/deployment-env-resolve";
+
 const RELWORX_API_BASE = "https://payments.relworx.com/api";
 const RELWORX_ACCEPT = "application/vnd.relworx.v2";
 
@@ -12,8 +14,8 @@ export function relworxApiBase(): string {
 }
 
 export function isRelworxConfigured(): boolean {
-  if (process.env.RELWORX_ENABLED === "false") return false;
-  return Boolean(process.env.RELWORX_API_KEY?.trim() && process.env.RELWORX_ACCOUNT_NO?.trim());
+  if (deploymentEnv("RELWORX_ENABLED") === "false") return false;
+  return Boolean(deploymentEnv("RELWORX_API_KEY") && deploymentEnv("RELWORX_ACCOUNT_NO"));
 }
 
 export function relworxNotConfiguredMessage(): string {
@@ -21,7 +23,7 @@ export function relworxNotConfiguredMessage(): string {
 }
 
 export function relworxCheckoutCurrency(): RelworxCurrency {
-  const c = process.env.RELWORX_CURRENCY?.trim().toUpperCase();
+  const c = deploymentEnv("RELWORX_CURRENCY").toUpperCase();
   if (c === "KES" || c === "TZS") return c;
   return "UGX";
 }
@@ -89,7 +91,7 @@ export function isRelworxSuccessStatus(status: unknown): boolean {
 }
 
 async function relworxFetch(path: string, init: RequestInit): Promise<Response> {
-  const apiKey = process.env.RELWORX_API_KEY?.trim();
+  const apiKey = deploymentEnv("RELWORX_API_KEY");
   if (!apiKey) throw new Error(relworxNotConfiguredMessage());
 
   const headers: Record<string, string> = {
@@ -106,7 +108,7 @@ async function relworxFetch(path: string, init: RequestInit): Promise<Response> 
 export async function relworxRequestPayment(
   input: RelworxRequestPaymentInput,
 ): Promise<RelworxRequestPaymentResult> {
-  const accountNo = process.env.RELWORX_ACCOUNT_NO?.trim();
+  const accountNo = deploymentEnv("RELWORX_ACCOUNT_NO");
   if (!accountNo) throw new Error(relworxNotConfiguredMessage());
 
   const currency = input.currency ?? relworxCheckoutCurrency();

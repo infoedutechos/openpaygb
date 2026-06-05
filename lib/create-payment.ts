@@ -2,7 +2,8 @@ import { PaymentRail, PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getActiveUgxPerTonForOrganization } from "@/lib/fx";
 import { feeTotal, ugxToTon } from "@/lib/money";
-import { DEFAULT_TON_WALLET } from "@/lib/constants";
+import { defaultTonWallet } from "@/lib/constants";
+import { warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 import { findProgrammeByCode, resolveFeeRowsForSelection, sumFeeRows, type ProgrammeFeeSelectionMode } from "@/lib/programmes";
 import {
   buildInstallmentScheduleFromRule,
@@ -46,6 +47,7 @@ export async function createPendingPayment(opts: {
   installmentIndex?: number;
   installmentPlanId?: string;
 }): Promise<CreatedPaymentResult> {
+  await warmDeploymentEnvCache();
   const student = await prisma.student.findUniqueOrThrow({
     where: { id: opts.studentId },
     select: { organizationId: true },
@@ -55,7 +57,7 @@ export async function createPendingPayment(opts: {
     where: { id: student.organizationId },
     select: { destinationWallet: true },
   });
-  const destWallet = org?.destinationWallet?.trim() || DEFAULT_TON_WALLET;
+  const destWallet = org?.destinationWallet?.trim() || defaultTonWallet();
 
   let programmeCode = opts.programmeCode;
   let year = opts.year;

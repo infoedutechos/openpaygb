@@ -60,10 +60,11 @@ export default function SupportChatWidget({ placement = 'landing' }: SupportChat
     setMessages(next);
     setLoading(true);
     try {
-      const res = await fetch('/api/support-chat', {
+      const res = await fetch('/api/platform/chat?hub=play', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: next }),
+        body: JSON.stringify({ message: text, hub: 'play' }),
       });
       if (!res.ok) {
         throw new Error('Request failed');

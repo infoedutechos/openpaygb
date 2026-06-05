@@ -54,12 +54,26 @@ function devClientStamp(): string {
 const globalForPrisma = globalThis as unknown as PrismaGlobal;
 const clientStamp = devClientStamp();
 
-if (process.env.NODE_ENV === "development" && globalForPrisma.prismaClientStamp !== clientStamp) {
-  if (globalForPrisma.prisma) {
-    void globalForPrisma.prisma.$disconnect().catch(() => {});
-  }
+/** Turbopack HMR can keep an old Prisma singleton from before `prisma generate`. */
+function prismaClientMissingExpectedModels(client: PrismaClient): boolean {
+  if (process.env.NODE_ENV !== "development") return false;
+  return !(client as PrismaClient & { deploymentEnvOverride?: unknown }).deploymentEnvOverride;
+}
+
+function recyclePrismaClient(): void {
+  if (!globalForPrisma.prisma) return;
+  void globalForPrisma.prisma.$disconnect().catch(() => {});
   globalForPrisma.prisma = undefined;
-  globalForPrisma.prismaClientStamp = clientStamp;
+}
+
+if (process.env.NODE_ENV === "development") {
+  if (globalForPrisma.prismaClientStamp !== clientStamp) {
+    recyclePrismaClient();
+    globalForPrisma.prismaClientStamp = clientStamp;
+  } else if (globalForPrisma.prisma && prismaClientMissingExpectedModels(globalForPrisma.prisma)) {
+    console.warn("[prisma] Stale client (missing DeploymentEnvOverride) — recreating. Run: npm run db:generate");
+    recyclePrismaClient();
+  }
 }
 
 export const prisma =

@@ -4,10 +4,11 @@ import { createHmac, timingSafeEqual } from "node:crypto";
  * If `MBIYO_WEBHOOK_SECRET` is set, require `Signature` (or `X-Signature`) to match
  * HMAC-SHA256 of the **raw** request body (UTF-8), hex-encoded (per MBIYOPAY docs).
  */
+import { deploymentEnv } from "@/lib/deployment-env-resolve";
 import { isProductionRuntime } from "@/lib/production-secrets";
 
 export function mbiyoWebhookSignatureOk(rawBody: string, req: Request): boolean {
-  const secret = process.env.MBIYO_WEBHOOK_SECRET?.trim();
+  const secret = deploymentEnv("MBIYO_WEBHOOK_SECRET");
   if (!secret) return !isProductionRuntime();
 
   const headerRaw =

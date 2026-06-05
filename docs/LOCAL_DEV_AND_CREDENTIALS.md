@@ -113,7 +113,7 @@ Set `PRISMA_VERBOSE_ERRORS=1` to see full Prisma Atlas errors in the terminal (n
 
 **LivePay `502` / `IP … not allowed` on checkout:** LivePay only accepts API calls from IPs you whitelist. Your dev machine’s **public** IP (shown in the terminal as `[checkout/livepay-start/collect] Error: IP x.x.x.x not allowed`) must be added in the **LivePay dashboard → API / security → allowed IPs**. Or disable IP restriction for sandbox testing. Check current IP: `curl https://ifconfig.me`
 
-**Master Admin → Environment:** `/admin/master#deployment-environment` audits all deployment variables (masked previews, webhook URLs, production gaps). Secrets are edited in Vercel / `.env.local`, not in the browser.
+**Master Admin → Environment:** `/admin/master#deployment-environment` audits and **saves** platform deployment variables. Values saved in the dashboard are **encrypted in MongoDB** and override server / Vercel / `.env.local` at runtime (dashboard wins). Leave a field blank and save to clear a dashboard override and fall back to process env. `NEXT_PUBLIC_*` vars still require a rebuild for client bundles; server routes pick up dashboard values immediately after save.
 
 **Relworx (optional MoMo rail):** [Relworx docs](https://payments.relworx.com/docs/). Set in `.env.local`:
 

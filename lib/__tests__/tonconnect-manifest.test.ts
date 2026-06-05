@@ -7,7 +7,7 @@ describe("buildTonConnectManifest", () => {
   it("builds manifest with matching url and png icon", () => {
     const m = buildTonConnectManifest("https://pay.example.com");
     expect(m.url).toBe("https://pay.example.com");
-    expect(m.iconUrl).toBe("https://pay.example.com/tonconnect-icon.png");
+    expect(m.iconUrl).toBe("https://pay.example.com/api/manifest/tonconnect-icon");
     expect(m.termsOfUseUrl).toContain("/clicker/terms");
     expect(m.privacyPolicyUrl).toContain("/clicker/privacy");
   });

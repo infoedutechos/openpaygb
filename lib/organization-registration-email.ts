@@ -1,3 +1,4 @@
+import { deploymentEnv, warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 import {
   organizationWorkspaceVerifyPath,
   organizationWorkspaceVerifyUrlForRequest,
@@ -21,8 +22,9 @@ export async function sendOrganizationRegistrationEmail(
   plainToken: string,
   req?: Request,
 ): Promise<boolean> {
-  const apiKey = process.env.RESEND_API_KEY?.trim();
-  const from = process.env.RESEND_FROM?.trim();
+  await warmDeploymentEnvCache();
+  const apiKey = deploymentEnv("RESEND_API_KEY");
+  const from = deploymentEnv("RESEND_FROM");
   const verifyUrl = req
     ? organizationWorkspaceVerifyUrlForRequest(req, plainToken)
     : absoluteUrl(organizationWorkspaceVerifyPath(plainToken));

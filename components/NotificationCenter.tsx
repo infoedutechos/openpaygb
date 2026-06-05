@@ -72,23 +72,33 @@ export default function NotificationCenter() {
   const fetchNotifications = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/notifications', { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } });
+      const res = await fetch('/api/platform/notifications?hub=play', {
+        credentials: 'include',
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' },
+      });
       if (res.ok) {
-        const data = await res.json();
-        const list = Array.isArray(data) ? data : [];
-        // Normalize so imageUrl/videoUrl work whether API returns camelCase or snake_case
-        setNotifications(
-          list.map((n: Record<string, unknown>) => ({
-            ...n,
-            id: String(n.id ?? ''),
-            title: String(n.title ?? ''),
-            body: String(n.body ?? ''),
-            imageUrl: (n.imageUrl ?? n.image_url ?? null) as string | null,
-            videoUrl: (n.videoUrl ?? n.video_url ?? null) as string | null,
-            isActive: Boolean(n.isActive ?? true),
-            createdAt: String(n.createdAt ?? ''),
-          })) as NotificationItem[]
-        );
+        const data = (await res.json()) as { notifications?: Record<string, unknown>[] };
+        const list = Array.isArray(data.notifications) ? data.notifications : [];
+        const mapped = list.map((n) => ({
+          id: String(n.id ?? ''),
+          title: String(n.title ?? ''),
+          body: String(n.body ?? ''),
+          imageUrl: (n.imageUrl ?? null) as string | null,
+          videoUrl: (n.videoUrl ?? null) as string | null,
+          isActive: Boolean(n.isActive ?? true),
+          createdAt: String(n.createdAt ?? ''),
+        })) as NotificationItem[];
+        setNotifications(mapped);
+        const serverRead = list.filter((n) => Boolean(n.read)).map((n) => String(n.id ?? ''));
+        if (serverRead.length > 0) {
+          markAsSeen(serverRead);
+          setSeenIds((prev) => {
+            const next = new Set(prev);
+            serverRead.forEach((id) => next.add(id));
+            return next;
+          });
+        }
       }
     } catch {
       setNotifications([]);
@@ -131,6 +141,12 @@ export default function NotificationCenter() {
         const next = new Set(prev);
         ids.forEach((id) => next.add(id));
         return next;
+      });
+      void fetch('/api/platform/notifications', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
       });
     }
   }, [open, notifications]);

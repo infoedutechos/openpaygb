@@ -3,14 +3,14 @@
  * Uganda UGX collections via MTN / AIRTEL.
  */
 
+import { deploymentEnv } from "@/lib/deployment-env-resolve";
+
 const LIVEPAY_API_BASE = "https://livepay.me/api";
 
 export type LivePayNetwork = "MTN" | "AIRTEL";
 
 export function isLivePayConfigured(): boolean {
-  return Boolean(
-    process.env.LIVEPAY_API_KEY?.trim() && process.env.LIVEPAY_ACCOUNT_NUMBER?.trim(),
-  );
+  return Boolean(deploymentEnv("LIVEPAY_API_KEY") && deploymentEnv("LIVEPAY_ACCOUNT_NUMBER"));
 }
 
 export function livePayNotConfiguredMessage(): string {
@@ -69,8 +69,8 @@ export function livePayUserMessage(err: unknown): string {
 }
 
 export async function livePayCollectMoney(input: LivePayCollectInput): Promise<LivePayCollectResult> {
-  const apiKey = process.env.LIVEPAY_API_KEY?.trim();
-  const accountNumber = process.env.LIVEPAY_ACCOUNT_NUMBER?.trim();
+  const apiKey = deploymentEnv("LIVEPAY_API_KEY");
+  const accountNumber = deploymentEnv("LIVEPAY_ACCOUNT_NUMBER");
   if (!apiKey || !accountNumber) {
     throw new Error(livePayNotConfiguredMessage());
   }

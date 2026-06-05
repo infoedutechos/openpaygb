@@ -1,4 +1,4 @@
-import { DEFAULT_TON_WALLET } from "@/lib/constants";
+import { defaultTonWallet } from "@/lib/constants";
 import { tonApiOrigin } from "@/lib/ton-network";
 
 type TonApiTx = Record<string, unknown>;
@@ -36,7 +36,7 @@ export async function fetchAccountTransactionsRecent(
 
 /** Default env settlement wallet (legacy single-wallet scan). */
 export async function fetchDefaultWalletTransactionsRecent(limit = 80): Promise<FetchResult> {
-  const address = DEFAULT_TON_WALLET.trim();
+  const address = defaultTonWallet().trim();
   if (!address || address.includes("placeholder")) {
     return { ok: false, error: "ODELHUB_TON_WALLET_ADDRESS is not configured" };
   }

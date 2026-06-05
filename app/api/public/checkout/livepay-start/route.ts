@@ -51,6 +51,8 @@ const Body = z
 /** Uganda mobile money via LivePay (MTN / AIRTEL). Webhook: POST /api/webhooks/livepay */
 export async function POST(req: Request) {
   try {
+    const { warmDeploymentEnvCache } = await import("@/lib/deployment-env-resolve");
+    await warmDeploymentEnvCache();
     if (!isLivePayConfigured()) {
       return NextResponse.json(
         { error: livePayNotConfiguredMessage(), code: "livepay_not_configured" },

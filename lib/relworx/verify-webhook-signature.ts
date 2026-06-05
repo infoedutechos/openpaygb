@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { deploymentEnv } from "@/lib/deployment-env-resolve";
 import { isProductionRuntime } from "@/lib/production-secrets";
 import { getRelworxWebhookUrl } from "@/lib/relworx/webhook-url";
 
@@ -62,7 +63,7 @@ export function relworxWebhookAuthorized(
   req: Request,
   payload: RelworxWebhookPayload,
 ): { ok: true } | { ok: false } {
-  const secret = process.env.RELWORX_WEBHOOK_KEY?.trim() ?? process.env.RELWORX_WEBHOOK_SECRET?.trim();
+  const secret = deploymentEnv("RELWORX_WEBHOOK_KEY") || deploymentEnv("RELWORX_WEBHOOK_SECRET");
   if (!secret) {
     return isProductionRuntime() ? { ok: false } : { ok: true };
   }

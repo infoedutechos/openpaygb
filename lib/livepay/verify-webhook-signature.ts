@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { deploymentEnv } from "@/lib/deployment-env-resolve";
 import { isProductionRuntime } from "@/lib/production-secrets";
 import { getLivePayWebhookUrl } from "@/lib/livepay/webhook-url";
 
@@ -54,7 +55,7 @@ export function livePayWebhookAuthorized(
   req: Request,
   payload: LivePayWebhookPayload,
 ): { ok: true } | { ok: false } {
-  const secret = process.env.LIVEPAY_WEBHOOK_SECRET?.trim();
+  const secret = deploymentEnv("LIVEPAY_WEBHOOK_SECRET");
   if (!secret) {
     return isProductionRuntime() ? { ok: false } : { ok: true };
   }

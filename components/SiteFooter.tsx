@@ -48,6 +48,9 @@ export function SiteFooter({ settings, bottomNavClearance }: Props) {
               <Link href="/pay" className={choiceCompactNav}>
                 Pay tuition
               </Link>
+              <Link href="/help" className={choiceCompactNav}>
+                Help center
+              </Link>
               <Link href="/student/login" className={choiceCompactNav}>
                 Student sign in
               </Link>

@@ -1,8 +1,7 @@
 'use client';
 
-import { useMemo } from 'react';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
-import { getTonConnectManifestUrl } from '@/lib/tonconnect-manifest-url';
+import { useTonConnectManifestUrl } from '@/hooks/useTonConnectManifestUrl';
 import { useTonConnectUiExtras } from '@/hooks/useTonConnectUiExtras';
 import { TonConnectBridgeConsoleQuiet } from '@/components/TonConnectBridgeConsoleQuiet';
 import { TonConnectErrorHandler } from '@/components/TonConnectErrorHandler';
@@ -18,15 +17,11 @@ type Props = {
 };
 
 export function TonConnectShell({ children, syncWallet = false, showManifestHelp = true }: Props) {
-  const manifestUrl = useMemo(
-    () => getTonConnectManifestUrl(typeof window !== 'undefined' ? window.location.origin : undefined),
-    [],
-  );
-
+  const manifestUrl = useTonConnectManifestUrl();
   const uiExtras = useTonConnectUiExtras();
 
   return (
-    <TonConnectUIProvider manifestUrl={manifestUrl} {...uiExtras}>
+    <TonConnectUIProvider key={manifestUrl} manifestUrl={manifestUrl} {...uiExtras}>
       <TonConnectBridgeConsoleQuiet />
       <ToastProvider>
         <TonConnectErrorHandler>

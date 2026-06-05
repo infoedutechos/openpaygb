@@ -35,6 +35,8 @@ const CreateNotificationBody = z.object({
   body: z.string().max(5000).optional().default(''),
   imageUrl: z.string().max(2000).optional().nullable(),
   videoUrl: z.string().max(2000).optional().nullable(),
+  href: z.string().max(2000).optional().nullable(),
+  audience: z.enum(['all', 'tuition', 'play', 'admin']).optional().default('all'),
   isActive: z.boolean().optional().default(true),
   postToTelegram: z.boolean().optional().default(true),
   sendToUserBotChats: z.boolean().optional().default(true),
@@ -57,6 +59,8 @@ export async function POST(req: NextRequest) {
         body: body.body.trim(),
         imageUrl: body.imageUrl?.trim() ? body.imageUrl.trim() : null,
         videoUrl: body.videoUrl?.trim() ? body.videoUrl.trim() : null,
+        href: body.href?.trim() ? body.href.trim() : null,
+        audience: body.audience ?? 'all',
         isActive: body.isActive !== false,
       },
     });

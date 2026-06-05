@@ -26,7 +26,7 @@ export const DEPLOYMENT_ENV_GROUPS: EnvGroupDefinition[] = [
   {
     id: "core",
     title: "Core deployment",
-    description: "Database, auth, and public site URL. Set on Vercel or in .env.local for local dev.",
+    description: "Database, auth, and public site URL.",
     docsPath: "docs/LOCAL_DEV_AND_CREDENTIALS.md",
     vars: [
       {
@@ -388,3 +388,19 @@ export const DEPLOYMENT_ENV_GROUPS: EnvGroupDefinition[] = [
     ],
   },
 ];
+
+const REGISTRY_BY_NAME = new Map(
+  DEPLOYMENT_ENV_GROUPS.flatMap((g) => g.vars.map((v) => [v.name, v] as const)),
+);
+
+export function deploymentEnvRegistryNames(): string[] {
+  return [...REGISTRY_BY_NAME.keys()];
+}
+
+export function getDeploymentEnvDefinition(name: string): EnvVarDefinition | undefined {
+  return REGISTRY_BY_NAME.get(name);
+}
+
+export function isDeploymentEnvRegistryName(name: string): boolean {
+  return REGISTRY_BY_NAME.has(name);
+}

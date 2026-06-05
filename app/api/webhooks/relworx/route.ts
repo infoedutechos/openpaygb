@@ -19,8 +19,9 @@ export function GET() {
  */
 export async function POST(req: Request) {
   try {
-    const secret =
-      process.env.RELWORX_WEBHOOK_KEY?.trim() ?? process.env.RELWORX_WEBHOOK_SECRET?.trim();
+    const { warmDeploymentEnvCache, deploymentEnv } = await import("@/lib/deployment-env-resolve");
+    await warmDeploymentEnvCache();
+    const secret = deploymentEnv("RELWORX_WEBHOOK_KEY") || deploymentEnv("RELWORX_WEBHOOK_SECRET");
     const secretCheck = requireConfiguredSecret("RELWORX_WEBHOOK_KEY", secret);
     if (!secretCheck.ok) return secretCheck.response;
 

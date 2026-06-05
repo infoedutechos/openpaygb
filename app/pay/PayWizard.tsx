@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -1140,6 +1140,11 @@ export function PayWizard({
 
   async function sendTonWithWallet() {
     if (!quote || !paymentId) return;
+    if (!wallet?.account?.address?.trim()) {
+      setWalletNote("Connect your TON wallet first.");
+      setStep("connect_wallet");
+      return;
+    }
     const memo = paymentMemo?.trim();
     if (!memo) {
       setWalletNote("Payment note is missing. Go back one step and continue again.");
@@ -1462,7 +1467,7 @@ export function PayWizard({
                                   {p.name}
                                 </span>
                                 <span className="mt-auto pt-4 text-xs font-medium text-slate-500 group-hover:text-slate-400">
-                                  {selected ? "Selected Â· continue below" : "Tap to select"}
+                                  {selected ? "Selected · continue below" : "Tap to select"}
                                 </span>
                               </button>
                             </li>
@@ -1478,7 +1483,7 @@ export function PayWizard({
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Selected programme</p>
                   <p className="mt-1 text-base font-semibold text-white">{selectedProgramme.name}</p>
                   <p className="mt-0.5 text-xs text-cyan-200/90">
-                    {PROGRAMME_TRACK_LABEL[selectedProgramme.track]} Â· {selectedProgramme.code}
+                    {PROGRAMME_TRACK_LABEL[selectedProgramme.track]} · {selectedProgramme.code}
                   </p>
                 </div>
               ) : null}
@@ -1867,20 +1872,24 @@ export function PayWizard({
           <p className="text-xs text-slate-500">Scan the QR or pick Telegram / a browser extension wallet in the modal.</p>
           <div className="flex flex-wrap justify-center gap-3 text-xs font-medium text-slate-500">
             <span>Tonkeeper</span>
-            <span>Â·</span>
+            <span>·</span>
             <span>MyTonWallet</span>
-            <span>Â·</span>
+            <span>·</span>
             <span>OpenMask</span>
-            <span>Â·</span>
+            <span>·</span>
             <span>Telegram</span>
           </div>
           <button
             type="button"
             onClick={() => setStep("confirm_payment")}
-            className="w-full rounded-xl border border-white/15 bg-white/[0.08] py-3 text-sm font-semibold text-white hover:bg-white/[0.12]"
+            disabled={!wallet?.account?.address?.trim()}
+            className="w-full rounded-xl border border-white/15 bg-white/[0.08] py-3 text-sm font-semibold text-white hover:bg-white/[0.12] disabled:cursor-not-allowed disabled:opacity-40"
           >
             Continue to confirm payment
           </button>
+          {!wallet?.account?.address?.trim() ? (
+            <p className="text-xs text-slate-500">Connect a wallet above to continue.</p>
+          ) : null}
         </div>
       )}
 
@@ -1897,7 +1906,7 @@ export function PayWizard({
             <div className="flex justify-between text-slate-300">
               <span>Amount</span>
               <span className="font-semibold text-white">
-                {tonDisplay} TON <span className="font-normal text-slate-500">â‰ˆ UGX {quote.totalUgx.toLocaleString()}</span>
+                {tonDisplay} TON <span className="font-normal text-slate-500">≈ UGX {quote.totalUgx.toLocaleString()}</span>
               </span>
             </div>
             <div>
@@ -1915,7 +1924,7 @@ export function PayWizard({
           <button
             type="button"
             onClick={() => void sendTonWithWallet()}
-            disabled={busy}
+            disabled={busy || !wallet?.account?.address?.trim()}
             className="w-full rounded-xl bg-gradient-to-r from-cyan-400 to-sky-500 py-3 text-sm font-semibold text-slate-950 shadow-lg hover:brightness-110 disabled:opacity-50"
           >
             Confirm &amp; Pay
@@ -1940,8 +1949,10 @@ export function PayWizard({
 
       {step === "success" && paymentId && quote && (
         <div className="space-y-8 text-center">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/20 text-4xl text-emerald-400">
-            âœ“
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
+              <path d="M20 6 9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </div>
           <div>
             <h1 className="text-2xl font-semibold text-white">Payment Successful!</h1>

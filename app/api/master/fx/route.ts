@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { DEFAULT_UGX_PER_TON } from "@/lib/constants";
+import { defaultUgxPerTon } from "@/lib/constants";
+import { warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 import { getDefaultOrganizationId } from "@/lib/default-organization";
 import { fetchLiveFxBreakdown, getCachedLiveUgxPerTon } from "@/lib/fx-live";
 import { getOrgFxOverride, getPlatformFxOverride, mergeFxOverrides, resolveFxWithOverride } from "@/lib/fx-override";
@@ -39,12 +40,14 @@ async function dbFallbackUgxOnly(organizationId: string): Promise<number> {
     orderBy: { effectiveAt: "desc" },
   });
   if (latest && latest.ugxPerTon > 0) return latest.ugxPerTon;
-  return DEFAULT_UGX_PER_TON;
+  return defaultUgxPerTon();
 }
 
 export async function GET(req: Request) {
   const gate = await requireMaster();
   if (!gate.ok) return gate.response;
+
+  await warmDeploymentEnvCache();
 
   const url = new URL(req.url);
   const fresh = url.searchParams.get("fresh") === "1";
@@ -89,7 +92,7 @@ export async function GET(req: Request) {
 
   return NextResponse.json({
     fresh,
-    envDefaultUgx: DEFAULT_UGX_PER_TON,
+    envDefaultUgx: defaultUgxPerTon(),
     platform: {
       fxOverrideKind: platformRow?.fxOverrideKind ?? "none",
       fxOverrideUgxPerTon: platformRow?.fxOverrideUgxPerTon ?? null,

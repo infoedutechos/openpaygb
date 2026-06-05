@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 import { runTonInboundConfirmJob } from "@/lib/ton/run-confirm-job";
 import { requireCronAuth } from "@/lib/production-secrets";
 
@@ -15,6 +16,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: true, skipped: true, reason: "TON_CONFIRM_ENABLED=false" });
   }
 
+  await warmDeploymentEnvCache();
   const cronAuth = requireCronAuth(req);
   if (!cronAuth.ok) return cronAuth.response;
 

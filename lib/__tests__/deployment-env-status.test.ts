@@ -1,6 +1,15 @@
 import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 import { getDeploymentEnvStatus } from "@/lib/deployment-env-status";
 
+vi.mock("@/lib/deployment-env-resolve", () => ({
+  warmDeploymentEnvCache: vi.fn().mockResolvedValue(undefined),
+  deploymentEnv: (name: string) => process.env[name]?.trim() ?? "",
+}));
+
+vi.mock("@/lib/deployment-env-overrides", () => ({
+  listDeploymentEnvOverrideNames: vi.fn().mockResolvedValue([]),
+}));
+
 describe("getDeploymentEnvStatus", () => {
   beforeEach(() => {
     vi.unstubAllEnvs();
@@ -25,6 +34,7 @@ describe("getDeploymentEnvStatus", () => {
     expect(livepay?.configured).toBe(true);
     const apiKey = livepay?.vars.find((v) => v.name === "LIVEPAY_API_KEY");
     expect(apiKey?.set).toBe(true);
+    expect(apiKey?.source).toBe("process");
     expect(apiKey?.maskedPreview).not.toBe("supersecretlivepaykey");
     expect(apiKey?.maskedPreview).toContain("…");
   });

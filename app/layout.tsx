@@ -3,8 +3,10 @@ import "./globals.css";
 import { ConditionalSiteHeaderServer } from "@/components/pay/ConditionalSiteHeaderServer";
 import { ConditionalMainServer } from "@/components/pay/ConditionalMainServer";
 import { PlatformSocialProvider } from "@/components/PlatformSocialProvider";
+import { TonConnectAppProvider } from "@/components/TonConnectAppProvider";
 import { SiteChromeFooter } from "@/components/SiteChromeFooter";
 import { ShareFab } from "@/components/ShareFab";
+import PlatformAssistShell from "@/components/platform/PlatformAssistShell";
 import { ConditionalSiteBottomNav } from "@/components/ConditionalSiteBottomNav";
 import { buildRootMetadata } from "@/lib/root-metadata";
 import { resolveRequestSiteOrigin } from "@/lib/request-site-origin";
@@ -22,11 +24,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en">
       <body className="min-h-dvh antialiased flex flex-col">
         <PlatformSocialProvider initial={siteUi}>
-          <ConditionalSiteHeaderServer />
-          <ConditionalMainServer>{children}</ConditionalMainServer>
-          <SiteChromeFooter settings={siteUi} />
-          <ConditionalSiteBottomNav />
-          <ShareFab />
+          <TonConnectAppProvider>
+            <ConditionalSiteHeaderServer />
+            <ConditionalMainServer>{children}</ConditionalMainServer>
+            <SiteChromeFooter settings={siteUi} />
+            <ConditionalSiteBottomNav />
+            <ShareFab />
+            <PlatformAssistShell />
+          </TonConnectAppProvider>
         </PlatformSocialProvider>
       </body>
     </html>

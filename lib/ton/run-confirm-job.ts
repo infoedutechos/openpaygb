@@ -1,6 +1,6 @@
 import { PaymentRail } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { DEFAULT_TON_WALLET } from "@/lib/constants";
+import { defaultTonWallet } from "@/lib/constants";
 import { tonToNanotonString } from "@/lib/money";
 import { handleFirstTimeConfirmation } from "@/lib/on-payment-confirmed";
 import { runOpenPayCardTonConfirmJob } from "@/lib/openpay-card-ton-confirm";
@@ -54,7 +54,7 @@ function pendingWhere() {
 
 function watchAddressesForPending(pending: PendingPayment[]): string[] {
   const set = new Set<string>();
-  const def = DEFAULT_TON_WALLET.trim();
+  const def = defaultTonWallet().trim();
   if (def && !def.includes("placeholder")) set.add(def);
   for (const p of pending) {
     const w = p.destinationWallet?.trim();

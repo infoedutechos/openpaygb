@@ -2,7 +2,7 @@ import "server-only";
 
 import { PaymentRail, PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { DEFAULT_TON_WALLET } from "@/lib/constants";
+import { defaultTonWallet } from "@/lib/constants";
 import { createPendingPayment } from "@/lib/create-payment";
 import { handleFirstTimeConfirmation } from "@/lib/on-payment-confirmed";
 import { getOpenPayCardPlatformSettings } from "@/lib/openpay-card-settings";
@@ -143,5 +143,5 @@ export async function payTuitionFromOpenPayCard(opts: {
 }
 
 export function platformTonWalletForCardOps(): string {
-  return DEFAULT_TON_WALLET.trim();
+  return defaultTonWallet().trim();
 }

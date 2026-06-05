@@ -1,3 +1,4 @@
+import { deploymentEnv } from "@/lib/deployment-env-resolve";
 import { mbiyoRailError } from "@/lib/open-pay-brand";
 import { isMbiyoConfigured, mbiyoNotConfiguredMessage } from "@/lib/mbiyo/config";
 
@@ -47,11 +48,11 @@ export type MbiyoWrappedResponse<T> = {
 export { isMbiyoConfigured, mbiyoNotConfiguredMessage };
 
 function apiBase(): string {
-  return process.env.MBIYO_API_BASE_URL?.trim() || DEFAULT_BASE;
+  return deploymentEnv("MBIYO_API_BASE_URL") || DEFAULT_BASE;
 }
 
 function secretKey(): string {
-  const k = process.env.MBIYO_SECRET_KEY?.trim();
+  const k = deploymentEnv("MBIYO_SECRET_KEY");
   if (!k) throw new Error(mbiyoNotConfiguredMessage());
   return k;
 }

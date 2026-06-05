@@ -1,5 +1,7 @@
 /** Built-in PSPs configured via environment (shown alongside DB providers in Master Admin). */
 
+import { deploymentEnv } from "@/lib/deployment-env-resolve";
+
 export type BuiltinProviderStatus = {
   code: string;
   name: string;
@@ -11,7 +13,7 @@ export type BuiltinProviderStatus = {
 };
 
 export function getBuiltinMobileMoneyProviders(): BuiltinProviderStatus[] {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://your-domain";
+  const appUrl = deploymentEnv("NEXT_PUBLIC_APP_URL") || "https://your-domain";
 
   return [
     {
@@ -19,8 +21,8 @@ export function getBuiltinMobileMoneyProviders(): BuiltinProviderStatus[] {
       name: "MoMo (MTN / Airtel bridge)",
       kind: "builtin",
       webhookPath: `${appUrl}/api/webhooks/momo`,
-      configured: Boolean(process.env.MOMO_WEBHOOK_SECRET?.trim()),
-      active: Boolean(process.env.MOMO_WEBHOOK_SECRET?.trim()),
+      configured: Boolean(deploymentEnv("MOMO_WEBHOOK_SECRET")),
+      active: Boolean(deploymentEnv("MOMO_WEBHOOK_SECRET")),
       notes: "Env: MOMO_WEBHOOK_SECRET, MOMO_COLLECTION_URL. Header: x-momo-webhook-secret.",
     },
     {
@@ -28,8 +30,8 @@ export function getBuiltinMobileMoneyProviders(): BuiltinProviderStatus[] {
       name: "Mbiyo rail (OpenPayGB brand)",
       kind: "builtin",
       webhookPath: `${appUrl}/api/webhooks/mbiyo`,
-      configured: Boolean(process.env.MBIYO_WEBHOOK_SECRET?.trim()),
-      active: Boolean(process.env.MBIYO_WEBHOOK_SECRET?.trim() && process.env.MBIYO_SECRET_KEY?.trim()),
+      configured: Boolean(deploymentEnv("MBIYO_WEBHOOK_SECRET")),
+      active: Boolean(deploymentEnv("MBIYO_WEBHOOK_SECRET") && deploymentEnv("MBIYO_SECRET_KEY")),
       notes: "Env: MBIYO_WEBHOOK_SECRET, MBIYO_SECRET_KEY. HMAC-SHA256 body signature.",
     },
     {
@@ -37,10 +39,8 @@ export function getBuiltinMobileMoneyProviders(): BuiltinProviderStatus[] {
       name: "LivePay rail (OpenPayGB brand)",
       kind: "builtin",
       webhookPath: `${appUrl}/api/webhooks/livepay`,
-      configured: Boolean(
-        process.env.LIVEPAY_API_KEY?.trim() && process.env.LIVEPAY_ACCOUNT_NUMBER?.trim(),
-      ),
-      active: Boolean(process.env.LIVEPAY_API_KEY?.trim() && process.env.LIVEPAY_ACCOUNT_NUMBER?.trim()),
+      configured: Boolean(deploymentEnv("LIVEPAY_API_KEY") && deploymentEnv("LIVEPAY_ACCOUNT_NUMBER")),
+      active: Boolean(deploymentEnv("LIVEPAY_API_KEY") && deploymentEnv("LIVEPAY_ACCOUNT_NUMBER")),
       notes: "Env: LIVEPAY_API_KEY, LIVEPAY_ACCOUNT_NUMBER. Optional: LIVEPAY_WEBHOOK_SECRET header.",
     },
     {
@@ -49,14 +49,14 @@ export function getBuiltinMobileMoneyProviders(): BuiltinProviderStatus[] {
       kind: "builtin",
       webhookPath: `${appUrl}/api/webhooks/relworx`,
       configured: Boolean(
-        process.env.RELWORX_API_KEY?.trim() &&
-          process.env.RELWORX_ACCOUNT_NO?.trim() &&
-          process.env.RELWORX_ENABLED !== "false",
+        deploymentEnv("RELWORX_API_KEY") &&
+          deploymentEnv("RELWORX_ACCOUNT_NO") &&
+          deploymentEnv("RELWORX_ENABLED") !== "false",
       ),
       active: Boolean(
-        process.env.RELWORX_API_KEY?.trim() &&
-          process.env.RELWORX_ACCOUNT_NO?.trim() &&
-          process.env.RELWORX_ENABLED !== "false",
+        deploymentEnv("RELWORX_API_KEY") &&
+          deploymentEnv("RELWORX_ACCOUNT_NO") &&
+          deploymentEnv("RELWORX_ENABLED") !== "false",
       ),
       notes: "Env: RELWORX_API_KEY, RELWORX_ACCOUNT_NO, RELWORX_WEBHOOK_KEY. Optional: RELWORX_CURRENCY, RELWORX_WEBHOOK_URL.",
     },

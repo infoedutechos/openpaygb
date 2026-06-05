@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { deploymentEnv, warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 import { prisma } from "@/lib/prisma";
 import { handleFirstTimeConfirmation } from "@/lib/on-payment-confirmed";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
@@ -28,7 +29,8 @@ export function GET() {
  * Duplicate deliveries are safe: `updateMany` only transitions from `pending`.
  */
 export async function POST(req: Request) {
-  const secretCheck = requireConfiguredSecret("MBIYO_WEBHOOK_SECRET", process.env.MBIYO_WEBHOOK_SECRET);
+  await warmDeploymentEnvCache();
+  const secretCheck = requireConfiguredSecret("MBIYO_WEBHOOK_SECRET", deploymentEnv("MBIYO_WEBHOOK_SECRET"));
   if (!secretCheck.ok) return secretCheck.response;
 
   if (rateLimitHit(`mbiyo-hook:${clientIp(req)}`, 120, 60_000)) {
@@ -63,11 +65,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, action: "no_order_id" });
   }
 
-  if (isProductionRuntime() && !process.env.MBIYO_SECRET_KEY?.trim()) {
+  if (isProductionRuntime() && !deploymentEnv("MBIYO_SECRET_KEY")) {
     return NextResponse.json({ ok: false, error: "MBIYO_SECRET_KEY required in production" }, { status: 503 });
   }
 
-  if (process.env.MBIYO_SECRET_KEY?.trim()) {
+  if (deploymentEnv("MBIYO_SECRET_KEY")) {
     try {
       const remote = await mbiyoGetTransaction(transaction_id);
       const st = remote.data?.status;

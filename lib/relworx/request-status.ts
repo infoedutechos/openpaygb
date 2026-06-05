@@ -1,3 +1,4 @@
+import { deploymentEnv } from "@/lib/deployment-env-resolve";
 import {
   isRelworxConfigured,
   isRelworxSuccessStatus,
@@ -23,13 +24,13 @@ export async function relworxFetchRequestStatus(
 ): Promise<RelworxRequestStatus | null> {
   if (!isRelworxConfigured()) return null;
 
-  const accountNo = process.env.RELWORX_ACCOUNT_NO!.trim();
+  const accountNo = deploymentEnv("RELWORX_ACCOUNT_NO");
   const qs = new URLSearchParams({
     account_no: accountNo,
     internal_reference: internalReference.trim(),
   });
 
-  const apiKey = process.env.RELWORX_API_KEY!.trim();
+  const apiKey = deploymentEnv("RELWORX_API_KEY");
   const res = await fetch(
     `https://payments.relworx.com/api/mobile-money/check-request-status?${qs}`,
     {

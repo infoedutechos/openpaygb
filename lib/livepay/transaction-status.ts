@@ -1,3 +1,4 @@
+import { deploymentEnv } from "@/lib/deployment-env-resolve";
 import {
   isLivePayConfigured,
   isLivePayWebhookSuccess,
@@ -22,8 +23,8 @@ export async function livePayFetchTransactionStatus(
 ): Promise<LivePayTransactionStatus | null> {
   if (!isLivePayConfigured()) return null;
 
-  const apiKey = process.env.LIVEPAY_API_KEY!.trim();
-  const accountNumber = process.env.LIVEPAY_ACCOUNT_NUMBER!.trim();
+  const apiKey = deploymentEnv("LIVEPAY_API_KEY");
+  const accountNumber = deploymentEnv("LIVEPAY_ACCOUNT_NUMBER");
   const reference = livePayCustomerReference(customerReference);
 
   const qs = new URLSearchParams({

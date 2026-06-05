@@ -1,7 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
-import { DEFAULT_TON_WALLET } from "@/lib/constants";
+import { defaultTonWallet } from "@/lib/constants";
 import { tonToNanotonString } from "@/lib/money";
 import { activateOpenPayCard, platformTonWalletForCardOps } from "@/lib/openpay-card";
 import {
@@ -41,7 +41,7 @@ async function confirmTopup(topupId: string, hash: string): Promise<boolean> {
  * Scan platform TON wallet for `opcard:` (issue) and `opcardfund:` (balance top-up) memos.
  */
 export async function runOpenPayCardTonConfirmJob(): Promise<OpenPayCardTonConfirmResult> {
-  const wallet = platformTonWalletForCardOps() || DEFAULT_TON_WALLET.trim();
+  const wallet = platformTonWalletForCardOps() || defaultTonWallet().trim();
   if (!wallet || wallet.includes("placeholder")) {
     return { ok: false, cardsActivated: 0, topupsConfirmed: 0, message: "Platform TON wallet not configured" };
   }

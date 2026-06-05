@@ -6,7 +6,8 @@ import { recurrenceLabel } from "@/lib/programme-fee-labels";
 import { getCheckoutPlatformFeeUgxForOrganization } from "@/lib/checkout-platform-fee";
 import { getActiveUgxPerTonForOrganization } from "@/lib/fx";
 import { feeTotal, ugxToTon } from "@/lib/money";
-import { DEFAULT_TON_WALLET } from "@/lib/constants";
+import { defaultTonWallet } from "@/lib/constants";
+import { warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 import { getActiveOrganizationBySlug } from "@/lib/organizations";
 import { getDefaultOrganizationId } from "@/lib/default-organization";
 import { prisma } from "@/lib/prisma";
@@ -50,23 +51,26 @@ export async function GET(req: Request, ctx: { params: Promise<{ code: string }>
 
   const feeSelectionMode = parsed.data.feeSelectionMode as ProgrammeFeeSelectionMode;
 
+  await warmDeploymentEnvCache();
+  const platformWallet = defaultTonWallet();
+
   const slug = url.searchParams.get("orgSlug")?.trim().toLowerCase() ?? "";
   let organizationId: string;
-  let destWallet = DEFAULT_TON_WALLET;
+  let destWallet = platformWallet;
   if (slug) {
     const org = await getActiveOrganizationBySlug(slug);
     if (!org) {
       return NextResponse.json({ error: "Organization not found or not active" }, { status: 404 });
     }
     organizationId = org.id;
-    destWallet = org.destinationWallet?.trim() || DEFAULT_TON_WALLET;
+    destWallet = org.destinationWallet?.trim() || platformWallet;
   } else {
     organizationId = await getDefaultOrganizationId();
     const row = await prisma.organization.findUnique({
       where: { id: organizationId },
       select: { destinationWallet: true },
     });
-    destWallet = row?.destinationWallet?.trim() || DEFAULT_TON_WALLET;
+    destWallet = row?.destinationWallet?.trim() || platformWallet;
   }
 
   const p = await findProgrammeByCode(code, organizationId);

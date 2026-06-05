@@ -6,7 +6,7 @@ import { getTelegramOrganizationId } from "@/lib/telegram/org";
 import { findProgrammeByCode, getFeeLineFromProgramme } from "@/lib/programmes";
 import { getActiveUgxPerTon } from "@/lib/fx";
 import { feeTotal, ugxToTon, tonToNanotonString } from "@/lib/money";
-import { DEFAULT_TON_WALLET } from "@/lib/constants";
+import { defaultTonWallet } from "@/lib/constants";
 import { createReceiptAccessToken } from "@/lib/receipt-access";
 import { absoluteUrl } from "@/lib/public-url";
 import {
@@ -399,7 +399,7 @@ async function dispatchCallback(
       rail: PaymentRail.telegram,
     });
 
-    const wallet = payment.destinationWallet || DEFAULT_TON_WALLET;
+    const wallet = payment.destinationWallet || defaultTonWallet();
     const memo = payment.memo;
     const tonLink = tonTransferUrl(wallet, payment.tonAmount, memo);
     const receiptUrl = absoluteUrl(`/receipt/${payment.id}`);

@@ -233,7 +233,7 @@ function BtnGhost({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonE
   return (
     <button
       type="button"
-      className="w-full rounded-2xl border border-cyan-400/35 bg-white/[0.04] py-3.5 text-sm font-bold uppercase tracking-wide text-cyan-100 transition-colors hover:border-cyan-300/60 hover:bg-white/[0.07]"
+      className="w-full rounded-2xl border border-cyan-400/35 bg-white/[0.04] py-3.5 text-sm font-bold uppercase tracking-wide text-cyan-100 transition-colors hover:border-cyan-300/60 hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-40"
       {...props}
     >
       {children}
@@ -1038,6 +1038,11 @@ export function StudentTuitionFlow() {
 
   async function sendTonWithWallet() {
     if (!quote || !paymentId) return;
+    if (!wallet?.account?.address?.trim()) {
+      setWalletNote("Connect your TON wallet first.");
+      setStep("connect_wallet");
+      return;
+    }
     const memo = paymentMemo?.trim();
     if (!memo) {
       setWalletNote("Payment note is missing. Go back one step and continue again.");
@@ -1832,7 +1837,15 @@ export function StudentTuitionFlow() {
               </span>
             ))}
           </div>
-          <BtnGhost onClick={() => setStep("confirm_payment")}>Continue to confirm payment</BtnGhost>
+          <BtnGhost
+            onClick={() => setStep("confirm_payment")}
+            disabled={!wallet?.account?.address?.trim()}
+          >
+            Continue to confirm payment
+          </BtnGhost>
+          {!wallet?.account?.address?.trim() ? (
+            <p className="text-xs text-slate-500">Connect a wallet above to continue.</p>
+          ) : null}
         </div>
       )}
 
@@ -1868,7 +1881,10 @@ export function StudentTuitionFlow() {
               </div>
             ) : null}
           </GlassPanel>
-          <BtnPrimary onClick={() => void sendTonWithWallet()} disabled={busy}>
+          <BtnPrimary
+            onClick={() => void sendTonWithWallet()}
+            disabled={busy || !wallet?.account?.address?.trim()}
+          >
             Confirm &amp; pay
           </BtnPrimary>
           {walletNote ? <p className="text-center text-xs text-rose-400">{walletNote}</p> : null}

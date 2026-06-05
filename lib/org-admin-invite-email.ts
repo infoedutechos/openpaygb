@@ -51,8 +51,10 @@ export function buildOrgAdminInviteEmailText(details: OrgAdminInviteEmailDetails
 export async function sendOrgAdminInviteEmail(
   details: OrgAdminInviteEmailDetails,
 ): Promise<boolean> {
-  const apiKey = process.env.RESEND_API_KEY?.trim();
-  const from = process.env.RESEND_FROM?.trim();
+  const { deploymentEnv, warmDeploymentEnvCache } = await import("@/lib/deployment-env-resolve");
+  await warmDeploymentEnvCache();
+  const apiKey = deploymentEnv("RESEND_API_KEY");
+  const from = deploymentEnv("RESEND_FROM");
   const loginUrl = absoluteUrl(PUBLIC_SCHOOL_LOGIN_PATH);
 
   if (!apiKey || !from) {

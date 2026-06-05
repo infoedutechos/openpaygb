@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { DEFAULT_UGX_PER_TON } from "@/lib/constants";
+import { defaultUgxPerTon } from "@/lib/constants";
 import type { LiveFxResult } from "@/lib/fx-live";
 
 export const PLATFORM_FX_KINDS = ["none", "fixed", "buffer_pct"] as const; // platform override kinds
@@ -155,7 +155,7 @@ export async function resolveFxWithOverride(
   }
 
   return {
-    ugxPerTon: fallbackUgx > 0 ? fallbackUgx : DEFAULT_UGX_PER_TON,
+    ugxPerTon: fallbackUgx > 0 ? fallbackUgx : defaultUgxPerTon(),
     source: fallbackUgx > 0 ? "db" : "env_default",
     liveBase: live,
   };

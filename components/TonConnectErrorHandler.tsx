@@ -15,6 +15,13 @@ function isBenignTonConnectAbort(msg: string): boolean {
   );
 }
 
+function isProviderNotSet(msg: string): boolean {
+  return (
+    msg.includes('TonConnectProviderNotSetError') ||
+    /TonConnectUIProvider.*top of the app/i.test(msg)
+  );
+}
+
 function isManifestRelated(msg: string): boolean {
   const lower = msg.toLowerCase();
   return (
@@ -50,6 +57,17 @@ export function TonConnectErrorHandler({ children, onManifestError }: Props) {
           event.preventDefault();
           event.stopPropagation();
         }
+        return;
+      }
+
+      if (isProviderNotSet(msg)) {
+        console.error('[TonConnect]', msg);
+        showToast(
+          'TON wallet provider is not ready. Refresh the page. If this persists, restart the dev server.',
+          'error',
+        );
+        event.preventDefault();
+        event.stopPropagation();
         return;
       }
 

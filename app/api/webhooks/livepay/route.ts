@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-
+import { deploymentEnv, warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 import { prisma } from "@/lib/prisma";
 
 import { livePayCustomerReference } from "@/lib/livepay/client";
@@ -40,11 +40,13 @@ export async function POST(req: Request) {
 
   try {
 
+    await warmDeploymentEnvCache();
+
     const secretCheck = requireConfiguredSecret(
 
       "LIVEPAY_WEBHOOK_SECRET",
 
-      process.env.LIVEPAY_WEBHOOK_SECRET,
+      deploymentEnv("LIVEPAY_WEBHOOK_SECRET"),
 
     );
 

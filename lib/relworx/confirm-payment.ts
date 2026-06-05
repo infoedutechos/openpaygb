@@ -1,4 +1,5 @@
 import type { Payment } from "@prisma/client";
+import { deploymentEnv } from "@/lib/deployment-env-resolve";
 import { prisma } from "@/lib/prisma";
 import { handleFirstTimeConfirmation } from "@/lib/on-payment-confirmed";
 import { isRelworxSuccessStatus } from "@/lib/relworx/client";
@@ -70,6 +71,6 @@ export async function confirmRelworxPaymentIfEligible(
 }
 
 function relworxCheckoutCurrencyFallback(): string {
-  const c = process.env.RELWORX_CURRENCY?.trim().toUpperCase();
+  const c = deploymentEnv("RELWORX_CURRENCY").toUpperCase();
   return c === "KES" || c === "TZS" ? c : "UGX";
 }

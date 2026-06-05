@@ -1,9 +1,13 @@
 import { DEPLOYMENT_ENV_GROUPS, type EnvGroupDefinition, type EnvVarDefinition } from "@/lib/deployment-env-registry";
+import { listDeploymentEnvOverrideNames } from "@/lib/deployment-env-overrides";
+import { deploymentEnv, warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 import { isProductionRuntime } from "@/lib/production-secrets";
 import { isLivePayConfigured } from "@/lib/livepay/client";
 import { getLivePayWebhookUrl } from "@/lib/livepay/webhook-url";
 import { isRelworxConfigured } from "@/lib/relworx/client";
 import { getRelworxWebhookUrl } from "@/lib/relworx/webhook-url";
+
+export type EnvVarSource = "dashboard" | "process" | "unset";
 
 export type EnvVarStatus = {
   name: string;
@@ -12,6 +16,7 @@ export type EnvVarStatus = {
   sensitive: boolean;
   requirement: EnvVarDefinition["requirement"];
   set: boolean;
+  source: EnvVarSource;
   maskedPreview: string | null;
   missingInProduction: boolean;
 };
@@ -34,6 +39,7 @@ export type DeploymentEnvSummary = {
   appUrl: string | null;
   totalVars: number;
   setVars: number;
+  dashboardOverrides: number;
   missingProduction: number;
   groupsReady: number;
   groupsTotal: number;
@@ -46,11 +52,17 @@ export type DeploymentEnvStatus = {
 };
 
 function envValue(name: string): string {
-  return process.env[name]?.trim() ?? "";
+  return deploymentEnv(name);
 }
 
 function isSet(name: string): boolean {
   return Boolean(envValue(name));
+}
+
+function resolveSource(name: string, dashboardNames: Set<string>): EnvVarSource {
+  if (dashboardNames.has(name)) return "dashboard";
+  if (process.env[name]?.trim()) return "process";
+  return envValue(name) ? "process" : "unset";
 }
 
 function maskValue(value: string, sensitive: boolean): string | null {
@@ -63,9 +75,10 @@ function maskValue(value: string, sensitive: boolean): string | null {
   return `${value.slice(0, 4)}…${value.slice(-4)}`;
 }
 
-function varStatus(def: EnvVarDefinition): EnvVarStatus {
+function varStatus(def: EnvVarDefinition, dashboardNames: Set<string>): EnvVarStatus {
   const raw = envValue(def.name);
   const set = Boolean(raw);
+  const source = set ? resolveSource(def.name, dashboardNames) : "unset";
   const missingInProduction =
     isProductionRuntime() &&
     def.requirement === "production" &&
@@ -77,6 +90,7 @@ function varStatus(def: EnvVarDefinition): EnvVarStatus {
     sensitive: def.sensitive,
     requirement: def.requirement,
     set,
+    source,
     maskedPreview: set ? maskValue(raw, def.sensitive) : null,
     missingInProduction,
   };
@@ -89,7 +103,7 @@ function groupConfigured(group: EnvGroupDefinition, vars: EnvVarStatus[]): boole
 }
 
 function groupWebhookUrl(id: string): string | null {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://your-domain";
+  const appUrl = deploymentEnv("NEXT_PUBLIC_APP_URL") || "https://your-domain";
   switch (id) {
     case "livepay":
       return getLivePayWebhookUrl();
@@ -129,7 +143,7 @@ function defaultGroupHealth(id: string): { healthy: boolean | null; note: string
     case "relworx": {
       const configured = isRelworxConfigured();
       const webhook = isSet("RELWORX_WEBHOOK_KEY") || isSet("RELWORX_WEBHOOK_SECRET");
-      const disabled = process.env.RELWORX_ENABLED === "false";
+      const disabled = deploymentEnv("RELWORX_ENABLED") === "false";
       return {
         healthy: configured && !disabled ? (isProductionRuntime() ? webhook : true) : null,
         note: disabled
@@ -205,8 +219,12 @@ async function probeLivePayApi(): Promise<string | null> {
 }
 
 export async function getDeploymentEnvStatus(opts?: { probe?: boolean }): Promise<DeploymentEnvStatus> {
+  await warmDeploymentEnvCache();
+  const dashboardMeta = await listDeploymentEnvOverrideNames();
+  const dashboardNames = new Set(dashboardMeta.map((m) => m.name));
+
   const groups: EnvGroupStatus[] = DEPLOYMENT_ENV_GROUPS.map((group) => {
-    const vars = group.vars.map(varStatus);
+    const vars = group.vars.map((v) => varStatus(v, dashboardNames));
     const health = defaultGroupHealth(group.id);
     return {
       id: group.id,
@@ -252,6 +270,7 @@ export async function getDeploymentEnvStatus(opts?: { probe?: boolean }): Promis
       appUrl: envValue("NEXT_PUBLIC_APP_URL") || null,
       totalVars: allVars.length,
       setVars,
+      dashboardOverrides: dashboardNames.size,
       missingProduction,
       groupsReady,
       groupsTotal: groups.length,

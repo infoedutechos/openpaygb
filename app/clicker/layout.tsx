@@ -9,7 +9,7 @@
 
 'use client'
 
-import { TonConnectShell } from '@/components/TonConnectShell';
+import { TonWalletSync } from '@/components/TonWalletSync';
 
 export default function MyApp({
     children,
@@ -17,8 +17,9 @@ export default function MyApp({
     children: React.ReactNode;
 }>) {
     return (
-        <TonConnectShell syncWallet>
+        <>
+            <TonWalletSync />
             {children}
-        </TonConnectShell>
+        </>
     );
 }
