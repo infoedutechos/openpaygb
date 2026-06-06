@@ -26,6 +26,8 @@
     "docs:inventory": "node scripts/export-api-inventory.cjs",
     "docs:serve": "npx serve docs -p 8787",
     "docs:build-index": "node scripts/build-docs-manifest.mjs",
+    "vercel:login": "vercel login",
+    "vercel:link": "vercel link",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
