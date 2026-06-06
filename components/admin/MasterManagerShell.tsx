@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton";
 
 const nav: { href: string; label: string; desc?: string }[] = [
   { href: "/admin/master", label: "Overview", desc: "Platform totals" },
@@ -14,6 +15,21 @@ const nav: { href: string; label: string; desc?: string }[] = [
     href: "/admin/master/programmes",
     label: "Programmes",
     desc: "Years & semesters per year",
+  },
+  {
+    href: "/admin/master#openpay-cards-overview",
+    label: "Virtual cards",
+    desc: "OpenPayGB registry",
+  },
+  {
+    href: "/admin/master#platform-communications",
+    label: "Chat & notifications",
+    desc: "Bell + KB assistant",
+  },
+  {
+    href: "/admin/master#knowledge-base",
+    label: "Knowledge base",
+    desc: "Copilot articles",
   },
   {
     href: "/admin/master#platform-social",
@@ -39,6 +55,11 @@ const nav: { href: string; label: string; desc?: string }[] = [
     href: "/admin/master#partner-integrations",
     label: "Partner API",
     desc: "Keys & webhooks out",
+  },
+  {
+    href: "/docs",
+    label: "Documentation",
+    desc: "Searchable docs library",
   },
 ];
 
@@ -97,6 +118,7 @@ export default function MasterManagerShell({
               {item.desc ? <span className="block text-[11px] font-normal text-slate-600">{item.desc}</span> : null}
             </Link>
           ))}
+          <DashboardChatNavButton variant="master" />
         </nav>
 
         <div className="mt-6 space-y-1 border-t border-amber-500/10 px-2 pt-4">
@@ -159,6 +181,7 @@ export default function MasterManagerShell({
                 {item.label}
               </Link>
             ))}
+            <DashboardChatNavButton variant="master" compact />
           </nav>
         </header>
         <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 md:py-8">{children}</div>

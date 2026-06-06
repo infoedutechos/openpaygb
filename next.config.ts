@@ -33,6 +33,8 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return [
+      { source: "/docs", destination: "/api/docs" },
+      { source: "/docs/:path*", destination: "/api/docs/:path*" },
       { source: "/favicon.ico", destination: "/playhub/favicon.svg" },
       { source: "/tonconnect-icon.png", destination: "/api/manifest/tonconnect-icon" },
       { source: "/school-admin", destination: "/admin" },

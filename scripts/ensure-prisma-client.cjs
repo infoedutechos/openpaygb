@@ -16,6 +16,7 @@ const SCHEMA_FIELD_MARKERS = [
   "ChatConversation",
   "NotificationRead",
   "PlatformAudience",
+  "copilotBubbleImage",
 ];
 
 function paths(root) {

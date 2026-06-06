@@ -1,4 +1,5 @@
-import { deploymentEnv, warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
+import { isTransactionalEmailConfigured, sendTransactionalEmail } from "@/lib/transactional-email";
+import { warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 import { prisma } from "@/lib/prisma";
 import { absoluteUrl } from "@/lib/public-url";
 import { createReceiptAccessToken } from "@/lib/receipt-access";
@@ -6,12 +7,10 @@ import { receiptBreakdownHtml } from "@/lib/receipt-breakdown-html";
 import { buildReceiptBreakdown } from "@/lib/receipt-lines";
 import { buildStudentProgrammeProgress } from "@/lib/tuition-progress";
 
-/** Send Resend email when RESEND_API_KEY + RESEND_FROM are set and student has email. */
+/** Send receipt email when Brevo or Resend is configured and student has email. */
 export async function sendReceiptEmailIfConfigured(paymentId: string): Promise<void> {
   await warmDeploymentEnvCache();
-  const apiKey = deploymentEnv("RESEND_API_KEY");
-  const from = deploymentEnv("RESEND_FROM");
-  if (!apiKey || !from) return;
+  if (!isTransactionalEmailConfigured()) return;
 
   const payment = await prisma.payment.findUnique({
     where: { id: paymentId },
@@ -69,17 +68,10 @@ export async function sendReceiptEmailIfConfigured(paymentId: string): Promise<v
     return "";
   })();
 
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from,
-      to: [email],
-      subject: `ODEL HUB — payment confirmed (${payment.programmeCode})`,
-      html: `<p>Hi ${escapeHtml(payment.student.name)},</p>
+  await sendTransactionalEmail({
+    to: email,
+    subject: `ODEL HUB — payment confirmed (${payment.programmeCode})`,
+    html: `<p>Hi ${escapeHtml(payment.student.name)},</p>
 <p>Your payment is <strong>confirmed</strong>.</p>
 <ul>
 <li>${periodLine}</li>
@@ -89,13 +81,8 @@ ${progressBlock}
 ${feeBreakdownBlock}
 ${completionBanner}
 <p><a href="${receiptUrl}">View receipt</a> · <a href="${pdfUrl}">Download PDF</a></p>`,
-    }),
+    logTag: "[receipt-email]",
   });
-
-  if (!res.ok) {
-    const err = await res.text();
-    console.error("[receipt-email]", res.status, err);
-  }
 }
 
 function escapeHtml(s: string): string {

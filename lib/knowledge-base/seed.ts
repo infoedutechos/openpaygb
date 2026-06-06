@@ -112,6 +112,102 @@ export const PLATFORM_KB_SEED: KnowledgeSeedArticle[] = [
     source: "seed",
   },
   {
+    slug: "openpay-card-top-up",
+    title: "Top up your OpenPayGB virtual card",
+    summary: "Add UGX balance via mobile money or TON wallet.",
+    body:
+      "Sign in at /student/login and open the OpenPayGB card panel on your student home. After your card is active, enter a UGX amount (minimum 1,000).\n\n**Mobile money:** Choose Mobile money, enter your Uganda phone number (and MTN/Airtel network when LivePay is enabled), then tap **Top up via MoMo**. Approve the prompt on your phone — balance updates after LivePay or Relworx confirms.\n\n**TON wallet:** Choose TON wallet, connect Tonkeeper or Telegram wallet, send the quoted TON on-chain, and wait for confirmation.",
+    category: "payments",
+    tags: ["openpay", "card", "top-up", "ton", "momo", "livepay", "relworx", "student"],
+    audience: "tuition",
+    sortOrder: 55,
+    source: "seed",
+  },
+  {
+    slug: "openpay-card-overview",
+    title: "OpenPayGB virtual card",
+    summary: "Optional closed-loop card for tuition and top-ups.",
+    body:
+      "Students opt in from the student dashboard. A one-time TON issue fee activates the card. Use the UGX balance at checkout (**Pay with OpenPayGB card**) or top up via mobile money / TON. School admins see a read-only card summary on the student detail page. Master admin manages card settings and the registry.",
+    category: "payments",
+    tags: ["openpay", "card", "virtual", "tuition", "checkout"],
+    audience: "tuition",
+    sortOrder: 54,
+    source: "seed",
+  },
+  {
+    slug: "receipts-and-email",
+    title: "Receipts and email delivery",
+    summary: "View, download, and email payment receipts.",
+    body:
+      "After a confirmed payment, open the receipt link from checkout or student payment history. PDF download is at /api/receipts/{paymentId}/pdf. Receipt emails send when Brevo or Resend is configured in Deployment environment (TRANSACTIONAL_EMAIL_FROM + BREVO_API_KEY or RESEND_API_KEY).",
+    category: "tuition",
+    tags: ["receipt", "pdf", "email", "brevo", "resend"],
+    audience: "tuition",
+    sortOrder: 25,
+    source: "seed",
+  },
+  {
+    slug: "programme-fees-admin",
+    title: "Manage programmes and fees (school admin)",
+    summary: "Configure tuition programmes, years, semesters, and fee lines.",
+    body:
+      "School admins manage programmes under the tuition hub. Add programme codes, fee schedules per year/semester, installment plans, and CSV import where enabled. Students and guest checkout quote fees from these schedules. Master admin can apply inferred programmes across organizations.",
+    category: "admin",
+    tags: ["programme", "fees", "school", "admin", "installments"],
+    audience: "admin",
+    sortOrder: 35,
+    source: "seed",
+  },
+  {
+    slug: "master-admin-overview",
+    title: "Master admin platform controls",
+    summary: "Organizations, deployment env, KB, cards, and platform fees.",
+    body:
+      "Master admin signs in at /admin/master. Approve school workspaces, manage organizations and org admins, set mobile money providers, OpenPayGB card settings, platform checkout fees, deployment environment variables (with Vercel .env export), knowledge base articles, and copilot bubble image.",
+    category: "admin",
+    tags: ["master", "deployment", "vercel", "organizations", "settings"],
+    audience: "admin",
+    sortOrder: 5,
+    source: "seed",
+  },
+  {
+    slug: "student-signup-portal",
+    title: "Student self-registration",
+    summary: "Email verification and portal password for students.",
+    body:
+      "Students can register at /student/register, verify email from the link, then sign in at /student/login. Existing payers may claim a portal at /student/claim using payment proof. Portal unlocks balance view, OpenPayGB card, and signed-in checkout.",
+    category: "tuition",
+    tags: ["student", "register", "signup", "claim", "portal"],
+    audience: "tuition",
+    sortOrder: 22,
+    source: "seed",
+  },
+  {
+    slug: "deployment-env-vercel",
+    title: "Export environment for Vercel",
+    summary: "Download merged secrets for Vercel import.",
+    body:
+      "In Master Admin → Deployment environment, use **Export for Vercel (.env)**. The file merges dashboard overrides with server process env. Import at Vercel → Project → Settings → Environment Variables. Treat the file as secret — never commit it.",
+    category: "platform",
+    tags: ["vercel", "env", "deployment", "master", "secrets"],
+    audience: "admin",
+    sortOrder: 2,
+    source: "seed",
+  },
+  {
+    slug: "insufficient-payment-funds",
+    title: "Insufficient funds at checkout",
+    summary: "What happens when balance is too low for card, mobile money, or TON.",
+    body:
+      "**OpenPayGB card:** Checkout checks your card balance before debiting. If UGX balance is below the quote, payment is blocked with a message to fund your card first — no charge is made.\n\n**Mobile money (LivePay / Relworx):** You receive a prompt on your phone. If your MoMo wallet lacks funds, you cannot approve or the provider declines — the tuition payment stays pending until it expires or you retry with sufficient balance.\n\n**TON wallet:** TonConnect will not send if your wallet balance is too low for the quoted TON amount.",
+    category: "payments",
+    tags: ["insufficient", "balance", "momo", "ton", "card", "checkout"],
+    audience: "tuition",
+    sortOrder: 56,
+    source: "seed",
+  },
+  {
     slug: "platform-help-copilot",
     title: "How this help assistant works",
     summary: "Knowledge-base copilot without paid AI APIs.",
@@ -145,9 +241,17 @@ function learnDefaultsToSeed(): KnowledgeSeedArticle[] {
   return out;
 }
 
-async function upsertSeedArticles(articles: KnowledgeSeedArticle[]): Promise<number> {
+async function upsertSeedArticles(articles: KnowledgeSeedArticle[], respectManual = false): Promise<number> {
   let n = 0;
   for (const article of articles) {
+    if (respectManual) {
+      const existing = await prisma.knowledgeArticle.findUnique({
+        where: { slug: article.slug },
+        select: { source: true },
+      });
+      if (existing?.source === "manual") continue;
+    }
+
     await prisma.knowledgeArticle.upsert({
       where: { slug: article.slug },
       create: {
@@ -179,6 +283,13 @@ async function upsertSeedArticles(articles: KnowledgeSeedArticle[]): Promise<num
   return n;
 }
 
+/** Continuous sync: push code seed updates without wiping manual articles. */
+export async function syncKnowledgeSeedUpdates(): Promise<{ synced: number }> {
+  const all = [...PLATFORM_KB_SEED, ...learnDefaultsToSeed()];
+  const synced = await upsertSeedArticles(all, true);
+  return { synced };
+}
+
 export async function reimportKnowledgeSeed(): Promise<{ seeded: number }> {
   await prisma.knowledgeArticle.deleteMany({
     where: { source: { in: ["seed", "learn-import"] } },
@@ -188,11 +299,15 @@ export async function reimportKnowledgeSeed(): Promise<{ seeded: number }> {
   return { seeded };
 }
 
-export async function ensureKnowledgeBaseSeeded(): Promise<{ seeded: number }> {
+export async function ensureKnowledgeBaseSeeded(): Promise<{ seeded: number; synced: number }> {
   const count = await prisma.knowledgeArticle.count();
-  if (count > 0) return { seeded: 0 };
-
   const all = [...PLATFORM_KB_SEED, ...learnDefaultsToSeed()];
-  const seeded = await upsertSeedArticles(all);
-  return { seeded };
+
+  if (count === 0) {
+    const seeded = await upsertSeedArticles(all);
+    return { seeded, synced: 0 };
+  }
+
+  const { synced } = await syncKnowledgeSeedUpdates();
+  return { seeded: 0, synced };
 }

@@ -1,10 +1,10 @@
 import type { WalletsListConfiguration } from "@tonconnect/ui";
 
 /**
- * Wallets with stable HTTP bridges for local dev.
- * Omitting Tomo / Mirai / Nicegram bridges avoids CORS + 522 console spam on localhost.
+ * Curated wallets with stable HTTP bridges — used on all hosts so TonConnect does not depend on
+ * fetching the remote wallets list (which fails offline / in some PWAs).
  */
-export const LOCAL_DEV_TON_WALLETS: NonNullable<WalletsListConfiguration["includeWallets"]> = [
+export const BUNDLED_TON_WALLETS: NonNullable<WalletsListConfiguration["includeWallets"]> = [
   {
     appName: "tonkeeper",
     name: "Tonkeeper",
@@ -34,6 +34,9 @@ export const LOCAL_DEV_TON_WALLETS: NonNullable<WalletsListConfiguration["includ
     platforms: ["ios", "android", "macos", "windows", "linux"],
   },
 ];
+
+/** @deprecated Use BUNDLED_TON_WALLETS */
+export const LOCAL_DEV_TON_WALLETS = BUNDLED_TON_WALLETS;
 
 export function isLocalTonConnectHost(hostname: string): boolean {
   return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";

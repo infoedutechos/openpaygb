@@ -36,10 +36,15 @@ export async function GET(req: Request) {
 
     const { key, isNew } = await sessionCookieValue();
     const hub = resolveHub(new URL(req.url));
-    const notifications = await listPlatformNotifications({
-      hub,
-      readerKey: readerKeyFromSession(key),
-    });
+    let notifications: Awaited<ReturnType<typeof listPlatformNotifications>> = [];
+    try {
+      notifications = await listPlatformNotifications({
+        hub,
+        readerKey: readerKeyFromSession(key),
+      });
+    } catch (listErr) {
+      console.warn("[GET /api/platform/notifications] list failed, returning empty", listErr);
+    }
 
     const res = NextResponse.json({ notifications, unread: notifications.filter((n) => !n.read).length });
     if (isNew) {

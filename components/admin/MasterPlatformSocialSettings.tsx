@@ -4,6 +4,40 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { SiteUiSettingsRow, SocialLink, SocialLinkDisplay } from "@/lib/site-ui-shared";
 import { BUILTIN_SOCIAL_LABELS, type BuiltinSocialKey } from "@/lib/site-ui-shared";
+import { fetchJson } from "@/utils/fetch-json";
+import { notifySiteUiUpdated } from "@/hooks/useSupportPanelSettings";
+
+const AUTO_SAVE_MS = 800;
+
+function buildSiteUiPatchPayload(data: SiteUiSettingsRow) {
+  return {
+    socialLinks: data.socialLinks,
+    shareEnabled: data.shareEnabled,
+    shareDefaultTitle: data.shareDefaultTitle,
+    shareDefaultText: data.shareDefaultText,
+    supportPhone: data.supportPhone,
+    supportEmail: data.supportEmail,
+    communitySupportUrl: data.communitySupportUrl,
+    showSupportPhone: data.showSupportPhone,
+    showSupportEmail: data.showSupportEmail,
+    showCommunitySupport: data.showCommunitySupport,
+    footerIntro: data.footerIntro,
+    footerMode: data.footerMode,
+    footerPathList: data.footerPathList,
+    footerShowQuickLinks: data.footerShowQuickLinks,
+    footerCopyrightVisible: data.footerCopyrightVisible,
+    homeScreenEnabled: data.homeScreenEnabled,
+    homeScreenShowOnHome: data.homeScreenShowOnHome,
+    homeScreenTitle: data.homeScreenTitle,
+    homeScreenShortName: data.homeScreenShortName,
+    homeScreenDescription: data.homeScreenDescription,
+    homeScreenThemeColor: data.homeScreenThemeColor,
+  };
+}
+
+function serializeSiteUiPatch(data: SiteUiSettingsRow) {
+  return JSON.stringify(buildSiteUiPatchPayload(data));
+}
 
 export function MasterPlatformSocialSettings() {
   const [data, setData] = useState<SiteUiSettingsRow | null>(null);
@@ -11,18 +45,28 @@ export function MasterPlatformSocialSettings() {
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [logoBusy, setLogoBusy] = useState(false);
+  const [bubbleBusy, setBubbleBusy] = useState(false);
   const [iconBusyKey, setIconBusyKey] = useState<string | null>(null);
   const logoInputRef = useRef<HTMLInputElement | null>(null);
+  const bubbleInputRef = useRef<HTMLInputElement | null>(null);
+  const lastPersistedRef = useRef("");
 
   const load = useCallback(async () => {
-    const r = await fetch("/api/master/site-ui", { credentials: "include" });
-    const j = await r.json();
-    if (!r.ok) {
-      setError((j as { error?: string }).error ?? "Could not load settings");
-      return;
+    try {
+      const r = await fetchJson("/api/master/site-ui", { credentials: "include" });
+      const j = await r.json();
+      if (!r.ok) {
+        setError((j as { error?: string }).error ?? "Could not load settings");
+        return;
+      }
+      const row = j as SiteUiSettingsRow;
+      setData(row);
+      lastPersistedRef.current = serializeSiteUiPatch(row);
+      setSaved(true);
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not reach server");
     }
-    setData(j as SiteUiSettingsRow);
-    setError(null);
   }, []);
 
   useEffect(() => {
@@ -106,7 +150,7 @@ export function MasterPlatformSocialSettings() {
     setLogoBusy(true);
     setError(null);
     try {
-      const r = await fetch("/api/master/site-ui/logo", { method: "DELETE", credentials: "include" });
+      const r = await fetchJson("/api/master/site-ui/logo", { method: "DELETE", credentials: "include" });
       const j = await r.json();
       if (!r.ok) throw new Error((j as { error?: string }).error ?? "Remove failed");
       await load();
@@ -117,47 +161,88 @@ export function MasterPlatformSocialSettings() {
     }
   }
 
-  async function save(e: React.FormEvent) {
-    e.preventDefault();
-    if (!data) return;
+  async function uploadCopilotBubble(file: File) {
+    setBubbleBusy(true);
+    setError(null);
+    try {
+      const fd = new FormData();
+      fd.set("file", file);
+      const r = await fetchJson("/api/master/site-ui/copilot-bubble", {
+        method: "POST",
+        body: fd,
+        credentials: "include",
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error((j as { error?: string }).error ?? "Upload failed");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setBubbleBusy(false);
+    }
+  }
+
+  async function removeCopilotBubble() {
+    if (!confirm("Remove the Help bubble image? The default 💬 icon will be used again.")) return;
+    setBubbleBusy(true);
+    setError(null);
+    try {
+      const r = await fetchJson("/api/master/site-ui/copilot-bubble", {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error((j as { error?: string }).error ?? "Remove failed");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Remove failed");
+    } finally {
+      setBubbleBusy(false);
+    }
+  }
+
+  const persistSettings = useCallback(async (payload: SiteUiSettingsRow) => {
+    const serialized = serializeSiteUiPatch(payload);
+    if (serialized === lastPersistedRef.current) return;
+
     setBusy(true);
     setError(null);
-    setSaved(false);
     try {
       const r = await fetch("/api/master/site-ui", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          socialLinks: data.socialLinks,
-          shareEnabled: data.shareEnabled,
-          shareDefaultTitle: data.shareDefaultTitle,
-          shareDefaultText: data.shareDefaultText,
-          supportPhone: data.supportPhone,
-          supportEmail: data.supportEmail,
-          footerIntro: data.footerIntro,
-          footerMode: data.footerMode,
-          footerPathList: data.footerPathList,
-          footerShowQuickLinks: data.footerShowQuickLinks,
-          footerCopyrightVisible: data.footerCopyrightVisible,
-          homeScreenEnabled: data.homeScreenEnabled,
-          homeScreenShowOnHome: data.homeScreenShowOnHome,
-          homeScreenTitle: data.homeScreenTitle,
-          homeScreenShortName: data.homeScreenShortName,
-          homeScreenDescription: data.homeScreenDescription,
-          homeScreenThemeColor: data.homeScreenThemeColor,
-        }),
+        body: serialized,
       });
       const j = await r.json();
       if (!r.ok) throw new Error((j as { error?: string }).error ?? "Save failed");
-      setData(j as SiteUiSettingsRow);
+      const row = j as SiteUiSettingsRow;
+      setData(row);
+      lastPersistedRef.current = serializeSiteUiPatch(row);
       setSaved(true);
+      notifySiteUiUpdated();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
     } finally {
       setBusy(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    if (!data) return;
+    const serialized = serializeSiteUiPatch(data);
+    if (serialized === lastPersistedRef.current) {
+      setSaved(true);
+      return;
+    }
+
+    setSaved(false);
+    const timer = window.setTimeout(() => {
+      void persistSettings(data);
+    }, AUTO_SAVE_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [data, persistSettings]);
 
   if (!data) {
     return <p className="text-sm text-slate-500">Loading social & share settings…</p>;
@@ -238,34 +323,155 @@ export function MasterPlatformSocialSettings() {
         </div>
       </div>
 
-      {error ? <p className="mt-3 text-sm text-rose-400">{error}</p> : null}
-      {saved ? <p className="mt-3 text-sm text-emerald-400">Saved. Changes are live after the next page load.</p> : null}
-
-      <form onSubmit={save} className="mt-6 space-y-8">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className="text-[11px] font-medium text-slate-500">Support phone (display)</label>
-            <input
-              value={data.supportPhone}
-              onChange={(e) => {
-                setData({ ...data, supportPhone: e.target.value });
-                setSaved(false);
-              }}
-              placeholder="e.g. +256 800 117 000"
-              className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
+      <div className="mt-4 rounded-lg border border-white/10 bg-black/25 p-4">
+        <p className="text-xs font-semibold text-sky-100">Help copilot bubble image</p>
+        <p className="mt-1 text-[11px] text-slate-500">
+          Shown on the floating <strong className="text-slate-400">Help</strong> button across pay, tuition, admin, and
+          URAPearls. PNG, JPEG, or WebP · max 512KB · square/circular crop works best. Served at{" "}
+          <code className="text-slate-400">/api/platform/copilot-bubble</code>
+        </p>
+        <div className="mt-4 flex flex-wrap items-center gap-4">
+          {data.hasCopilotBubbleImage && data.copilotBubbleImageUrl ? (
+            <Image
+              src={data.copilotBubbleImageUrl}
+              alt="Help bubble preview"
+              width={72}
+              height={72}
+              unoptimized
+              className="h-[72px] w-[72px] rounded-full border border-white/15 bg-black/40 object-cover"
             />
+          ) : (
+            <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full border border-dashed border-white/20 bg-black/30 text-2xl">
+              💬
+            </div>
+          )}
+          <div className="flex flex-wrap gap-2">
+            <input
+              ref={bubbleInputRef}
+              type="file"
+              accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+              className="sr-only"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                e.target.value = "";
+                if (f) void uploadCopilotBubble(f);
+              }}
+            />
+            <button
+              type="button"
+              disabled={bubbleBusy}
+              onClick={() => bubbleInputRef.current?.click()}
+              className="rounded-lg bg-sky-600 px-4 py-2 text-xs font-semibold text-slate-950 hover:bg-sky-500 disabled:opacity-50"
+            >
+              {bubbleBusy
+                ? "Uploading…"
+                : data.hasCopilotBubbleImage
+                  ? "Replace bubble image"
+                  : "Upload bubble image"}
+            </button>
+            {data.hasCopilotBubbleImage ? (
+              <button
+                type="button"
+                disabled={bubbleBusy}
+                onClick={() => void removeCopilotBubble()}
+                className="rounded-lg border border-white/15 px-4 py-2 text-xs text-slate-300 hover:bg-white/5 disabled:opacity-50"
+              >
+                Remove
+              </button>
+            ) : null}
           </div>
-          <div>
-            <label className="text-[11px] font-medium text-slate-500">Support email</label>
-            <input
-              value={data.supportEmail}
-              onChange={(e) => {
-                setData({ ...data, supportEmail: e.target.value });
-                setSaved(false);
-              }}
-              placeholder="support@example.com"
-              className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
-            />
+        </div>
+      </div>
+
+      {error ? <p className="mt-3 text-sm text-rose-400">{error}</p> : null}
+      <p className="mt-3 text-sm text-slate-400" aria-live="polite">
+        {busy ? (
+          <span className="text-cyan-300">Saving…</span>
+        ) : saved ? (
+          <span className="text-emerald-400">All changes saved — live in Help / support panel.</span>
+        ) : (
+          <span className="text-amber-200/90">Unsaved changes — auto-save in a moment…</span>
+        )}
+      </p>
+
+      <div className="mt-6 space-y-8">
+        <div className="space-y-4 rounded-lg border border-emerald-500/20 bg-emerald-950/15 p-4">
+          <h3 className="text-sm font-semibold text-emerald-100">Support panel (Help / Talk to an agent)</h3>
+          <p className="text-xs text-slate-500">
+            Shown in the copilot “Talk to an agent” section. Toggle each row off to hide without clearing the value.
+            Changes apply immediately after Save (no full page reload). Social platforms below use their own{" "}
+            <strong className="text-slate-400">Support panel</strong> checkbox.
+          </p>
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div>
+              <label className="text-[11px] font-medium text-slate-500">Support phone (display)</label>
+              <input
+                value={data.supportPhone}
+                onChange={(e) => {
+                  setData({ ...data, supportPhone: e.target.value });
+                  setSaved(false);
+                }}
+                placeholder="e.g. +256 800 117 000"
+                className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
+              />
+              <label className="mt-2 inline-flex min-h-[44px] cursor-pointer items-center gap-2 text-xs text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={data.showSupportPhone}
+                  onChange={(e) => {
+                    setData({ ...data, showSupportPhone: e.target.checked });
+                    setSaved(false);
+                  }}
+                />
+                Show in support panel
+              </label>
+            </div>
+            <div>
+              <label className="text-[11px] font-medium text-slate-500">Support email</label>
+              <input
+                value={data.supportEmail}
+                onChange={(e) => {
+                  setData({ ...data, supportEmail: e.target.value });
+                  setSaved(false);
+                }}
+                placeholder="support@example.com"
+                className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
+              />
+              <label className="mt-2 inline-flex min-h-[44px] cursor-pointer items-center gap-2 text-xs text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={data.showSupportEmail}
+                  onChange={(e) => {
+                    setData({ ...data, showSupportEmail: e.target.checked });
+                    setSaved(false);
+                  }}
+                />
+                Show in support panel
+              </label>
+            </div>
+            <div>
+              <label className="text-[11px] font-medium text-slate-500">Community Support (WhatsApp group)</label>
+              <input
+                value={data.communitySupportUrl}
+                onChange={(e) => {
+                  setData({ ...data, communitySupportUrl: e.target.value });
+                  setSaved(false);
+                }}
+                placeholder="https://chat.whatsapp.com/…"
+                className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
+              />
+              <label className="mt-2 inline-flex min-h-[44px] cursor-pointer items-center gap-2 text-xs text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={data.showCommunitySupport}
+                  onChange={(e) => {
+                    setData({ ...data, showCommunitySupport: e.target.checked });
+                    setSaved(false);
+                  }}
+                />
+                Show in support panel
+              </label>
+            </div>
           </div>
         </div>
 
@@ -588,14 +794,7 @@ export function MasterPlatformSocialSettings() {
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={busy}
-          className="rounded-lg bg-cyan-600 px-5 py-2 text-sm font-semibold text-slate-950 hover:bg-cyan-500 disabled:opacity-50"
-        >
-          {busy ? "Saving…" : "Save all settings"}
-        </button>
-      </form>
+      </div>
     </section>
   );
 }

@@ -1,4 +1,16 @@
-# Error hardening (2026-06-03)
+# Error hardening (2026-06-03, audited 2026-06-05)
+
+## Coverage audit
+
+Run `node scripts/audit-api-error-hardening.cjs` for a live count.
+
+| Metric | Approx. (263 routes) |
+|--------|---------------------|
+| Uses `apiErrorResponse` | ~48 |
+| `catch` without `apiErrorResponse` | ~152 |
+| No `catch` block | ~63 |
+
+**Tuition-critical paths** (checkout, auth, student, receipts, master, knowledge, webhooks) are largely hardened. **Play / game / legacy admin** routes (sync, quiz, tasks, upgrades) often return raw error messages — lower priority for tuition go-live but should be migrated over time.
 
 ## Central helper: `lib/api-error.ts`
 

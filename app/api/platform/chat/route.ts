@@ -36,7 +36,18 @@ export async function GET(req: Request) {
 
     const key = await sessionKey();
     const hub = resolveHub(new URL(req.url));
-    const conversation = await getOrCreateConversation({ sessionKey: key, hub });
+    let conversation: Awaited<ReturnType<typeof getOrCreateConversation>> | null = null;
+    try {
+      conversation = await getOrCreateConversation({ sessionKey: key, hub });
+    } catch (chatErr) {
+      console.warn("[GET /api/platform/chat] conversation load failed", chatErr);
+      return NextResponse.json({
+        conversationId: null,
+        hub,
+        messages: [],
+        degraded: true,
+      });
+    }
 
     const res = NextResponse.json({
       conversationId: conversation.id,

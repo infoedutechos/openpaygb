@@ -8,6 +8,7 @@ import { SiteChromeFooter } from "@/components/SiteChromeFooter";
 import { ShareFab } from "@/components/ShareFab";
 import PlatformAssistShell from "@/components/platform/PlatformAssistShell";
 import { ConditionalSiteBottomNav } from "@/components/ConditionalSiteBottomNav";
+import { PwaRefreshButton } from "@/components/PwaRefreshButton";
 import { buildRootMetadata } from "@/lib/root-metadata";
 import { resolveRequestSiteOrigin } from "@/lib/request-site-origin";
 import { getPublicSiteUiSettings } from "@/lib/site-ui-settings";
@@ -21,8 +22,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const siteUi = await getPublicSiteUiSettings();
   return (
-    <html lang="en">
-      <body className="min-h-dvh antialiased flex flex-col">
+    <html lang="en" suppressHydrationWarning>
+      <body className="min-h-dvh antialiased flex flex-col" suppressHydrationWarning>
         <PlatformSocialProvider initial={siteUi}>
           <TonConnectAppProvider>
             <ConditionalSiteHeaderServer />
@@ -30,6 +31,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <SiteChromeFooter settings={siteUi} />
             <ConditionalSiteBottomNav />
             <ShareFab />
+            <PwaRefreshButton />
             <PlatformAssistShell />
           </TonConnectAppProvider>
         </PlatformSocialProvider>

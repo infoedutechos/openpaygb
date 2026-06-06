@@ -6,10 +6,7 @@ import {
   type TonConnectUiProviderExtras,
 } from "@/lib/tonconnect-ui-options";
 
-/** Localhost wallet restriction — computed on first client render (no empty-then-update remount). */
+/** Bundled wallet list — same on server and client (no empty-then-update remount). */
 export function useTonConnectUiExtras(): TonConnectUiProviderExtras {
-  return useMemo(() => {
-    if (typeof window === "undefined") return {};
-    return getTonConnectUiProviderExtras(window.location.hostname);
-  }, []);
+  return useMemo(() => getTonConnectUiProviderExtras(), []);
 }

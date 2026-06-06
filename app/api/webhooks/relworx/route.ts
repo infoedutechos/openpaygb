@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { confirmRelworxPaymentIfEligible } from "@/lib/relworx/confirm-payment";
+import { confirmOpenPayCardTopupFromRelworx } from "@/lib/openpay-card-momo-topup";
 import { relworxCustomerReference } from "@/lib/relworx/client";
 import { relworxWebhookAuthorized } from "@/lib/relworx/verify-webhook-signature";
 import { getRelworxWebhookUrl } from "@/lib/relworx/webhook-url";
@@ -66,6 +67,17 @@ export async function POST(req: Request) {
     }
 
     const internal = internal_reference.trim();
+    const topupResult = await confirmOpenPayCardTopupFromRelworx(ref, {
+      status: payload.status,
+      request_status: payload.request_status,
+      amount: payload.amount,
+      currency: payload.currency,
+      internal_reference: payload.internal_reference,
+    });
+    if (topupResult.action === "card_topup_confirmed" || topupResult.action === "already_confirmed") {
+      return NextResponse.json({ ok: true, action: topupResult.action, cardTopupId: ref });
+    }
+
     const payment = await withPrismaRetry(() =>
       prisma.payment.findFirst({
         where: {
@@ -76,7 +88,11 @@ export async function POST(req: Request) {
     );
 
     if (!payment) {
-      return NextResponse.json({ ok: true, action: "unknown_reference", reference: ref });
+      return NextResponse.json({
+        ok: true,
+        action: topupResult.action !== "unknown_topup" ? topupResult.action : "unknown_reference",
+        reference: ref,
+      });
     }
 
     const result = await confirmRelworxPaymentIfEligible(payment, {

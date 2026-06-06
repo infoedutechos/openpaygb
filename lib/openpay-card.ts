@@ -77,6 +77,28 @@ export async function creditOpenPayCardBalance(cardId: string, amountUgx: number
   });
 }
 
+/** Idempotent confirm — used by TON scan and MoMo webhooks. */
+export async function confirmOpenPayCardTopup(
+  topupId: string,
+  txHash: string,
+): Promise<boolean> {
+  const topup = await prisma.openPayCardTopup.findUnique({ where: { id: topupId } });
+  if (!topup || topup.status === "confirmed") return false;
+
+  await prisma.$transaction(async (tx) => {
+    const updated = await tx.openPayCardTopup.updateMany({
+      where: { id: topupId, status: "pending" },
+      data: { status: "confirmed", txHash },
+    });
+    if (updated.count !== 1) throw new Error("topup already confirmed");
+    await tx.openPayCard.update({
+      where: { id: topup.cardId },
+      data: { balanceUgx: { increment: topup.amountUgx } },
+    });
+  });
+  return true;
+}
+
 export async function payTuitionFromOpenPayCard(opts: {
   studentId: string;
   programmeCode: string;

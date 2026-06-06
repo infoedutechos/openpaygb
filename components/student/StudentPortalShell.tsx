@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton";
 
 export type StudentPortalShellMode = "my" | "student";
 
@@ -70,6 +71,7 @@ export function StudentPortalShell({
               {item.label}
             </Link>
           ))}
+          <DashboardChatNavButton variant="student" />
         </nav>
         <button
           type="button"
@@ -106,6 +108,7 @@ export function StudentPortalShell({
                 {item.label}
               </Link>
             ))}
+            <DashboardChatNavButton variant="student" compact />
           </nav>
         </header>
         <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 md:max-w-4xl md:py-8">{children}</div>

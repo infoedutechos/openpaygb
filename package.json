@@ -25,6 +25,7 @@
     "docs:tree:write": "node scripts/print-folder-tree.cjs --prune-game --out docs/FOLDER_TREE_SNAPSHOT.txt",
     "docs:inventory": "node scripts/export-api-inventory.cjs",
     "docs:serve": "npx serve docs -p 8787",
+    "docs:build-index": "node scripts/build-docs-manifest.mjs",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",

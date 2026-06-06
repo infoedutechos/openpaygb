@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { withPrismaRetry } from "@/lib/prisma-retry";
+import { recordKnowledgeLearningGap } from "@/lib/knowledge-base/continuous-learning";
 import { composeCopilotReply } from "@/lib/knowledge-base/copilot-reply";
 import type { PlatformHub } from "@/lib/knowledge-base/types";
 
@@ -45,6 +46,9 @@ export async function appendChatTurn(opts: {
   hub: PlatformHub;
 }) {
   const copilot = await composeCopilotReply(opts.userMessage, opts.hub);
+  if (copilot.source === "fallback") {
+    void recordKnowledgeLearningGap({ query: opts.userMessage, hub: opts.hub }).catch(() => undefined);
+  }
 
   await withPrismaRetry(() =>
     prisma.chatMessage.create({

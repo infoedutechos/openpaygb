@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { OPEN_PAY_BRAND } from "@/lib/open-pay-brand";
+import { fetchJson } from "@/utils/fetch-json";
 import { readJsonResponse } from "@/utils/read-json-response";
 
 type Settings = {
@@ -17,12 +18,20 @@ export function MasterOpenPayCardSettings() {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const r = await fetch("/api/master/openpay-card-settings", { credentials: "include" });
-    const parsed = await readJsonResponse<Settings>(r);
-    if (!parsed.ok) return;
-    setSettings(parsed.data);
-    setEnabled(parsed.data.enabled);
-    setFeeDraft(String(parsed.data.issueFeeTon));
+    try {
+      const r = await fetchJson("/api/master/openpay-card-settings", { credentials: "include" });
+      const parsed = await readJsonResponse<Settings>(r);
+      if (!parsed.ok) {
+        setError(parsed.error);
+        return;
+      }
+      setSettings(parsed.data);
+      setEnabled(parsed.data.enabled);
+      setFeeDraft(String(parsed.data.issueFeeTon));
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not load card settings");
+    }
   }, []);
 
   useEffect(() => {

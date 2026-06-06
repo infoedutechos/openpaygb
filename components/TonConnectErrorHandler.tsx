@@ -3,7 +3,11 @@
 import { useEffect } from 'react';
 import { useToast } from '@/contexts/ToastContext';
 import { isClientFetchNetworkError } from '@/lib/client-fetch-error';
-import { isTonConnectBridgeConsoleNoise } from '@/lib/tonconnect-ui-options';
+import {
+  isTonConnectAnalyticsNoise,
+  isTonConnectBridgeConsoleNoise,
+  isTonConnectWalletsListFetchNoise,
+} from '@/lib/tonconnect-ui-options';
 
 const MANIFEST_HELP =
   'TON wallet could not load this app. Check your network, enable automatic date/time, or clear Telegram cache. Open the app from the same URL your admin configured.';
@@ -47,11 +51,15 @@ export function TonConnectErrorHandler({ children, onManifestError }: Props) {
         !msg ||
         isBenignTonConnectAbort(msg) ||
         isTonConnectBridgeConsoleNoise(msg) ||
+        isTonConnectWalletsListFetchNoise(event.reason) ||
+        isTonConnectAnalyticsNoise(event.reason) ||
         (process.env.NODE_ENV === "development" && isClientFetchNetworkError(event.reason))
       ) {
         if (
           isBenignTonConnectAbort(msg) ||
           isTonConnectBridgeConsoleNoise(msg) ||
+          isTonConnectWalletsListFetchNoise(event.reason) ||
+          isTonConnectAnalyticsNoise(event.reason) ||
           (process.env.NODE_ENV === "development" && isClientFetchNetworkError(event.reason))
         ) {
           event.preventDefault();

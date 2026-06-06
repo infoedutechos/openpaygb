@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   getTonConnectUiProviderExtras,
+  isTonConnectAnalyticsNoise,
   isTonConnectBridgeConsoleNoise,
+  isTonConnectWalletsListFetchNoise,
 } from "@/lib/tonconnect-ui-options";
 
 describe("isTonConnectBridgeConsoleNoise", () => {
@@ -32,15 +34,42 @@ describe("isTonConnectBridgeConsoleNoise", () => {
       ),
     ).toBe(true);
   });
+
+  it("detects wallets list CDN failures in console text", () => {
+    expect(
+      isTonConnectBridgeConsoleNoise(
+        "Failed to fetch https://config.ton.org/wallets-v2.json",
+      ),
+    ).toBe(true);
+  });
+});
+
+describe("isTonConnectWalletsListFetchNoise", () => {
+  it("detects wallets list fetch rejections from TonConnect SDK", () => {
+    const err = new TypeError("Failed to fetch");
+    err.stack =
+      "TypeError: Failed to fetch\n    at WalletsListManager.fetchWalletsListFromSource";
+    expect(isTonConnectWalletsListFetchNoise(err)).toBe(true);
+  });
+
+  it("ignores unrelated fetch failures", () => {
+    const err = new TypeError("Failed to fetch");
+    err.stack = "TypeError: Failed to fetch\n    at loadUser (/app/api/user)";
+    expect(isTonConnectWalletsListFetchNoise(err)).toBe(false);
+  });
+});
+
+describe("isTonConnectAnalyticsNoise", () => {
+  it("detects analytics API failures", () => {
+    const err = new Error("[TON_CONNECT_SDK_ERROR] TonConnectError\nAnalytics API error: 400");
+    expect(isTonConnectAnalyticsNoise(err)).toBe(true);
+  });
 });
 
 describe("getTonConnectUiProviderExtras", () => {
-  it("limits wallets on localhost", () => {
-    const extras = getTonConnectUiProviderExtras("localhost");
+  it("bundles wallets for connect modal", () => {
+    const extras = getTonConnectUiProviderExtras();
     expect(extras.walletsListConfiguration?.includeWallets?.length).toBe(3);
-  });
-
-  it("returns empty on production host", () => {
-    expect(getTonConnectUiProviderExtras("pay.odelhub.com")).toEqual({});
+    expect(extras.analytics?.mode).toBe("off");
   });
 });

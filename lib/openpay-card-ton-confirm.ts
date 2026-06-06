@@ -3,7 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { defaultTonWallet } from "@/lib/constants";
 import { tonToNanotonString } from "@/lib/money";
-import { activateOpenPayCard, platformTonWalletForCardOps } from "@/lib/openpay-card";
+import { activateOpenPayCard, confirmOpenPayCardTopup, platformTonWalletForCardOps } from "@/lib/openpay-card";
 import {
   fetchAccountTransactionsRecent,
   txHash,
@@ -18,24 +18,6 @@ export type OpenPayCardTonConfirmResult = {
   topupsConfirmed: number;
   message?: string;
 };
-
-async function confirmTopup(topupId: string, hash: string): Promise<boolean> {
-  const topup = await prisma.openPayCardTopup.findUnique({ where: { id: topupId } });
-  if (!topup || topup.status === "confirmed") return false;
-
-  await prisma.$transaction(async (tx) => {
-    const updated = await tx.openPayCardTopup.updateMany({
-      where: { id: topupId, status: "pending" },
-      data: { status: "confirmed", txHash: hash },
-    });
-    if (updated.count !== 1) throw new Error("topup already confirmed");
-    await tx.openPayCard.update({
-      where: { id: topup.cardId },
-      data: { balanceUgx: { increment: topup.amountUgx } },
-    });
-  });
-  return true;
-}
 
 /**
  * Scan platform TON wallet for `opcard:` (issue) and `opcardfund:` (balance top-up) memos.
@@ -53,7 +35,7 @@ export async function runOpenPayCardTonConfirmJob(): Promise<OpenPayCardTonConfi
       select: { id: true, issueFeeTon: true, issueMemo: true, createdAt: true },
     }),
     prisma.openPayCardTopup.findMany({
-      where: { status: "pending", memo: { not: "" } },
+      where: { status: "pending", fundingRail: "ton", memo: { not: "" } },
       take: 100,
       select: { id: true, cardId: true, tonAmount: true, memo: true, createdAt: true },
     }),
@@ -110,7 +92,7 @@ export async function runOpenPayCardTonConfirmJob(): Promise<OpenPayCardTonConfi
       if (nano === null || nano !== expectedNano) continue;
       if (txUtimeMs(tx) < minTime) continue;
 
-      const ok = await confirmTopup(topup.id, h);
+      const ok = await confirmOpenPayCardTopup(topup.id, h);
       if (ok) {
         topupsConfirmed++;
         usedHashes.add(h);

@@ -26,6 +26,10 @@ export function usePlatformSocial(): PublicSiteUiSettings {
       shareDefaultText: "",
       supportPhone: "",
       supportEmail: "",
+      communitySupportUrl: "",
+      showSupportPhone: true,
+      showSupportEmail: true,
+      showCommunitySupport: true,
       footerIntro: "",
       footerShowQuickLinks: true,
       footerCopyrightVisible: true,
@@ -39,6 +43,8 @@ export function usePlatformSocial(): PublicSiteUiSettings {
       homeScreenThemeColor: "#0ea5e9",
       hasPlatformLogo: false,
       platformLogoUrl: null,
+      hasCopilotBubbleImage: false,
+      copilotBubbleImageUrl: null,
     };
   }
   return ctx;

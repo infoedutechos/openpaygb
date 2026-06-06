@@ -12,14 +12,17 @@ import { MasterMobileMoneyProviders } from "@/components/admin/MasterMobileMoney
 import { MasterSchoolWorkspaceRegistrationSettings } from "@/components/admin/MasterSchoolWorkspaceRegistrationSettings";
 import { MasterPlatformCheckoutFeeSettings } from "@/components/admin/MasterPlatformCheckoutFeeSettings";
 import { MasterOpenPayCardSettings } from "@/components/admin/MasterOpenPayCardSettings";
+import { MasterOpenPayCardsOverview } from "@/components/admin/MasterOpenPayCardsOverview";
 import { MasterDeploymentEnvSettings } from "@/components/admin/MasterDeploymentEnvSettings";
 import { MasterKnowledgeBaseSettings } from "@/components/admin/MasterKnowledgeBaseSettings";
+import { MasterHubMaintenanceSettings } from "@/components/admin/MasterHubMaintenanceSettings";
 import { readJsonResponse } from "@/utils/read-json-response";
 
 type MasterSummary = {
   organizations: { active: number; pending: number; rejected: number; total: number };
   tuition: { totalStudents: number; totalPayments: number; totalCollectionsTon: number };
   platformAdmins: { orgAdmins: number };
+  openPayCards?: { active: number; totalBalanceUgx: number };
 };
 
 type UnsetProgrammeCount = { count: number };
@@ -90,6 +93,21 @@ export default function MasterManagerOverviewPage() {
         <MetricCard label="Payments (all orgs)" value={String(data.tuition.totalPayments)} hint="All rails" />
       </div>
 
+      {data.openPayCards ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Link
+            href="/admin/master#openpay-cards-overview"
+            className="rounded-xl border border-violet-500/30 bg-violet-950/20 p-4 hover:border-violet-400/45 transition-colors"
+          >
+            <p className="text-xs uppercase tracking-wide text-violet-300/80">Virtual cards (active)</p>
+            <p className="mt-2 text-2xl font-semibold tabular-nums text-white">{data.openPayCards.active}</p>
+            <p className="mt-1 text-[11px] text-slate-500">
+              UGX {data.openPayCards.totalBalanceUgx.toLocaleString()} total balance · View registry ↓
+            </p>
+          </Link>
+        </div>
+      ) : null}
+
       {unsetProgrammes && unsetProgrammes.count > 0 ? (
         <section className="rounded-xl border border-amber-500/35 bg-amber-950/30 p-5">
           <h2 className="text-sm font-semibold text-amber-100">Programme duration setup pending</h2>
@@ -156,10 +174,22 @@ export default function MasterManagerOverviewPage() {
           Environment
         </Link>
         <Link
+          href="/admin/master#platform-communications"
+          className="rounded-xl border border-sky-500/35 bg-sky-950/25 px-5 py-2.5 text-sm font-medium text-sky-100 hover:border-sky-400/55"
+        >
+          Chat & notifications
+        </Link>
+        <Link
           href="/admin/master#knowledge-base"
           className="rounded-xl border border-emerald-500/35 bg-emerald-950/25 px-5 py-2.5 text-sm font-medium text-emerald-100 hover:border-emerald-400/55"
         >
           Knowledge base
+        </Link>
+        <Link
+          href="/admin/master#openpay-cards-overview"
+          className="rounded-xl border border-violet-500/35 bg-violet-950/25 px-5 py-2.5 text-sm font-medium text-violet-100 hover:border-violet-400/55"
+        >
+          Virtual cards
         </Link>
         <Link
           href="/admin/master#mobile-money-providers"
@@ -195,11 +225,15 @@ export default function MasterManagerOverviewPage() {
 
       <MasterDeploymentEnvSettings />
 
+      <MasterHubMaintenanceSettings />
+
       <MasterKnowledgeBaseSettings />
 
       <MasterPlatformCheckoutFeeSettings />
 
       <MasterOpenPayCardSettings />
+
+      <MasterOpenPayCardsOverview />
 
       <MasterSchoolWorkspaceRegistrationSettings />
 

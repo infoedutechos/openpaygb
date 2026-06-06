@@ -81,9 +81,31 @@ export type StudentDetailProps = {
   totalUgx: number;
   payments: StudentPaymentRow[];
   balance?: TuitionBalanceData | null;
+  openPayCardEnabled?: boolean;
+  openPayCard?: {
+    status: string;
+    maskedPan: string;
+    balanceUgx: number;
+    issuedAt: string | null;
+    topupCount: number;
+  } | null;
 };
 
-export function StudentDetailView({ student, totalTon, totalUgx, payments, balance }: StudentDetailProps) {
+function openPayCardStatusLabel(status: string): string {
+  if (status === "active") return "Active";
+  if (status === "pending_issue") return "Pending issue";
+  return status.replace(/_/g, " ");
+}
+
+export function StudentDetailView({
+  student,
+  totalTon,
+  totalUgx,
+  payments,
+  balance,
+  openPayCardEnabled = false,
+  openPayCard = null,
+}: StudentDetailProps) {
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
 
@@ -149,6 +171,47 @@ export function StudentDetailView({ student, totalTon, totalUgx, payments, balan
             />
           </div>
         </div>
+
+        {openPayCardEnabled ? (
+          <div className="mt-6 rounded-lg border border-indigo-200 bg-indigo-50/60 px-5 py-4">
+            <p className="text-sm font-semibold text-indigo-900">OpenPayGB virtual card</p>
+            {openPayCard ? (
+              <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
+                <div>
+                  <dt className="text-xs font-medium uppercase tracking-wide text-indigo-600/80">Card</dt>
+                  <dd className="mt-0.5 font-mono text-indigo-950">{openPayCard.maskedPan || "—"}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium uppercase tracking-wide text-indigo-600/80">Status</dt>
+                  <dd className="mt-0.5 text-indigo-950">{openPayCardStatusLabel(openPayCard.status)}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium uppercase tracking-wide text-indigo-600/80">Balance</dt>
+                  <dd className="mt-0.5 font-semibold tabular-nums text-indigo-950">
+                    UGX {openPayCard.balanceUgx.toLocaleString()}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium uppercase tracking-wide text-indigo-600/80">Top-ups</dt>
+                  <dd className="mt-0.5 text-indigo-950">{openPayCard.topupCount}</dd>
+                </div>
+                {openPayCard.issuedAt ? (
+                  <div className="sm:col-span-2">
+                    <dt className="text-xs font-medium uppercase tracking-wide text-indigo-600/80">Issued</dt>
+                    <dd className="mt-0.5 text-indigo-950">{formatDate(openPayCard.issuedAt)}</dd>
+                  </div>
+                ) : null}
+              </dl>
+            ) : (
+              <p className="mt-2 text-sm text-indigo-800/90">
+                This student has not opted in to an OpenPayGB card yet.
+              </p>
+            )}
+            <p className="mt-3 text-xs text-indigo-700/80">
+              Read-only view for school admins. Students manage top-ups from their portal.
+            </p>
+          </div>
+        ) : null}
 
         {balance ? (
           <div className="mt-6">

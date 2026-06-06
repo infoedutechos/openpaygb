@@ -14,6 +14,8 @@ export async function GET() {
     totalStudents,
     orgAdminCount,
     tonAgg,
+    activeCards,
+    cardBalanceAgg,
   ] = await Promise.all([
     prisma.organization.count({ where: { tenantStatus: "active" } }),
     prisma.organization.count({ where: { tenantStatus: "pending" } }),
@@ -24,6 +26,11 @@ export async function GET() {
     prisma.payment.aggregate({
       where: { status: "confirmed" },
       _sum: { tonAmount: true },
+    }),
+    prisma.openPayCard.count({ where: { status: "active" } }),
+    prisma.openPayCard.aggregate({
+      where: { status: "active" },
+      _sum: { balanceUgx: true },
     }),
   ]);
 
@@ -43,6 +50,10 @@ export async function GET() {
     },
     platformAdmins: {
       orgAdmins: orgAdminCount,
+    },
+    openPayCards: {
+      active: activeCards,
+      totalBalanceUgx: cardBalanceAgg._sum.balanceUgx ?? 0,
     },
   });
 }

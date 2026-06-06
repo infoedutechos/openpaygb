@@ -1,5 +1,6 @@
 import { PUBLIC_SCHOOL_LOGIN_PATH } from "@/lib/admin-auth-entry";
 import { absoluteUrl } from "@/lib/public-url";
+import { sendTransactionalEmail } from "@/lib/transactional-email";
 
 function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -47,48 +48,22 @@ export function buildOrgAdminInviteEmailText(details: OrgAdminInviteEmailDetails
   ].join("\n");
 }
 
-/** Sends school admin invite via Resend with a one-time password-set link. */
+/** Sends school admin invite via Brevo or Resend with a one-time password-set link. */
 export async function sendOrgAdminInviteEmail(
   details: OrgAdminInviteEmailDetails,
 ): Promise<boolean> {
-  const { deploymentEnv, warmDeploymentEnvCache } = await import("@/lib/deployment-env-resolve");
-  await warmDeploymentEnvCache();
-  const apiKey = deploymentEnv("RESEND_API_KEY");
-  const from = deploymentEnv("RESEND_FROM");
   const loginUrl = absoluteUrl(PUBLIC_SCHOOL_LOGIN_PATH);
 
-  if (!apiKey || !from) {
-    if (process.env.NODE_ENV !== "production") {
-      console.warn(
-        "[org-admin-invite] RESEND not configured; reset link for",
-        details.adminEmail,
-        details.resetUrl,
-      );
-    } else {
-      console.error("[org-admin-invite] RESEND_API_KEY / RESEND_FROM missing");
-    }
-    return false;
-  }
-
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from,
-      to: [details.adminEmail],
-      subject: `ODEL HUB — set your password for ${details.schoolName}`,
-      html: buildOrgAdminInviteEmailHtml(details, loginUrl),
-      text: buildOrgAdminInviteEmailText(details, loginUrl),
-    }),
+  const sent = await sendTransactionalEmail({
+    to: details.adminEmail,
+    subject: `ODEL HUB — set your password for ${details.schoolName}`,
+    html: buildOrgAdminInviteEmailHtml(details, loginUrl),
+    text: buildOrgAdminInviteEmailText(details, loginUrl),
+    logTag: "[org-admin-invite]",
   });
 
-  if (!res.ok) {
-    const err = await res.text();
-    console.error("[org-admin-invite]", res.status, err);
-    return false;
+  if (!sent && process.env.NODE_ENV !== "production") {
+    console.warn("[org-admin-invite] reset link (dev fallback):", details.adminEmail, details.resetUrl);
   }
-  return true;
+  return sent;
 }

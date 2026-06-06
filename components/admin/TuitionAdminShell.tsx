@@ -10,11 +10,13 @@ import { RequestSchoolWorkspaceCta } from "@/components/tuition/RequestSchoolWor
 import { PUBLIC_SCHOOL_LOGIN_PATH } from "@/lib/admin-auth-entry";
 import { invalidateAuthMeCache, useAuthMe } from "@/hooks/useAuthMe";
 import { DbDegradedBanner } from "@/components/admin/DbDegradedBanner";
+import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton";
 
 const SEGMENTS: { suffix: string; label: string }[] = [
   { suffix: "", label: "Dashboard" },
   { suffix: "/students", label: "Students" },
   { suffix: "/payments", label: "Payments" },
+  { suffix: "/virtual-cards", label: "Virtual cards" },
   { suffix: "/programmes", label: "Programs" },
   { suffix: "/receipts", label: "Receipts" },
   { suffix: "/reports", label: "Reports" },
@@ -83,6 +85,7 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
               {item.label}
             </Link>
           ))}
+          <DashboardChatNavButton variant="tuition" />
         </nav>
         {isMaster ? (
           <Link
@@ -136,6 +139,7 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
                 {item.label}
               </Link>
             ))}
+            <DashboardChatNavButton variant="tuition" compact />
           </nav>
         </header>
         <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 md:py-8">

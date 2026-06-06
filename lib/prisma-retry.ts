@@ -6,6 +6,7 @@ const TRANSIENT_PATTERNS = [
   "ReplicaSetNoPrimary",
   "Raw query failed",
   "PrismaClientInitializationError",
+  "PrismaClientUnknownRequestError",
   "MongoServerSelectionError",
   "MongoNetworkError",
   "connection was forcibly closed",
@@ -17,10 +18,22 @@ const TRANSIENT_PATTERNS = [
   "ECONNRESET",
   "ETIMEDOUT",
   "ENOTFOUND",
+  "Response from the Engine was empty",
+  "Engine is not yet connected",
   "zimtvpl.mongodb",
   "mongodb.net",
   "-shard-00-",
 ] as const;
+
+export function isPrismaEngineEmptyError(err: unknown): boolean {
+  const name = (err as { name?: string })?.name ?? "";
+  const msg = String((err as { message?: string })?.message ?? err ?? "");
+  return (
+    name === "PrismaClientUnknownRequestError" ||
+    msg.includes("Response from the Engine was empty") ||
+    msg.includes("Engine is not yet connected")
+  );
+}
 
 /** User-facing copy for APIs and banners when Atlas is unreachable. */
 export const DB_UNAVAILABLE_MESSAGE =

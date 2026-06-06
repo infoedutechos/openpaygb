@@ -1,6 +1,8 @@
 'use client';
 
+import '@/lib/tonconnect-console-quiet-install';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
+import { useTonConnectConnector } from '@/hooks/useTonConnectConnector';
 import { useTonConnectManifestUrl } from '@/hooks/useTonConnectManifestUrl';
 import { useTonConnectUiExtras } from '@/hooks/useTonConnectUiExtras';
 import { TonConnectBridgeConsoleQuiet } from '@/components/TonConnectBridgeConsoleQuiet';
@@ -16,12 +18,25 @@ type Props = {
   showManifestHelp?: boolean;
 };
 
-export function TonConnectShell({ children, syncWallet = false, showManifestHelp = true }: Props) {
+function TonConnectShellInner({
+  children,
+  syncWallet = false,
+  showManifestHelp = true,
+}: Props) {
   const manifestUrl = useTonConnectManifestUrl();
+  const connector = useTonConnectConnector(manifestUrl);
   const uiExtras = useTonConnectUiExtras();
 
+  if (!connector) {
+    return (
+      <ToastProvider>
+        {children}
+      </ToastProvider>
+    );
+  }
+
   return (
-    <TonConnectUIProvider key={manifestUrl} manifestUrl={manifestUrl} {...uiExtras}>
+    <TonConnectUIProvider key={manifestUrl} connector={connector} restoreConnection {...uiExtras}>
       <TonConnectBridgeConsoleQuiet />
       <ToastProvider>
         <TonConnectErrorHandler>
@@ -32,4 +47,8 @@ export function TonConnectShell({ children, syncWallet = false, showManifestHelp
       </ToastProvider>
     </TonConnectUIProvider>
   );
+}
+
+export function TonConnectShell(props: Props) {
+  return <TonConnectShellInner {...props} />;
 }

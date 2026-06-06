@@ -66,6 +66,10 @@ export type SiteUiSettingsRow = {
   shareDefaultText: string;
   supportPhone: string;
   supportEmail: string;
+  communitySupportUrl: string;
+  showSupportPhone: boolean;
+  showSupportEmail: boolean;
+  showCommunitySupport: boolean;
   homeScreenEnabled: boolean;
   homeScreenShowOnHome: boolean;
   homeScreenTitle: string;
@@ -75,6 +79,9 @@ export type SiteUiSettingsRow = {
   hasPlatformLogo: boolean;
   platformLogoUploadedAt: string | null;
   platformLogoUrl: string | null;
+  hasCopilotBubbleImage: boolean;
+  copilotBubbleImageUploadedAt: string | null;
+  copilotBubbleImageUrl: string | null;
 };
 
 export type PublicSiteUiSettings = Pick<
@@ -85,6 +92,10 @@ export type PublicSiteUiSettings = Pick<
   | "shareDefaultText"
   | "supportPhone"
   | "supportEmail"
+  | "communitySupportUrl"
+  | "showSupportPhone"
+  | "showSupportEmail"
+  | "showCommunitySupport"
   | "footerIntro"
   | "footerShowQuickLinks"
   | "footerCopyrightVisible"
@@ -98,6 +109,8 @@ export type PublicSiteUiSettings = Pick<
   | "homeScreenThemeColor"
   | "hasPlatformLogo"
   | "platformLogoUrl"
+  | "hasCopilotBubbleImage"
+  | "copilotBubbleImageUrl"
 >;
 
 function envTelegramSupportUrl(): string {
@@ -200,6 +213,10 @@ export const MasterSiteUiPatchSchema = z.object({
   shareDefaultText: z.string().max(500),
   supportPhone: z.string().max(40),
   supportEmail: z.string().max(120),
+  communitySupportUrl: z.string().max(2048),
+  showSupportPhone: z.boolean(),
+  showSupportEmail: z.boolean(),
+  showCommunitySupport: z.boolean(),
   footerIntro: z.string().max(2000),
   footerMode: z.enum(FOOTER_MODES),
   footerPathList: z.array(z.string().max(120)).max(40),

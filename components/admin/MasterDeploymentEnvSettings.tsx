@@ -230,14 +230,26 @@ export function MasterDeploymentEnvSettings() {
             override. Secrets are never shown in full after save.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => void runProbe()}
-          disabled={probing || loading}
-          className="rounded-lg border border-indigo-500/40 bg-indigo-950/40 px-3 py-2 text-xs font-medium text-indigo-100 hover:border-indigo-400/60 disabled:opacity-50"
-        >
-          {probing ? "Probing PSP APIs…" : "Probe LivePay / Relworx"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => void runProbe()}
+            disabled={probing || loading}
+            className="rounded-lg border border-indigo-500/40 bg-indigo-950/40 px-3 py-2 text-xs font-medium text-indigo-100 hover:border-indigo-400/60 disabled:opacity-50"
+          >
+            {probing ? "Probing PSP APIs…" : "Probe LivePay / Relworx"}
+          </button>
+          <a
+            href="/api/master/deployment-env/export"
+            className="rounded-lg border border-emerald-500/40 bg-emerald-950/30 px-3 py-2 text-xs font-medium text-emerald-100 hover:border-emerald-400/60"
+          >
+            Export for Vercel (.env)
+          </a>
+        </div>
+        <p className="mt-2 text-xs text-amber-200/90">
+          Export includes real secret values (merged dashboard + server env). Import at Vercel → Settings →
+          Environment Variables. Do not commit or share the downloaded file.
+        </p>
       </div>
 
       {error ? <p className="mt-3 text-sm text-rose-400">{error}</p> : null}

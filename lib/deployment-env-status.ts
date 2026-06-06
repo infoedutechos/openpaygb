@@ -174,10 +174,15 @@ function defaultGroupHealth(id: string): { healthy: boolean | null; note: string
       };
     }
     case "email": {
-      const ok = !isProductionRuntime() || (isSet("RESEND_API_KEY") && isSet("RESEND_FROM"));
+      const hasProvider = isSet("BREVO_API_KEY") || isSet("RESEND_API_KEY");
+      const hasFrom =
+        isSet("TRANSACTIONAL_EMAIL_FROM") || isSet("RESEND_FROM") || isSet("BREVO_FROM");
+      const ok = !isProductionRuntime() || (hasProvider && hasFrom);
       return {
         healthy: ok,
-        note: ok ? null : "RESEND_API_KEY and RESEND_FROM required in production.",
+        note: ok
+          ? null
+          : "BREVO_API_KEY or RESEND_API_KEY plus TRANSACTIONAL_EMAIL_FROM (or RESEND_FROM) required in production.",
       };
     }
     default:

@@ -24,6 +24,11 @@ export function OpenPayCardPanel() {
   const [data, setData] = useState<CardStatus | null>(null);
   const [wantCard, setWantCard] = useState(false);
   const [fundUgx, setFundUgx] = useState("50000");
+  const [fundMode, setFundMode] = useState<"ton" | "momo">("momo");
+  const [momoPhone, setMomoPhone] = useState("");
+  const [momoNetwork, setMomoNetwork] = useState<"mtn" | "airtel">("mtn");
+  const [livepayEnabled, setLivepayEnabled] = useState(false);
+  const [relworxEnabled, setRelworxEnabled] = useState(false);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +47,21 @@ export function OpenPayCardPanel() {
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  useEffect(() => {
+    void fetch("/api/public/livepay-config")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => setLivepayEnabled(Boolean(j?.enabled)))
+      .catch(() => setLivepayEnabled(false));
+    void fetch("/api/public/relworx-config")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => setRelworxEnabled(Boolean(j?.enabled)))
+      .catch(() => setRelworxEnabled(false));
+  }, []);
+
+  useEffect(() => {
+    if (livepayEnabled || relworxEnabled) setFundMode("momo");
+  }, [livepayEnabled, relworxEnabled]);
 
   useEffect(() => {
     if (!data?.card || data.card.status !== "pending_issue") return;
@@ -105,6 +125,46 @@ export function OpenPayCardPanel() {
       void reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Wallet payment failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function fundCardMomo() {
+    const amountUgx = parseInt(fundUgx.trim().replace(/,/g, ""), 10);
+    if (Number.isNaN(amountUgx) || amountUgx < 1000) {
+      setError("Enter at least UGX 1,000 to add.");
+      return;
+    }
+    const rail = livepayEnabled ? "livepay" : relworxEnabled ? "relworx" : null;
+    if (!rail) {
+      setError("Mobile money top-up is not available (LivePay / Relworx not configured).");
+      return;
+    }
+    if (!momoPhone.trim()) {
+      setError("Enter your mobile money number.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const r = await fetch("/api/student/openpay-card/fund/momo-start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          amountUgx,
+          rail,
+          phone: momoPhone.trim(),
+          network: rail === "livepay" ? momoNetwork : undefined,
+        }),
+      });
+      const j = (await r.json()) as { error?: string; message?: string };
+      if (!r.ok) throw new Error(j.error ?? "Could not start mobile money top-up");
+      setNote(j.message ?? "Approve the prompt on your phone. Balance updates after confirmation.");
+      void reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Mobile money top-up failed");
     } finally {
       setBusy(false);
     }
@@ -212,24 +272,85 @@ export function OpenPayCardPanel() {
             At <a href="/student/pay" className="text-cyan-400 hover:underline">Pay tuition</a>, choose &quot;Pay with{" "}
             {PAYMENT_RAIL_OPENPAY_CARD}&quot; when you want to use this balance.
           </p>
-          <div className="flex flex-wrap items-end gap-2">
-            <label className="text-xs text-slate-500">
-              Add funds (UGX)
-              <input
-                value={fundUgx}
-                onChange={(e) => setFundUgx(e.target.value)}
-                className="mt-1 block w-36 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"
-              />
-            </label>
-            <TonConnectButton />
-            <button
-              type="button"
-              disabled={busy || !wallet}
-              onClick={() => void fundCard()}
-              className="rounded-lg border border-white/15 px-3 py-2 text-sm text-white hover:bg-white/10 disabled:opacity-50"
-            >
-              Top up via TON
-            </button>
+          <div className="space-y-3 rounded-lg border border-white/10 bg-black/20 p-3">
+            <p className="text-xs font-semibold text-slate-400">Add funds (UGX)</p>
+            <input
+              value={fundUgx}
+              onChange={(e) => setFundUgx(e.target.value)}
+              className="block w-full max-w-xs rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"
+            />
+            <div className="flex flex-wrap gap-2">
+              {(livepayEnabled || relworxEnabled) ? (
+                <button
+                  type="button"
+                  onClick={() => setFundMode("momo")}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                    fundMode === "momo"
+                      ? "bg-emerald-600/30 text-emerald-100 border border-emerald-400/40"
+                      : "border border-white/10 text-slate-400"
+                  }`}
+                >
+                  Mobile money
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => setFundMode("ton")}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                  fundMode === "ton"
+                    ? "bg-sky-600/30 text-sky-100 border border-sky-400/40"
+                    : "border border-white/10 text-slate-400"
+                }`}
+              >
+                TON wallet
+              </button>
+            </div>
+            {fundMode === "momo" && (livepayEnabled || relworxEnabled) ? (
+              <div className="flex flex-wrap items-end gap-2">
+                <label className="text-xs text-slate-500">
+                  Phone (UG)
+                  <input
+                    value={momoPhone}
+                    onChange={(e) => setMomoPhone(e.target.value)}
+                    placeholder="07…"
+                    className="mt-1 block w-40 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"
+                  />
+                </label>
+                {livepayEnabled ? (
+                  <label className="text-xs text-slate-500">
+                    Network
+                    <select
+                      value={momoNetwork}
+                      onChange={(e) => setMomoNetwork(e.target.value as "mtn" | "airtel")}
+                      className="mt-1 block rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"
+                    >
+                      <option value="mtn">MTN</option>
+                      <option value="airtel">Airtel</option>
+                    </select>
+                  </label>
+                ) : null}
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void fundCardMomo()}
+                  className="rounded-lg bg-emerald-600/80 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
+                >
+                  Top up via MoMo
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center gap-2">
+                <TonConnectButton />
+                <button
+                  type="button"
+                  disabled={busy || !wallet}
+                  onClick={() => void fundCard()}
+                  className="rounded-lg border border-white/15 px-3 py-2 text-sm text-white hover:bg-white/10 disabled:opacity-50"
+                >
+                  Top up via TON
+                </button>
+              </div>
+            )}
           </div>
         </div>
       ) : null}

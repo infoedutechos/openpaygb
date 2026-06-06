@@ -76,7 +76,7 @@ Demo student is on programme **BEP-ENG/RE**, year **1**, semester **1**.
 
 Full lifecycle: **[ORGANIZATION_REGISTRATION.md](./ORGANIZATION_REGISTRATION.md)** · sign-in detail: **[SCHOOL_ADMIN_LOGIN.md](./SCHOOL_ADMIN_LOGIN.md)**.
 
-**Email (production):** set `RESEND_API_KEY` and `RESEND_FROM`. **Dev:** if Resend is unset, register API returns a **dev verification link** in the JSON response.
+**Email (production):** set **`BREVO_API_KEY`** (recommended, free at [brevo.com](https://www.brevo.com)) and **`TRANSACTIONAL_EMAIL_FROM`** (or legacy `RESEND_FROM`). Resend (`RESEND_API_KEY`) still works. **Dev:** if email is unset, register API returns a **dev verification link** in the JSON response.
 
 ---
 

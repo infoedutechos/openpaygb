@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { StudentLogoutButton } from "@/components/StudentLogoutButton";
+import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton";
 
 type MeJson = {
   student?: { organizationName: string; organizationSlug: string; name: string };
@@ -70,6 +71,7 @@ export function StudentDashboardShell({ children }: { children: React.ReactNode 
               {item.label}
             </Link>
           ))}
+          <DashboardChatNavButton variant="student" />
         </nav>
         <div className="mt-auto border-t border-white/10 pt-4">
           <StudentLogoutButton />
@@ -98,6 +100,7 @@ export function StudentDashboardShell({ children }: { children: React.ReactNode 
                 {item.label}
               </Link>
             ))}
+            <DashboardChatNavButton variant="student" compact />
           </nav>
         </header>
         <div className="mx-auto w-full max-w-4xl flex-1 px-4 py-6 md:py-8">{children}</div>

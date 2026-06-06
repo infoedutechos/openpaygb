@@ -4,6 +4,14 @@ import { useCallback, useEffect, useState } from "react";
 import { fetchJson } from "@/utils/fetch-json";
 import { readJsonResponse } from "@/utils/read-json-response";
 
+type LearningGapRow = {
+  id: string;
+  querySample: string;
+  hub: string;
+  hitCount: number;
+  lastSeenAt: string;
+};
+
 type ArticleRow = {
   id: string;
   slug: string;
@@ -32,6 +40,7 @@ const emptyForm = {
 
 export function MasterKnowledgeBaseSettings() {
   const [articles, setArticles] = useState<ArticleRow[]>([]);
+  const [gaps, setGaps] = useState<LearningGapRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +55,9 @@ export function MasterKnowledgeBaseSettings() {
       const parsed = await readJsonResponse<{ total: number; articles: ArticleRow[] }>(res);
       if (!parsed.ok) throw new Error(parsed.error);
       setArticles(parsed.data.articles ?? []);
+      const gapsRes = await fetchJson("/api/master/knowledge/gaps", { credentials: "include" });
+      const gapsParsed = await readJsonResponse<{ gaps?: LearningGapRow[] }>(gapsRes);
+      if (gapsParsed.ok) setGaps(gapsParsed.data.gaps ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load knowledge base");
     } finally {
@@ -118,6 +130,42 @@ export function MasterKnowledgeBaseSettings() {
     }
   }
 
+  function draftFromGap(gap: LearningGapRow) {
+    const slug = gap.querySample
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 60);
+    setForm({
+      slug: slug || `gap-${gap.id.slice(-6)}`,
+      title: gap.querySample.slice(0, 120),
+      summary: `Answer for: ${gap.querySample.slice(0, 200)}`,
+      body: `## ${gap.querySample}\n\n(Add the official answer here — asked ${gap.hitCount} time(s) in ${gap.hub} hub.)`,
+      category: gap.hub === "admin" ? "admin" : gap.hub === "play" ? "play" : "general",
+      tags: "copilot-gap",
+      audience: (gap.hub === "all" ? "all" : gap.hub) as typeof emptyForm.audience,
+      published: true,
+      sortOrder: 0,
+    });
+    setMessage("Gap pre-filled — complete the body and save to teach the copilot.");
+  }
+
+  async function dismissGap(id: string) {
+    try {
+      const res = await fetch("/api/master/knowledge/gaps", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: "dismissed" }),
+      });
+      const parsed = await readJsonResponse<{ ok?: boolean }>(res);
+      if (!parsed.ok) throw new Error(parsed.error);
+      setGaps((rows) => rows.filter((g) => g.id !== id));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not dismiss gap");
+    }
+  }
+
   function editRow(row: ArticleRow) {
     setForm({
       slug: row.slug,
@@ -142,10 +190,44 @@ export function MasterKnowledgeBaseSettings() {
         <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-400/90">Platform assist</p>
         <h2 className="mt-1 text-lg font-semibold text-white">Knowledge base &amp; copilot</h2>
         <p className="mt-2 max-w-3xl text-sm text-slate-400">
-          Articles power in-app search and the zero-API-cost copilot (no OpenAI). Extend with new slugs; seed
-          content covers tuition, admin, and URAPearls.
+          Articles power in-app search and the zero-API-cost copilot (no OpenAI). Seed content auto-syncs from code on
+          each KB load; unanswered questions accumulate below for continuous learning.
         </p>
       </div>
+
+      {gaps.length > 0 ? (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-950/20 p-4 space-y-3">
+          <p className="text-xs font-bold uppercase tracking-wider text-amber-300/90">
+            Learning gaps ({gaps.length}) — copilot had no KB match
+          </p>
+          <ul className="space-y-2 text-sm text-amber-100/90">
+            {gaps.slice(0, 8).map((g) => (
+              <li key={g.id} className="flex flex-wrap items-center justify-between gap-2 rounded border border-amber-500/20 bg-black/20 px-3 py-2">
+                <span>
+                  <strong>{g.hitCount}×</strong> {g.querySample}
+                  <span className="ml-2 text-xs text-amber-400/80">({g.hub})</span>
+                </span>
+                <span className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => draftFromGap(g)}
+                    className="text-xs font-semibold text-emerald-300 hover:underline"
+                  >
+                    Draft article
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void dismissGap(g.id)}
+                    className="text-xs text-slate-400 hover:underline"
+                  >
+                    Dismiss
+                  </button>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       {error ? <p className="text-sm text-rose-400">{error}</p> : null}
       {message ? <p className="text-sm text-emerald-300">{message}</p> : null}

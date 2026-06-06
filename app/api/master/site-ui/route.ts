@@ -5,6 +5,7 @@ import {
   MasterSiteUiPatchSchema,
   PLATFORM_SITE_UI_KEY,
   getPlatformSiteUiSettings,
+  invalidatePublicSiteUiCache,
   mergeSocialLinks,
 } from "@/lib/site-ui-settings";
 
@@ -39,6 +40,10 @@ export async function PATCH(req: Request) {
       shareDefaultText: body.shareDefaultText,
       supportPhone: body.supportPhone,
       supportEmail: body.supportEmail,
+      communitySupportUrl: body.communitySupportUrl,
+      showSupportPhone: body.showSupportPhone,
+      showSupportEmail: body.showSupportEmail,
+      showCommunitySupport: body.showCommunitySupport,
       footerIntro: body.footerIntro,
       footerMode: body.footerMode,
       footerPathList: body.footerPathList,
@@ -58,6 +63,10 @@ export async function PATCH(req: Request) {
       shareDefaultText: body.shareDefaultText,
       supportPhone: body.supportPhone,
       supportEmail: body.supportEmail,
+      communitySupportUrl: body.communitySupportUrl,
+      showSupportPhone: body.showSupportPhone,
+      showSupportEmail: body.showSupportEmail,
+      showCommunitySupport: body.showCommunitySupport,
       footerIntro: body.footerIntro,
       footerMode: body.footerMode,
       footerPathList: body.footerPathList,
@@ -72,6 +81,7 @@ export async function PATCH(req: Request) {
     },
   });
 
+  invalidatePublicSiteUiCache();
   const settings = await getPlatformSiteUiSettings();
   return NextResponse.json(settings);
 }

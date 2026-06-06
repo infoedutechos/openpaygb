@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { usePlatformSocial } from "@/components/PlatformSocialProvider";
-import { linksForSupport } from "@/lib/site-ui-shared";
+import { useSupportPanelSettings } from "@/hooks/useSupportPanelSettings";
+import { buildSupportPanelView } from "@/lib/support-panel-display";
 import type { PlatformHub } from "@/lib/knowledge-base/types";
+import { HelpCopilotBubbleIcon } from "@/components/platform/HelpCopilotBubbleIcon";
+import { PLATFORM_CHAT_OPEN_EVENT } from "@/lib/platform-chat-events";
 import { triggerHapticFeedback } from "@/utils/ui";
 
 type ChatMessage = {
@@ -40,14 +42,10 @@ export default function PlatformCopilotChat({
   title = "ODEL HUB Help",
   subtitle = "Knowledge-base assistant · No paid AI API",
 }: PlatformCopilotChatProps) {
-  const platform = usePlatformSocial();
-  const supportLinks = linksForSupport(platform.socialLinks);
-  const supportPhoneDisplay = platform.supportPhone.trim() || "0800 117 000";
-  const supportPhoneHref = `tel:${(platform.supportPhone || "0800117000").replace(/\s/g, "")}`;
-  const supportEmail = platform.supportEmail.trim() || null;
-
   const [open, setOpen] = useState(false);
   const [agentOpen, setAgentOpen] = useState(false);
+  const platform = useSupportPanelSettings(agentOpen);
+  const support = buildSupportPanelView(platform);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -83,6 +81,12 @@ export default function PlatformCopilotChat({
       setBootLoading(false);
     }
   }, [hub]);
+
+  useEffect(() => {
+    const openFromSidebar = () => setOpen(true);
+    window.addEventListener(PLATFORM_CHAT_OPEN_EVENT, openFromSidebar);
+    return () => window.removeEventListener(PLATFORM_CHAT_OPEN_EVENT, openFromSidebar);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -222,7 +226,7 @@ export default function PlatformCopilotChat({
               <div className="rounded-xl border border-white/10 bg-[#161a20] p-2.5 space-y-2 text-[11px] text-slate-300">
                 <p className="text-slate-400">Choose how to reach us for account-specific help.</p>
                 <div className="flex flex-col gap-1.5">
-                  {supportLinks.map((link) => (
+                  {support.socialLinks.map((link) => (
                     <button
                       key={link.key}
                       type="button"
@@ -235,20 +239,34 @@ export default function PlatformCopilotChat({
                       {link.label}
                     </button>
                   ))}
-                  <a
-                    href={supportPhoneHref}
-                    onClick={() => triggerHapticFeedback(window)}
-                    className="rounded-lg bg-white/[0.06] border border-white/10 py-2 px-2 text-left font-medium text-white hover:bg-white/10"
-                  >
-                    Call {supportPhoneDisplay}
-                  </a>
-                  {supportEmail ? (
+                  {support.showCommunitySupport && support.communitySupportUrl ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerHapticFeedback(window);
+                        openExternalUrl(support.communitySupportUrl!);
+                      }}
+                      className="rounded-lg bg-[#25D366]/15 border border-[#25D366]/40 py-2 px-2 text-left font-medium text-emerald-200 hover:bg-[#25D366]/25"
+                    >
+                      Community Support
+                    </button>
+                  ) : null}
+                  {support.showSupportPhone ? (
                     <a
-                      href={`mailto:${supportEmail}`}
+                      href={support.supportPhoneHref}
+                      onClick={() => triggerHapticFeedback(window)}
+                      className="rounded-lg bg-white/[0.06] border border-white/10 py-2 px-2 text-left font-medium text-white hover:bg-white/10"
+                    >
+                      Call {support.supportPhoneDisplay}
+                    </a>
+                  ) : null}
+                  {support.showSupportEmail && support.supportEmail ? (
+                    <a
+                      href={`mailto:${support.supportEmail}`}
                       onClick={() => triggerHapticFeedback(window)}
                       className="rounded-lg bg-white/[0.06] border border-white/10 py-2 px-2 text-left font-medium text-white hover:bg-white/10 break-all"
                     >
-                      Email {supportEmail}
+                      Email {support.supportEmail}
                     </a>
                   ) : null}
                 </div>
@@ -296,12 +314,7 @@ export default function PlatformCopilotChat({
         aria-label={open ? "Close help chat" : "Open help chat"}
       >
         <span className="text-sm font-bold tracking-tight drop-shadow-sm">Help</span>
-        <span
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-ura-navy/30 text-[1.35rem] leading-none"
-          aria-hidden
-        >
-          💬
-        </span>
+        <HelpCopilotBubbleIcon />
       </button>
     </div>
   );

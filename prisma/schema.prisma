@@ -340,20 +340,24 @@ model OpenPayCard {
   @@map("openpay_cards")
 }
 
-/** TON top-up crediting OpenPayGB card UGX balance. */
+/** Top-up crediting OpenPayGB card UGX balance (TON on-chain or mobile money). */
 model OpenPayCardTopup {
-  id        String     @id @default(auto()) @map("_id") @db.ObjectId
-  cardId    String     @db.ObjectId
-  card      OpenPayCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
-  amountUgx Int
-  tonAmount Float
-  memo      String     @unique
-  status    String     @default("pending")
-  txHash    String     @default("")
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  cardId        String      @db.ObjectId
+  card          OpenPayCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  amountUgx     Int
+  tonAmount     Float       @default(0)
+  /** ton | livepay | relworx */
+  fundingRail   String      @default("ton")
+  momoReference String      @default("")
+  memo          String      @unique
+  status        String      @default("pending")
+  txHash        String      @default("")
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
   @@index([cardId, status])
+  @@index([fundingRail, status])
   @@map("openpay_card_topups")
 }
 
@@ -413,6 +417,11 @@ model SiteUiSettings {
   /** Optional overrides; empty string = use deployment env in lib/site-ui-settings. */
   supportPhone       String   @default("")
   supportEmail       String   @default("")
+  /** WhatsApp community group — shown as “Community Support” in the help panel. */
+  communitySupportUrl String  @default("")
+  showSupportPhone    Boolean @default(true)
+  showSupportEmail    Boolean @default(true)
+  showCommunitySupport Boolean @default(true)
   /** PWA / Add to Home Screen — master-editable install prompt on home page. */
   homeScreenEnabled       Boolean @default(true)
   homeScreenShowOnHome    Boolean @default(true)
@@ -420,9 +429,18 @@ model SiteUiSettings {
   homeScreenShortName     String  @default("ODEL HUB")
   homeScreenDescription   String  @default("Tuition, TON payments, Play & Dex — save ODEL HUB to your home screen or desktop.")
   homeScreenThemeColor    String  @default("#0ea5e9")
+  /** When true, public Tuition Hub routes show a maintenance screen. */
+  tuitionHubMaintenance Boolean @default(false)
+  /** When true, public Play Hub routes show a maintenance screen. */
+  playHubMaintenance    Boolean @default(false)
+  /** When true, public Dex Hub routes show a maintenance screen. */
+  dexHubMaintenance     Boolean @default(false)
   /** Platform icon/logo (PNG, ICO, JPEG, WebP) — favicon, PWA, share previews. */
   platformLogo              Bytes?
   platformLogoUploadedAt    DateTime?
+  /** Optional image on the floating Help copilot bubble (PNG, JPEG, WebP; square works best). */
+  copilotBubbleImage        Bytes?
+  copilotBubbleImageUploadedAt DateTime?
   /** Per-platform footer/support icons keyed by social link key (see lib/social-link-icons). */
   socialLinkIcons           Json     @default("{}")
   /**
@@ -1627,6 +1645,23 @@ model KnowledgeArticle {
 
   @@index([audience, published, category])
   @@map("knowledge_articles")
+}
+
+/** Unanswered copilot queries — aggregated for continuous KB learning (master promotes to articles). */
+model KnowledgeLearningGap {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  queryNorm     String   @unique
+  querySample   String
+  hub           String   @default("all")
+  hitCount      Int      @default(1)
+  /** pending | dismissed | promoted */
+  status        String   @default("pending")
+  promotedSlug  String   @default("")
+  firstSeenAt   DateTime @default(now())
+  lastSeenAt    DateTime @default(now())
+
+  @@index([status, hitCount])
+  @@map("knowledge_learning_gaps")
 }
 
 /** Persisted support / copilot chat threads (browser session or authenticated user). */

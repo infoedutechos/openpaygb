@@ -515,87 +515,582 @@
     <script>
       /** @type {{ id: string, file: string, title: string, category: string, keywords: string }[]} */
       const MANIFEST = [
-        {
-          id: "flows",
-          file: "FLOWS.md",
-          title: "Flow documentation (index)",
-          category: "flows",
-          keywords: "index flows navigation user admin master multi-tenant",
-        },
-        {
-          id: "user-flow",
-          file: "USER_FLOW.md",
-          title: "User flow — payers & public",
-          category: "flows",
-          keywords: "payer pay checkout ton connect receipt momo telegram web",
-        },
-        {
-          id: "multi-tenant",
-          file: "MULTI_TENANT_FLOW.md",
-          title: "Multi-tenant flow",
-          category: "architecture",
-          keywords: "organization slug tenant isolation pending active registration master",
-        },
-        {
-          id: "admin-flow",
-          file: "ADMIN_FLOW.md",
-          title: "Admin flow — org admin",
-          category: "flows",
-          keywords: "school dashboard students payments csv jwt scope workspace",
-        },
-        {
-          id: "master-flow",
-          file: "MASTER_ADMIN_FLOW.md",
-          title: "Master admin flow",
-          category: "flows",
-          keywords: "platform master console approve organization org admin",
-        },
-        {
-          id: "folder-structure",
-          file: "FOLDER_STRUCTURE.md",
-          title: "Full folder & project structure",
-          category: "implementation",
-          keywords: "tree routes scripts prisma src app api layout npm verify",
-        },
-        {
-          id: "repository-layout",
-          file: "STRUCTURE.md",
-          title: "Repository layout (hub)",
-          category: "implementation",
-          keywords: "folder layout ura pearl pointer flows index",
-        },
-        {
-          id: "user-stories",
-          file: "USER_STORIES.md",
-          title: "User stories & epics",
-          category: "product",
-          keywords: "epic acceptance telegram admin momo receipt",
-        },
-        {
-          id: "openapi",
-          file: "openapi.yaml",
-          title: "OpenAPI (HTTP contract)",
-          category: "api-reference",
-          keywords: "rest api endpoints openapi yaml http",
-        },
-        {
-          id: "economics",
-          file: "ECONOMICS.md",
-          title: "Economics & settlement (UGX, TON, FX)",
-          category: "economics",
-          keywords: "ugx ton fx fees programme mo bridge settlement wallet",
-        },
-      ];
+  {
+    "id": "flows",
+    "file": "FLOWS.md",
+    "title": "Flow documentation (index)",
+    "category": "flows",
+    "keywords": "flow documentation (index) flows flows"
+  },
+  {
+    "id": "admin-flow",
+    "file": "ADMIN_FLOW.md",
+    "title": "Full Admin flow (org admin)",
+    "category": "flows",
+    "keywords": "full admin flow (org admin) flows admin flow"
+  },
+  {
+    "id": "master-admin-flow",
+    "file": "MASTER_ADMIN_FLOW.md",
+    "title": "Full Master Admin flow (platform operator)",
+    "category": "flows",
+    "keywords": "full master admin flow (platform operator) flows master admin flow"
+  },
+  {
+    "id": "multi-tenant-flow",
+    "file": "MULTI_TENANT_FLOW.md",
+    "title": "Full multi-tenant flow",
+    "category": "flows",
+    "keywords": "full multi-tenant flow flows multi tenant flow"
+  },
+  {
+    "id": "user-flow",
+    "file": "USER_FLOW.md",
+    "title": "Full user flow (payer & public)",
+    "category": "flows",
+    "keywords": "full user flow (payer & public) flows user flow"
+  },
+  {
+    "id": "platform-flows",
+    "file": "PLATFORM_FLOWS.md",
+    "title": "Platform flows and multi-tenant operations",
+    "category": "flows",
+    "keywords": "platform flows and multi-tenant operations flows platform flows"
+  },
+  {
+    "id": "dual-admin-auth",
+    "file": "DUAL_ADMIN_AUTH.md",
+    "title": "Dual admin authentication",
+    "category": "implementation",
+    "keywords": "dual admin authentication implementation dual admin auth"
+  },
+  {
+    "id": "ecosystem-test-report",
+    "file": "ECOSYSTEM_TEST_REPORT.md",
+    "title": "Ecosystem test report",
+    "category": "implementation",
+    "keywords": "ecosystem test report implementation ecosystem test report"
+  },
+  {
+    "id": "folder-tree-snapshot",
+    "file": "FOLDER_TREE_SNAPSHOT.txt",
+    "title": "FOLDER TREE SNAPSHOT",
+    "category": "implementation",
+    "keywords": "folder tree snapshot implementation folder tree snapshot"
+  },
+  {
+    "id": "organization-registration",
+    "file": "ORGANIZATION_REGISTRATION.md",
+    "title": "How schools and organizations register and get a dashboard",
+    "category": "implementation",
+    "keywords": "how schools and organizations register and get a dashboard implementation organization registration"
+  },
+  {
+    "id": "livepay-integration-assessment",
+    "file": "LIVEPAY_INTEGRATION_ASSESSMENT.md",
+    "title": "LivePay integration assessment",
+    "category": "implementation",
+    "keywords": "livepay integration assessment implementation livepay integration assessment"
+  },
+  {
+    "id": "local-dev-and-credentials",
+    "file": "LOCAL_DEV_AND_CREDENTIALS.md",
+    "title": "Local development — URLs and seed credentials",
+    "category": "implementation",
+    "keywords": "local development — urls and seed credentials implementation local dev and credentials"
+  },
+  {
+    "id": "mbiyo-webhook-setup",
+    "file": "MBIYO_WEBHOOK_SETUP.md",
+    "title": "Mbiyo dashboard — Webhook & IP whitelisting",
+    "category": "implementation",
+    "keywords": "mbiyo dashboard — webhook & ip whitelisting implementation mbiyo webhook setup"
+  },
+  {
+    "id": "folder-structure",
+    "file": "FOLDER_STRUCTURE.md",
+    "title": "ODEL HUB Pay — full folder & project structure",
+    "category": "implementation",
+    "keywords": "odel hub pay — full folder & project structure implementation folder structure"
+  },
+  {
+    "id": "readme",
+    "file": "README.md",
+    "title": "ODEL HUB TON Pay",
+    "category": "implementation",
+    "keywords": "odel hub ton pay implementation readme"
+  },
+  {
+    "id": "structure-alignment-ura-pearl",
+    "file": "STRUCTURE_ALIGNMENT_URA_PEARL.md",
+    "title": "ODELHUB Pay ↔ [ura-pearl-data-center](https://github.com/urapearlug-sys/ura-pearl-data-center)",
+    "category": "implementation",
+    "keywords": "odelhub pay ↔ [ura-pearl-data-center](https://github.com/urapearlug-sys/ura-pearl-data-center) implementation structure alignment ura pearl"
+  },
+  {
+    "id": "partner-api",
+    "file": "PARTNER_API.md",
+    "title": "Partner API (machine-to-machine)",
+    "category": "implementation",
+    "keywords": "partner api (machine-to-machine) implementation partner api"
+  },
+  {
+    "id": "prisma-commands",
+    "file": "PRISMA_COMMANDS.md",
+    "title": "Prisma commands used in this repository",
+    "category": "implementation",
+    "keywords": "prisma commands used in this repository implementation prisma commands"
+  },
+  {
+    "id": "relworx-investigation",
+    "file": "RELWORX_INVESTIGATION.md",
+    "title": "Relworx Payments API v2 — holistic investigation",
+    "category": "implementation",
+    "keywords": "relworx payments api v2 — holistic investigation implementation relworx investigation"
+  },
+  {
+    "id": "structure",
+    "file": "STRUCTURE.md",
+    "title": "Repository layout",
+    "category": "implementation",
+    "keywords": "repository layout implementation structure"
+  },
+  {
+    "id": "school-admin-login",
+    "file": "SCHOOL_ADMIN_LOGIN.md",
+    "title": "School admin login and dashboard access",
+    "category": "implementation",
+    "keywords": "school admin login and dashboard access implementation school admin login"
+  },
+  {
+    "id": "school-admin-programmes",
+    "file": "SCHOOL_ADMIN_PROGRAMMES.md",
+    "title": "School admin — programme customization",
+    "category": "implementation",
+    "keywords": "school admin — programme customization implementation school admin programmes"
+  },
+  {
+    "id": "sis-integration-cookbook",
+    "file": "SIS_INTEGRATION_COOKBOOK.md",
+    "title": "SIS integration cookbook",
+    "category": "implementation",
+    "keywords": "sis integration cookbook implementation sis integration cookbook"
+  },
+  {
+    "id": "ui-vs-codebase",
+    "file": "UI_VS_CODEBASE.md",
+    "title": "UI vs codebase",
+    "category": "implementation",
+    "keywords": "ui vs codebase implementation ui vs codebase"
+  },
+  {
+    "id": "virtual-card-investigation",
+    "file": "VIRTUAL_CARD_INVESTIGATION.md",
+    "title": "Virtual card investigation (holistic)",
+    "category": "implementation",
+    "keywords": "virtual card investigation (holistic) implementation virtual card investigation"
+  },
+  {
+    "id": "vercel-auto-deploy",
+    "file": "VERCEL_AUTO_DEPLOY.md",
+    "title": "Auto-deploy on Vercel (ODELHUB Pay)",
+    "category": "deployment",
+    "keywords": "auto-deploy on vercel (odelhub pay) deployment vercel auto deploy"
+  },
+  {
+    "id": "deployment-architecture",
+    "file": "DEPLOYMENT_ARCHITECTURE.md",
+    "title": "Deployment architecture (MongoDB · Vercel · GitHub · Telegram)",
+    "category": "deployment",
+    "keywords": "deployment architecture (mongodb · vercel · github · telegram) deployment deployment architecture"
+  },
+  {
+    "id": "deployment-version",
+    "file": "DEPLOYMENT_VERSION.txt",
+    "title": "DEPLOYMENT VERSION",
+    "category": "deployment",
+    "keywords": "deployment version deployment deployment version"
+  },
+  {
+    "id": "production-go-live",
+    "file": "PRODUCTION_GO_LIVE.md",
+    "title": "Production go-live checklist (ODELHUB Pay)",
+    "category": "deployment",
+    "keywords": "production go-live checklist (odelhub pay) deployment production go live"
+  },
+  {
+    "id": "vercel-env-setup",
+    "file": "VERCEL_ENV_SETUP.md",
+    "title": "Vercel environment variables (ODELHUB Pay)",
+    "category": "deployment",
+    "keywords": "vercel environment variables (odelhub pay) deployment vercel env setup"
+  },
+  {
+    "id": "backup-and-recovery",
+    "file": "BACKUP_AND_RECOVERY.md",
+    "title": "Backup, disaster recovery & migration",
+    "category": "operations",
+    "keywords": "backup, disaster recovery & migration operations backup and recovery"
+  },
+  {
+    "id": "error-hardening",
+    "file": "ERROR_HARDENING.md",
+    "title": "Error hardening (2026-06-03, audited 2026-06-05)",
+    "category": "operations",
+    "keywords": "error hardening (2026-06-03, audited 2026-06-05) operations error hardening"
+  },
+  {
+    "id": "integration-hardening",
+    "file": "INTEGRATION_HARDENING.md",
+    "title": "Integration hardening audit",
+    "category": "operations",
+    "keywords": "integration hardening audit operations integration hardening"
+  },
+  {
+    "id": "security-hardening",
+    "file": "SECURITY_HARDENING.md",
+    "title": "Security hardening (2026-06-03)",
+    "category": "operations",
+    "keywords": "security hardening (2026-06-03) operations security hardening"
+  },
+  {
+    "id": "economics",
+    "file": "ECONOMICS.md",
+    "title": "Economics & settlement (UGX, TON, FX)",
+    "category": "economics",
+    "keywords": "economics & settlement (ugx, ton, fx) economics economics"
+  },
+  {
+    "id": "app-status-audit",
+    "file": "APP_STATUS_AUDIT.md",
+    "title": "App status audit (holistic scan)",
+    "category": "product",
+    "keywords": "app status audit (holistic scan) product app status audit"
+  },
+  {
+    "id": "holistic-app-audit",
+    "file": "HOLISTIC_APP_AUDIT.md",
+    "title": "Holistic app audit (deep scan)",
+    "category": "product",
+    "keywords": "holistic app audit (deep scan) product holistic app audit"
+  },
+  {
+    "id": "user-stories",
+    "file": "USER_STORIES.md",
+    "title": "ODEL HUB TON Pay — user stories",
+    "category": "product",
+    "keywords": "odel hub ton pay — user stories product user stories"
+  },
+  {
+    "id": "backlog",
+    "file": "BACKLOG.md",
+    "title": "Product & engineering backlog",
+    "category": "product",
+    "keywords": "product & engineering backlog product backlog"
+  },
+  {
+    "id": "api-inventory",
+    "file": "API_INVENTORY.csv",
+    "title": "API INVENTORY",
+    "category": "api-reference",
+    "keywords": "api inventory api-reference api inventory"
+  },
+  {
+    "id": "openapi",
+    "file": "openapi.yaml",
+    "title": "Openapi",
+    "category": "api-reference",
+    "keywords": "openapi api-reference openapi"
+  },
+  {
+    "id": "ui-routes",
+    "file": "UI_ROUTES.csv",
+    "title": "UI ROUTES",
+    "category": "api-reference",
+    "keywords": "ui routes api-reference ui routes"
+  },
+  {
+    "id": "upstream-ura-pearl-authenticate-and-push",
+    "file": "upstream-ura-pearl/AUTHENTICATE_AND_PUSH.md",
+    "title": "Authenticate and Push to Private Repository",
+    "category": "upstream-pearl",
+    "keywords": "authenticate and push to private repository upstream-pearl upstream ura pearl authenticate and push"
+  },
+  {
+    "id": "upstream-ura-pearl-build-fix-summary",
+    "file": "upstream-ura-pearl/BUILD_FIX_SUMMARY.md",
+    "title": "Build Fix Summary",
+    "category": "upstream-pearl",
+    "keywords": "build fix summary upstream-pearl upstream ura pearl build fix summary"
+  },
+  {
+    "id": "upstream-ura-pearl-build-fixes-applied",
+    "file": "upstream-ura-pearl/BUILD_FIXES_APPLIED.md",
+    "title": "Build Fixes Applied",
+    "category": "upstream-pearl",
+    "keywords": "build fixes applied upstream-pearl upstream ura pearl build fixes applied"
+  },
+  {
+    "id": "upstream-ura-pearl-check-vercel-github-connection",
+    "file": "upstream-ura-pearl/CHECK_VERCEL_GITHUB_CONNECTION.md",
+    "title": "Check Vercel GitHub Connection",
+    "category": "upstream-pearl",
+    "keywords": "check vercel github connection upstream-pearl upstream ura pearl check vercel github connection"
+  },
+  {
+    "id": "upstream-ura-pearl-vercel-connection-steps",
+    "file": "upstream-ura-pearl/VERCEL_CONNECTION_STEPS.md",
+    "title": "Connect Vercel to maglip/clicker-game - Exact Steps",
+    "category": "upstream-pearl",
+    "keywords": "connect vercel to maglip/clicker-game - exact steps upstream-pearl upstream ura pearl vercel connection steps"
+  },
+  {
+    "id": "upstream-ura-pearl-connect-vercel-to-correct-repo",
+    "file": "upstream-ura-pearl/CONNECT_VERCEL_TO_CORRECT_REPO.md",
+    "title": "Connect Vercel to maglip/clicker-game Repository",
+    "category": "upstream-pearl",
+    "keywords": "connect vercel to maglip/clicker-game repository upstream-pearl upstream ura pearl connect vercel to correct repo"
+  },
+  {
+    "id": "upstream-ura-pearl-deployment-checklist",
+    "file": "upstream-ura-pearl/DEPLOYMENT_CHECKLIST.md",
+    "title": "CRITICAL DEPLOYMENT CHECKLIST - v0.2.3",
+    "category": "upstream-pearl",
+    "keywords": "critical deployment checklist - v0.2.3 upstream-pearl upstream ura pearl deployment checklist"
+  },
+  {
+    "id": "upstream-ura-pearl-deploy-with-cli",
+    "file": "upstream-ura-pearl/DEPLOY_WITH_CLI.md",
+    "title": "Deploy Using Vercel CLI - Bypass Permissions Issue",
+    "category": "upstream-pearl",
+    "keywords": "deploy using vercel cli - bypass permissions issue upstream-pearl upstream ura pearl deploy with cli"
+  },
+  {
+    "id": "upstream-ura-pearl-deployment-version",
+    "file": "upstream-ura-pearl/DEPLOYMENT_VERSION.txt",
+    "title": "DEPLOYMENT VERSION",
+    "category": "upstream-pearl",
+    "keywords": "deployment version upstream-pearl upstream ura pearl deployment version"
+  },
+  {
+    "id": "upstream-ura-pearl-final-webhook-fix",
+    "file": "upstream-ura-pearl/FINAL_WEBHOOK_FIX.md",
+    "title": "Final Steps to Fix Webhook Issue",
+    "category": "upstream-pearl",
+    "keywords": "final steps to fix webhook issue upstream-pearl upstream ura pearl final webhook fix"
+  },
+  {
+    "id": "upstream-ura-pearl-fix-vercel-build",
+    "file": "upstream-ura-pearl/FIX_VERCEL_BUILD.md",
+    "title": "Fix Vercel Build Failure",
+    "category": "upstream-pearl",
+    "keywords": "fix vercel build failure upstream-pearl upstream ura pearl fix vercel build"
+  },
+  {
+    "id": "upstream-ura-pearl-vercel-403-401-eslint-fix",
+    "file": "upstream-ura-pearl/VERCEL_403_401_ESLINT_FIX.md",
+    "title": "Fix: 403 /api/user, 401 static files, ESLint build message",
+    "category": "upstream-pearl",
+    "keywords": "fix: 403 /api/user, 401 static files, eslint build message upstream-pearl upstream ura pearl vercel 403 401 eslint fix"
+  },
+  {
+    "id": "upstream-ura-pearl-fix-webhook-issue",
+    "file": "upstream-ura-pearl/FIX_WEBHOOK_ISSUE.md",
+    "title": "Fix: No Webhook Created by Vercel",
+    "category": "upstream-pearl",
+    "keywords": "fix: no webhook created by vercel upstream-pearl upstream ura pearl fix webhook issue"
+  },
+  {
+    "id": "upstream-ura-pearl-how-to-check-webhooks",
+    "file": "upstream-ura-pearl/HOW_TO_CHECK_WEBHOOKS.md",
+    "title": "How to Check GitHub Webhooks for Vercel",
+    "category": "upstream-pearl",
+    "keywords": "how to check github webhooks for vercel upstream-pearl upstream ura pearl how to check webhooks"
+  },
+  {
+    "id": "upstream-ura-pearl-reconnect-vercel",
+    "file": "upstream-ura-pearl/RECONNECT_VERCEL.md",
+    "title": "How to Reconnect Vercel to GitHub",
+    "category": "upstream-pearl",
+    "keywords": "how to reconnect vercel to github upstream-pearl upstream ura pearl reconnect vercel"
+  },
+  {
+    "id": "upstream-ura-pearl-vercel-branch-setup",
+    "file": "upstream-ura-pearl/VERCEL_BRANCH_SETUP.md",
+    "title": "How to Set Production Branch in Vercel Dashboard",
+    "category": "upstream-pearl",
+    "keywords": "how to set production branch in vercel dashboard upstream-pearl upstream ura pearl vercel branch setup"
+  },
+  {
+    "id": "upstream-ura-pearl-manual-webhook-setup",
+    "file": "upstream-ura-pearl/MANUAL_WEBHOOK_SETUP.md",
+    "title": "Manual Webhook Setup - Vercel Not Creating Webhooks Automatically",
+    "category": "upstream-pearl",
+    "keywords": "manual webhook setup - vercel not creating webhooks automatically upstream-pearl upstream ura pearl manual webhook setup"
+  },
+  {
+    "id": "upstream-ura-pearl-production-loading-fix",
+    "file": "upstream-ura-pearl/PRODUCTION_LOADING_FIX.md",
+    "title": "Production \"Stuck on Loading\" – Fix & Checklist",
+    "category": "upstream-pearl",
+    "keywords": "production \"stuck on loading\" – fix & checklist upstream-pearl upstream ura pearl production loading fix"
+  },
+  {
+    "id": "upstream-ura-pearl-push-instructions",
+    "file": "upstream-ura-pearl/PUSH_INSTRUCTIONS.md",
+    "title": "Push Instructions - Check Remote First",
+    "category": "upstream-pearl",
+    "keywords": "push instructions - check remote first upstream-pearl upstream ura pearl push instructions"
+  },
+  {
+    "id": "upstream-ura-pearl-push-to-correct-repo",
+    "file": "upstream-ura-pearl/PUSH_TO_CORRECT_REPO.md",
+    "title": "Push to Correct Repository: maglip/clicker-game",
+    "category": "upstream-pearl",
+    "keywords": "push to correct repository: maglip/clicker-game upstream-pearl upstream ura pearl push to correct repo"
+  },
+  {
+    "id": "upstream-ura-pearl-vercel-env-setup",
+    "file": "upstream-ura-pearl/VERCEL_ENV_SETUP.md",
+    "title": "Quick Fix: Add DATABASE_URL to Vercel",
+    "category": "upstream-pearl",
+    "keywords": "quick fix: add database_url to vercel upstream-pearl upstream ura pearl vercel env setup"
+  },
+  {
+    "id": "upstream-ura-pearl-quick-fix-vercel-build",
+    "file": "upstream-ura-pearl/QUICK_FIX_VERCEL_BUILD.md",
+    "title": "Quick Fix: Vercel Build Failure",
+    "category": "upstream-pearl",
+    "keywords": "quick fix: vercel build failure upstream-pearl upstream ura pearl quick fix vercel build"
+  },
+  {
+    "id": "upstream-ura-pearl-resolve-push-conflict",
+    "file": "upstream-ura-pearl/RESOLVE_PUSH_CONFLICT.md",
+    "title": "Resolve Push Conflict - Remote Has Changes",
+    "category": "upstream-pearl",
+    "keywords": "resolve push conflict - remote has changes upstream-pearl upstream ura pearl resolve push conflict"
+  },
+  {
+    "id": "upstream-ura-pearl-error-403-and-eslint-build",
+    "file": "upstream-ura-pearl/ERROR_403_AND_ESLINT_BUILD.md",
+    "title": "Understanding These Errors",
+    "category": "upstream-pearl",
+    "keywords": "understanding these errors upstream-pearl upstream ura pearl error 403 and eslint build"
+  },
+  {
+    "id": "upstream-ura-pearl-readme",
+    "file": "upstream-ura-pearl/README.md",
+    "title": "Upstream runbooks (mirror)",
+    "category": "upstream-pearl",
+    "keywords": "upstream runbooks (mirror) upstream-pearl upstream ura pearl readme"
+  },
+  {
+    "id": "upstream-ura-pearl-vercel-build-troubleshooting",
+    "file": "upstream-ura-pearl/VERCEL_BUILD_TROUBLESHOOTING.md",
+    "title": "Vercel Build Failure Troubleshooting Guide",
+    "category": "upstream-pearl",
+    "keywords": "vercel build failure troubleshooting guide upstream-pearl upstream ura pearl vercel build troubleshooting"
+  },
+  {
+    "id": "upstream-ura-pearl-vercel-fix-instructions",
+    "file": "upstream-ura-pearl/VERCEL_FIX_INSTRUCTIONS.md",
+    "title": "Vercel Deployment Fix Instructions",
+    "category": "upstream-pearl",
+    "keywords": "vercel deployment fix instructions upstream-pearl upstream ura pearl vercel fix instructions"
+  },
+  {
+    "id": "upstream-ura-pearl-set-production-url-and-eslint",
+    "file": "upstream-ura-pearl/SET_PRODUCTION_URL_AND_ESLINT.md",
+    "title": "Where to Set Production URL & How to Fix ESLint Build Message",
+    "category": "upstream-pearl",
+    "keywords": "where to set production url & how to fix eslint build message upstream-pearl upstream ura pearl set production url and eslint"
+  },
+  {
+    "id": "upstream-ura-pearl-deploy-and-play-checklist",
+    "file": "upstream-ura-pearl/DEPLOY_AND_PLAY_CHECKLIST.md",
+    "title": "Will the game load and play after deployment?",
+    "category": "upstream-pearl",
+    "keywords": "will the game load and play after deployment? upstream-pearl upstream ura pearl deploy and play checklist"
+  },
+  {
+    "id": "upstream-ura-game-afrolumens-game-overview",
+    "file": "upstream-ura-game/AFROLUMENS_GAME_OVERVIEW.md",
+    "title": "AfroLumens: Game Overview for Website",
+    "category": "upstream-game",
+    "keywords": "afrolumens: game overview for website upstream-game upstream ura game afrolumens game overview"
+  },
+  {
+    "id": "upstream-ura-game-nft-collection-design",
+    "file": "upstream-ura-game/NFT_COLLECTION_DESIGN.md",
+    "title": "NFT COLLECTION DESIGN",
+    "category": "upstream-game",
+    "keywords": "nft collection design upstream-game upstream ura game nft collection design"
+  },
+  {
+    "id": "upstream-ura-game-nft-collection-marketplace",
+    "file": "upstream-ura-game/NFT-COLLECTION-MARKETPLACE.md",
+    "title": "NFT Collection Marketplace – Integration Plan",
+    "category": "upstream-game",
+    "keywords": "nft collection marketplace – integration plan upstream-game upstream ura game nft collection marketplace"
+  },
+  {
+    "id": "upstream-ura-game-nft-rollout-phases-spec",
+    "file": "upstream-ura-game/NFT_ROLLOUT_PHASES_SPEC.md",
+    "title": "NFT ROLLOUT PHASES SPEC",
+    "category": "upstream-game",
+    "keywords": "nft rollout phases spec upstream-game upstream ura game nft rollout phases spec"
+  },
+  {
+    "id": "upstream-ura-game-teams-leagues-terms-and-summary",
+    "file": "upstream-ura-game/TEAMS_LEAGUES_TERMS_AND_SUMMARY.md",
+    "title": "Teams & Leagues – Summary and Terms (copyable)",
+    "category": "upstream-game",
+    "keywords": "teams & leagues – summary and terms (copyable) upstream-game upstream ura game teams leagues terms and summary"
+  },
+  {
+    "id": "upstream-ura-game-readme",
+    "file": "upstream-ura-game/README.md",
+    "title": "Upstream game docs (mirror)",
+    "category": "upstream-game",
+    "keywords": "upstream game docs (mirror) upstream-game upstream ura game readme"
+  },
+  {
+    "id": "upstream-ura-game-vercel-auto-deploy",
+    "file": "upstream-ura-game/VERCEL_AUTO_DEPLOY.md",
+    "title": "Vercel not auto-deploying? Fix it here",
+    "category": "upstream-game",
+    "keywords": "vercel not auto-deploying? fix it here upstream-game upstream ura game vercel auto deploy"
+  },
+  {
+    "id": "contract-build-tact-nftcollection",
+    "file": "contract-build/tact_NftCollection.md",
+    "title": "TACT Compilation Report",
+    "category": "contracts",
+    "keywords": "tact compilation report contracts contract build tact nftcollection"
+  },
+  {
+    "id": "contract-build-tact-nftitem",
+    "file": "contract-build/tact_NftItem.md",
+    "title": "TACT Compilation Report",
+    "category": "contracts",
+    "keywords": "tact compilation report contracts contract build tact nftitem"
+  }
+];;;
 
       const CATEGORY_LABEL = {
-        all: "All",
-        flows: "Flows",
-        architecture: "Architecture",
-        implementation: "Implementation",
-        economics: "Economics",
-        product: "Product",
-        "api-reference": "API reference",
-      };
+  "all": "All",
+  "flows": "Flows",
+  "architecture": "Architecture",
+  "implementation": "Implementation",
+  "deployment": "Deployment",
+  "operations": "Operations",
+  "economics": "Economics",
+  "product": "Product",
+  "api-reference": "API reference",
+  "upstream-pearl": "Upstream (Pearl)",
+  "upstream-game": "Upstream (Game)",
+  "contracts": "Contracts"
+}
 
       let activeCategory = "all";
       let searchQuery = "";

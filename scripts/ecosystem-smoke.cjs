@@ -149,7 +149,7 @@ async function testEnvConfig() {
   const required = ["DATABASE_URL", "JWT_SECRET"];
   const tuition = ["NEXT_PUBLIC_APP_URL"];
   const livepay = ["LIVEPAY_API_KEY", "LIVEPAY_ACCOUNT_NUMBER"];
-  const prod = ["RESEND_API_KEY", "RESEND_FROM"];
+  const prodEmailFrom = ["TRANSACTIONAL_EMAIL_FROM", "RESEND_FROM"];
 
   for (const k of required) {
     if (process.env[k]?.trim()) pass(`env ${k}`);
@@ -163,9 +163,13 @@ async function testEnvConfig() {
     if (process.env[k]?.trim()) pass(`env ${k}`);
     else warn(`env ${k} unset`);
   }
-  for (const k of prod) {
-    if (process.env[k]?.trim()) pass(`env ${k} (email)`);
-    else warn(`env ${k} unset — workspace verification email dev-only fallback`);
+  const hasEmailProvider =
+    process.env.BREVO_API_KEY?.trim() || process.env.RESEND_API_KEY?.trim();
+  const hasEmailFrom = prodEmailFrom.some((k) => process.env[k]?.trim());
+  if (hasEmailProvider && hasEmailFrom) {
+    pass("env transactional email (Brevo or Resend + from)");
+  } else {
+    warn("env BREVO_API_KEY or RESEND_API_KEY + TRANSACTIONAL_EMAIL_FROM unset — dev verification link fallback");
   }
 }
 

@@ -8,6 +8,7 @@ import { ServerDbUnavailable } from "@/components/ui/ServerDbUnavailable";
 import { getStudentBalanceSummary } from "@/lib/tuition-balance";
 import { serializeStudentBalance } from "@/lib/tuition-balance-json";
 import { tryServerDb } from "@/lib/run-server-db";
+import { getOpenPayCardPlatformSettings } from "@/lib/openpay-card-settings";
 
 export default async function AdminStudentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getAdminFromCookies();
@@ -53,6 +54,16 @@ export default async function AdminStudentDetailPage({ params }: { params: Promi
   const totalTon = agg._sum.tonAmount ?? 0;
   const totalUgx = agg._sum.totalUgx ?? 0;
 
+  const [openPayCardSettings, openPayCardResult] = await Promise.all([
+    getOpenPayCardPlatformSettings(),
+    tryServerDb(() =>
+      prisma.openPayCard.findUnique({
+        where: { studentId: id },
+        include: { _count: { select: { topups: true } } },
+      }),
+    ),
+  ]);
+
   const balanceSummary = await getStudentBalanceSummary({
     studentId: student.id,
     organizationId: student.organizationId,
@@ -94,6 +105,18 @@ export default async function AdminStudentDetailPage({ params }: { params: Promi
       totalUgx={totalUgx}
       payments={paymentRows}
       balance={balance}
+      openPayCardEnabled={openPayCardSettings.enabled}
+      openPayCard={
+        openPayCardResult.ok && openPayCardResult.data
+          ? {
+              status: openPayCardResult.data.status,
+              maskedPan: openPayCardResult.data.maskedPan,
+              balanceUgx: openPayCardResult.data.balanceUgx,
+              issuedAt: openPayCardResult.data.issuedAt?.toISOString() ?? null,
+              topupCount: openPayCardResult.data._count.topups,
+            }
+          : null
+      }
     />
   );
 }

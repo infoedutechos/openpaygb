@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { livePayCustomerReference } from "@/lib/livepay/client";
 
 import { confirmLivePayPaymentIfEligible } from "@/lib/livepay/confirm-payment";
+import { confirmOpenPayCardTopupFromLivePay } from "@/lib/openpay-card-momo-topup";
 
 import { livePayWebhookAuthorized } from "@/lib/livepay/verify-webhook-signature";
 
@@ -138,6 +139,16 @@ export async function POST(req: Request) {
 
 
 
+    const topupResult = await confirmOpenPayCardTopupFromLivePay(ref, {
+      status: payload.status,
+      amount: payload.amount,
+      currency: payload.currency,
+      internal_reference: payload.internal_reference,
+    });
+    if (topupResult.action === "card_topup_confirmed" || topupResult.action === "already_confirmed") {
+      return NextResponse.json({ ok: true, action: topupResult.action, cardTopupId: ref });
+    }
+
     const payment = await withPrismaRetry(() =>
 
       prisma.payment.findFirst({
@@ -156,7 +167,11 @@ export async function POST(req: Request) {
 
     if (!payment) {
 
-      return NextResponse.json({ ok: true, action: "unknown_reference", reference: ref });
+      return NextResponse.json({
+        ok: true,
+        action: topupResult.action !== "unknown_topup" ? topupResult.action : "unknown_reference",
+        reference: ref,
+      });
 
     }
 
