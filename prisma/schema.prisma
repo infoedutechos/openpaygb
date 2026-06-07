@@ -471,6 +471,20 @@ model DeploymentEnvOverride {
   @@map("deployment_env_overrides")
 }
 
+/** Master-added env var definitions (extends built-in registry in code). */
+model DeploymentEnvRegistryCustom {
+  name        String   @id @map("_id")
+  label       String
+  description String   @default("")
+  sensitive   Boolean  @default(true)
+  requirement String   @default("optional")
+  createdBy   String   @default("")
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@map("deployment_env_registry_custom")
+}
+
 model ProcessedWebhook {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   dedupeKey String   @unique
@@ -1647,7 +1661,7 @@ model KnowledgeArticle {
   @@map("knowledge_articles")
 }
 
-/** Unanswered copilot queries — aggregated for continuous KB learning (master promotes to articles). */
+/** Copilot queries — auto-promoted to articles; pending = too short or not yet learned. */
 model KnowledgeLearningGap {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
   queryNorm     String   @unique

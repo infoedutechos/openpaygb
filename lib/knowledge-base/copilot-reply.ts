@@ -1,4 +1,5 @@
-import { searchKnowledgeBase } from "@/lib/knowledge-base/search";
+import { autonomousLearnFromGap } from "@/lib/knowledge-base/autonomous-learning";
+import { searchKnowledgeBase, searchKnowledgeBaseRelaxed } from "@/lib/knowledge-base/search";
 import type { PlatformHub } from "@/lib/knowledge-base/types";
 import { getSupportChatFallbackReply } from "@/utils/support-chat-fallback";
 
@@ -60,6 +61,13 @@ export async function composeCopilotReply(
   const hits = await searchKnowledgeBase({ query: trimmed, hub, limit: 4 });
   const kb = formatKbReply(trimmed, hits);
   if (kb) return kb;
+
+  const relaxed = await searchKnowledgeBaseRelaxed({ query: trimmed, hub, limit: 4 });
+  const relaxedKb = formatKbReply(trimmed, relaxed);
+  if (relaxedKb) return relaxedKb;
+
+  const learned = await autonomousLearnFromGap({ query: trimmed, hub });
+  if (learned) return learned;
 
   return {
     reply: getSupportChatFallbackReply(trimmed),

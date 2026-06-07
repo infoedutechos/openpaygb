@@ -16,7 +16,7 @@ import {
 
 } from "@/lib/deployment-env-resolve";
 
-import { deploymentEnvRegistryNames } from "@/lib/deployment-env-registry";
+import { getMergedDeploymentEnvRegistryNames } from "@/lib/deployment-env-registry";
 
 import { apiErrorResponse } from "@/lib/api-error";
 
@@ -85,15 +85,12 @@ export async function PATCH(req: Request) {
 
 
     const updates = parsed.data.updates ?? {};
+    const allowedNames = new Set(await getMergedDeploymentEnvRegistryNames());
 
     for (const key of Object.keys(updates)) {
-
-      if (!deploymentEnvRegistryNames().includes(key)) {
-
+      if (!allowedNames.has(key)) {
         return NextResponse.json({ error: `Unknown variable: ${key}` }, { status: 400 });
-
       }
-
     }
 
 

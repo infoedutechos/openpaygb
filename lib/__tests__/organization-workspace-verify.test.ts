@@ -35,7 +35,7 @@ describe("organization-workspace-verify", () => {
         registrationContactEmail: "school@example.com",
         registrationEmailVerifiedAt: null,
       }),
-    ).toBe(false);
+    ).toBe(true);
     expect(
       workspaceEmailVerifyStatus({
         registrationContactEmail: "school@example.com",

@@ -6,10 +6,7 @@ import {
   decryptDeploymentEnvValue,
   encryptDeploymentEnvValue,
 } from "@/lib/deployment-env-crypto";
-import {
-  getDeploymentEnvDefinition,
-  isDeploymentEnvRegistryName,
-} from "@/lib/deployment-env-registry";
+import { resolveDeploymentEnvDefinition } from "@/lib/deployment-env-custom-registry";
 
 function deploymentEnvOverrideClient() {
   const client = prisma.deploymentEnvOverride;
@@ -70,10 +67,10 @@ export async function patchDeploymentEnvOverrides(
 
   const updates = input.updates ?? {};
   for (const [name, value] of Object.entries(updates)) {
-    if (!isDeploymentEnvRegistryName(name)) {
+    const def = await resolveDeploymentEnvDefinition(name);
+    if (!def) {
       throw new Error(`Unknown environment variable: ${name}`);
     }
-    const def = getDeploymentEnvDefinition(name)!;
     const trimmed = typeof value === "string" ? value.trim() : "";
     if (!trimmed) {
       await withPrismaRetry(() =>
@@ -102,7 +99,7 @@ export async function patchDeploymentEnvOverrides(
   }
 
   for (const name of input.clear ?? []) {
-    if (!isDeploymentEnvRegistryName(name)) continue;
+    if (!(await resolveDeploymentEnvDefinition(name))) continue;
     await withPrismaRetry(() =>
       deploymentEnvOverrideClient().deleteMany({ where: { name } }),
     );

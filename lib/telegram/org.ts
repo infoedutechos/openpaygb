@@ -1,9 +1,11 @@
 import { getActiveOrganizationBySlug } from "@/lib/organizations";
 import { getDefaultOrganizationId } from "@/lib/default-organization";
+import { deploymentEnv, warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 
 /** Tenant for the Telegram bot (`TELEGRAM_ORG_SLUG`, else default org). */
 export async function getTelegramOrganizationId(): Promise<string> {
-  const slug = process.env.TELEGRAM_ORG_SLUG?.trim().toLowerCase();
+  await warmDeploymentEnvCache();
+  const slug = deploymentEnv("TELEGRAM_ORG_SLUG").toLowerCase();
   if (slug) {
     const org = await getActiveOrganizationBySlug(slug);
     if (org) return org.id;
@@ -12,5 +14,5 @@ export async function getTelegramOrganizationId(): Promise<string> {
 }
 
 export function telegramOrganizationSlug(): string {
-  return process.env.TELEGRAM_ORG_SLUG?.trim().toLowerCase() || "default";
+  return deploymentEnv("TELEGRAM_ORG_SLUG").toLowerCase() || "default";
 }

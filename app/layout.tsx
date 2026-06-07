@@ -8,7 +8,8 @@ import { SiteChromeFooter } from "@/components/SiteChromeFooter";
 import { ShareFab } from "@/components/ShareFab";
 import PlatformAssistShell from "@/components/platform/PlatformAssistShell";
 import { ConditionalSiteBottomNav } from "@/components/ConditionalSiteBottomNav";
-import { PwaRefreshButton } from "@/components/PwaRefreshButton";
+import { PwaTitleBarMenu } from "@/components/PwaTitleBarMenu";
+import { PwaRefreshShortcutHandler } from "@/components/PwaRefreshShortcutHandler";
 import { buildRootMetadata } from "@/lib/root-metadata";
 import { resolveRequestSiteOrigin } from "@/lib/request-site-origin";
 import { getPublicSiteUiSettings } from "@/lib/site-ui-settings";
@@ -31,7 +32,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <SiteChromeFooter settings={siteUi} />
             <ConditionalSiteBottomNav />
             <ShareFab />
-            <PwaRefreshButton />
+            <PwaTitleBarMenu />
+            <PwaRefreshShortcutHandler />
             <PlatformAssistShell />
           </TonConnectAppProvider>
         </PlatformSocialProvider>

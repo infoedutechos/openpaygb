@@ -6,7 +6,6 @@ import Link from "next/link";
 import { PasswordRevealInput } from "@/components/PasswordRevealInput";
 import { MasterOrgMobileCard } from "@/components/admin/MasterOrgMobileCard";
 import {
-  canMasterApproveWorkspace,
   workspaceEmailVerifyStatus,
 } from "@/lib/organization-workspace-verify";
 
@@ -200,6 +199,29 @@ export default function MasterOrganizationsPage() {
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Update failed");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function resendVerification(org: OrgRow) {
+    setBusyId(org.id);
+    setError(null);
+    setCreateMsg(null);
+    try {
+      const r = await fetch(
+        `/api/master/organizations/${encodeURIComponent(org.id)}/resend-verification`,
+        { method: "POST", credentials: "include" },
+      );
+      const j = (await r.json()) as { error?: string; message?: string; devConfirmUrl?: string };
+      if (!r.ok) throw new Error(j.error ?? "Could not resend verification email");
+      setCreateMsg(
+        j.devConfirmUrl
+          ? `${j.message ?? "Sent."} Dev link: ${j.devConfirmUrl}`
+          : (j.message ?? "Verification email sent."),
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not resend verification email");
     } finally {
       setBusyId(null);
     }
@@ -784,20 +806,16 @@ export default function MasterOrganizationsPage() {
                         <span className="text-xs text-slate-500">template</span>
                       ) : o.tenantStatus === "pending" ? (
                         <div className="flex flex-col gap-1">
-                          {!canMasterApproveWorkspace(o) ? (
-                            <span className="max-w-[140px] text-[10px] leading-snug text-amber-300/90">
-                              School must verify email first
+                          {workspaceEmailVerifyStatus(o) === "pending" ? (
+                            <span className="max-w-[180px] text-[10px] leading-snug text-amber-300/90">
+                              Email not verified — you may approve anyway; their dashboard will prompt them to confirm.
                             </span>
                           ) : null}
                           <div className="flex flex-wrap gap-1">
                           <button
                             type="button"
-                            disabled={busyId === o.id || !canMasterApproveWorkspace(o)}
-                            title={
-                              canMasterApproveWorkspace(o)
-                                ? "Approve workspace"
-                                : "Applicant must click the ODEL HUB verification email first"
-                            }
+                            disabled={busyId === o.id}
+                            title="Approve workspace"
                             onClick={() => void patchOrg(o.id, "approve")}
                             className="rounded bg-emerald-700/80 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
                           >

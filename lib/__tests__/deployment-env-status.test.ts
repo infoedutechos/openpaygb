@@ -10,6 +10,10 @@ vi.mock("@/lib/deployment-env-overrides", () => ({
   listDeploymentEnvOverrideNames: vi.fn().mockResolvedValue([]),
 }));
 
+vi.mock("@/lib/deployment-env-custom-registry", () => ({
+  listCustomRegistryEntries: vi.fn().mockResolvedValue([]),
+}));
+
 describe("getDeploymentEnvStatus", () => {
   beforeEach(() => {
     vi.unstubAllEnvs();

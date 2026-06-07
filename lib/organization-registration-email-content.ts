@@ -22,6 +22,8 @@ export type WorkspaceRegistrationEmailDetails = {
   contactEmail: string;
   note: string;
   registeredAt: Date;
+  /** When true, workspace activates automatically after email verify (no master approval). */
+  autoRegistrationEnabled?: boolean;
 };
 
 export function buildWorkspaceRegistrationEmailHtml(
@@ -45,7 +47,7 @@ export function buildWorkspaceRegistrationEmailHtml(
     <li>Platform master review and secure school staff sign-in</li>
   </ul>
 </div>
-<p>Please confirm your contact email using the button below. After confirmation you will be redirected to the <strong>school admin sign-in</strong> page. Dashboard login credentials are issued separately once your workspace is approved.</p>
+<p>Please confirm your contact email using the button below. ${details.autoRegistrationEnabled ? "After confirmation your workspace is <strong>activated automatically</strong> (programmes and fees copied from the platform template). School admin login credentials are issued separately by the platform operator." : "After confirmation you will be redirected to track your workspace status. A platform master will review and approve your school workspace."}</p>
 <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden">
   <tbody>
     <tr style="background:#f8fafc"><td style="padding:6px 12px;color:#64748b;width:38%">School / institution</td><td style="padding:6px 12px">${escapeHtml(details.schoolName)}</td></tr>
@@ -56,7 +58,7 @@ export function buildWorkspaceRegistrationEmailHtml(
   </tbody>
 </table>
 <p><a href="${escapeHtml(verifyUrl)}" style="display:inline-block;background:linear-gradient(90deg,#06b6d4,#0284c7);color:#020617;font-weight:600;text-decoration:none;padding:12px 20px;border-radius:10px">Confirm email &amp; continue</a></p>
-<p style="font-size:13px;color:#64748b">After confirmation you will be taken to the <strong>school admin sign-in</strong> page. Login credentials are issued separately after a platform master approves your workspace.</p>
+<p style="font-size:13px;color:#64748b">${details.autoRegistrationEnabled ? "After confirmation your workspace becomes active without waiting for master approval. Login credentials are issued separately by the platform operator." : "After confirmation a platform master will review your workspace. Login credentials are issued separately once approved."}</p>
 <p style="font-size:12px;color:#94a3b8">This link expires in 72 hours. If you did not request a workspace, you can ignore this email.</p>
 <p style="font-size:11px;color:#94a3b8;word-break:break-all">${escapeHtml(verifyUrl)}</p>
 </div>`;
@@ -88,7 +90,9 @@ export function buildWorkspaceRegistrationEmailText(
     "",
     `Confirm your email: ${verifyUrl}`,
     "",
-    "After confirmation you will be taken to the school admin sign-in page. Login credentials are issued separately after a platform master approves your workspace.",
+    details.autoRegistrationEnabled
+      ? "After confirmation your workspace becomes active automatically. Login credentials are issued separately by the platform operator."
+      : "After confirmation a platform master will review your workspace. Login credentials are issued separately once approved.",
     "",
     "This link expires in 72 hours.",
   );

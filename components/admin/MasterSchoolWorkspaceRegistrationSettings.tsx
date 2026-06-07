@@ -65,8 +65,10 @@ export function MasterSchoolWorkspaceRegistrationSettings() {
       <h2 className="text-sm font-semibold text-amber-100">Platform master approval</h2>
       <p className="mt-2 max-w-3xl text-sm text-slate-400">
         Enable or disable master approval for self-serve school workspace requests at{" "}
-        <span className="font-mono text-slate-300">/admin/register</span>. When disabled, workspaces are activated
-        automatically after the applicant verifies their email.
+        <span className="font-mono text-slate-300">/admin/register</span>.{" "}
+        <strong className="text-slate-300">Email verification is always required</strong> — auto-registration only
+        skips the master approval step after the applicant confirms their email. Until then, organizations show{" "}
+        <span className="text-amber-300">Awaiting email</span> on the organizations list.
       </p>
 
       <label className="mt-5 flex min-h-[44px] cursor-pointer items-start gap-3 rounded-lg border border-white/10 bg-black/20 px-4 py-3 md:min-h-0 md:items-center">

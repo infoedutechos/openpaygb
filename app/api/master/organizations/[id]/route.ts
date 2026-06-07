@@ -71,15 +71,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   }
 
   // approve
-  if (workspaceEmailVerificationRequired(org)) {
-    return NextResponse.json(
-      {
-        error:
-          "Applicant has not verified their registration email yet. They must click the ODEL HUB link in their inbox before workspace approval.",
-      },
-      { status: 400 },
-    );
-  }
+  const emailUnverified = workspaceEmailVerificationRequired(org);
 
   if (org.tenantStatus !== OrganizationTenantStatus.pending) {
     if (org.tenantStatus === OrganizationTenantStatus.active) {
@@ -93,7 +85,15 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
 
   try {
     const updated = await activatePendingOrganizationWorkspace(id);
-    return NextResponse.json({ organization: updated });
+    return NextResponse.json({
+      organization: updated,
+      ...(emailUnverified
+        ? {
+            warning:
+              "Workspace approved, but the registration email is not verified yet. The school dashboard will show a reminder until they confirm.",
+          }
+        : {}),
+    });
   } catch (e) {
     return apiErrorResponse(e, {
       route: "master/organizations",

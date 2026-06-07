@@ -3,6 +3,8 @@
  * Values are never stored here — only names, labels, and documentation.
  */
 
+import { listCustomRegistryEntries } from "@/lib/deployment-env-custom-registry";
+
 export type EnvRequirement = "always" | "production" | "optional";
 
 export type EnvVarDefinition = {
@@ -352,6 +354,51 @@ export const DEPLOYMENT_ENV_GROUPS: EnvGroupDefinition[] = [
     ],
   },
   {
+    id: "telegram",
+    title: "Telegram bot & announcements",
+    description:
+      "Tuition bot webhooks, Master Admin Telegram user notifications, and optional announcement channel posts.",
+    masterUiAnchor: "platform-communications",
+    docsPath: "docs/LOCAL_DEV_AND_CREDENTIALS.md",
+    vars: [
+      {
+        name: "BOT_TOKEN",
+        label: "Play / broadcast bot token",
+        description: "Primary token for DMs, Play admin broadcasts, and Master platform notifications.",
+        sensitive: true,
+        requirement: "optional",
+      },
+      {
+        name: "TELEGRAM_BOT_TOKEN",
+        label: "Tuition bot token",
+        description: "Tuition webhook bot (falls back when BOT_TOKEN is unset for notify helpers).",
+        sensitive: true,
+        requirement: "optional",
+      },
+      {
+        name: "TELEGRAM_ANNOUNCEMENT_CHANNEL_ID",
+        label: "Announcement channel ID",
+        description: "Channel for optional “post to Telegram channel” from Master / Play admin notifications.",
+        sensitive: false,
+        requirement: "optional",
+      },
+      {
+        name: "TELEGRAM_ORG_SLUG",
+        label: "Telegram org slug",
+        description: "Single-tenant bot binding for tuition Telegram flow (default: default).",
+        sensitive: false,
+        requirement: "optional",
+      },
+      {
+        name: "TELEGRAM_WEBHOOK_SECRET",
+        label: "Webhook secret",
+        description: "Optional header check for POST /api/webhooks/telegram.",
+        sensitive: true,
+        requirement: "optional",
+      },
+    ],
+  },
+  {
     id: "support-public",
     title: "Public support (UI)",
     description: "Shown in footer/support widget; Master Social settings can override phone/email.",
@@ -432,4 +479,32 @@ export function getDeploymentEnvDefinition(name: string): EnvVarDefinition | und
 
 export function isDeploymentEnvRegistryName(name: string): boolean {
   return REGISTRY_BY_NAME.has(name);
+}
+
+/** Built-in groups plus Master-added custom variables (async). */
+export async function getMergedDeploymentEnvGroups(): Promise<EnvGroupDefinition[]> {
+  const custom = await listCustomRegistryEntries();
+  if (custom.length === 0) return DEPLOYMENT_ENV_GROUPS;
+
+  const customGroup: EnvGroupDefinition = {
+    id: "custom",
+    title: "Custom (Master added)",
+    description:
+      "Variables you added from Master Admin. Set values below; they are encrypted like other dashboard overrides.",
+    masterUiAnchor: "deployment-environment",
+    vars: custom.map((c) => ({
+      name: c.name,
+      label: c.label,
+      description: c.description,
+      sensitive: c.sensitive,
+      requirement: c.requirement,
+    })),
+  };
+
+  return [...DEPLOYMENT_ENV_GROUPS, customGroup];
+}
+
+export async function getMergedDeploymentEnvRegistryNames(): Promise<string[]> {
+  const groups = await getMergedDeploymentEnvGroups();
+  return groups.flatMap((g) => g.vars.map((v) => v.name));
 }

@@ -29,6 +29,8 @@ export function MasterPlatformCommunicationsSettings() {
   const [body, setBody] = useState("");
   const [href, setHref] = useState("");
   const [audience, setAudience] = useState<(typeof AUDIENCES)[number]>("all");
+  const [sendToTelegramUsers, setSendToTelegramUsers] = useState(true);
+  const [postToTelegramChannel, setPostToTelegramChannel] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -66,6 +68,8 @@ export function MasterPlatformCommunicationsSettings() {
           href: href.trim() || null,
           audience,
           isActive: true,
+          sendToUserBotChats: sendToTelegramUsers,
+          postToTelegram: postToTelegramChannel,
         }),
       });
       const parsed = await readJsonResponse(r);
@@ -73,7 +77,10 @@ export function MasterPlatformCommunicationsSettings() {
       setTitle("");
       setBody("");
       setHref("");
-      setMessage("Notification published to the platform bell.");
+      const parts = ["Notification published to the platform bell"];
+      if (sendToTelegramUsers) parts.push("Telegram user accounts");
+      if (postToTelegramChannel) parts.push("Telegram announcement channel");
+      setMessage(`${parts.join(" and ")}.`);
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Create failed");
@@ -97,6 +104,25 @@ export function MasterPlatformCommunicationsSettings() {
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Update failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function recallTelegram(row: NotificationRow) {
+    setBusy(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const r = await fetch(`/api/master/notifications/${row.id}/recall`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const parsed = await readJsonResponse<{ message?: string }>(r);
+      if (!parsed.ok) throw new Error(parsed.error);
+      setMessage(parsed.data.message ?? "Telegram recall started.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Recall failed");
     } finally {
       setBusy(false);
     }
@@ -132,8 +158,11 @@ export function MasterPlatformCommunicationsSettings() {
         </p>
         <h2 className="mt-2 text-lg font-semibold text-white">Platform communications</h2>
         <p className="mt-2 max-w-3xl text-sm text-slate-400">
-          Manage in-app notifications shown in the bell on tuition, play, and admin dashboards. Chat answers come from
-          the knowledge base — edit articles in the section below.
+          Manage in-app notifications shown in the bell on tuition, play, and admin dashboards. Optionally push the same
+          message to Telegram user accounts (Play <code className="text-xs">User</code> and tuition{" "}
+          <code className="text-xs">Student</code> records with a linked Telegram ID). Users must have opened the bot at
+          least once to receive DMs. Set <code className="text-xs">BOT_TOKEN</code> or{" "}
+          <code className="text-xs">TELEGRAM_BOT_TOKEN</code> in deployment env.
         </p>
         <div className="mt-4 max-w-xs">
           <DashboardChatNavButton variant="master" />
@@ -185,11 +214,39 @@ export function MasterPlatformCommunicationsSettings() {
             className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-white"
           />
         </label>
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 flex flex-col gap-3">
+          <label className="flex items-start gap-2 text-sm text-slate-300">
+            <input
+              type="checkbox"
+              checked={sendToTelegramUsers}
+              onChange={(e) => setSendToTelegramUsers(e.target.checked)}
+              className="mt-1"
+            />
+            <span>
+              <strong className="text-white">Send to Telegram user accounts</strong>
+              <span className="mt-0.5 block text-xs text-slate-500">
+                Audience filter applies: tuition → students, play → play users, all → both.
+              </span>
+            </span>
+          </label>
+          <label className="flex items-start gap-2 text-sm text-slate-300">
+            <input
+              type="checkbox"
+              checked={postToTelegramChannel}
+              onChange={(e) => setPostToTelegramChannel(e.target.checked)}
+              className="mt-1"
+            />
+            <span>
+              <strong className="text-white">Post to Telegram announcement channel</strong>
+              <span className="mt-0.5 block text-xs text-slate-500">
+                Requires <code className="text-[10px]">TELEGRAM_ANNOUNCEMENT_CHANNEL_ID</code>.
+              </span>
+            </span>
+          </label>
           <button
             type="submit"
             disabled={busy}
-            className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-50"
+            className="w-fit rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-50"
           >
             Publish notification
           </button>
@@ -249,6 +306,14 @@ export function MasterPlatformCommunicationsSettings() {
                         className="rounded border border-white/15 px-2 py-1 hover:bg-white/5 disabled:opacity-50"
                       >
                         {row.isActive ? "Hide" : "Show"}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void recallTelegram(row)}
+                        className="rounded border border-violet-500/30 px-2 py-1 text-violet-200 hover:bg-violet-950/30 disabled:opacity-50"
+                      >
+                        Recall Telegram
                       </button>
                       <button
                         type="button"

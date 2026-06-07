@@ -92,6 +92,12 @@ export function MasterDeploymentEnvSettings() {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({ core: true, livepay: true, relworx: true });
   const [copied, setCopied] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [addingRegistry, setAddingRegistry] = useState(false);
+  const [newVarName, setNewVarName] = useState("");
+  const [newVarLabel, setNewVarLabel] = useState("");
+  const [newVarDescription, setNewVarDescription] = useState("");
+  const [newVarSensitive, setNewVarSensitive] = useState(true);
+  const [newVarRequirement, setNewVarRequirement] = useState<EnvVarRow["requirement"]>("optional");
 
   const load = useCallback(async (probe = false) => {
     setError(null);
@@ -190,6 +196,68 @@ export function MasterDeploymentEnvSettings() {
     }
   }
 
+  async function addRegistryVariable(e: React.FormEvent) {
+    e.preventDefault();
+    setAddingRegistry(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const r = await fetchJson("/api/master/deployment-env/registry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          name: newVarName.trim(),
+          label: newVarLabel.trim(),
+          description: newVarDescription.trim(),
+          sensitive: newVarSensitive,
+          requirement: newVarRequirement,
+        }),
+      });
+      const parsed = await readJsonResponse<{ status?: DeploymentPayload; error?: string }>(r);
+      if (!parsed.ok) throw new Error(parsed.error);
+      if (parsed.data.status) setData(parsed.data.status);
+      else await load();
+      const addedName = newVarName.trim().toUpperCase();
+      setNewVarName("");
+      setNewVarLabel("");
+      setNewVarDescription("");
+      setNewVarSensitive(true);
+      setNewVarRequirement("optional");
+      setExpanded((prev) => ({ ...prev, custom: true }));
+      setSuccess(
+        `Added ${addedName} to the deployment registry. Set its value in Custom (Master added).`,
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not add variable");
+    } finally {
+      setAddingRegistry(false);
+    }
+  }
+
+  async function removeRegistryVariable(name: string) {
+    if (!window.confirm(`Remove ${name} from the registry? Dashboard override for this name will also be deleted.`)) {
+      return;
+    }
+    setError(null);
+    setSuccess(null);
+    try {
+      const r = await fetchJson("/api/master/deployment-env/registry", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ name }),
+      });
+      const parsed = await readJsonResponse<{ status?: DeploymentPayload; error?: string }>(r);
+      if (!parsed.ok) throw new Error(parsed.error);
+      if (parsed.data.status) setData(parsed.data.status);
+      else await load();
+      setSuccess(`Removed ${name} from the custom registry.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not remove variable");
+    }
+  }
+
   async function clearDashboardOverride(name: string) {
     setError(null);
     setSuccess(null);
@@ -224,10 +292,11 @@ export function MasterDeploymentEnvSettings() {
         <div>
           <h2 className="text-sm font-semibold text-indigo-100">Deployment environment</h2>
           <p className="mt-2 max-w-3xl text-xs leading-relaxed text-slate-400">
-            Save platform credentials here — values are <strong className="font-medium text-slate-300">encrypted in MongoDB</strong>{" "}
-            and override server / Vercel env at runtime. Dashboard values take precedence over{" "}
-            <code className="rounded bg-black/35 px-1">.env.local</code>. Leave a field blank and save to clear a dashboard
-            override. Secrets are never shown in full after save.
+            Save platform credentials here for <strong className="font-medium text-slate-300">local dev and Vercel production</strong> — values are{" "}
+            <strong className="font-medium text-slate-300">encrypted in MongoDB</strong> and override server / Vercel env at runtime on every
+            deployment. Dashboard values take precedence over <code className="rounded bg-black/35 px-1">.env.local</code>. Leave a field blank and save to clear a dashboard
+            override. Secrets are never shown in full after save. Use <strong className="text-slate-300">Add custom variable</strong>{" "}
+            below to register new env names (e.g. integration keys not yet in the built-in list).
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -292,6 +361,75 @@ export function MasterDeploymentEnvSettings() {
               Last PSP probe: {new Date(data.probedAt).toLocaleString()}
             </p>
           ) : null}
+
+          <form
+            onSubmit={(e) => void addRegistryVariable(e)}
+            className="mt-5 rounded-lg border border-violet-500/25 bg-violet-950/15 p-4"
+          >
+            <p className="text-xs font-semibold uppercase tracking-wide text-violet-300">Add custom variable</p>
+            <p className="mt-1 text-[11px] text-slate-500">
+              Registers a new name in the Master env list (UPPER_SNAKE_CASE). Then set its value in the{" "}
+              <strong className="text-slate-400">Custom (Master added)</strong> group.
+            </p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <label className="block text-xs">
+                <span className="text-slate-400">Variable name</span>
+                <input
+                  value={newVarName}
+                  onChange={(e) => setNewVarName(e.target.value)}
+                  placeholder="MY_API_KEY"
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-[#0d1526] px-3 py-2 font-mono text-xs text-white"
+                  required
+                />
+              </label>
+              <label className="block text-xs">
+                <span className="text-slate-400">Label</span>
+                <input
+                  value={newVarLabel}
+                  onChange={(e) => setNewVarLabel(e.target.value)}
+                  placeholder="My API key"
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-[#0d1526] px-3 py-2 text-xs text-white"
+                  required
+                />
+              </label>
+              <label className="block text-xs sm:col-span-2">
+                <span className="text-slate-400">Description</span>
+                <input
+                  value={newVarDescription}
+                  onChange={(e) => setNewVarDescription(e.target.value)}
+                  placeholder="What this variable is used for"
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-[#0d1526] px-3 py-2 text-xs text-white"
+                />
+              </label>
+              <label className="flex items-center gap-2 text-xs text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={newVarSensitive}
+                  onChange={(e) => setNewVarSensitive(e.target.checked)}
+                />
+                Sensitive (mask after save)
+              </label>
+              <label className="block text-xs">
+                <span className="text-slate-400">Requirement</span>
+                <select
+                  value={newVarRequirement}
+                  onChange={(e) => setNewVarRequirement(e.target.value as EnvVarRow["requirement"])}
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-[#0d1526] px-3 py-2 text-xs text-white"
+                >
+                  <option value="optional">Optional</option>
+                  <option value="production">Production</option>
+                  <option value="always">Required</option>
+                </select>
+              </label>
+            </div>
+            <button
+              type="submit"
+              disabled={addingRegistry}
+              className="mt-3 rounded-lg bg-violet-600 px-4 py-2 text-xs font-semibold text-white hover:bg-violet-500 disabled:opacity-50"
+            >
+              {addingRegistry ? "Adding…" : "Add to registry"}
+            </button>
+          </form>
 
           <div className="mt-5 space-y-3">
             {data.groups.map((group) => {
@@ -388,15 +526,26 @@ export function MasterDeploymentEnvSettings() {
                                 className="mt-1.5 w-full rounded-lg border border-indigo-500/20 bg-[#0d1526] px-3 py-2 font-mono text-xs text-white placeholder:text-slate-600"
                               />
                             </div>
-                            {v.source === "dashboard" ? (
-                              <button
-                                type="button"
-                                onClick={() => void clearDashboardOverride(v.name)}
-                                className="mt-2 text-[10px] text-rose-300 hover:text-rose-100"
-                              >
-                                Clear dashboard override (fall back to server env)
-                              </button>
-                            ) : null}
+                            <div className="mt-2 flex flex-wrap gap-3">
+                              {v.source === "dashboard" ? (
+                                <button
+                                  type="button"
+                                  onClick={() => void clearDashboardOverride(v.name)}
+                                  className="text-[10px] text-rose-300 hover:text-rose-100"
+                                >
+                                  Clear dashboard override (fall back to server env)
+                                </button>
+                              ) : null}
+                              {group.id === "custom" ? (
+                                <button
+                                  type="button"
+                                  onClick={() => void removeRegistryVariable(v.name)}
+                                  className="text-[10px] text-violet-300 hover:text-violet-100"
+                                >
+                                  Remove from registry
+                                </button>
+                              ) : null}
+                            </div>
                           </div>
                         ))}
                       </div>

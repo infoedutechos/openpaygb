@@ -15,6 +15,7 @@ import { MasterOpenPayCardSettings } from "@/components/admin/MasterOpenPayCardS
 import { MasterOpenPayCardsOverview } from "@/components/admin/MasterOpenPayCardsOverview";
 import { MasterDeploymentEnvSettings } from "@/components/admin/MasterDeploymentEnvSettings";
 import { MasterKnowledgeBaseSettings } from "@/components/admin/MasterKnowledgeBaseSettings";
+import { MasterPlatformCommunicationsSettings } from "@/components/admin/MasterPlatformCommunicationsSettings";
 import { MasterHubMaintenanceSettings } from "@/components/admin/MasterHubMaintenanceSettings";
 import { readJsonResponse } from "@/utils/read-json-response";
 
@@ -228,6 +229,8 @@ export default function MasterManagerOverviewPage() {
       <MasterHubMaintenanceSettings />
 
       <MasterKnowledgeBaseSettings />
+
+      <MasterPlatformCommunicationsSettings />
 
       <MasterPlatformCheckoutFeeSettings />
 

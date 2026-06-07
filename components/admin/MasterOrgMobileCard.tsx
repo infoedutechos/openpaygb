@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { canMasterApproveWorkspace, workspaceEmailVerifyStatus } from "@/lib/organization-workspace-verify";
+import { workspaceEmailVerifyStatus } from "@/lib/organization-workspace-verify";
 
 export type MasterOrgRow = {
   id: string;
@@ -229,13 +229,15 @@ export function MasterOrgMobileCard({
           <span className="text-xs text-slate-500">template org</span>
         ) : o.tenantStatus === "pending" ? (
           <div className="flex flex-col gap-2">
-            {!canMasterApproveWorkspace(o) ? (
-              <p className="text-[11px] text-amber-300/90">Applicant must verify their ODEL HUB email before approval.</p>
+            {workspaceEmailVerifyStatus(o) === "pending" ? (
+              <p className="text-[11px] text-amber-300/90">
+                Email not verified yet — you can still approve; the school dashboard will show a reminder.
+              </p>
             ) : null}
             <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              disabled={busyId === o.id || !canMasterApproveWorkspace(o)}
+              disabled={busyId === o.id}
               onClick={onApprove}
               className="min-h-[44px] flex-1 rounded-lg bg-emerald-700/80 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
             >

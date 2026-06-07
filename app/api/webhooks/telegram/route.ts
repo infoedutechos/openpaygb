@@ -5,11 +5,13 @@ import { prisma } from "@/lib/prisma";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
 import { tryMarkWebhookProcessed } from "@/lib/webhook-dedupe";
 import { requireConfiguredSecret } from "@/lib/production-secrets";
+import { deploymentEnv, warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 
-function isAuthorized(req: Request): { ok: true } | { ok: false; response: NextResponse } {
+async function isAuthorized(req: Request): Promise<{ ok: true } | { ok: false; response: NextResponse }> {
+  await warmDeploymentEnvCache();
   const secret =
-    process.env.TELEGRAM_WEBHOOK_SECRET?.trim() ||
-    process.env.TELEGRAM_SECRET_TOKEN?.trim() ||
+    deploymentEnv("TELEGRAM_WEBHOOK_SECRET") ||
+    deploymentEnv("TELEGRAM_SECRET_TOKEN") ||
     "";
   const secretCheck = requireConfiguredSecret(
     "TELEGRAM_WEBHOOK_SECRET",
@@ -27,8 +29,9 @@ function isAuthorized(req: Request): { ok: true } | { ok: false; response: NextR
 }
 
 export async function POST(req: Request) {
-  const auth = isAuthorized(req);
+  const auth = await isAuthorized(req);
   if (!auth.ok) return auth.response;
+  await warmDeploymentEnvCache();
   if (rateLimitHit(`tg-hook:${clientIp(req)}`, 120, 60_000)) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }

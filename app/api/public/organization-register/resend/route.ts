@@ -3,11 +3,13 @@ import { z } from "zod";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
 import { findPendingOrganizationByContactEmail } from "@/lib/organization-intake";
 import { sendOrganizationRegistrationEmail } from "@/lib/organization-registration-email";
+import { getSchoolWorkspaceRegistrationPolicy } from "@/lib/school-workspace-registration-policy";
 import {
   issueOrganizationWorkspaceVerifyToken,
   organizationWorkspaceVerifyUrlForRequest,
 } from "@/lib/organization-workspace-verify";
 import { apiErrorResponse } from "@/lib/api-error";
+import { warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 
 const Body = z.object({
   email: z.string().email(),
@@ -17,6 +19,7 @@ const GENERIC = "If a pending workspace exists for that email, a new verificatio
 
 export async function POST(req: Request) {
   try {
+    await warmDeploymentEnvCache();
     const ip = clientIp(req);
     if (rateLimitHit(`org-register-resend:${ip}`, 5, 60 * 60 * 1000)) {
       return NextResponse.json({ error: "Too many requests. Try again later." }, { status: 429 });
@@ -41,6 +44,7 @@ export async function POST(req: Request) {
       return NextResponse.json(payload);
     }
 
+    const policy = await getSchoolWorkspaceRegistrationPolicy();
     const plain = await issueOrganizationWorkspaceVerifyToken(org.id);
     const emailSent = await sendOrganizationRegistrationEmail(
       emailLower,
@@ -50,6 +54,7 @@ export async function POST(req: Request) {
         contactEmail: emailLower,
         note: org.registrationNote ?? "",
         registeredAt: org.createdAt,
+        autoRegistrationEnabled: policy.autoRegistrationEnabled,
       },
       plain,
       req,

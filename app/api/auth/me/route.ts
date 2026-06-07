@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { getAdminFromCookies } from "@/lib/auth";
 import { getCachedAdminProfile } from "@/lib/cached-admin-profile";
 import { isAdminManualPaymentConfirmAllowed } from "@/lib/admin-payment-confirm-policy";
-import type { AuthMeJson } from "@/lib/auth-me";
+import type { AuthMeJson, AuthMeOrganization } from "@/lib/auth-me";
+import { workspaceEmailVerifyStatus } from "@/lib/organization-workspace-verify";
 import { apiErrorResponse } from "@/lib/api-error";
 import { isTransientMongoError } from "@/lib/prisma-retry";
 import { ADMIN_SESSION_COOKIE_NAME, hasAdminShellAccess } from "@/utils/admin-session";
@@ -58,6 +59,22 @@ export async function GET() {
       return NextResponse.json(body);
     }
 
+    const organization: AuthMeOrganization | null = admin.organization
+      ? {
+          id: admin.organization.id,
+          name: admin.organization.name,
+          slug: admin.organization.slug,
+          registrationContactEmail: admin.organization.registrationContactEmail ?? "",
+          registrationEmailVerifiedAt: admin.organization.registrationEmailVerifiedAt
+            ? admin.organization.registrationEmailVerifiedAt.toISOString()
+            : null,
+          emailVerifyStatus: workspaceEmailVerifyStatus({
+            registrationContactEmail: admin.organization.registrationContactEmail ?? "",
+            registrationEmailVerifiedAt: admin.organization.registrationEmailVerifiedAt,
+          }),
+        }
+      : null;
+
     const body: AuthMeJson = {
       admin: {
         id: admin.id,
@@ -65,7 +82,7 @@ export async function GET() {
         name: admin.name,
         role: admin.role,
         organizationId: admin.organizationId,
-        organization: admin.organization,
+        organization,
       },
       tuitionSession: true,
       adminShellAccess,

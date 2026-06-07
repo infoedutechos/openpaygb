@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
-import { recordKnowledgeLearningGap } from "@/lib/knowledge-base/continuous-learning";
 import { composeCopilotReply } from "@/lib/knowledge-base/copilot-reply";
 import { ensureKnowledgeBaseSeeded } from "@/lib/knowledge-base/seed";
 
@@ -41,9 +40,6 @@ export async function POST(req: NextRequest) {
 
   await ensureKnowledgeBaseSeeded();
   const copilot = await composeCopilotReply(lastUserText, hub);
-  if (copilot.source === "fallback" && lastUserText) {
-    void recordKnowledgeLearningGap({ query: lastUserText, hub }).catch(() => undefined);
-  }
 
   return NextResponse.json({
     reply: copilot.reply,

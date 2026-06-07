@@ -10,6 +10,7 @@ import { RequestSchoolWorkspaceCta } from "@/components/tuition/RequestSchoolWor
 import { PUBLIC_SCHOOL_LOGIN_PATH } from "@/lib/admin-auth-entry";
 import { invalidateAuthMeCache, useAuthMe } from "@/hooks/useAuthMe";
 import { DbDegradedBanner } from "@/components/admin/DbDegradedBanner";
+import { WorkspaceEmailUnverifiedBanner } from "@/components/admin/WorkspaceEmailUnverifiedBanner";
 import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton";
 
 const SEGMENTS: { suffix: string; label: string }[] = [
@@ -145,6 +146,7 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
         <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 md:py-8">
           <AdminWorkspaceBar />
           {authMe?.dbDegraded ? <DbDegradedBanner /> : null}
+          <WorkspaceEmailUnverifiedBanner />
           {children}
         </div>
       </div>

@@ -12,6 +12,17 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     start_url: "/",
     scope: "/",
     display: "standalone",
+    display_override: ["window-controls-overlay", "standalone"],
+    shortcuts: [
+      {
+        name: "Refresh app",
+        short_name: "Refresh",
+        url: "/?pwa_refresh=1",
+        icons: s.hasPlatformLogo && s.platformLogoUrl
+          ? [{ src: s.platformLogoUrl, sizes: "96x96", type: "image/png" }]
+          : [{ src: "/playhub/favicon.svg", sizes: "any", type: "image/svg+xml" }],
+      },
+    ],
     background_color: "#08070a",
     theme_color: s.homeScreenThemeColor,
     orientation: "portrait-primary",

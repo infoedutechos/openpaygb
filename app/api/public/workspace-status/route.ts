@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { apiErrorResponse } from "@/lib/api-error";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
+import { getSchoolWorkspaceRegistrationPolicy } from "@/lib/school-workspace-registration-policy";
 
 const Query = z.object({
   slug: z.string().min(2).max(64).optional(),
@@ -50,21 +51,35 @@ export async function GET(req: Request) {
       return NextResponse.json({ found: false });
     }
 
+    const policy = await getSchoolWorkspaceRegistrationPolicy();
+
+    let nextSteps: string;
+    if (org.tenantStatus === "active") {
+      nextSteps =
+        "Your workspace is active. Sign in at /school/login once your platform operator has created your admin account.";
+    } else if (org.tenantStatus === "rejected") {
+      nextSteps =
+        "This workspace request was not approved. Contact ODEL HUB support if you believe this is an error.";
+    } else if (!org.registrationEmailVerifiedAt) {
+      nextSteps = policy.autoRegistrationEnabled
+        ? "Verify your registration email. Your workspace will activate automatically after you confirm (no master approval step)."
+        : "Verify your registration email, then wait for platform master approval.";
+    } else if (policy.autoRegistrationEnabled) {
+      nextSteps =
+        "Email verified. Your workspace should activate shortly — refresh this page. Contact support if it stays pending.";
+    } else {
+      nextSteps = "Email verified. A platform operator will review and approve your school workspace.";
+    }
+
     return NextResponse.json({
       found: true,
       name: org.name,
       slug: org.slug,
       tenantStatus: org.tenantStatus,
       emailVerified: Boolean(org.registrationEmailVerifiedAt),
+      autoRegistrationEnabled: policy.autoRegistrationEnabled,
       payUrl: `/pay/${org.slug}`,
-      nextSteps:
-        org.tenantStatus === "active"
-          ? "Your workspace is active. Sign in at /school/login once your platform operator has created your admin account."
-          : org.tenantStatus === "rejected"
-            ? "This workspace request was not approved. Contact ODEL HUB support if you believe this is an error."
-            : org.registrationEmailVerifiedAt
-              ? "Email verified. A platform operator will review and approve your school workspace."
-              : "Verify your registration email, then wait for platform approval.",
+      nextSteps,
     });
   } catch (e) {
     return apiErrorResponse(e, { route: "public/workspace-status", fallback: "Could not load status" });

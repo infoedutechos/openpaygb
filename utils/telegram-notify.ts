@@ -3,6 +3,12 @@
  * Used for optional notifications (e.g. Send/Receive PEARLS)
  */
 
+import {
+  deploymentEnv,
+  resolvedBotToken,
+  warmDeploymentEnvCache,
+} from "@/lib/deployment-env-resolve";
+
 /** One inline button (under the message). Use url for links, or callback_data for bot handling. */
 export type TelegramInlineButton = { text: string; url?: string; callback_data?: string };
 
@@ -35,7 +41,7 @@ export async function sendTelegramMessage(
   text: string,
   options?: TelegramSendOptions
 ): Promise<number | false> {
-  const botToken = process.env.BOT_TOKEN;
+  const botToken = process.env.BOT_TOKEN?.trim() || process.env.TELEGRAM_BOT_TOKEN?.trim();
   if (!botToken) {
     return false;
   }
@@ -97,7 +103,7 @@ export async function sendTelegramPhoto(
   caption: string,
   options?: Pick<TelegramSendOptions, 'inlineKeyboard'>
 ): Promise<number | false> {
-  const botToken = process.env.BOT_TOKEN;
+  const botToken = process.env.BOT_TOKEN?.trim() || process.env.TELEGRAM_BOT_TOKEN?.trim();
   if (!botToken || !photoUrl?.trim()) return false;
 
   try {
@@ -134,7 +140,8 @@ export async function sendTelegramPhoto(
  * Returns true if deleted, false otherwise.
  */
 export async function deleteTelegramMessage(chatId: string, messageId: number): Promise<boolean> {
-  const botToken = process.env.BOT_TOKEN;
+  await warmDeploymentEnvCache();
+  const botToken = resolvedBotToken();
   if (!botToken) return false;
   try {
     const url = `https://api.telegram.org/bot${botToken}/deleteMessage`;
@@ -271,8 +278,9 @@ export async function sendAnnouncementToChannel(
   body: string,
   imageUrl?: string | null
 ): Promise<boolean> {
-  const botToken = process.env.BOT_TOKEN;
-  const channelId = process.env.TELEGRAM_ANNOUNCEMENT_CHANNEL_ID?.trim();
+  await warmDeploymentEnvCache();
+  const botToken = resolvedBotToken();
+  const channelId = deploymentEnv("TELEGRAM_ANNOUNCEMENT_CHANNEL_ID");
   if (!botToken || !channelId) {
     return false;
   }

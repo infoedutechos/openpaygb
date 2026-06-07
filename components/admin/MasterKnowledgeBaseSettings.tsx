@@ -191,14 +191,16 @@ export function MasterKnowledgeBaseSettings() {
         <h2 className="mt-1 text-lg font-semibold text-white">Knowledge base &amp; copilot</h2>
         <p className="mt-2 max-w-3xl text-sm text-slate-400">
           Articles power in-app search and the zero-API-cost copilot (no OpenAI). Seed content auto-syncs from code on
-          each KB load; unanswered questions accumulate below for continuous learning.
+          each KB load. Unanswered questions are <strong className="text-emerald-200/90">auto-learned</strong> — the
+          copilot publishes a new article immediately (source: <code className="text-xs">auto-learned</code>) from
+          related KB content or your question text.
         </p>
       </div>
 
       {gaps.length > 0 ? (
         <div className="rounded-lg border border-amber-500/30 bg-amber-950/20 p-4 space-y-3">
           <p className="text-xs font-bold uppercase tracking-wider text-amber-300/90">
-            Learning gaps ({gaps.length}) — copilot had no KB match
+            Pending gaps ({gaps.length}) — awaiting auto-learn or very short queries
           </p>
           <ul className="space-y-2 text-sm text-amber-100/90">
             {gaps.slice(0, 8).map((g) => (

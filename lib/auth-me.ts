@@ -1,12 +1,21 @@
 /** Shared shape for `GET /api/auth/me` (client + server typing). */
 
+export type AuthMeOrganization = {
+  id: string;
+  name: string;
+  slug: string;
+  registrationContactEmail: string | null;
+  registrationEmailVerifiedAt: string | null;
+  emailVerifyStatus: "none" | "pending" | "verified";
+};
+
 export type AuthMeAdmin = {
   id: string;
   email: string;
   name: string | null;
   role: string;
   organizationId: string | null;
-  organization: { id: string; name: string; slug: string } | null;
+  organization: AuthMeOrganization | null;
 };
 
 export type AuthMeJson = {

@@ -200,7 +200,7 @@ export const PLATFORM_KB_SEED: KnowledgeSeedArticle[] = [
     title: "Insufficient funds at checkout",
     summary: "What happens when balance is too low for card, mobile money, or TON.",
     body:
-      "**OpenPayGB card:** Checkout checks your card balance before debiting. If UGX balance is below the quote, payment is blocked with a message to fund your card first — no charge is made.\n\n**Mobile money (LivePay / Relworx):** You receive a prompt on your phone. If your MoMo wallet lacks funds, you cannot approve or the provider declines — the tuition payment stays pending until it expires or you retry with sufficient balance.\n\n**TON wallet:** TonConnect will not send if your wallet balance is too low for the quoted TON amount.",
+      "**OpenPayGB card:** Checkout checks your card balance before debiting. If UGX balance is below the quote, payment is blocked with a message to fund your card first — no charge is made.\n\n**Mobile money (LivePay / Relworx / Mbiyo):** You receive a prompt on your phone. If your MoMo wallet lacks funds, you cannot approve or the provider declines. Checkout shows **Insufficient funds. Top up and continue your payment** with a **Top up mobile money** link to Dex onramp (`/dex/onramp`). The tuition payment stays pending until it expires or you retry with sufficient balance.\n\n**TON wallet:** TonConnect will not send if your wallet balance is too low for the quoted TON amount. Checkout shows the same insufficient-funds message with a **Top up TON** link to `/dex/onramp`. After topping up, use **Continue your payment** on the onramp page to return to checkout.",
     category: "payments",
     tags: ["insufficient", "balance", "momo", "ton", "card", "checkout"],
     audience: "tuition",

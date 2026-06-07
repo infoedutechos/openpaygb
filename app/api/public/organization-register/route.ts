@@ -12,9 +12,11 @@ import {
   organizationWorkspaceVerifyUrlForRequest,
 } from "@/lib/organization-workspace-verify";
 import { apiErrorResponse } from "@/lib/api-error";
+import { warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 
 export async function POST(req: Request) {
   try {
+    await warmDeploymentEnvCache();
     const ip = clientIp(req);
     if (rateLimitHit(`org-register:${ip}`, 5, 60 * 60 * 1000)) {
       return NextResponse.json({ error: "Too many requests. Try again later." }, { status: 429 });
@@ -43,6 +45,7 @@ export async function POST(req: Request) {
         contactEmail,
         note: (parsed.data.registrationNote ?? "").trim(),
         registeredAt: org.createdAt,
+        autoRegistrationEnabled: policy.autoRegistrationEnabled,
       },
       plain,
       req,

@@ -3,6 +3,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireMaster } from "@/lib/master-session";
 import { apiErrorResponse } from "@/lib/api-error";
+import { dispatchPlatformNotificationToTelegram } from "@/lib/notification-telegram";
+import { warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 
 export async function GET() {
   try {
@@ -40,6 +42,8 @@ const CreateBody = z.object({
   href: z.string().max(2000).optional().nullable(),
   audience: z.enum(["all", "tuition", "play", "admin"]).optional().default("all"),
   isActive: z.boolean().optional().default(true),
+  postToTelegram: z.boolean().optional(),
+  sendToUserBotChats: z.boolean().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -65,6 +69,19 @@ export async function POST(req: NextRequest) {
         isActive: body.isActive !== false,
       },
     });
+
+    if (body.postToTelegram || body.sendToUserBotChats) {
+      await warmDeploymentEnvCache();
+      dispatchPlatformNotificationToTelegram({
+        notificationId: notification.id,
+        title: notification.title,
+        body: notification.body,
+        imageUrl: notification.imageUrl,
+        audience: notification.audience,
+        postToTelegram: body.postToTelegram,
+        sendToUserBotChats: body.sendToUserBotChats,
+      });
+    }
 
     return NextResponse.json({
       notification: {

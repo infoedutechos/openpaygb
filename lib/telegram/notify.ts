@@ -4,13 +4,14 @@ import { sendMessageHtml } from "@/lib/telegram/client";
 import { escapeHtml } from "@/lib/telegram/escape";
 import { buildStudentProgrammeProgress } from "@/lib/tuition-progress";
 import { createReceiptAccessToken } from "@/lib/receipt-access";
+import { resolvedBotToken, warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 
 /** Fire-and-forget: tell a payer on Telegram that a payment was confirmed. */
 export function notifyTelegramPaymentConfirmed(paymentId: string): void {
-  if (!process.env.TELEGRAM_BOT_TOKEN?.trim()) return;
-
   void (async () => {
     try {
+      await warmDeploymentEnvCache();
+      if (!resolvedBotToken()) return;
       const payment = await prisma.payment.findUnique({
         where: { id: paymentId },
         include: { student: true },

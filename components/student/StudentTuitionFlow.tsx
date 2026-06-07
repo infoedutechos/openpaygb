@@ -38,6 +38,13 @@ import {
 import { ugxToTon } from "@/lib/money";
 import { fetchPaymentPublicStatus } from "@/utils/fetch-payment-public";
 import { usePaymentStatusPoll } from "@/hooks/usePaymentStatusPoll";
+import { InsufficientFundsTopupCallout } from "@/components/pay/InsufficientFundsTopupCallout";
+import {
+  checkoutPaymentErrorMessage,
+  checkoutTopupRailFromPayChannel,
+  isInsufficientFundsMessage,
+  type CheckoutTopupRail,
+} from "@/lib/checkout-insufficient-funds";
 
 type ProgrammeDuration = {
   durationYears: number;
@@ -492,6 +499,23 @@ export function StudentTuitionFlow() {
   }, [step, quote, paymentId]);
 
   const tonDisplay = paymentTonAmount ?? quote?.tonAmount ?? 0;
+
+  const insufficientFundsRail = useMemo((): CheckoutTopupRail | null => {
+    const msg = error ?? walletNote;
+    if (!isInsufficientFundsMessage(msg)) return null;
+    if (
+      step === "confirm_payment" ||
+      step === "processing" ||
+      step === "connect_wallet" ||
+      payChannel === "ton"
+    ) {
+      return "ton";
+    }
+    const fromChannel = checkoutTopupRailFromPayChannel(payChannel);
+    if (fromChannel) return fromChannel;
+    if (step === "mbiyo_waiting") return "momo";
+    return null;
+  }, [error, walletNote, payChannel, step]);
 
   const selectedProgramme = useMemo(() => programmes.find((p) => p.code === code), [programmes, code]);
   const yearOptions = useMemo(() => {
@@ -1070,8 +1094,7 @@ export function StudentTuitionFlow() {
       setStep("processing");
       void pollPaymentOnce();
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Wallet action cancelled or failed.";
-      setWalletNote(msg);
+      setWalletNote(checkoutPaymentErrorMessage(e, "Wallet action cancelled or failed."));
     } finally {
       setBusy(false);
     }
@@ -1887,7 +1910,9 @@ export function StudentTuitionFlow() {
           >
             Confirm &amp; pay
           </BtnPrimary>
-          {walletNote ? <p className="text-center text-xs text-rose-400">{walletNote}</p> : null}
+          {walletNote && !insufficientFundsRail ? (
+            <p className="text-center text-xs text-rose-400">{walletNote}</p>
+          ) : null}
         </div>
       )}
 

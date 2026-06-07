@@ -41,3 +41,8 @@ export async function deploymentEnvAsync(name: string): Promise<string> {
 export async function warmDeploymentEnvCache(): Promise<void> {
   await ensureCache();
 }
+
+/** BOT_TOKEN wins over TELEGRAM_BOT_TOKEN (both respect Master dashboard overrides). */
+export function resolvedBotToken(): string {
+  return deploymentEnv("BOT_TOKEN") || deploymentEnv("TELEGRAM_BOT_TOKEN");
+}

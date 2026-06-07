@@ -2,7 +2,12 @@ import Link from "next/link";
 import { DexWalletConnect } from "@/components/dex/DexWalletConnect";
 import { HUBS } from "@/lib/ecosystem/hubs";
 
-export default function DexOnrampPage() {
+type Props = { searchParams: Promise<{ next?: string }> };
+
+export default async function DexOnrampPage({ searchParams }: Props) {
+  const sp = await searchParams;
+  const returnPath = sp.next?.startsWith("/") ? sp.next : null;
+
   return (
     <div className="mx-auto max-w-xl space-y-6">
       <div>
@@ -29,12 +34,21 @@ export default function DexOnrampPage() {
           ) — same rails as the rest of ODEL HUB.
         </li>
       </ul>
-      <Link
-        href={HUBS.tuition.basePath}
-        className="inline-flex rounded-xl bg-gradient-to-r from-cyan-400 to-sky-500 px-5 py-2.5 text-sm font-semibold text-slate-950 hover:brightness-110"
-      >
-        Go to tuition checkout
-      </Link>
+      {returnPath ? (
+        <Link
+          href={returnPath}
+          className="inline-flex rounded-xl bg-gradient-to-r from-cyan-400 to-sky-500 px-5 py-2.5 text-sm font-semibold text-slate-950 hover:brightness-110"
+        >
+          Continue your payment
+        </Link>
+      ) : (
+        <Link
+          href={HUBS.tuition.basePath}
+          className="inline-flex rounded-xl bg-gradient-to-r from-cyan-400 to-sky-500 px-5 py-2.5 text-sm font-semibold text-slate-950 hover:brightness-110"
+        >
+          Go to tuition checkout
+        </Link>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { DEPLOYMENT_ENV_GROUPS, type EnvGroupDefinition, type EnvVarDefinition } from "@/lib/deployment-env-registry";
+import { getMergedDeploymentEnvGroups, type EnvGroupDefinition, type EnvVarDefinition } from "@/lib/deployment-env-registry";
 import { listDeploymentEnvOverrideNames } from "@/lib/deployment-env-overrides";
 import { deploymentEnv, warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 import { isProductionRuntime } from "@/lib/production-secrets";
@@ -185,6 +185,9 @@ function defaultGroupHealth(id: string): { healthy: boolean | null; note: string
           : "BREVO_API_KEY or RESEND_API_KEY plus TRANSACTIONAL_EMAIL_FROM (or RESEND_FROM) required in production.",
       };
     }
+    case "custom": {
+      return { healthy: null, note: null };
+    }
     default:
       return { healthy: null, note: null };
   }
@@ -228,7 +231,8 @@ export async function getDeploymentEnvStatus(opts?: { probe?: boolean }): Promis
   const dashboardMeta = await listDeploymentEnvOverrideNames();
   const dashboardNames = new Set(dashboardMeta.map((m) => m.name));
 
-  const groups: EnvGroupStatus[] = DEPLOYMENT_ENV_GROUPS.map((group) => {
+  const mergedGroups = await getMergedDeploymentEnvGroups();
+  const groups: EnvGroupStatus[] = mergedGroups.map((group) => {
     const vars = group.vars.map((v) => varStatus(v, dashboardNames));
     const health = defaultGroupHealth(group.id);
     return {

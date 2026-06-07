@@ -49,6 +49,13 @@ import { SchoolCheckoutBanner } from "@/components/pay/SchoolCheckoutBanner";
 import { readJsonResponse } from "@/utils/read-json-response";
 import { fetchPaymentPublicStatus } from "@/utils/fetch-payment-public";
 import { usePaymentStatusPoll } from "@/hooks/usePaymentStatusPoll";
+import { InsufficientFundsTopupCallout } from "@/components/pay/InsufficientFundsTopupCallout";
+import {
+  checkoutPaymentErrorMessage,
+  checkoutTopupRailFromPayChannel,
+  isInsufficientFundsMessage,
+  type CheckoutTopupRail,
+} from "@/lib/checkout-insufficient-funds";
 
 type Programme = { id: string; code: string; name: string; track: ProgrammeTrackValue };
 
@@ -514,6 +521,23 @@ export function PayWizard({
 
   const tonDisplay = paymentTonAmount ?? quote?.tonAmount ?? 0;
 
+  const insufficientFundsRail = useMemo((): CheckoutTopupRail | null => {
+    const msg = error ?? walletNote;
+    if (!isInsufficientFundsMessage(msg)) return null;
+    if (
+      step === "confirm_payment" ||
+      step === "processing" ||
+      step === "connect_wallet" ||
+      payChannel === "ton"
+    ) {
+      return "ton";
+    }
+    const fromChannel = checkoutTopupRailFromPayChannel(payChannel);
+    if (fromChannel) return fromChannel;
+    if (step === "mbiyo_waiting") return "momo";
+    return null;
+  }, [error, walletNote, payChannel, step]);
+
   const selectedProgramme = useMemo(() => programmes.find((p) => p.code === code), [programmes, code]);
 
   const buildCoverageBucket = useCallback(
@@ -849,7 +873,7 @@ export function PayWizard({
       setMbiyoCollect(null);
       setStep("connect_wallet");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not start payment");
+      setError(checkoutPaymentErrorMessage(e, "Could not start payment"));
     } finally {
       setBusy(false);
     }
@@ -930,7 +954,7 @@ export function PayWizard({
       );
       setStep("mbiyo_waiting");
     } catch (e) {
-      setError(e instanceof Error ? e.message : `Could not start ${PAYMENT_RAIL_MBIYO} payment`);
+      setError(checkoutPaymentErrorMessage(e, `Could not start ${PAYMENT_RAIL_MBIYO} payment`));
     } finally {
       setBusy(false);
     }
@@ -997,7 +1021,7 @@ export function PayWizard({
       setMbiyoCollect({ amount: quote.totalUgx, currency: "UGX" });
       setStep("mbiyo_waiting");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not start LivePay payment");
+      setError(checkoutPaymentErrorMessage(e, "Could not start LivePay payment"));
     } finally {
       setBusy(false);
     }
@@ -1063,7 +1087,7 @@ export function PayWizard({
       setMbiyoCollect({ amount: quote.totalUgx, currency: "UGX" });
       setStep("mbiyo_waiting");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not start Relworx payment");
+      setError(checkoutPaymentErrorMessage(e, "Could not start Relworx payment"));
     } finally {
       setBusy(false);
     }
@@ -1173,8 +1197,7 @@ export function PayWizard({
       setStep("processing");
       void pollPaymentOnce();
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Wallet action cancelled or failed.";
-      setWalletNote(msg);
+      setWalletNote(checkoutPaymentErrorMessage(e, "Wallet action cancelled or failed."));
     } finally {
       setBusy(false);
     }
@@ -1219,7 +1242,13 @@ export function PayWizard({
 
   const shell = (
     <div className="mx-auto min-h-[70vh] max-w-lg px-4 pb-16 pt-6 sm:max-w-xl">
-      {error ? (
+      {insufficientFundsRail ? (
+        <InsufficientFundsTopupCallout
+          rail={insufficientFundsRail}
+          returnPath={pathname ?? undefined}
+          className="mb-4"
+        />
+      ) : error ? (
         <p className="mb-4 rounded-lg border border-rose-500/40 bg-rose-950/30 px-3 py-2 text-sm text-rose-200">{error}</p>
       ) : null}
 
@@ -1929,7 +1958,9 @@ export function PayWizard({
           >
             Confirm &amp; Pay
           </button>
-          {walletNote ? <p className="text-center text-xs text-rose-300">{walletNote}</p> : null}
+          {walletNote && !insufficientFundsRail ? (
+            <p className="text-center text-xs text-rose-300">{walletNote}</p>
+          ) : null}
         </div>
       )}
 

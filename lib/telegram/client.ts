@@ -1,15 +1,17 @@
 import type { ReplyMarkup } from "./types";
+import { resolvedBotToken, warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 
-function getToken(): string {
-  const t = process.env.TELEGRAM_BOT_TOKEN;
-  if (!t?.trim()) throw new Error("TELEGRAM_BOT_TOKEN is not set");
-  return t.trim();
+async function getToken(): Promise<string> {
+  await warmDeploymentEnvCache();
+  const t = resolvedBotToken();
+  if (!t) throw new Error("TELEGRAM_BOT_TOKEN is not set");
+  return t;
 }
 
 type TgOk<T> = { ok: true; result: T } | { ok: false; description?: string; error_code?: number };
 
 export async function tgApi<T>(method: string, body: Record<string, unknown>): Promise<T> {
-  const token = getToken();
+  const token = await getToken();
   const res = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

@@ -11,7 +11,15 @@ export function getCachedAdminProfile(adminUserId: string) {
         prisma.adminUser.findUnique({
           where: { id: adminUserId },
           include: {
-            organization: { select: { id: true, name: true, slug: true } },
+            organization: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                registrationContactEmail: true,
+                registrationEmailVerifiedAt: true,
+              },
+            },
           },
         }),
       ),

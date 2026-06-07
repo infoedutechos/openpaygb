@@ -1,6 +1,6 @@
 import "server-only";
 
-import { deploymentEnvRegistryNames } from "@/lib/deployment-env-registry";
+import { getMergedDeploymentEnvRegistryNames } from "@/lib/deployment-env-registry";
 import { deploymentEnv, warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 
 function quoteEnvValue(value: string): string {
@@ -22,7 +22,8 @@ export async function buildVercelEnvExport(): Promise<string> {
   ];
 
   let count = 0;
-  for (const name of deploymentEnvRegistryNames().sort()) {
+  const names = await getMergedDeploymentEnvRegistryNames();
+  for (const name of names.sort()) {
     const value = deploymentEnv(name)?.trim();
     if (!value) continue;
     lines.push(`${name}=${quoteEnvValue(value)}`);

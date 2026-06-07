@@ -63,7 +63,7 @@ export async function verifyOrganizationWorkspaceToken(plain: string): Promise<W
   return { ok: true, organizationId: row.organizationId };
 }
 
-/** Master approval requires verified email when a contact email was provided at registration. */
+/** True when a registration contact email exists but the applicant has not confirmed it yet. */
 export function workspaceEmailVerificationRequired(org: {
   registrationContactEmail: string;
   registrationEmailVerifiedAt: Date | string | null;
@@ -73,11 +73,12 @@ export function workspaceEmailVerificationRequired(org: {
   return !org.registrationEmailVerifiedAt;
 }
 
-export function canMasterApproveWorkspace(org: {
+/** Master may approve pending workspaces even before email verification (email status shown in UI). */
+export function canMasterApproveWorkspace(_org: {
   registrationContactEmail: string;
   registrationEmailVerifiedAt: Date | string | null;
 }): boolean {
-  return !workspaceEmailVerificationRequired(org);
+  return true;
 }
 
 export type WorkspaceEmailVerifyStatus = "none" | "pending" | "verified";
