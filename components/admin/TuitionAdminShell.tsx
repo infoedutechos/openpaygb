@@ -43,12 +43,15 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
   );
   const { data: authMe } = useAuthMe();
   const isMaster = authMe?.admin?.role === "master";
+  const schoolName = authMe?.admin?.organization?.name?.trim() || null;
+  const isSchoolAdmin = authMe?.admin?.role === "org_admin" && Boolean(schoolName);
   const tenantLabel = !authMe?.admin
     ? authMe?.adminShellAccess
       ? "Tuition sign-in pending"
       : "Admin"
-    : authMe.admin.organization?.name ??
-      (authMe.admin.role === "master" ? "Platform overview" : "Admin");
+    : schoolName ?? (authMe.admin.role === "master" ? "Platform overview" : "Admin");
+  const shellTitle = isSchoolAdmin ? schoolName! : "ODEL HUB";
+  const shellSubtitle = isSchoolAdmin ? "School dashboard" : tenantLabel;
 
   async function logout() {
     invalidateAuthMeCache();
@@ -110,9 +113,11 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
         <header className="border-b border-white/10 bg-[#0a101f] md:hidden">
           <div className="flex items-center justify-between gap-2 px-3 py-3">
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-white">ODEL HUB</p>
-              <p className="truncate text-[10px] text-slate-500" title={tenantLabel}>
-                {tenantLabel}
+              <p className="truncate text-xs font-semibold text-white" title={shellTitle}>
+                {shellTitle}
+              </p>
+              <p className="truncate text-[10px] text-slate-500" title={shellSubtitle}>
+                {shellSubtitle}
               </p>
             </div>
             <div className="flex shrink-0 gap-3 text-[11px]">

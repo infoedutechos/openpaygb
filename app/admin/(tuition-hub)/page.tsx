@@ -158,7 +158,11 @@ function AdminDashboardPageInner() {
     return <p className="text-sm text-slate-500">Loading dashboard…</p>;
   }
 
-  const orgLabel = summary.viewer?.organizationName;
+  const schoolName =
+    summary.viewer?.organizationName?.trim() ||
+    authMe?.admin?.organization?.name?.trim() ||
+    null;
+  const isSchoolAdmin = authMe?.admin?.role === "org_admin";
   const scopedSlug =
     (summary.viewer as { scopedToSlug?: string | null } | undefined)?.scopedToSlug ?? orgSlugFilter;
 
@@ -174,8 +178,18 @@ function AdminDashboardPageInner() {
       ) : null}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-white">Dashboard</h1>
-          {orgLabel ? <p className="mt-1 text-sm text-slate-400">{orgLabel}</p> : null}
+          <h1 className="text-2xl font-semibold text-white">
+            {isSchoolAdmin && schoolName ? schoolName : "Dashboard"}
+          </h1>
+          <p className="mt-1 text-sm text-slate-400">
+            {isSchoolAdmin && schoolName
+              ? "School dashboard"
+              : schoolName
+                ? schoolName
+                : isSchoolAdmin
+                  ? "Link your admin account to a school workspace to show the school name here."
+                  : "Platform overview"}
+          </p>
         </div>
         <Link
           href="/admin/settings"

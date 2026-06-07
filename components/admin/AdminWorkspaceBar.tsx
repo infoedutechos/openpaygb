@@ -12,8 +12,10 @@ function AdminWorkspaceBarInner() {
   const isMaster = authMe?.admin?.role === "master";
   const { orgSlug, setOrgSlug } = useMasterOrgSlug();
 
+  const schoolName = authMe?.admin?.organization?.name?.trim() || null;
+  const isSchoolAdmin = authMe?.admin?.role === "org_admin";
   const workspaceName =
-    authMe?.admin?.organization?.name ??
+    schoolName ??
     (isMaster && orgSlug ? `Tenant: ${orgSlug}` : isMaster ? "All workspaces" : "Workspace");
 
   const paySlug = authMe?.admin?.organization?.slug ?? (isMaster ? orgSlug : "");
@@ -22,10 +24,17 @@ function AdminWorkspaceBarInner() {
     <div className="mb-6 space-y-4 rounded-xl border border-white/10 bg-[#0a101f]/80 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wider text-cyan-200/80">Workspace</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-cyan-200/80">
+            {isSchoolAdmin ? "Your school" : "Workspace"}
+          </p>
           <p className="truncate text-sm font-medium text-white" title={workspaceName}>
             {workspaceName}
           </p>
+          {isSchoolAdmin && !schoolName ? (
+            <p className="mt-1 text-xs text-amber-200/90">
+              School name unavailable — ask your platform operator to link this admin account to your workspace.
+            </p>
+          ) : null}
           {paySlug ? (
             <p className="mt-1 text-xs text-slate-500">
               Guest pay:{" "}
