@@ -55,6 +55,7 @@ export default function NotificationCenter() {
   const triggerRef = useRef<HTMLButtonElement>(null);
   // null = newest (first) is expanded; otherwise the id of the expanded older notification
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [brokenMediaIds, setBrokenMediaIds] = useState<Set<string>>(() => new Set());
 
   const prevUnreadRef = useRef(0);
   const [panelStyle, setPanelStyle] = useState<{ top: number; left: number; width: number }>({
@@ -297,7 +298,7 @@ export default function NotificationCenter() {
                         </button>
                       ) : (
                         <>
-                          {n.imageUrl && (
+                          {n.imageUrl && !brokenMediaIds.has(n.id) && (
                             <div className="mb-2 rounded-lg overflow-hidden bg-ura-panel">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
@@ -305,16 +306,23 @@ export default function NotificationCenter() {
                                 alt=""
                                 className="w-full max-h-40 object-cover"
                                 loading="lazy"
+                                onError={() =>
+                                  setBrokenMediaIds((prev) => new Set(prev).add(n.id))
+                                }
                               />
                             </div>
                           )}
-                          {n.videoUrl && (
+                          {n.videoUrl && !brokenMediaIds.has(`${n.id}:video`) && (
                             <div className="mb-2 rounded-lg overflow-hidden bg-ura-panel">
                               <video
                                 src={resolveMediaUrl(n.videoUrl)}
                                 controls
                                 className="w-full max-h-48"
-                                preload="metadata"
+                                preload="none"
+                                playsInline
+                                onError={() =>
+                                  setBrokenMediaIds((prev) => new Set(prev).add(`${n.id}:video`))
+                                }
                               />
                             </div>
                           )}

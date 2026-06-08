@@ -50,9 +50,19 @@ export default function PlatformNotificationBell({ hub = "all" }: PlatformNotifi
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<NotificationRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [brokenMediaIds, setBrokenMediaIds] = useState<Set<string>>(() => new Set());
   const panelRef = useRef<HTMLDivElement>(null);
 
   const unread = rows.filter((n) => !n.read).length;
+
+  const markMediaBroken = useCallback((id: string) => {
+    setBrokenMediaIds((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }, []);
 
   const fetchRows = useCallback(async () => {
     setLoading(true);
@@ -173,20 +183,23 @@ export default function PlatformNotificationBell({ hub = "all" }: PlatformNotifi
               <ul className="divide-y divide-white/5">
                 {rows.map((n) => (
                   <li key={n.id} className="p-3 hover:bg-white/[0.04]">
-                    {n.imageUrl ? (
+                    {n.imageUrl && !brokenMediaIds.has(n.id) ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={resolveMediaUrl(n.imageUrl)}
                         alt=""
                         className="mb-2 w-full max-h-32 rounded-lg object-cover"
+                        onError={() => markMediaBroken(n.id)}
                       />
                     ) : null}
-                    {n.videoUrl ? (
+                    {n.videoUrl && !brokenMediaIds.has(`${n.id}:video`) ? (
                       <video
                         src={resolveMediaUrl(n.videoUrl)}
                         controls
                         className="mb-2 w-full max-h-36 rounded-lg"
-                        preload="metadata"
+                        preload="none"
+                        playsInline
+                        onError={() => markMediaBroken(`${n.id}:video`)}
                       />
                     ) : null}
                     {n.href ? (
