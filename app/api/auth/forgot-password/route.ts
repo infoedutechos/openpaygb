@@ -10,7 +10,9 @@ const Body = z.object({
   email: z.string().email(),
 });
 
-const GENERIC = "If an account exists for this email, password reset instructions have been sent.";
+const SENT =
+  "This email is registered. We sent a secure reset link — it expires in one hour.";
+const NOT_REGISTERED = "No admin account is registered with this email address.";
 
 export async function POST(req: Request) {
   try {
@@ -28,25 +30,27 @@ export async function POST(req: Request) {
       where: { email: emailLower },
     });
 
-    if (admin) {
-      await prisma.adminPasswordResetToken.deleteMany({ where: { adminUserId: admin.id } });
-
-      const plainToken = newAdminResetTokenPlain();
-      const tokenHash = hashAdminResetToken(plainToken);
-      const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
-
-      await prisma.adminPasswordResetToken.create({
-        data: {
-          adminUserId: admin.id,
-          tokenHash,
-          expiresAt,
-        },
-      });
-
-      await sendAdminPasswordResetEmail(admin.email, plainToken);
+    if (!admin) {
+      return NextResponse.json({ error: NOT_REGISTERED, registered: false }, { status: 404 });
     }
 
-    return NextResponse.json({ ok: true, message: GENERIC });
+    await prisma.adminPasswordResetToken.deleteMany({ where: { adminUserId: admin.id } });
+
+    const plainToken = newAdminResetTokenPlain();
+    const tokenHash = hashAdminResetToken(plainToken);
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+    await prisma.adminPasswordResetToken.create({
+      data: {
+        adminUserId: admin.id,
+        tokenHash,
+        expiresAt,
+      },
+    });
+
+    await sendAdminPasswordResetEmail(admin.email, plainToken);
+
+    return NextResponse.json({ ok: true, registered: true, message: SENT });
   } catch (e) {
     return apiErrorResponse(e, { route: "auth/forgot-password", fallback: "Server error" });
   }

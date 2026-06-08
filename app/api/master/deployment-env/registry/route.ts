@@ -15,7 +15,7 @@ const CreateBody = z.object({
   label: z.string().min(1).max(120),
   description: z.string().max(500).optional().default(""),
   sensitive: z.boolean().optional().default(true),
-  requirement: z.enum(["always", "production", "optional"]).optional().default("optional"),
+  requirement: z.enum(["always", "production", "optional", "all"]).optional().default("optional"),
 });
 
 const DeleteBody = z.object({

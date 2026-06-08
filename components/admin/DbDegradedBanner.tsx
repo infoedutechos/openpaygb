@@ -1,6 +1,6 @@
 "use client";
 
-import { DB_UNAVAILABLE_MESSAGE } from "@/lib/prisma-retry";
+import { DB_UNAVAILABLE_MESSAGE } from "@/lib/mongo-transient-error";
 
 export function DbDegradedBanner() {
   return (

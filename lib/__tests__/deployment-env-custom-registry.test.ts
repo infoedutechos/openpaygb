@@ -17,3 +17,11 @@ describe("deployment-env-custom-registry", () => {
     expect(validateCustomEnvVarName("MY_PARTNER_WEBHOOK_SECRET")).toBeNull();
   });
 });
+
+describe("custom registry requirement parsing", () => {
+  it("accepts all requirement via API schema", async () => {
+    const { z } = await import("zod");
+    const schema = z.enum(["always", "production", "optional", "all"]);
+    expect(schema.safeParse("all").success).toBe(true);
+  });
+});

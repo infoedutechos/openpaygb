@@ -1,48 +1,11 @@
 import { prisma } from "@/lib/prisma";
+import { isTransientMongoError } from "@/lib/mongo-transient-error";
 
-const TRANSIENT_PATTERNS = [
-  "Server selection timeout",
-  "No available servers",
-  "ReplicaSetNoPrimary",
-  "Raw query failed",
-  "PrismaClientInitializationError",
-  "PrismaClientUnknownRequestError",
-  "MongoServerSelectionError",
-  "MongoNetworkError",
-  "connection was forcibly closed",
-  "RetryableWriteError",
-  "TransientTransactionError",
-  "write conflict",
-  "I/O error",
-  "os error 10054",
-  "ECONNRESET",
-  "ETIMEDOUT",
-  "ENOTFOUND",
-  "Response from the Engine was empty",
-  "Engine is not yet connected",
-  "zimtvpl.mongodb",
-  "mongodb.net",
-  "-shard-00-",
-] as const;
-
-export function isPrismaEngineEmptyError(err: unknown): boolean {
-  const name = (err as { name?: string })?.name ?? "";
-  const msg = String((err as { message?: string })?.message ?? err ?? "");
-  return (
-    name === "PrismaClientUnknownRequestError" ||
-    msg.includes("Response from the Engine was empty") ||
-    msg.includes("Engine is not yet connected")
-  );
-}
-
-/** User-facing copy for APIs and banners when Atlas is unreachable. */
-export const DB_UNAVAILABLE_MESSAGE =
-  "Database is temporarily unavailable. Wait a moment and try again.";
-
-export function isTransientMongoError(err: unknown): boolean {
-  const msg = String((err as { message?: string })?.message ?? err ?? "");
-  return TRANSIENT_PATTERNS.some((p) => msg.includes(p));
-}
+export {
+  DB_UNAVAILABLE_MESSAGE,
+  isPrismaEngineEmptyError,
+  isTransientMongoError,
+} from "@/lib/mongo-transient-error";
 
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
@@ -68,4 +31,22 @@ export async function withPrismaRetry<T>(
     }
   }
   throw last;
+}
+
+/** Cap how long a Prisma call may block (e.g. notification polling when Atlas is down). */
+export async function withPrismaDeadline<T>(fn: () => Promise<T>, deadlineMs: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      fn(),
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(`Prisma deadline exceeded (${deadlineMs}ms)`)),
+          deadlineMs,
+        );
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }

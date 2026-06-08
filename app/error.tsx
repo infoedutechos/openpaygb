@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { isTransientMongoError } from "@/lib/prisma-retry";
+import { isTransientMongoError } from "@/lib/mongo-transient-error";
 
 export default function GlobalError({
   error,

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton";
+import { NotificationContentPickers } from "@/components/admin/NotificationContentPickers";
 import { fetchJson } from "@/utils/fetch-json";
 import { readJsonResponse } from "@/utils/read-json-response";
 
@@ -28,6 +29,7 @@ export function MasterPlatformCommunicationsSettings() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [href, setHref] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [audience, setAudience] = useState<(typeof AUDIENCES)[number]>("all");
   const [sendToTelegramUsers, setSendToTelegramUsers] = useState(true);
   const [postToTelegramChannel, setPostToTelegramChannel] = useState(false);
@@ -214,6 +216,14 @@ export function MasterPlatformCommunicationsSettings() {
             className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-white"
           />
         </label>
+        <NotificationContentPickers
+          title={title}
+          body={body}
+          imageUrl={imageUrl}
+          onTitleChange={setTitle}
+          onBodyChange={setBody}
+          onImageUrlChange={setImageUrl}
+        />
         <div className="md:col-span-2 flex flex-col gap-3">
           <label className="flex items-start gap-2 text-sm text-slate-300">
             <input

@@ -29,7 +29,7 @@ export async function getOrCreateConversation(opts: {
           create: {
             role: "assistant",
             content:
-              "Hi — I’m the ODEL HUB assistant. I answer from our **knowledge base** (no paid AI API). Ask about tuition, payments, school admin, or URAPearls.",
+              "Hi — I'm the ODEL HUB assistant. Ask about tuition, payments, school admin, or URAPearls.",
             kbCitations: ["platform-help-copilot"],
           },
         },

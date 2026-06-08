@@ -76,6 +76,7 @@ export default function NotificationCenter() {
         credentials: 'include',
         cache: 'no-store',
         headers: { 'Cache-Control': 'no-cache' },
+        signal: AbortSignal.timeout(8_000),
       });
       if (res.ok) {
         const data = (await res.json()) as { notifications?: Record<string, unknown>[] };

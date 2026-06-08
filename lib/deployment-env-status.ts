@@ -81,7 +81,9 @@ function varStatus(def: EnvVarDefinition, dashboardNames: Set<string>): EnvVarSt
   const source = set ? resolveSource(def.name, dashboardNames) : "unset";
   const missingInProduction =
     isProductionRuntime() &&
-    def.requirement === "production" &&
+    (def.requirement === "production" ||
+      def.requirement === "always" ||
+      def.requirement === "all") &&
     !set;
   return {
     name: def.name,
@@ -97,7 +99,7 @@ function varStatus(def: EnvVarDefinition, dashboardNames: Set<string>): EnvVarSt
 }
 
 function groupConfigured(group: EnvGroupDefinition, vars: EnvVarStatus[]): boolean {
-  const required = vars.filter((v) => v.requirement === "always");
+  const required = vars.filter((v) => v.requirement === "always" || v.requirement === "all");
   if (required.length > 0) return required.every((v) => v.set);
   return vars.some((v) => v.set);
 }
@@ -183,6 +185,19 @@ function defaultGroupHealth(id: string): { healthy: boolean | null; note: string
         note: ok
           ? null
           : "BREVO_API_KEY or RESEND_API_KEY plus TRANSACTIONAL_EMAIL_FROM (or RESEND_FROM) required in production.",
+      };
+    }
+    case "vercel-sync": {
+      const configured = isSet("VERCEL_ACCESS_TOKEN") && isSet("VERCEL_PROJECT_ID");
+      const disabled =
+        deploymentEnv("DEPLOYMENT_ENV_AUTONOMOUS_SYNC").toLowerCase() === "false";
+      return {
+        healthy: configured ? true : null,
+        note: configured
+          ? disabled
+            ? "Autonomous sync disabled (DEPLOYMENT_ENV_AUTONOMOUS_SYNC=false)."
+            : "Autonomous registry scan + Vercel push enabled."
+          : "Optional — set VERCEL_ACCESS_TOKEN and VERCEL_PROJECT_ID for auto Vercel sync.",
       };
     }
     case "custom": {

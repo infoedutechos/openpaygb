@@ -13,7 +13,7 @@ type EnvVarRow = {
   label: string;
   description: string;
   sensitive: boolean;
-  requirement: "always" | "production" | "optional";
+  requirement: "always" | "production" | "optional" | "all";
   set: boolean;
   source: EnvVarSource;
   maskedPreview: string | null;
@@ -33,6 +33,21 @@ type EnvGroup = {
   vars: EnvVarRow[];
 };
 
+type AutonomousPayload = {
+  registry: { scanned: number; added: string[]; skippedExisting: number };
+  vercel: {
+    ok: boolean;
+    configured: boolean;
+    synced: number;
+    created: number;
+    updated: number;
+    skipped: number;
+    errors: string[];
+    message: string | null;
+  } | null;
+  vercelPending?: boolean;
+};
+
 type DeploymentPayload = {
   summary: {
     production: boolean;
@@ -46,11 +61,13 @@ type DeploymentPayload = {
   };
   groups: EnvGroup[];
   probedAt: string | null;
+  autonomous?: AutonomousPayload | null;
 };
 
 function requirementLabel(r: EnvVarRow["requirement"]): string {
   if (r === "always") return "Required";
   if (r === "production") return "Production";
+  if (r === "all") return "All environments";
   return "Optional";
 }
 
@@ -98,6 +115,8 @@ export function MasterDeploymentEnvSettings() {
   const [newVarDescription, setNewVarDescription] = useState("");
   const [newVarSensitive, setNewVarSensitive] = useState(true);
   const [newVarRequirement, setNewVarRequirement] = useState<EnvVarRow["requirement"]>("optional");
+  const [syncingVercel, setSyncingVercel] = useState(false);
+  const [autonomousNote, setAutonomousNote] = useState<string | null>(null);
 
   const load = useCallback(async (probe = false) => {
     setError(null);
@@ -107,6 +126,26 @@ export function MasterDeploymentEnvSettings() {
     if (!parsed.ok) throw new Error(parsed.error);
     setData(parsed.data);
     setDrafts({});
+    const auto = parsed.data.autonomous;
+    if (auto) {
+      const parts: string[] = [];
+      if (auto.registry.added.length > 0) {
+        parts.push(`Auto-added ${auto.registry.added.length} variable(s) from codebase: ${auto.registry.added.join(", ")}`);
+      } else {
+        parts.push(`Registry scan: ${auto.registry.scanned} name(s) in codebase, none new.`);
+      }
+      if (auto.vercel?.configured) {
+        parts.push(auto.vercel.message ?? `Vercel: ${auto.vercel.synced} synced.`);
+        if (auto.vercel.errors.length > 0) {
+          parts.push(auto.vercel.errors[0]);
+        }
+      } else if (auto.vercelPending) {
+        parts.push("Vercel sync running in the background after this page loaded.");
+      } else if (auto.vercel?.message) {
+        parts.push(auto.vercel.message);
+      }
+      setAutonomousNote(parts.join(" "));
+    }
   }, []);
 
   useEffect(() => {
@@ -119,6 +158,36 @@ export function MasterDeploymentEnvSettings() {
     if (!data?.summary.totalVars) return 0;
     return Math.round((data.summary.setVars / data.summary.totalVars) * 100);
   }, [data]);
+
+  async function runVercelSync() {
+    setSyncingVercel(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const r = await fetchJson("/api/master/deployment-env/vercel-sync", {
+        method: "POST",
+        credentials: "include",
+      });
+      const parsed = await readJsonResponse<{
+        ok?: boolean;
+        registry?: AutonomousPayload["registry"];
+        vercel?: AutonomousPayload["vercel"];
+        status?: DeploymentPayload;
+        error?: string;
+      }>(r);
+      if (!parsed.ok) throw new Error(parsed.error);
+      if (parsed.data.status) setData({ ...parsed.data.status, autonomous: { registry: parsed.data.registry!, vercel: parsed.data.vercel ?? null } });
+      const msg = parsed.data.vercel?.message ?? "Vercel sync finished.";
+      setSuccess(msg);
+      if (parsed.data.vercel?.errors?.length) {
+        setError(parsed.data.vercel.errors.join("; "));
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Vercel sync failed");
+    } finally {
+      setSyncingVercel(false);
+    }
+  }
 
   async function runProbe() {
     setProbing(true);
@@ -296,7 +365,11 @@ export function MasterDeploymentEnvSettings() {
             <strong className="font-medium text-slate-300">encrypted in MongoDB</strong> and override server / Vercel env at runtime on every
             deployment. Dashboard values take precedence over <code className="rounded bg-black/35 px-1">.env.local</code>. Leave a field blank and save to clear a dashboard
             override. Secrets are never shown in full after save. Use <strong className="text-slate-300">Add custom variable</strong>{" "}
-            below to register new env names (e.g. integration keys not yet in the built-in list).
+            below to register new env names (e.g. integration keys not yet in the built-in list). The registry{" "}
+            <strong className="font-medium text-slate-300">auto-updates from the codebase</strong> on each load; set{" "}
+            <code className="rounded bg-black/35 px-1">VERCEL_ACCESS_TOKEN</code> +{" "}
+            <code className="rounded bg-black/35 px-1">VERCEL_PROJECT_ID</code> to{" "}
+            <strong className="font-medium text-slate-300">push values to Vercel automatically</strong>.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -308,6 +381,14 @@ export function MasterDeploymentEnvSettings() {
           >
             {probing ? "Probing PSP APIs…" : "Probe LivePay / Relworx"}
           </button>
+          <button
+            type="button"
+            onClick={() => void runVercelSync()}
+            disabled={syncingVercel || loading}
+            className="rounded-lg border border-sky-500/40 bg-sky-950/30 px-3 py-2 text-xs font-medium text-sky-100 hover:border-sky-400/60 disabled:opacity-50"
+          >
+            {syncingVercel ? "Syncing to Vercel…" : "Sync to Vercel now"}
+          </button>
           <a
             href="/api/master/deployment-env/export"
             className="rounded-lg border border-emerald-500/40 bg-emerald-950/30 px-3 py-2 text-xs font-medium text-emerald-100 hover:border-emerald-400/60"
@@ -315,6 +396,9 @@ export function MasterDeploymentEnvSettings() {
             Export for Vercel (.env)
           </a>
         </div>
+        {autonomousNote ? (
+          <p className="mt-2 text-xs text-cyan-200/90">{autonomousNote}</p>
+        ) : null}
         <p className="mt-2 text-xs text-amber-200/90">
           Export includes real secret values (merged dashboard + server env). Import at Vercel → Settings →
           Environment Variables. Do not commit or share the downloaded file.
@@ -419,6 +503,7 @@ export function MasterDeploymentEnvSettings() {
                   <option value="optional">Optional</option>
                   <option value="production">Production</option>
                   <option value="always">Required</option>
+                  <option value="all">All</option>
                 </select>
               </label>
             </div>

@@ -6,6 +6,7 @@ import { AdminAccountPasswordSection } from "@/components/admin/AdminAccountPass
 import { MasterPendingSchoolsBanner } from "@/components/admin/MasterPendingSchoolsBanner";
 import { MasterFxSettings } from "@/components/admin/MasterFxSettings";
 import { MasterBackupPanel } from "@/components/admin/MasterBackupPanel";
+import { MasterProjectDownloadPanel } from "@/components/admin/MasterProjectDownloadPanel";
 import { MasterPlatformSocialSettings } from "@/components/admin/MasterPlatformSocialSettings";
 import { MasterPartnerIntegrations } from "@/components/admin/MasterPartnerIntegrations";
 import { MasterMobileMoneyProviders } from "@/components/admin/MasterMobileMoneyProviders";
@@ -175,6 +176,12 @@ export default function MasterManagerOverviewPage() {
           Environment
         </Link>
         <Link
+          href="/admin/master#project-download"
+          className="rounded-xl border border-cyan-500/35 bg-cyan-950/25 px-5 py-2.5 text-sm font-medium text-cyan-100 hover:border-cyan-400/55"
+        >
+          Project download
+        </Link>
+        <Link
           href="/admin/master#platform-communications"
           className="rounded-xl border border-sky-500/35 bg-sky-950/25 px-5 py-2.5 text-sm font-medium text-sky-100 hover:border-sky-400/55"
         >
@@ -247,6 +254,8 @@ export default function MasterManagerOverviewPage() {
       <MasterPartnerIntegrations />
 
       <MasterPlatformSocialSettings />
+
+      <MasterProjectDownloadPanel />
 
       <MasterBackupPanel />
 

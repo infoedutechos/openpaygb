@@ -5,7 +5,7 @@
 
 import { listCustomRegistryEntries } from "@/lib/deployment-env-custom-registry";
 
-export type EnvRequirement = "always" | "production" | "optional";
+export type EnvRequirement = "always" | "production" | "optional" | "all";
 
 export type EnvVarDefinition = {
   name: string;
@@ -137,6 +137,37 @@ export const DEPLOYMENT_ENV_GROUPS: EnvGroupDefinition[] = [
         name: "LIVEPAY_WEBHOOK_URL",
         label: "Webhook URL override",
         description: "Full webhook URL if dashboard differs from NEXT_PUBLIC_APP_URL.",
+        sensitive: false,
+        requirement: "optional",
+      },
+    ],
+  },
+  {
+    id: "vixonpay",
+    title: "VixonPay (Uganda MoMo)",
+    description:
+      "Sandbox/production UGX collections via VixonPay API — https://docs.vixonpay.com/pay (integration pending).",
+    masterUiAnchor: "mobile-money-providers",
+    docsPath: "https://docs.vixonpay.com/pay#description/getting-started",
+    vars: [
+      {
+        name: "VIXONPAY_API_KEY",
+        label: "API key",
+        description: "Bearer token from VixonPay dashboard → Settings → API Keys.",
+        sensitive: true,
+        requirement: "optional",
+      },
+      {
+        name: "VIXONPAY_WEBHOOK_SECRET",
+        label: "Webhook secret",
+        description: "HMAC SHA512 key for X-VixonPay-Signature webhook verification.",
+        sensitive: true,
+        requirement: "optional",
+      },
+      {
+        name: "VIXONPAY_WEBHOOK_URL",
+        label: "Webhook URL",
+        description: "Public URL for VixonPay transaction webhooks (configure in dashboard).",
         sensitive: false,
         requirement: "optional",
       },
@@ -429,6 +460,44 @@ export const DEPLOYMENT_ENV_GROUPS: EnvGroupDefinition[] = [
         name: "NEXT_PUBLIC_SUPPORT_TELEGRAM_URL",
         label: "Support Telegram URL",
         description: "Link to Telegram support channel.",
+        sensitive: false,
+        requirement: "optional",
+      },
+    ],
+  },
+  {
+    id: "vercel-sync",
+    title: "Vercel autonomous sync",
+    description:
+      "When set, Master Admin auto-scans the codebase for env names and pushes merged dashboard values to your Vercel project.",
+    masterUiAnchor: "deployment-environment",
+    docsPath: "docs/PRODUCTION_GO_LIVE.md",
+    vars: [
+      {
+        name: "VERCEL_ACCESS_TOKEN",
+        label: "Vercel access token",
+        description: "From Vercel → Account → Tokens. Needs project env read/write scope.",
+        sensitive: true,
+        requirement: "optional",
+      },
+      {
+        name: "VERCEL_PROJECT_ID",
+        label: "Vercel project ID",
+        description: "Project → Settings → General → Project ID (prj_…).",
+        sensitive: false,
+        requirement: "optional",
+      },
+      {
+        name: "VERCEL_TEAM_ID",
+        label: "Vercel team ID (optional)",
+        description: "Team projects only — Team Settings → General → Team ID.",
+        sensitive: false,
+        requirement: "optional",
+      },
+      {
+        name: "DEPLOYMENT_ENV_AUTONOMOUS_SYNC",
+        label: "Autonomous sync enabled",
+        description: "true (default) — auto registry scan on load and Vercel push when token + project ID are set. Use false to disable.",
         sensitive: false,
         requirement: "optional",
       },

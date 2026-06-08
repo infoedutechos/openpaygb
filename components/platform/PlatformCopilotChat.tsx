@@ -40,7 +40,7 @@ export default function PlatformCopilotChat({
   hub = "all",
   placement = "landing",
   title = "ODEL HUB Help",
-  subtitle = "Knowledge-base assistant · No paid AI API",
+  subtitle = "Knowledge-base assistant",
 }: PlatformCopilotChatProps) {
   const [open, setOpen] = useState(false);
   const [agentOpen, setAgentOpen] = useState(false);
@@ -74,7 +74,7 @@ export default function PlatformCopilotChat({
         {
           role: "assistant",
           content:
-            "Hi — I answer from our **knowledge base** (no OpenAI). Ask about tuition, payments, school admin, or URAPearls.",
+            "Hi — I'm the ODEL HUB assistant. Ask about tuition, payments, school admin, or URAPearls.",
         },
       ]);
     } finally {

@@ -1,23 +1,16 @@
 import { NextResponse } from "next/server";
-
+import { after } from "next/server";
 import { z } from "zod";
-
 import { requireMaster } from "@/lib/master-session";
-
 import { getDeploymentEnvStatus } from "@/lib/deployment-env-status";
-
 import { patchDeploymentEnvOverrides } from "@/lib/deployment-env-overrides";
-
 import {
-
   invalidateDeploymentEnvCache,
-
   refreshDeploymentEnvCache,
-
 } from "@/lib/deployment-env-resolve";
-
 import { getMergedDeploymentEnvRegistryNames } from "@/lib/deployment-env-registry";
-
+import { runDeploymentEnvAutonomousTasks, runRegistryAutodiscover } from "@/lib/deployment-env-autonomous";
+import { isAutonomousDeploymentEnvSyncEnabled, syncDeploymentEnvToVercel } from "@/lib/deployment-env-vercel-sync";
 import { apiErrorResponse } from "@/lib/api-error";
 
 
@@ -46,11 +39,38 @@ export async function GET(req: Request) {
 
     await refreshDeploymentEnvCache();
 
-    const probe = new URL(req.url).searchParams.get("probe") === "1";
+    const url = new URL(req.url);
+    const probe = url.searchParams.get("probe") === "1";
+    const skipAutonomous = url.searchParams.get("skipAutonomous") === "1";
+
+    let autonomous: {
+      registry: Awaited<ReturnType<typeof runRegistryAutodiscover>>;
+      vercel: null;
+      vercelPending: boolean;
+    } | null = null;
+
+    if (!skipAutonomous) {
+      const registry = await runRegistryAutodiscover();
+      if (registry.added.length) {
+        invalidateDeploymentEnvCache();
+        await refreshDeploymentEnvCache();
+      }
+      const vercelPending = isAutonomousDeploymentEnvSyncEnabled();
+      if (vercelPending) {
+        after(async () => {
+          try {
+            await syncDeploymentEnvToVercel();
+          } catch (e) {
+            console.warn("[deployment-env] background Vercel sync failed", e);
+          }
+        });
+      }
+      autonomous = { registry, vercel: null, vercelPending };
+    }
 
     const status = await getDeploymentEnvStatus({ probe });
 
-    return NextResponse.json(status);
+    return NextResponse.json({ ...status, autonomous });
 
   } catch (e) {
 
@@ -108,21 +128,24 @@ export async function PATCH(req: Request) {
 
 
     invalidateDeploymentEnvCache();
-
     await refreshDeploymentEnvCache();
 
     const status = await getDeploymentEnvStatus();
 
-
+    after(async () => {
+      try {
+        await runDeploymentEnvAutonomousTasks({ syncVercel: true }); // explicit manual/after-save sync
+      } catch (e) {
+        console.warn("[deployment-env] autonomous Vercel sync after save failed", e);
+      }
+    });
 
     return NextResponse.json({
-
       ok: true,
-
       ...result,
-
       status,
-
+      autonomousNote:
+        "Registry scan runs on load; Vercel sync runs in the background after save when VERCEL_ACCESS_TOKEN and VERCEL_PROJECT_ID are set.",
     });
 
   } catch (e) {

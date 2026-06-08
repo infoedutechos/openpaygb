@@ -53,7 +53,7 @@ export function validateCustomEnvVarName(name: string): string | null {
 
 function parseRequirement(raw: string): EnvRequirement {
   const v = raw.trim().toLowerCase();
-  if (v === "always" || v === "production" || v === "optional") return v;
+  if (v === "always" || v === "production" || v === "optional" || v === "all") return v;
   return "optional";
 }
 

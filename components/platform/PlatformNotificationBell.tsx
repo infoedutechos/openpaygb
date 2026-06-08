@@ -60,6 +60,7 @@ export default function PlatformNotificationBell({ hub = "all" }: PlatformNotifi
       const res = await fetch(`/api/platform/notifications?hub=${encodeURIComponent(hub)}`, {
         credentials: "include",
         cache: "no-store",
+        signal: AbortSignal.timeout(8_000),
       });
       if (!res.ok) return;
       const data = (await res.json()) as { notifications?: NotificationRow[] };

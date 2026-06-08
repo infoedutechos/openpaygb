@@ -221,9 +221,15 @@ function AdminLoginForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail.trim() }),
       });
-      const j = (await r.json()) as { error?: string; message?: string };
-      if (!r.ok) throw new Error(j.error ?? "Request failed");
-      setForgotMsg(j.message ?? "Check your inbox for reset instructions.");
+      const j = (await r.json()) as { error?: string; message?: string; registered?: boolean };
+      if (!r.ok) {
+        if (r.status === 404) {
+          setForgotErr(j.error ?? "No admin account is registered with this email address.");
+          return;
+        }
+        throw new Error(j.error ?? "Request failed");
+      }
+      setForgotMsg(j.message ?? "Reset link sent. Check your inbox.");
     } catch (err) {
       setForgotErr(describeLoginError(err));
     } finally {
@@ -407,7 +413,8 @@ function AdminLoginForm() {
               Reset password
             </h2>
             <p className="mt-2 text-sm text-slate-400">
-              We&apos;ll email you a secure link if this address is registered. The link expires in one hour.
+              Enter the email on your school or master admin account. We only send a reset link when that address is
+              registered. The link expires in one hour.
             </p>
             <form className="mt-5 space-y-4" onSubmit={onForgotSubmit}>
               <div>

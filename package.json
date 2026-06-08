@@ -73,6 +73,7 @@
     "@tonconnect/sdk": "^3.0.0",
     "@tonconnect/ui-react": "^2.0.9",
     "@twa-dev/sdk": "^8.0.2",
+    "archiver": "^8.0.0",
     "bcryptjs": "^2.4.3",
     "crypto-js": "^4.2.0",
     "jose": "^5.9.6",
@@ -92,6 +93,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",
+    "@types/archiver": "^8.0.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.10.5",
     "@types/qrcode": "^1.5.5",

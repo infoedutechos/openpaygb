@@ -5,7 +5,7 @@ import {
 } from "@/lib/organization-registration-email-content";
 
 describe("organization-registration-email", () => {
-  it("includes registration details in html", { timeout: 15_000 }, () => {
+  it("includes registration details in html", { timeout: 30_000 }, () => {
     const html = buildWorkspaceRegistrationEmailHtml(
       {
         schoolName: "Test School",

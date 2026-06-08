@@ -1,6 +1,6 @@
 import type { PlatformAudience } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { withPrismaRetry } from "@/lib/prisma-retry";
+import { withPrismaDeadline, withPrismaRetry } from "@/lib/prisma-retry";
 import type { PlatformHub } from "@/lib/knowledge-base/types";
 import { hubToAudiences } from "@/lib/knowledge-base/types";
 
@@ -23,22 +23,36 @@ export async function listPlatformNotifications(opts: {
   limit?: number;
 }): Promise<PlatformNotificationRow[]> {
   const audiences = hubToAudiences(opts.hub ?? "all");
-  const rows = await withPrismaRetry(() =>
-    prisma.notification.findMany({
-      where: { isActive: true, audience: { in: audiences } },
-      orderBy: { createdAt: "desc" },
-      take: opts.limit ?? 50,
-    }),
+  const pollRetry = { attempts: 1, baseDelayMs: 100 };
+  const pollDeadlineMs = 4_000;
+  const rows = await withPrismaDeadline(
+    () =>
+      withPrismaRetry(
+        () =>
+          prisma.notification.findMany({
+            where: { isActive: true, audience: { in: audiences } },
+            orderBy: { createdAt: "desc" },
+            take: opts.limit ?? 50,
+          }),
+        pollRetry,
+      ),
+    pollDeadlineMs,
   );
 
   const ids = rows.map((r) => r.id);
   const reads =
     ids.length === 0
       ? []
-      : await withPrismaRetry(() =>
-          prisma.notificationRead.findMany({
-            where: { readerKey: opts.readerKey, notificationId: { in: ids } },
-          }),
+      : await withPrismaDeadline(
+          () =>
+            withPrismaRetry(
+              () =>
+                prisma.notificationRead.findMany({
+                  where: { readerKey: opts.readerKey, notificationId: { in: ids } },
+                }),
+              pollRetry,
+            ),
+          pollDeadlineMs,
         );
   const readSet = new Set(reads.map((r) => r.notificationId));
 
