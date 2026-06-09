@@ -1,0 +1,49 @@
+# Optional production deploy when Vercel Git integration is blocked.
+# Add GitHub repo secrets: VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID
+# Org: odeldevelopers-projects · Project: odelhub-pay · Domain: odelpay.vercel.app
+
+name: Vercel Production Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.repository == 'openpayglobal/openpaygb' }}
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - name: Skip when secrets missing
+        if: ${{ env.VERCEL_TOKEN == '' || env.VERCEL_ORG_ID == '' || env.VERCEL_PROJECT_ID == '' }}
+        run: |
+          echo "Vercel deploy skipped — set VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID in repo secrets."
+          echo "See docs/VERCEL_ODELPAY_DEPLOY.md"
+
+      - uses: actions/checkout@v4
+        if: ${{ env.VERCEL_TOKEN != '' && env.VERCEL_ORG_ID != '' && env.VERCEL_PROJECT_ID != '' }}
+
+      - uses: actions/setup-node@v4
+        if: ${{ env.VERCEL_TOKEN != '' && env.VERCEL_ORG_ID != '' && env.VERCEL_PROJECT_ID != '' }}
+        with:
+          node-version: "22"
+
+      - name: Install Vercel CLI
+        if: ${{ env.VERCEL_TOKEN != '' && env.VERCEL_ORG_ID != '' && env.VERCEL_PROJECT_ID != '' }}
+        run: npm install -g vercel@latest
+
+      - name: Pull Vercel env
+        if: ${{ env.VERCEL_TOKEN != '' && env.VERCEL_ORG_ID != '' && env.VERCEL_PROJECT_ID != '' }}
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Build
+        if: ${{ env.VERCEL_TOKEN != '' && env.VERCEL_ORG_ID != '' && env.VERCEL_PROJECT_ID != '' }}
+        run: vercel build --prod --token="$VERCEL_TOKEN"
+
+      - name: Deploy prebuilt
+        if: ${{ env.VERCEL_TOKEN != '' && env.VERCEL_ORG_ID != '' && env.VERCEL_PROJECT_ID != '' }}
+        run: vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"

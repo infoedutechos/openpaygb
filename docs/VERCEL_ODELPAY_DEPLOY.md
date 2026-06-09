@@ -12,10 +12,11 @@
 
 | Check | Result |
 |-------|--------|
-| `https://odelpay.vercel.app/` | **404** `DEPLOYMENT_NOT_FOUND` — hostname registered, **no production deployment** |
-| Vercel UI | **“No Production Deployment”** — domain not serving traffic |
-| Vercel Git check | **Failed** — *Git author **infoedutechos** must have access to the project on Vercel* |
-| GitHub **CI / lint** | **Failed** — `prisma validate` without `DATABASE_URL` (fixed in `.github/workflows/ci.yml`) |
+| `https://odelpay.vercel.app/` | **404** `DEPLOYMENT_NOT_FOUND` — domain registered, **no successful production deployment yet** |
+| GitHub **CI** (`main`) | **Green** — lint, test, tsc, build (with `SKIP_DB_AT_BUILD=true`) |
+| Latest `main` commits | `ab895c4` CI build fix · `2872044` platform features |
+| Vercel Git check | Often **blocked** — *Git author must have access to project* — fix in dashboard |
+| Vercel CLI | Not logged in on dev machine — use dashboard or GitHub Action fallback |
 
 ---
 
@@ -55,9 +56,24 @@ Full list: [VERCEL_ENV_SETUP.md](./VERCEL_ENV_SETUP.md)
 
 ## Fix 4 — Deploy & verify
 
-1. Push to **`main`** (CI green).
-2. Vercel **Deployments** → Production **Ready**.
+1. Push to **`main`** — **done**; CI is green on [Actions](https://github.com/openpayglobal/openpaygb/actions).
+2. Vercel **Deployments** → Production **Ready** (after Fix 1–3).
 3. `GET https://odelpay.vercel.app/api/health` → JSON (not 404).
+
+### Fix 4b — GitHub Action deploy (if Vercel Git hook stays blocked)
+
+1. Vercel → [Account tokens](https://vercel.com/account/tokens) → create token (logged in as `info.edutechos@gmail.com`).
+2. Project → **Settings → General** → copy **Project ID**; team **Settings** → **Team ID**.
+3. GitHub repo → **Settings → Secrets → Actions** — add:
+
+   | Secret | Value |
+   |--------|--------|
+   | `VERCEL_TOKEN` | Token from step 1 |
+   | `VERCEL_ORG_ID` | `odeldevelopers-projects` team ID |
+   | `VERCEL_PROJECT_ID` | `odelhub-pay` project ID |
+
+4. Push to `main` or run workflow **Vercel Production Deploy** manually.
+5. Workflow file: `.github/workflows/vercel-deploy.yml` (skips safely if secrets missing).
 
 Local `.env.local`:
 
