@@ -1,7 +1,9 @@
-import { OrganizationTenantStatus } from "@prisma/client";
+import { OrganizationTenantStatus, type Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { cloneProgrammesAndFxFromTemplate } from "@/lib/org-provision";
 import { revalidateOrganizationCaches } from "@/lib/revalidate-organizations";
+import { fetchFaviconFromWebsite } from "@/lib/fetch-remote-favicon";
+import { maybeProvisionSchoolOrgAdmin } from "@/lib/provision-school-org-admin";
 
 /**
  * Approve a pending school workspace: clone programmes/FX from template and set active.
@@ -23,10 +25,37 @@ export async function activatePendingOrganizationWorkspace(organizationId: strin
   }
 
   await cloneProgrammesAndFxFromTemplate(organizationId);
+
+  const before = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    select: { registrationWebsiteUrl: true, faviconUploadedAt: true },
+  });
+
+  let faviconBytes: Uint8Array | null = null;
+  if (!before?.faviconUploadedAt && before?.registrationWebsiteUrl?.trim()) {
+    const favicon = await fetchFaviconFromWebsite(before.registrationWebsiteUrl);
+    if (favicon) faviconBytes = new Uint8Array(favicon);
+  }
+
+  const data: Prisma.OrganizationUpdateInput = {
+    tenantStatus: OrganizationTenantStatus.active,
+  };
+  if (faviconBytes) {
+    data.faviconIco = faviconBytes as Uint8Array<ArrayBuffer>;
+    data.faviconUploadedAt = new Date();
+  }
+
   const updated = await prisma.organization.update({
     where: { id: organizationId },
-    data: { tenantStatus: OrganizationTenantStatus.active },
+    data,
   });
   revalidateOrganizationCaches(updated.slug, updated.id);
+
+  try {
+    await maybeProvisionSchoolOrgAdmin(organizationId);
+  } catch (e) {
+    console.warn("[org-activate] auto org_admin provision failed", e);
+  }
+
   return updated;
 }

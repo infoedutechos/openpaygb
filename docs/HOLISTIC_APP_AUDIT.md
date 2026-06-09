@@ -84,15 +84,14 @@ See [SCHOOL_ADMIN_PROGRAMMES.md](./SCHOOL_ADMIN_PROGRAMMES.md).
 
 ### Remaining backlog
 
-See **[BACKLOG.md](./BACKLOG.md)** for the full prioritized list. Highlights:
+See **[BACKLOG.md](./BACKLOG.md)**. Prior 2026-06-04 items (admin search, orgSlug scoping, LivePay student flow, invite reset links) are **implemented**.
 
 | Item | Priority |
 |------|----------|
-| `AdminGlobalSearch` + missing `/api/admin/search`; docs reference missing `AdminWorkspaceBar` | Medium |
-| Master `?orgSlug=` only on dashboard; reports not tenant-scoped | Medium |
-| Student portal: no LivePay; branding copy drift | Medium |
-| Invite email sends plaintext password | Medium |
+| Production env + TON wallet ops | High — [DEPLOYMENT_ENV_PRODUCTION.md](./DEPLOYMENT_ENV_PRODUCTION.md) |
+| OpenPayGB virtual card program | Medium — investigation doc |
 | Consolidate master org mobile/desktop cards | Low |
+| URA game routes `apiErrorResponse` | Low (out of tuition scope) |
 
 ### Implemented (2026-06-04)
 

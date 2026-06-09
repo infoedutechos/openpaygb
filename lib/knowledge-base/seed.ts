@@ -56,7 +56,7 @@ export const PLATFORM_KB_SEED: KnowledgeSeedArticle[] = [
     title: "Register a new school workspace",
     summary: "Self-serve school registration and email verification.",
     body:
-      "New schools register at /admin/register. After submit, verify email from the link sent by Resend. Workspace stays pending until master approves (when that policy is enabled). Then master provisions org_admin login.",
+      "New schools self-register at /admin/register. After email confirmation, the workspace may activate automatically (programmes and fees cloned from the platform template) or await master approval — see Master Admin school workspace settings. Optional school website URL helps fetch your favicon for /pay/your-slug. School admin login may be auto-generated with a password-set email when that policy is enabled.",
     category: "admin",
     tags: ["register", "workspace", "verification", "master"],
     audience: "admin",
@@ -209,10 +209,10 @@ export const PLATFORM_KB_SEED: KnowledgeSeedArticle[] = [
   },
   {
     slug: "platform-help-copilot",
-    title: "How this help assistant works",
-    summary: "Knowledge-base copilot without paid AI APIs.",
+    title: "How ODEL HUB Copilot works",
+    summary: "ODEL HUB Copilot answers from help articles with direct links.",
     body:
-      "Answers are retrieved from the ODEL HUB knowledge base (articles you can extend in Master Admin). No OpenAI or external LLM is required. If nothing matches, basic rules apply — use Talk to an agent for human help.",
+      "ODEL HUB Copilot answers from platform help articles (editable in Master Admin) and includes clickable links to tuition pay, school registration, student portal, and URAPearls. For account-specific help, use Talk to an agent in the chat.",
     category: "platform",
     tags: ["help", "copilot", "knowledge", "support"],
     audience: "all",

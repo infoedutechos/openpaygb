@@ -12,6 +12,7 @@ export const pendingOrgBodySchema = z.object({
   name: z.string().min(2).max(120),
   slug: z.string().min(2).max(48),
   registrationContactEmail: z.string().email().optional().or(z.literal("")),
+  registrationWebsiteUrl: z.string().max(2048).optional().default(""),
   registrationNote: z.string().max(2000).optional().default(""),
 });
 
@@ -77,6 +78,7 @@ export async function createPendingOrganization(input: PendingOrgInput) {
         slug,
         tenantStatus: OrganizationTenantStatus.pending,
         registrationContactEmail: normalizeRegistrationContactEmail(input.registrationContactEmail ?? ""),
+        registrationWebsiteUrl: (input.registrationWebsiteUrl ?? "").trim(),
         registrationNote: (input.registrationNote ?? "").trim(),
         destinationWallet: "",
       },

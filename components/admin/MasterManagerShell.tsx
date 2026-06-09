@@ -36,7 +36,7 @@ const nav: { href: string; label: string; desc?: string }[] = [
   {
     href: "/admin/master#platform-communications",
     label: "Chat & notifications",
-    desc: "Bell + KB assistant",
+    desc: "Bell + ODEL HUB Copilot",
   },
   {
     href: "/admin/master#knowledge-base",

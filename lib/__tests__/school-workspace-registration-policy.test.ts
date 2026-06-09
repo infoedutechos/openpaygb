@@ -11,6 +11,7 @@ vi.mock("@/lib/prisma", () => ({
 import { prisma } from "@/lib/prisma";
 import {
   getSchoolWorkspaceRegistrationPolicy,
+  isSchoolWorkspaceAutoAdminLoginEnabled,
   isUnknownSchoolWorkspacePolicyFieldError,
 } from "@/lib/school-workspace-registration-policy";
 
@@ -40,6 +41,17 @@ describe("school-workspace-registration-policy", () => {
     const policy = await getSchoolWorkspaceRegistrationPolicy();
     expect(policy.requireMasterApproval).toBe(true);
     expect(policy.autoRegistrationEnabled).toBe(false);
+    expect(policy.autoGenerateAdminLogin).toBe(false);
+  });
+
+  it("reads autoGenerateAdminLogin from site settings", async () => {
+    vi.mocked(prisma.siteUiSettings.findUnique).mockResolvedValue({
+      schoolWorkspaceRequireMasterApproval: false,
+      schoolWorkspaceAutoGenerateAdminLogin: true,
+    } as never);
+    const policy = await getSchoolWorkspaceRegistrationPolicy();
+    expect(policy.autoGenerateAdminLogin).toBe(true);
+    expect(await isSchoolWorkspaceAutoAdminLoginEnabled()).toBe(true);
   });
 
   it("isUnknownSchoolWorkspacePolicyFieldError detects stale Prisma client", () => {

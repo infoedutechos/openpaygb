@@ -42,6 +42,7 @@ type SiteUiDbRow = {
   homeScreenThemeColor?: string;
   platformLogoUploadedAt?: Date | null;
   copilotBubbleImageUploadedAt?: Date | null;
+  copilotAssistantName?: string;
   socialLinkIcons?: unknown;
 };
 
@@ -95,6 +96,7 @@ function rowToSettings(row: SiteUiDbRow): SiteUiSettingsRow {
     hasCopilotBubbleImage: Boolean(bubbleAt),
     copilotBubbleImageUploadedAt: bubbleAt?.toISOString() ?? null,
     copilotBubbleImageUrl: copilotBubbleImageUrl(bubbleAt),
+    copilotAssistantName: row.copilotAssistantName?.trim() || "ODEL HUB Copilot",
   };
 }
 
@@ -124,6 +126,7 @@ const siteUiSelectBase = {
   homeScreenThemeColor: true,
   platformLogoUploadedAt: true,
   copilotBubbleImageUploadedAt: true,
+  copilotAssistantName: true,
 } as const;
 
 const siteUiSelect = {
@@ -207,6 +210,7 @@ function defaultSiteUiRow(): Parameters<typeof rowToSettings>[0] {
     homeScreenDescription: "",
     homeScreenThemeColor: "#0ea5e9",
     platformLogoUploadedAt: null,
+    copilotAssistantName: "ODEL HUB Copilot",
     socialLinkIcons: {},
   };
 }
@@ -317,6 +321,7 @@ function toPublicSiteUiSettings(s: SiteUiSettingsRow): PublicSiteUiSettings {
     platformLogoUrl: s.platformLogoUrl,
     hasCopilotBubbleImage: s.hasCopilotBubbleImage,
     copilotBubbleImageUrl: s.copilotBubbleImageUrl,
+    copilotAssistantName: s.copilotAssistantName,
   };
 }
 

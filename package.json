@@ -63,6 +63,8 @@
     "telegram:set-menu": "npx tsx scripts/set-telegram-menu-button.ts",
     "telegram:tuition-reminders": "npx tsx scripts/run-telegram-reminders.ts",
     "telegram:smoke-cron": "node --require ./scripts/stub-server-only.cjs ./node_modules/tsx/dist/cli.mjs scripts/smoke-telegram-cron.ts",
+    "deployment:provision-sync": "node scripts/provision-and-sync-deployment-env.cjs",
+    "deployment:sync-vercel": "node scripts/provision-and-sync-deployment-env.cjs --sync-only",
     "admin:link-telegram": "npx tsx scripts/link-admin-telegram.ts",
     "admin:ensure-master-telegram": "npx tsx scripts/ensure-master-telegram.ts",
     "prepare": "husky"

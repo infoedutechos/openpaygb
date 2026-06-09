@@ -6,9 +6,11 @@ import { OdelShieldIcon } from "@/components/icons/OdelShieldIcon";
 
 function RegisterForm() {
   const [requireMasterApproval, setRequireMasterApproval] = useState(true);
+  const [autoGenerateAdminLogin, setAutoGenerateAdminLogin] = useState(false);
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [contact, setContact] = useState("");
+  const [website, setWebsite] = useState("");
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
@@ -22,9 +24,15 @@ function RegisterForm() {
     void (async () => {
       const r = await fetch("/api/public/school-workspace-registration-policy");
       if (!r.ok) return;
-      const j = (await r.json()) as { requireMasterApproval?: boolean };
+      const j = (await r.json()) as {
+        requireMasterApproval?: boolean;
+        autoGenerateAdminLogin?: boolean;
+      };
       if (!cancelled && typeof j.requireMasterApproval === "boolean") {
         setRequireMasterApproval(j.requireMasterApproval);
+      }
+      if (!cancelled && typeof j.autoGenerateAdminLogin === "boolean") {
+        setAutoGenerateAdminLogin(j.autoGenerateAdminLogin);
       }
     })();
     return () => {
@@ -46,6 +54,7 @@ function RegisterForm() {
           name,
           slug: slug.trim().toLowerCase(),
           registrationContactEmail: contact.trim().toLowerCase(),
+          registrationWebsiteUrl: website.trim(),
           registrationNote: note,
         }),
       });
@@ -117,8 +126,10 @@ function RegisterForm() {
               ) : (
                 <>
                   After you confirm your email, your workspace is <strong className="text-slate-400">activated automatically</strong>{" "}
-                  (programmes and fees copied from the platform template). A platform operator still creates your admin
-                  login.
+                  (programmes and fees copied from the platform template).
+                  {autoGenerateAdminLogin
+                    ? " You will receive an email to set your school admin password."
+                    : " A platform operator still creates your admin login."}
                 </>
               )}
             </p>
@@ -145,7 +156,9 @@ function RegisterForm() {
                     <Link href="/school/login" className="font-mono text-cyan-300/90 hover:underline">
                       /school/login
                     </Link>{" "}
-                    once the platform operator shares admin credentials
+                    {autoGenerateAdminLogin
+                      ? "using the password-set link sent to your contact email"
+                      : "once the platform operator shares admin credentials"}
                   </li>
                 </>
               )}
@@ -184,6 +197,19 @@ function RegisterForm() {
               />
               <p className="mt-1 text-[11px] text-slate-600">
                 ODEL HUB sends a verification link with your registration details to this address.
+              </p>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-slate-400">School website (optional)</label>
+              <input
+                type="url"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                placeholder="https://yourschool.ac.ug"
+                className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[#070b14] px-3 py-2 text-sm text-white"
+              />
+              <p className="mt-1 text-[11px] text-slate-600">
+                We may fetch your school favicon from this site for your pay page branding.
               </p>
             </div>
             <div>

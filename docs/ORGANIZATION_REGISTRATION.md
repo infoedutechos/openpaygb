@@ -2,6 +2,8 @@
 
 This document describes the tenant lifecycle in ODELHUB Pay: from **pending workspace** to **active school** with an **org admin** who can use the **School & organization dashboard** at `/admin`.
 
+**User-facing guide:** [SCHOOL_WORKSPACE_SELF_REGISTER.md](./SCHOOL_WORKSPACE_SELF_REGISTER.md) — self-register flow, auto admin login, ODEL HUB Copilot, favicon fetch.
+
 For sign-in URLs, login page UX, and where links appear in the product, see **[SCHOOL_ADMIN_LOGIN.md](./SCHOOL_ADMIN_LOGIN.md)**.
 
 ---

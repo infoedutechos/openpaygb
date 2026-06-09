@@ -45,6 +45,7 @@ export function usePlatformSocial(): PublicSiteUiSettings {
       platformLogoUrl: null,
       hasCopilotBubbleImage: false,
       copilotBubbleImageUrl: null,
+      copilotAssistantName: "ODEL HUB Copilot",
     };
   }
   return ctx;

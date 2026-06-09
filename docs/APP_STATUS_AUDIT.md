@@ -117,17 +117,16 @@ See **[SECURITY_HARDENING.md](./SECURITY_HARDENING.md)** — IDOR fixes, receipt
 | Consolidate master org desktop + mobile card UI | Low |
 | Legacy URA `POST /api/admin/login` vs tuition JWT — document Play-only scope | Low |
 
-## 9. Open backlog (scan 2026-06-04)
+## 9. Open backlog (scan 2026-06-09)
 
-Prioritized inventory: **[BACKLOG.md](./BACKLOG.md)**. Top items:
+Prioritized inventory: **[BACKLOG.md](./BACKLOG.md)**. Items from the 2026-06-04 scan are **done** (admin search, `AdminWorkspaceBar`, master `?orgSlug=` on dashboard/students/payments/reports, invite reset links, distributed rate limits, JWT split).
 
 | Area | Open work |
 |------|-----------|
-| Admin UX | Implement `/api/admin/search` or remove `AdminGlobalSearch`; fix docs for missing `AdminWorkspaceBar` |
-| Master scope | Propagate `?orgSlug=` to students/payments/reports (today: dashboard + manual filters) |
-| Student pay | LivePay in `StudentTuitionFlow`; OpenPayGB copy in dex/collect |
-| Security | Invite reset-link vs plaintext password; Redis rate limits; split JWT secrets |
-| Ops | `db:push` for `livepay` enum; regenerate `docs:inventory` |
+| Ops | Production TON wallet + webhook dashboard alignment — [DEPLOYMENT_ENV_PRODUCTION.md](./DEPLOYMENT_ENV_PRODUCTION.md) |
+| Product | OpenPayGB virtual card program — [VIRTUAL_CARD_INVESTIGATION.md](./VIRTUAL_CARD_INVESTIGATION.md) |
+| Low | Master org UI consolidation (single `MasterOrgRow`); URA game `apiErrorResponse` (~200 routes) |
+| Docs | Regenerate `docs:inventory` after new routes (`/api/platform/chat/suggest`) |
 
 ---
 

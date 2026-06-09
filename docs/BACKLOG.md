@@ -1,6 +1,6 @@
 # Product & engineering backlog
 
-**Last updated:** 2026-06-03 · **Brand:** **OpenPayGB** · **Rails:** Mbiyo, LivePay
+**Last updated:** 2026-06-09 · **Brand:** **OpenPayGB** · **Rails:** Mbiyo, LivePay
 
 ---
 
@@ -43,6 +43,10 @@
 | B-TMA-06 | Tuition due cron | `GET /api/cron/telegram-tuition-reminders` |
 | B-TMA-07 | Menu button script | `npm run telegram:set-menu` |
 | B-DB-01 | Prisma schema push | `lastLoginAt` fields — run `npm run db:push` on each environment |
+| B-REG-01 | School auto admin login | `schoolWorkspaceAutoGenerateAdminLogin` + `maybeProvisionSchoolOrgAdmin` on activate |
+| B-REG-02 | School website favicon fetch | `registrationWebsiteUrl` + `fetchFaviconFromWebsite` on activate |
+| B-COP-01 | ODEL HUB Copilot UX | Markdown article links, typeahead `/api/platform/chat/suggest`, no API disclaimers |
+| B-DEP-01 | Production env autonomous sync | `deployment:provision-sync`, `DEPLOYMENT_ENV_PRODUCTION.md` |
 
 ---
 

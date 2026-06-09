@@ -1,5 +1,6 @@
 ui_route,relative_file
 /admin,app/admin/(tuition-hub)/page.tsx
+/admin/payment-requests,app/admin/(tuition-hub)/payment-requests/page.tsx
 /admin/payments,app/admin/(tuition-hub)/payments/page.tsx
 /admin/programmes,app/admin/(tuition-hub)/programmes/page.tsx
 /admin/receipts,app/admin/(tuition-hub)/receipts/page.tsx
@@ -40,9 +41,11 @@ ui_route,relative_file
 /admin/tasks,app/admin/tasks/page.tsx
 /admin/telegram-broadcast,app/admin/telegram-broadcast/page.tsx
 /admin/weekly-event,app/admin/weekly-event/page.tsx
+/card/get,app/card/get/page.tsx
 /clicker,app/clicker/page.tsx
 /clicker/privacy,app/clicker/privacy/page.tsx
 /clicker/terms,app/clicker/terms/page.tsx
+/dex/convert,app/dex/convert/page.tsx
 /dex/offramp,app/dex/offramp/page.tsx
 /dex/onramp,app/dex/onramp/page.tsx
 /dex,app/dex/page.tsx

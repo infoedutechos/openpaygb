@@ -30,12 +30,7 @@ describe("organization-workspace-verify", () => {
         registrationEmailVerifiedAt: null,
       }),
     ).toBe(true);
-    expect(
-      canMasterApproveWorkspace({
-        registrationContactEmail: "school@example.com",
-        registrationEmailVerifiedAt: null,
-      }),
-    ).toBe(true);
+    expect(canMasterApproveWorkspace()).toBe(true);
     expect(
       workspaceEmailVerifyStatus({
         registrationContactEmail: "school@example.com",
@@ -45,18 +40,7 @@ describe("organization-workspace-verify", () => {
   });
 
   it("allows approval when verified or no email", () => {
-    expect(
-      canMasterApproveWorkspace({
-        registrationContactEmail: "school@example.com",
-        registrationEmailVerifiedAt: "2026-01-01T00:00:00.000Z",
-      }),
-    ).toBe(true);
-    expect(
-      canMasterApproveWorkspace({
-        registrationContactEmail: "",
-        registrationEmailVerifiedAt: null,
-      }),
-    ).toBe(true);
+    expect(canMasterApproveWorkspace()).toBe(true);
     expect(
       workspaceEmailVerifyStatus({
         registrationContactEmail: "",

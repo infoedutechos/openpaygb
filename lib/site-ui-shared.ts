@@ -82,6 +82,7 @@ export type SiteUiSettingsRow = {
   hasCopilotBubbleImage: boolean;
   copilotBubbleImageUploadedAt: string | null;
   copilotBubbleImageUrl: string | null;
+  copilotAssistantName: string;
 };
 
 export type PublicSiteUiSettings = Pick<
@@ -111,6 +112,7 @@ export type PublicSiteUiSettings = Pick<
   | "platformLogoUrl"
   | "hasCopilotBubbleImage"
   | "copilotBubbleImageUrl"
+  | "copilotAssistantName"
 >;
 
 function envTelegramSupportUrl(): string {

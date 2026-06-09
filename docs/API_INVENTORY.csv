@@ -26,6 +26,7 @@ url_path,relative_file,http_methods,method_count
 /api/admin/openpay-cards,app/api/admin/openpay-cards/route.ts,GET,1
 /api/admin/org-users,app/api/admin/org-users/route.ts,POST,1
 /api/admin/organizations/[slug]/detail,app/api/admin/organizations/[slug]/detail/route.ts,GET,1
+/api/admin/payment-requests,app/api/admin/payment-requests/route.ts,GET;POST,2
 /api/admin/pearls,app/api/admin/pearls/route.ts,GET;POST,2
 /api/admin/programmes/[id]/fees/[feeId],app/api/admin/programmes/[id]/fees/[feeId]/route.ts,DELETE;PATCH,2
 /api/admin/programmes/[id]/fees,app/api/admin/programmes/[id]/fees/route.ts,POST,1
@@ -141,6 +142,7 @@ url_path,relative_file,http_methods,method_count
 /api/master/partner/keys,app/api/master/partner/keys/route.ts,GET;POST,2
 /api/master/partner/webhooks/[id],app/api/master/partner/webhooks/[id]/route.ts,DELETE;PATCH,2
 /api/master/partner/webhooks,app/api/master/partner/webhooks/route.ts,GET;POST,2
+/api/master/payment-providers,app/api/master/payment-providers/route.ts,GET;PATCH,2
 /api/master/platform-checkout-fee,app/api/master/platform-checkout-fee/route.ts,GET;PATCH,2
 /api/master/programmes/[id],app/api/master/programmes/[id]/route.ts,PATCH,1
 /api/master/programmes/apply-inferred,app/api/master/programmes/apply-inferred/route.ts,POST,1
@@ -152,6 +154,7 @@ url_path,relative_file,http_methods,method_count
 /api/master/site-ui,app/api/master/site-ui/route.ts,GET;PATCH,2
 /api/master/site-ui/social-icon/[key],app/api/master/site-ui/social-icon/[key]/route.ts,DELETE;POST,2
 /api/master/summary,app/api/master/summary/route.ts,GET,1
+/api/master/telegram-hub,app/api/master/telegram-hub/route.ts,GET;PATCH,2
 /api/milestone-banner,app/api/milestone-banner/route.ts,GET,1
 /api/mini-games,app/api/mini-games/route.ts,GET;POST,2
 /api/notification-social-icon,app/api/notification-social-icon/route.ts,GET,1
@@ -177,6 +180,7 @@ url_path,relative_file,http_methods,method_count
 /api/pearls/transfer,app/api/pearls/transfer/route.ts,POST,1
 /api/pearls/withdraw,app/api/pearls/withdraw/route.ts,POST,1
 /api/platform/chat,app/api/platform/chat/route.ts,GET;POST,2
+/api/platform/chat/suggest,app/api/platform/chat/suggest/route.ts,GET,1
 /api/platform/copilot-bubble,app/api/platform/copilot-bubble/route.ts,GET,1
 /api/platform/logo,app/api/platform/logo/route.ts,GET,1
 /api/platform/notifications,app/api/platform/notifications/route.ts,GET;POST,2
@@ -194,12 +198,17 @@ url_path,relative_file,http_methods,method_count
 /api/public/checkout/student,app/api/public/checkout/student/route.ts,POST,1
 /api/public/checkout/ton-pay-transfer,app/api/public/checkout/ton-pay-transfer/route.ts,POST,1
 /api/public/checkout/vixonpay-start,app/api/public/checkout/vixonpay-start/route.ts,POST,1
+/api/public/convert/quote,app/api/public/convert/quote/route.ts,POST,1
+/api/public/guest-card/register,app/api/public/guest-card/register/route.ts,POST,1
+/api/public/guest-card/send-otp,app/api/public/guest-card/send-otp/route.ts,POST,1
 /api/public/livepay-config,app/api/public/livepay-config/route.ts,GET,1
+/api/public/mbiyo-config,app/api/public/mbiyo-config/route.ts,GET,1
 /api/public/openpay-card-config,app/api/public/openpay-card-config/route.ts,GET,1
 /api/public/organization-register/resend,app/api/public/organization-register/resend/route.ts,POST,1
 /api/public/organization-register,app/api/public/organization-register/route.ts,POST,1
 /api/public/organization-register/verify,app/api/public/organization-register/verify/route.ts,GET,1
 /api/public/organizations,app/api/public/organizations/route.ts,GET,1
+/api/public/payment-requests/[id],app/api/public/payment-requests/[id]/route.ts,GET,1
 /api/public/relworx-config,app/api/public/relworx-config/route.ts,GET,1
 /api/public/school-workspace-registration-policy,app/api/public/school-workspace-registration-policy/route.ts,GET,1
 /api/public/site-ui,app/api/public/site-ui/route.ts,GET,1
@@ -233,6 +242,7 @@ url_path,relative_file,http_methods,method_count
 /api/student/openpay-card,app/api/student/openpay-card/route.ts,GET,1
 /api/student/payments/[id]/cancel,app/api/student/payments/[id]/cancel/route.ts,POST,1
 /api/student/session,app/api/student/session/route.ts,GET,1
+/api/student/wallet/send,app/api/student/wallet/send/route.ts,POST,1
 /api/students/[id]/balance,app/api/students/[id]/balance/route.ts,GET,1
 /api/students/[id]/portal-password,app/api/students/[id]/portal-password/route.ts,PATCH,1
 /api/students/[id],app/api/students/[id]/route.ts,GET,1

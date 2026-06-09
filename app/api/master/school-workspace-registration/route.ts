@@ -6,7 +6,8 @@ import { PLATFORM_SITE_UI_KEY } from "@/lib/site-ui-shared";
 import { getSchoolWorkspaceRegistrationPolicy } from "@/lib/school-workspace-registration-policy";
 
 const PatchBody = z.object({
-  requireMasterApproval: z.boolean(),
+  requireMasterApproval: z.boolean().optional(),
+  autoGenerateAdminLogin: z.boolean().optional(),
 });
 
 export async function GET() {
@@ -26,15 +27,36 @@ export async function PATCH(req: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid body", details: parsed.error.flatten() }, { status: 400 });
   }
+  if (
+    parsed.data.requireMasterApproval === undefined &&
+    parsed.data.autoGenerateAdminLogin === undefined
+  ) {
+    return NextResponse.json({ error: "No settings to update" }, { status: 400 });
+  }
+
+  const current = await prisma.siteUiSettings.findUnique({
+    where: { key: PLATFORM_SITE_UI_KEY },
+    select: {
+      schoolWorkspaceRequireMasterApproval: true,
+      schoolWorkspaceAutoGenerateAdminLogin: true,
+    },
+  });
+
+  const requireMasterApproval =
+    parsed.data.requireMasterApproval ?? current?.schoolWorkspaceRequireMasterApproval ?? true;
+  const autoGenerateAdminLogin =
+    parsed.data.autoGenerateAdminLogin ?? current?.schoolWorkspaceAutoGenerateAdminLogin ?? false;
 
   await prisma.siteUiSettings.upsert({
     where: { key: PLATFORM_SITE_UI_KEY },
     create: {
       key: PLATFORM_SITE_UI_KEY,
-      schoolWorkspaceRequireMasterApproval: parsed.data.requireMasterApproval,
+      schoolWorkspaceRequireMasterApproval: requireMasterApproval,
+      schoolWorkspaceAutoGenerateAdminLogin: autoGenerateAdminLogin,
     },
     update: {
-      schoolWorkspaceRequireMasterApproval: parsed.data.requireMasterApproval,
+      schoolWorkspaceRequireMasterApproval: requireMasterApproval,
+      schoolWorkspaceAutoGenerateAdminLogin: autoGenerateAdminLogin,
     },
   });
 

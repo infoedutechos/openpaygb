@@ -15,10 +15,7 @@ export function workspaceEmailVerificationRequired(org: {
 }
 
 /** Master may approve pending workspaces even before email verification (email status shown in UI). */
-export function canMasterApproveWorkspace(_org: {
-  registrationContactEmail: string;
-  registrationEmailVerifiedAt: Date | string | null;
-}): boolean {
+export function canMasterApproveWorkspace(): boolean {
   return true;
 }
 

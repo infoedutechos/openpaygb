@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { withPrismaRetry } from "@/lib/prisma-retry";
 import { composeCopilotReply } from "@/lib/knowledge-base/copilot-reply";
+import { buildCopilotIntro, getCopilotAssistantContext } from "@/lib/copilot-assistant-context";
 import type { PlatformHub } from "@/lib/knowledge-base/types";
 
 export async function getOrCreateConversation(opts: {
@@ -18,6 +19,9 @@ export async function getOrCreateConversation(opts: {
   );
   if (existing) return existing;
 
+  const ctx = await getCopilotAssistantContext();
+  const intro = buildCopilotIntro(ctx);
+
   return withPrismaRetry(() =>
     prisma.chatConversation.create({
       data: {
@@ -28,8 +32,7 @@ export async function getOrCreateConversation(opts: {
         messages: {
           create: {
             role: "assistant",
-            content:
-              "Hi — I'm the ODEL HUB assistant. Ask about tuition, payments, school admin, or URAPearls.",
+            content: intro,
             kbCitations: ["platform-help-copilot"],
           },
         },

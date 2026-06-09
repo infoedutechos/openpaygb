@@ -13,6 +13,18 @@ vi.mock("@/utils/support-chat-fallback", () => ({
   getSupportChatFallbackReply: vi.fn((msg: string) => `fallback:${msg}`),
 }));
 
+vi.mock("@/lib/copilot-assistant-context", () => ({
+  getCopilotAssistantContext: vi.fn(async () => ({
+    assistantName: "ODEL HUB Copilot",
+    platformName: "ODEL HUB",
+    platformTagline: "Tuition and payments",
+    platformUrl: "http://localhost:3000",
+  })),
+  buildCopilotIntro: vi.fn(
+    () => "Hi — I'm **ODEL HUB Copilot** on ODEL HUB.",
+  ),
+}));
+
 import { searchKnowledgeBase, searchKnowledgeBaseRelaxed } from "@/lib/knowledge-base/search";
 import { autonomousLearnFromGap } from "@/lib/knowledge-base/autonomous-learning";
 import { composeCopilotReply } from "@/lib/knowledge-base/copilot-reply";
@@ -52,7 +64,7 @@ describe("composeCopilotReply", () => {
     const result = await composeCopilotReply("how to pay tuition", "tuition");
     expect(result.source).toBe("knowledge_base");
     expect(result.citations).toContain("tuition-pay-guest");
-    expect(result.reply).toContain("Pay tuition as a guest");
+    expect(result.reply).toMatch(/\[Pay tuition as a guest\]\(/);
   });
 
   it("auto-learns when strict search returns no hits", async () => {

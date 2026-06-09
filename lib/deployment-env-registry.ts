@@ -66,6 +66,13 @@ export const DEPLOYMENT_ENV_GROUPS: EnvGroupDefinition[] = [
         sensitive: false,
         requirement: "optional",
       },
+      {
+        name: "HEALTH_CHECK_SECRET",
+        label: "Health check secret",
+        description: "Bearer auth for GET /api/health in production (optional but recommended).",
+        sensitive: true,
+        requirement: "production",
+      },
     ],
   },
   {

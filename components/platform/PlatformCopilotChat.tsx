@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useSupportPanelSettings } from "@/hooks/useSupportPanelSettings";
 import { buildSupportPanelView } from "@/lib/support-panel-display";
 import type { PlatformHub } from "@/lib/knowledge-base/types";
+import { CopilotMessageContent } from "@/components/platform/CopilotMessageContent";
 import { HelpCopilotBubbleIcon } from "@/components/platform/HelpCopilotBubbleIcon";
 import { PLATFORM_CHAT_OPEN_EVENT } from "@/lib/platform-chat-events";
 import { triggerHapticFeedback } from "@/utils/ui";
@@ -39,12 +40,12 @@ export type PlatformCopilotChatProps = {
 export default function PlatformCopilotChat({
   hub = "all",
   placement = "landing",
-  title = "ODEL HUB Help",
-  subtitle = "Knowledge-base assistant",
+  title,
+  subtitle,
 }: PlatformCopilotChatProps) {
   const [open, setOpen] = useState(false);
   const [agentOpen, setAgentOpen] = useState(false);
-  const platform = useSupportPanelSettings(agentOpen);
+  const platform = useSupportPanelSettings(agentOpen || open);
   const support = buildSupportPanelView(platform);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -52,7 +53,14 @@ export default function PlatformCopilotChat({
   const [loading, setLoading] = useState(false);
   const [bootLoading, setBootLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const listRef = useRef<HTMLDivElement>(null);
+  const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const copilotName = platform.copilotAssistantName?.trim() || "ODEL HUB Copilot";
+  const platformName = platform.shareDefaultTitle?.trim() || "ODEL HUB";
+  const chatTitle = title ?? `${platformName} Help`;
+  const chatSubtitle = subtitle ?? copilotName;
 
   const loadHistory = useCallback(async () => {
     setBootLoading(true);
@@ -73,14 +81,40 @@ export default function PlatformCopilotChat({
       setMessages([
         {
           role: "assistant",
-          content:
-            "Hi — I'm the ODEL HUB assistant. Ask about tuition, payments, school admin, or URAPearls.",
+          content: `Hi — I'm **${copilotName}** on ${platformName}. Ask about tuition, school registration, payments, or URAPearls.`,
         },
       ]);
     } finally {
       setBootLoading(false);
     }
-  }, [hub]);
+  }, [hub, copilotName, platformName]);
+
+  useEffect(() => {
+    if (!open) return;
+    const q = input.trim();
+    if (q.length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    if (suggestTimer.current) clearTimeout(suggestTimer.current);
+    suggestTimer.current = setTimeout(() => {
+      void (async () => {
+        try {
+          const res = await fetch(
+            `/api/platform/chat/suggest?hub=${encodeURIComponent(hub)}&q=${encodeURIComponent(q)}`,
+          );
+          if (!res.ok) return;
+          const data = (await res.json()) as { suggestions?: string[] };
+          setSuggestions(Array.isArray(data.suggestions) ? data.suggestions : []);
+        } catch {
+          setSuggestions([]);
+        }
+      })();
+    }, 280);
+    return () => {
+      if (suggestTimer.current) clearTimeout(suggestTimer.current);
+    };
+  }, [input, hub, open]);
 
   useEffect(() => {
     const openFromSidebar = () => setOpen(true);
@@ -162,8 +196,8 @@ export default function PlatformCopilotChat({
         >
           <div className="flex items-center justify-between gap-2 px-3 py-2.5 bg-gradient-to-r from-sky-600/90 to-indigo-700/90 border-b border-white/10">
             <div className="min-w-0">
-              <p className="text-sm font-bold text-white truncate">{title}</p>
-              <p className="text-[10px] text-white/80 truncate">{subtitle}</p>
+              <p className="text-sm font-bold text-white truncate">{chatTitle}</p>
+              <p className="text-[10px] text-white/80 truncate">{chatSubtitle}</p>
             </div>
             <button
               type="button"
@@ -194,17 +228,12 @@ export default function PlatformCopilotChat({
                     : "mr-4 bg-white/[0.06] text-slate-100 border border-white/[0.07]"
                 }`}
               >
-                <p className="whitespace-pre-wrap">{msg.content}</p>
-                {msg.kbCitations && msg.kbCitations.length > 0 ? (
-                  <p className="mt-1 text-[10px] text-slate-500">
-                    KB: {msg.kbCitations.join(", ")}
-                  </p>
-                ) : null}
+                <CopilotMessageContent content={msg.content} />
               </div>
             ))}
             {loading ? (
               <div className="mr-4 rounded-xl px-2.5 py-2 bg-white/[0.06] border border-white/[0.07] text-slate-400 text-xs">
-                Searching knowledge base…
+                {copilotName} is typing…
               </div>
             ) : null}
             {error ? <p className="text-[11px] text-amber-300/95 px-1">{error}</p> : null}
@@ -270,6 +299,24 @@ export default function PlatformCopilotChat({
                     </a>
                   ) : null}
                 </div>
+              </div>
+            ) : null}
+
+            {suggestions.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {suggestions.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => {
+                      setInput(s);
+                      setSuggestions([]);
+                    }}
+                    className="rounded-lg border border-white/10 bg-white/[0.05] px-2 py-1 text-[10px] text-slate-300 hover:bg-white/10"
+                  >
+                    {s}
+                  </button>
+                ))}
               </div>
             ) : null}
 

@@ -73,6 +73,8 @@ model Organization {
   tenantStatus               OrganizationTenantStatus   @default(active)
   registrationContactEmail String                     @default("")
   registrationNote           String                     @default("")
+  /** Optional school website — used to fetch favicon on workspace activation. */
+  registrationWebsiteUrl     String                     @default("")
   /** Set when the applicant confirms their registration email (workspace request). */
   registrationEmailVerifiedAt DateTime?
   /** Raw favicon.ico (or PNG) bytes; paired with faviconUploadedAt when set via Master Admin. */
@@ -524,6 +526,10 @@ model SiteUiSettings {
    * automatically after email verification (programmes/FX cloned from template `default`).
    */
   schoolWorkspaceRequireMasterApproval Boolean @default(true)
+  /** When true, create org_admin + invite email for registration contact on workspace activation. */
+  schoolWorkspaceAutoGenerateAdminLogin Boolean @default(false)
+  /** Floating help copilot display name. */
+  copilotAssistantName       String  @default("ODEL HUB Copilot")
   /** When false, students cannot opt in to OpenPayGB platform card or pay tuition with it. */
   openPayCardEnabled     Boolean @default(true)
   /** When false, guests cannot register for a platform card via email/phone OTP (Option B). */

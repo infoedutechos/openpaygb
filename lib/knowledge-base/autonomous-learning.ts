@@ -5,7 +5,7 @@ import type { PlatformAudience } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { withPrismaRetry } from "@/lib/prisma-retry";
 import { normalizeLearningQuery } from "@/lib/knowledge-base/normalize-query";
-import { searchKnowledgeBase, searchKnowledgeBaseRelaxed } from "@/lib/knowledge-base/search";
+import { searchKnowledgeBaseRelaxed } from "@/lib/knowledge-base/search";
 import { excerptFromBody } from "@/lib/knowledge-base/tokenize";
 import type { CopilotReply } from "@/lib/knowledge-base/copilot-reply";
 import type { KnowledgeSearchHit, PlatformHub } from "@/lib/knowledge-base/types";
@@ -51,7 +51,7 @@ export function buildAutoLearnedArticle(opts: {
       opts.query.trim(),
       "",
       "## Auto-learned answer",
-      "This entry was created automatically from related knowledge base content (no external AI API).",
+      "This answer was assembled automatically from related ODEL HUB help articles.",
       "",
       ...sections,
       "",

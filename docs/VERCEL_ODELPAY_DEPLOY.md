@@ -12,11 +12,12 @@
 
 | Check | Result |
 |-------|--------|
-| `https://odelpay.vercel.app/` | **404** `DEPLOYMENT_NOT_FOUND` — domain registered, **no successful production deployment yet** |
+| `https://odelpay.vercel.app/` | **200** — production deployment live |
+| `GET /api/health` | **200** with `Authorization: Bearer <HEALTH_CHECK_SECRET>` |
+| Vercel production env | **29** vars synced (DB, JWT, cron, webhooks, Telegram, TON) |
+| Master Admin overrides | **33** vars in Deployment Environment (`/admin/master#deployment-environment`) |
+| Vercel CLI | Logged in as **infoedutechos** — `npm run deployment:sync-vercel` to re-push env |
 | GitHub **CI** (`main`) | **Green** — lint, test, tsc, build (with `SKIP_DB_AT_BUILD=true`) |
-| Latest `main` commits | `ab895c4` CI build fix · `2872044` platform features |
-| Vercel Git check | Often **blocked** — *Git author must have access to project* — fix in dashboard |
-| Vercel CLI | Not logged in on dev machine — use dashboard or GitHub Action fallback |
 
 ---
 
@@ -90,6 +91,27 @@ npm run telegram:set-menu
 
 ---
 
+## Master Admin → Vercel autonomous sync
+
+**UI:** `https://odelpay.vercel.app/admin/master#deployment-environment`
+
+| Variable | Where to get it |
+|----------|-----------------|
+| `VERCEL_PROJECT_ID` | `.vercel/project.json` → `prj_J5WZp67C2DB4zR6LzjLYZ0j8Nebk` — or Vercel → **odelhub-pay** → Settings → General → **Project ID** |
+| `VERCEL_TEAM_ID` | `.vercel/project.json` → `team_HSziNLJNu74t46uP691K8XG4` — or Team → Settings → General → **Team ID** |
+| `VERCEL_ACCESS_TOKEN` | [vercel.com/account/tokens](https://vercel.com/account/tokens) — create token while logged in as **info.edutechos@gmail.com** (needs project env read/write) |
+
+These are stored encrypted in Master Admin overrides (not in `.env` — `VERCEL_PROJECT_ID` in `.env` breaks linked CLI).
+
+**Local scripts:**
+
+```powershell
+npm run deployment:provision-sync   # generate secrets, save Master overrides, push to Vercel
+npm run deployment:sync-vercel      # re-push registry values only
+```
+
+---
+
 ## CLI
 
 ```powershell
@@ -113,3 +135,10 @@ npx vercel env pull .env.local
 ## Master sign-in
 
 `https://odelpay.vercel.app/admin/login?master=1` — `oiptechcore@gmail.com`
+
+---
+
+## Related docs
+
+- [DEPLOYMENT_ENV_PRODUCTION.md](./DEPLOYMENT_ENV_PRODUCTION.md) — production env sync summary
+- [SCHOOL_WORKSPACE_SELF_REGISTER.md](./SCHOOL_WORKSPACE_SELF_REGISTER.md) — school self-registration, ODEL HUB Copilot, favicon fetch
