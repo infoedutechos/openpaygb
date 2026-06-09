@@ -22,6 +22,12 @@ const PARTS: Part[] = [
   { id: "organizations", label: "Organizations only", description: "Schools + platform UI settings." },
   { id: "programmes", label: "Programmes & fees", description: "Organizations, programmes, fee rows." },
   { id: "payments", label: "Students & payments", description: "Organizations, students, payment records." },
+  {
+    id: "master-admins",
+    label: "Master Admin Download",
+    description: "Platform master and school org_admin accounts (emails, roles, schools — no password hashes).",
+    highlight: true,
+  },
   { id: "env", label: "Environment variables", description: "Merged .env for Vercel import." },
   { id: "knowledge-base", label: "Knowledge base", description: "Help articles JSON export." },
   { id: "notifications", label: "Notifications", description: "Platform notification history JSON." },

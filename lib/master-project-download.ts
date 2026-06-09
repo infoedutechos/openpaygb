@@ -16,6 +16,7 @@ export type ProjectDownloadPart =
   | "organizations"
   | "programmes"
   | "payments"
+  | "master-admins"
   | "env"
   | "knowledge-base"
   | "notifications"
@@ -165,6 +166,42 @@ export async function buildNotificationsExport() {
   };
 }
 
+export async function buildMasterAdminsExport() {
+  const admins = await prisma.adminUser.findMany({
+    orderBy: [{ role: "asc" }, { email: "asc" }],
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      organizationId: true,
+      createdAt: true,
+      updatedAt: true,
+      organization: {
+        select: { slug: true, name: true, tenantStatus: true },
+      },
+    },
+  });
+  return {
+    exportedAt: new Date().toISOString(),
+    total: admins.length,
+    note:
+      "Master and school admin accounts (no password hashes). Re-issue passwords with npm run master:set-login or POST /api/master/admins after restore.",
+    admins: admins.map((a) => ({
+      id: a.id,
+      email: a.email,
+      name: a.name,
+      role: a.role,
+      organizationId: a.organizationId,
+      organizationSlug: a.organization?.slug ?? null,
+      organizationName: a.organization?.name ?? null,
+      organizationTenantStatus: a.organization?.tenantStatus ?? null,
+      createdAt: a.createdAt.toISOString(),
+      updatedAt: a.updatedAt.toISOString(),
+    })),
+  };
+}
+
 export type DownloadPayload = {
   body: Buffer | string;
   contentType: string;
@@ -189,6 +226,15 @@ export async function buildProjectDownload(part: ProjectDownloadPart): Promise<D
       body: JSON.stringify(partial, null, 2),
       contentType: "application/json; charset=utf-8",
       filename: `odelhub-${part}-${s}.json`,
+    };
+  }
+
+  if (part === "master-admins") {
+    const admins = await buildMasterAdminsExport();
+    return {
+      body: JSON.stringify(admins, null, 2),
+      contentType: "application/json; charset=utf-8",
+      filename: `odelhub-master-admins-${s}.json`,
     };
   }
 
@@ -244,6 +290,7 @@ export async function buildProjectDownload(part: ProjectDownloadPart): Promise<D
   const envText = await buildVercelEnvExport();
   const kb = await buildKnowledgeBaseExport();
   const notes = await buildNotificationsExport();
+  const admins = await buildMasterAdminsExport();
 
   const manifest = {
     exportedAt: new Date().toISOString(),
@@ -251,6 +298,7 @@ export async function buildProjectDownload(part: ProjectDownloadPart): Promise<D
     bundle: "full",
     contents: [
       "data/tuition-backup.json",
+      "data/master-admins.json",
       "data/deployment-env.env",
       "data/knowledge-base.json",
       "data/notifications.json",
@@ -277,6 +325,7 @@ export async function buildProjectDownload(part: ProjectDownloadPart): Promise<D
 
     archive.append(JSON.stringify(manifest, null, 2), { name: "MANIFEST.json" });
     archive.append(JSON.stringify(tuition, null, 2), { name: "data/tuition-backup.json" });
+    archive.append(JSON.stringify(admins, null, 2), { name: "data/master-admins.json" });
     archive.append(envText, { name: "data/deployment-env.env" });
     archive.append(JSON.stringify(kb, null, 2), { name: "data/knowledge-base.json" });
     archive.append(JSON.stringify(notes, null, 2), { name: "data/notifications.json" });

@@ -9,6 +9,7 @@ const PARTS = new Set<ProjectDownloadPart>([
   "organizations",
   "programmes",
   "payments",
+  "master-admins",
   "env",
   "knowledge-base",
   "notifications",
