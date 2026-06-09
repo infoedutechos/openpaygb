@@ -234,7 +234,13 @@ async function loadSiteUiRowWithSelect(select: Record<string, boolean>): Promise
   return row as SiteUiDbRow | null;
 }
 
+function skipDbForStaticBuild(): boolean {
+  return process.env.SKIP_DB_AT_BUILD === "true";
+}
+
 async function loadSiteUiRow(): Promise<SiteUiDbRow | null> {
+  if (skipDbForStaticBuild()) return null;
+
   const attempts: Array<Record<string, boolean>> = [siteUiSelect, siteUiSelectBase, siteUiSelectLegacy];
 
   for (let i = 0; i < attempts.length; i += 1) {

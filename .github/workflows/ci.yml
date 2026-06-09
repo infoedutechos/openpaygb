@@ -13,6 +13,8 @@ jobs:
       DATABASE_URL: mongodb://ci:ci@127.0.0.1:27017/odelhub_pay_ci?directConnection=true
       JWT_SECRET: ci-jwt-secret-minimum-32-characters-long
       NEXT_PUBLIC_APP_URL: https://odelpay.vercel.app
+      # Root layout reads site UI at build time; skip Prisma when CI has no MongoDB.
+      SKIP_DB_AT_BUILD: "true"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
