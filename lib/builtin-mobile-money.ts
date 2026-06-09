@@ -60,5 +60,14 @@ export function getBuiltinMobileMoneyProviders(): BuiltinProviderStatus[] {
       ),
       notes: "Env: RELWORX_API_KEY, RELWORX_ACCOUNT_NO, RELWORX_WEBHOOK_KEY. Optional: RELWORX_CURRENCY, RELWORX_WEBHOOK_URL.",
     },
+    {
+      code: "vixonpay",
+      name: "VixonPay rail (OpenPayGB brand)",
+      kind: "builtin",
+      webhookPath: `${appUrl}/api/webhooks/vixonpay`,
+      configured: Boolean(deploymentEnv("VIXONPAY_API_KEY")),
+      active: Boolean(deploymentEnv("VIXONPAY_API_KEY")),
+      notes: "Env: VIXONPAY_API_KEY, VIXONPAY_WEBHOOK_SECRET. Optional: VIXONPAY_WEBHOOK_URL.",
+    },
   ];
 }

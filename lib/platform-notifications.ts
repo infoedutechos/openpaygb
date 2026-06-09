@@ -24,7 +24,7 @@ export async function listPlatformNotifications(opts: {
 }): Promise<PlatformNotificationRow[]> {
   const audiences = hubToAudiences(opts.hub ?? "all");
   const pollRetry = { attempts: 1, baseDelayMs: 100 };
-  const pollDeadlineMs = 4_000;
+  const pollDeadlineMs = 6_000;
   const rows = await withPrismaDeadline(
     () =>
       withPrismaRetry(

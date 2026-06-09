@@ -28,8 +28,10 @@ import {
   PAYMENT_RAIL_MBIYO,
   PAYMENT_RAIL_LIVEPAY,
   PAYMENT_RAIL_RELWORX,
+  PAYMENT_RAIL_VIXONPAY,
   PAYMENT_RAIL_OPENPAY_CARD,
   relworxRailSectionLabel,
+  vixonpayRailSectionLabel,
   withMobileMoneyRails,
 } from "@/lib/open-pay-brand";
 import { PayFeesBreakdown } from "@/components/pay/PayFeesBreakdown";
@@ -206,10 +208,11 @@ export function PayWizard({
   const [confirmedTxHash, setConfirmedTxHash] = useState<string | null>(null);
   const [getStartedOpen, setGetStartedOpen] = useState(false);
   const [payChannel, setPayChannel] = useState<
-    "ton" | "mbiyo" | "livepay" | "relworx" | "openpay_card" | null
+    "ton" | "mbiyo" | "livepay" | "relworx" | "vixonpay" | "openpay_card" | null
   >(null);
   const [livepayEnabled, setLivepayEnabled] = useState(false);
   const [relworxEnabled, setRelworxEnabled] = useState(false);
+  const [vixonpayEnabled, setVixonpayEnabled] = useState(false);
   const [openPayCardPlatformEnabled, setOpenPayCardPlatformEnabled] = useState(false);
   const [openPayCardBalanceUgx, setOpenPayCardBalanceUgx] = useState(0);
   const [openPayCardCanPay, setOpenPayCardCanPay] = useState(false);
@@ -259,6 +262,14 @@ export function PayWizard({
       })
       .catch(() => {
         if (!cancelled) setRelworxEnabled(false);
+      });
+    void fetch("/api/public/vixonpay-config")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { enabled?: boolean } | null) => {
+        if (!cancelled) setVixonpayEnabled(Boolean(j?.enabled));
+      })
+      .catch(() => {
+        if (!cancelled) setVixonpayEnabled(false);
       });
     void fetch("/api/public/openpay-card-config")
       .then((r) => (r.ok ? r.json() : null))
@@ -1027,6 +1038,72 @@ export function PayWizard({
     }
   }
 
+  async function startGuestVixonpay() {
+    setError(null);
+    if (!quote) {
+      setError("Load quote first.");
+      return;
+    }
+    if (!studentName.trim()) {
+      setError("Enter your full name.");
+      return;
+    }
+    const phone = ugandaPhoneToE164(livepayPhone.trim());
+    if (!phone) {
+      setError("Enter a valid Uganda mobile number (e.g. 0777123456 or +256777123456).");
+      return;
+    }
+    setBusy(true);
+    try {
+      const body: Record<string, unknown> = {
+        organizationSlug: orgSlug,
+        name: studentName.trim(),
+        email: studentEmail.trim() || "",
+        programmeCode: code,
+        year,
+        semester,
+        phone,
+        feeSelectionMode: quote.feeSelectionMode,
+        installmentCount,
+      };
+      if (quote.isFullSelection !== true && quote.lines.length > 0) {
+        body.feeIds = [...quote.lines.map((l) => l.id)].sort();
+      }
+      const r = await fetch("/api/public/checkout/vixonpay-start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...checkoutAuthHeaders(orgSlug) },
+        credentials: "include",
+        body: JSON.stringify(body),
+      });
+      const j = (await r.json()) as {
+        error?: string;
+        checkoutToken?: string;
+        payment?: { id: string; studentId?: string; memo?: string | null };
+        vixonpay?: { message?: string };
+      };
+      if (!r.ok) throw new Error(j.error ?? "Could not start VixonPay payment");
+      if (!j.payment?.id) throw new Error("Invalid VixonPay response");
+      if (j.checkoutToken) setCheckoutToken(orgSlug, j.checkoutToken);
+      if (j.payment.studentId) setCheckoutStudentId(j.payment.studentId);
+      setPayChannel("vixonpay");
+      setPaymentId(j.payment.id);
+      setPaymentMemo(j.payment.memo ?? null);
+      setPaymentTonAmount(null);
+      setChainStatus("pending");
+      setConfirmedTxHash(null);
+      setWalletNote(j.vixonpay?.message ?? "Approve the mobile money prompt on your phone.");
+      setMbiyoRedirectUrl(null);
+      setMbiyoInstructions(null);
+      setMbiyoAuthMode(null);
+      setMbiyoCollect({ amount: quote.totalUgx, currency: "UGX" });
+      setStep("mbiyo_waiting");
+    } catch (e) {
+      setError(checkoutPaymentErrorMessage(e, "Could not start VixonPay payment"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function startGuestRelworx() {
     setError(null);
     if (!quote) {
@@ -1738,6 +1815,31 @@ export function PayWizard({
                 </button>
               </div>
             ) : null}
+            {vixonpayEnabled ? (
+              <div className="rounded-xl border border-violet-500/25 bg-violet-950/20 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-violet-200/85">{vixonpayRailSectionLabel}</p>
+                <p className="mt-1 text-sm text-slate-400">
+                  Pay UGX {quote.totalUgx.toLocaleString()} via VixonPay mobile money (Uganda MTN/Airtel).
+                </p>
+                <div className="mt-4">
+                  <label className="text-xs font-medium text-slate-500">Phone</label>
+                  <input
+                    value={livepayPhone}
+                    onChange={(e) => setLivepayPhone(e.target.value)}
+                    placeholder="0777123456"
+                    className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
+                  />
+                </div>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void startGuestVixonpay()}
+                  className="mt-4 w-full rounded-xl border border-violet-500/40 bg-violet-600/90 py-3 text-sm font-semibold text-white hover:bg-violet-500 disabled:opacity-50"
+                >
+                  Pay with {PAYMENT_RAIL_VIXONPAY}
+                </button>
+              </div>
+            ) : null}
             {relworxEnabled ? (
               <div className="rounded-xl border border-sky-500/25 bg-sky-950/20 p-4">
                 <p className="text-xs font-semibold uppercase tracking-wider text-sky-200/85">{relworxRailSectionLabel}</p>
@@ -1798,6 +1900,17 @@ export function PayWizard({
                   {PAYMENT_RAIL_LIVEPAY}. {walletNote ? `${walletNote} ` : ""}
                   This page updates automatically when LivePay confirms the payment.
                 </>
+              ) : payChannel === "vixonpay" || payChannel === "relworx" ? (
+                <>
+                  Approve{" "}
+                  <span className="font-semibold text-white">
+                    UGX {quote.totalUgx.toLocaleString()}
+                  </span>{" "}
+                  on your handset via{" "}
+                  {payChannel === "vixonpay" ? PAYMENT_RAIL_VIXONPAY : PAYMENT_RAIL_RELWORX}.{" "}
+                  {walletNote ? `${walletNote} ` : ""}
+                  This page updates automatically when your payment confirms.
+                </>
               ) : mbiyoCollect ? (
                 <>
                   Approve{" "}
@@ -1818,7 +1931,7 @@ export function PayWizard({
                   collection time.
                 </>
               )}{" "}
-              {payChannel !== "livepay" ? (
+              {payChannel !== "livepay" && payChannel !== "vixonpay" && payChannel !== "relworx" ? (
                 <>Approve the USSD or in-app prompt. This page updates when the payment confirms.</>
               ) : null}
             </p>
@@ -1994,7 +2107,7 @@ export function PayWizard({
                   <span className="font-semibold text-cyan-100">UGX {quote.totalUgx.toLocaleString()}</span> via{" "}
                   {PAYMENT_RAIL_OPENPAY_CARD} has been confirmed.
                 </>
-              ) : payChannel === "mbiyo" || payChannel === "livepay" || payChannel === "relworx" ? (
+              ) : payChannel === "mbiyo" || payChannel === "livepay" || payChannel === "relworx" || payChannel === "vixonpay" ? (
                 <>
                   Your payment of{" "}
                   <span className="font-semibold text-cyan-100">UGX {quote.totalUgx.toLocaleString()}</span> via{" "}
@@ -2002,7 +2115,9 @@ export function PayWizard({
                     ? PAYMENT_RAIL_LIVEPAY
                     : payChannel === "relworx"
                       ? PAYMENT_RAIL_RELWORX
-                      : PAYMENT_RAIL_MBIYO}{" "}
+                      : payChannel === "vixonpay"
+                        ? PAYMENT_RAIL_VIXONPAY
+                        : PAYMENT_RAIL_MBIYO}{" "}
                   has been confirmed.
                 </>
               ) : (

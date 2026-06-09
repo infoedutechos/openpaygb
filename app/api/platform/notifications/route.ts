@@ -43,7 +43,10 @@ export async function GET(req: Request) {
         readerKey: readerKeyFromSession(key),
       });
     } catch (listErr) {
-      console.warn("[GET /api/platform/notifications] list failed, returning empty", listErr);
+      const msg = listErr instanceof Error ? listErr.message : String(listErr);
+      if (!/prisma deadline exceeded/i.test(msg)) {
+        console.warn("[GET /api/platform/notifications] list failed, returning empty", listErr);
+      }
     }
 
     const res = NextResponse.json({ notifications, unread: notifications.filter((n) => !n.read).length });

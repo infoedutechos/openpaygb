@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getStudentFromCookies } from "@/lib/student-auth";
 import { getStudentOpenPayCard } from "@/lib/openpay-card";
-import { startOpenPayCardMomoTopup } from "@/lib/openpay-card-momo-topup";
+import { openPayCardIssueFeeUgx } from "@/lib/openpay-card-issue-fee";
 import { getOpenPayCardPlatformSettings } from "@/lib/openpay-card-settings";
+import { startOpenPayCardMomoTopup } from "@/lib/openpay-card-momo-topup";
 import { isLivePayConfigured } from "@/lib/livepay/client";
 import { isRelworxConfigured } from "@/lib/relworx/client";
 import { isVixonPayConfigured } from "@/lib/vixonpay/client";
@@ -16,15 +17,15 @@ import { clientIp, rateLimitHit } from "@/lib/rate-limit";
 const E164 = z.string().regex(/^\+\d{10,15}$/);
 
 const Body = z.object({
-  amountUgx: z.number().int().min(1000).max(500_000_000),
   rail: z.enum(["livepay", "relworx", "vixonpay"]),
   phone: z.string().min(9).max(20),
   network: z.enum(["mtn", "airtel"]).optional(),
 });
 
+/** Mobile money collection to activate a pending OpenPayGB card (issue fee in UGX). */
 export async function POST(req: Request) {
   try {
-    if (rateLimitHit(`opcard-momo-fund:${clientIp(req)}`, 20, 60 * 60 * 1000)) {
+    if (rateLimitHit(`opcard-momo-issue:${clientIp(req)}`, 10, 60 * 60 * 1000)) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
 
@@ -45,8 +46,11 @@ export async function POST(req: Request) {
     }
 
     const card = await getStudentOpenPayCard(session.sub);
-    if (!card || card.status !== "active") {
-      return NextResponse.json({ error: "Activate your OpenPayGB card before adding funds" }, { status: 409 });
+    if (!card || card.status !== "pending_issue") {
+      return NextResponse.json(
+        { error: "Reserve your card first, or it is already active" },
+        { status: 409 },
+      );
     }
 
     if (parsed.data.rail === "livepay" && !isLivePayConfigured()) {
@@ -76,27 +80,35 @@ export async function POST(req: Request) {
 
     const student = await prisma.student.findUnique({
       where: { id: session.sub },
-      select: { name: true, email: true },
+      select: { name: true, email: true, organizationId: true },
     });
+    if (!student) {
+      return NextResponse.json({ error: "Student not found" }, { status: 404 });
+    }
+
+    const issueFeeTon = card.issueFeeTon ?? settings.issueFeeTon;
+    const fee = await openPayCardIssueFeeUgx(issueFeeTon, student.organizationId);
 
     const started = await startOpenPayCardMomoTopup({
       cardId: card.id,
-      amountUgx: parsed.data.amountUgx,
+      amountUgx: fee.amountUgx,
       rail: parsed.data.rail,
       phone: phoneForRail,
       network: parsed.data.network?.toUpperCase() as "MTN" | "AIRTEL" | undefined,
-      customerEmail: student?.email || undefined,
-      customerName: student?.name || undefined,
+      customerEmail: student.email || undefined,
+      customerName: student.name || undefined,
+      purpose: "issue",
     });
 
     return NextResponse.json({
       topupId: started.topupId,
-      amountUgx: parsed.data.amountUgx,
+      amountUgx: fee.amountUgx,
+      issueFeeTon,
       rail: parsed.data.rail,
       message: started.message,
       reference: started.reference,
     });
   } catch (e) {
-    return apiErrorResponse(e, { route: "POST /api/student/openpay-card/fund/momo-start" });
+    return apiErrorResponse(e, { route: "POST /api/student/openpay-card/issue/momo-start" });
   }
 }

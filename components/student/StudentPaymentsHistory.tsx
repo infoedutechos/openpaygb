@@ -34,6 +34,7 @@ function railLabel(rail: string): string {
   if (rail === "mbiyo") return "Mbiyo";
   if (rail === "livepay") return "LivePay";
   if (rail === "relworx") return "Relworx";
+  if (rail === "vixonpay") return "VixonPay";
   if (rail === "web") return "TON";
   if (rail === "telegram") return "Telegram TON";
   return rail;

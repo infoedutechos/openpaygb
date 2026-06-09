@@ -1,5 +1,11 @@
 import { inspect } from "util";
 import { PrismaClient } from "@prisma/client";
+import { tuneMongoDatabaseUrl } from "@/lib/mongodb-connection-url";
+
+const dbUrl = process.env.DATABASE_URL?.trim() || process.env.MONGODB_URI?.trim();
+if (dbUrl) {
+  process.env.DATABASE_URL = tuneMongoDatabaseUrl(dbUrl);
+}
 
 /**
  * In dev, Prisma logs huge `prisma:error` blocks for MongoDB Atlas TLS/timeout; Next forwards them to the browser.

@@ -20,6 +20,8 @@
     "verify": "node scripts/verify.cjs",
     "test:ecosystem": "node scripts/ecosystem-smoke.cjs",
     "test:relworx": "node scripts/relworx-smoke.cjs",
+    "test:vixonpay-webhook": "node scripts/test-vixonpay-webhook.cjs",
+    "tunnel:dev": "npx localtunnel --port 3000",
     "docs:tree": "node scripts/print-folder-tree.cjs",
     "docs:tree:prune": "node scripts/print-folder-tree.cjs --prune-game",
     "docs:tree:write": "node scripts/print-folder-tree.cjs --prune-game --out docs/FOLDER_TREE_SNAPSHOT.txt",

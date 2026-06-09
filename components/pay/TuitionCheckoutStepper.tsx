@@ -2,7 +2,7 @@
 
 import { openPayGlobalStatus, PAYMENT_RAIL_OPENPAY_CARD } from "@/lib/open-pay-brand";
 
-export type TuitionPayChannel = "ton" | "mbiyo" | "livepay" | "relworx" | "openpay_card" | null;
+export type TuitionPayChannel = "ton" | "mbiyo" | "livepay" | "relworx" | "vixonpay" | "openpay_card" | null;
 
 /** Shared milestone labels for guest + student tuition checkout. */
 export const TUITION_CHECKOUT_MILESTONES = [

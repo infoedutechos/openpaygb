@@ -16,10 +16,18 @@ import {
   relworxNotConfiguredMessage,
   relworxRequestPayment,
 } from "@/lib/relworx/client";
-import { confirmOpenPayCardTopup } from "@/lib/openpay-card";
+import {
+  isVixonPayConfigured,
+  isVixonPayWebhookSuccess,
+  vixonPayCollectMoney,
+  vixonPayMerchantReference,
+  vixonPayNotConfiguredMessage,
+} from "@/lib/vixonpay/client";
+import { finalizeOpenPayCardMomoTopup } from "@/lib/openpay-card";
 import { webhookAmountMatchesPayment } from "@/lib/webhook-payment-confirm";
 
-export type CardMomoRail = "livepay" | "relworx";
+export type CardMomoRail = "livepay" | "relworx" | "vixonpay";
+export type CardMomoPurpose = "fund" | "issue";
 
 export async function startOpenPayCardMomoTopup(opts: {
   cardId: string;
@@ -27,6 +35,9 @@ export async function startOpenPayCardMomoTopup(opts: {
   rail: CardMomoRail;
   phone: string;
   network?: LivePayNetwork;
+  customerEmail?: string;
+  customerName?: string;
+  purpose?: CardMomoPurpose;
 }): Promise<{ topupId: string; message: string; reference: string }> {
   const topup = await prisma.openPayCardTopup.create({
     data: {
@@ -42,7 +53,9 @@ export async function startOpenPayCardMomoTopup(opts: {
   const reference =
     opts.rail === "livepay"
       ? livePayCustomerReference(topup.id)
-      : relworxCustomerReference(topup.id);
+      : opts.rail === "vixonpay"
+        ? vixonPayMerchantReference(topup.id)
+        : relworxCustomerReference(topup.id);
 
   let message: string;
   let momoReference = reference;
@@ -53,8 +66,26 @@ export async function startOpenPayCardMomoTopup(opts: {
       phoneNumber: opts.phone,
       amountUgx: opts.amountUgx,
       reference,
-      description: "ODEL HUB OpenPayGB card top-up",
+      description:
+        opts.purpose === "issue"
+          ? "ODEL HUB OpenPayGB card activation"
+          : "ODEL HUB OpenPayGB card top-up",
       network: opts.network,
+    });
+    message = collect.message;
+    momoReference = collect.internal_reference?.trim() || reference;
+  } else if (opts.rail === "vixonpay") {
+    if (!isVixonPayConfigured()) throw new Error(vixonPayNotConfiguredMessage());
+    const collect = await vixonPayCollectMoney({
+      phone: opts.phone,
+      amountUgx: opts.amountUgx,
+      reference,
+      description:
+        opts.purpose === "issue"
+          ? "ODEL HUB OpenPayGB card activation"
+          : "ODEL HUB OpenPayGB card top-up",
+      customerEmail: opts.customerEmail,
+      customerName: opts.customerName,
     });
     message = collect.message;
     momoReference = collect.internal_reference?.trim() || reference;
@@ -64,16 +95,20 @@ export async function startOpenPayCardMomoTopup(opts: {
       msisdn: opts.phone,
       amount: opts.amountUgx,
       reference,
-      description: "ODEL HUB OpenPayGB card top-up",
+      description:
+        opts.purpose === "issue"
+          ? "ODEL HUB OpenPayGB card activation"
+          : "ODEL HUB OpenPayGB card top-up",
     });
     message = collect.message;
     momoReference = collect.internal_reference?.trim() || reference;
   }
 
+  const memoPrefix = opts.purpose === "issue" ? "opcardissuemomo" : "opcardmomo";
   await prisma.openPayCardTopup.update({
     where: { id: topup.id },
     data: {
-      memo: `opcardmomo:${topup.id}`,
+      memo: `${memoPrefix}:${topup.id}`,
       momoReference,
     },
   });
@@ -108,8 +143,7 @@ export async function confirmOpenPayCardTopupFromLivePay(
   const internalRef =
     typeof input.internal_reference === "string" ? input.internal_reference.trim() : "";
   const txHash = internalRef || topup.momoReference || topupId;
-  const ok = await confirmOpenPayCardTopup(topupId, txHash);
-  return { action: ok ? "card_topup_confirmed" : "confirm_failed" };
+  return finalizeOpenPayCardMomoTopup(topupId, txHash);
 }
 
 export async function confirmOpenPayCardTopupFromRelworx(
@@ -139,6 +173,40 @@ export async function confirmOpenPayCardTopupFromRelworx(
   const internalRef =
     typeof input.internal_reference === "string" ? input.internal_reference.trim() : "";
   const txHash = internalRef || topup.momoReference || topupId;
-  const ok = await confirmOpenPayCardTopup(topupId, txHash);
-  return { action: ok ? "card_topup_confirmed" : "confirm_failed" };
+  return finalizeOpenPayCardMomoTopup(topupId, txHash);
+}
+
+export async function confirmOpenPayCardTopupFromVixonPay(
+  topupId: string,
+  input: {
+    event?: unknown;
+    transaction_status?: unknown;
+    transaction_amount?: unknown;
+    request_currency?: unknown;
+    internal_reference?: unknown;
+  },
+): Promise<{ action: string }> {
+  const topup = await prisma.openPayCardTopup.findUnique({ where: { id: topupId } });
+  if (!topup || topup.fundingRail !== "vixonpay") {
+    return { action: "unknown_topup" };
+  }
+  if (!isVixonPayWebhookSuccess(input.transaction_status)) {
+    return { action: "not_success" };
+  }
+  if (topup.status === "confirmed") {
+    return { action: "already_confirmed" };
+  }
+  const amount =
+    typeof input.transaction_amount === "number"
+      ? input.transaction_amount
+      : Number(input.transaction_amount);
+  const currency =
+    typeof input.request_currency === "string" ? input.request_currency : "UGX";
+  if (!webhookAmountMatchesPayment(topup.amountUgx, Number.isFinite(amount) ? amount : undefined, currency)) {
+    return { action: "amount_mismatch" };
+  }
+  const internalRef =
+    typeof input.internal_reference === "string" ? input.internal_reference.trim() : "";
+  const txHash = internalRef || topup.momoReference || topupId;
+  return finalizeOpenPayCardMomoTopup(topupId, txHash);
 }

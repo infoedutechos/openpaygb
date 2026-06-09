@@ -18,6 +18,7 @@ function navActive(pathname: string, href: string): boolean {
   if (href === "/student") return pathname === "/student";
   if (href === "/my/dashboard") return pathname === "/my/dashboard";
   if (href === "/my/receipts") return pathname === "/my/receipts";
+  if (href === "/student/card") return pathname === "/student/card";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -25,6 +26,7 @@ const NAV: { href: string; label: string }[] = [
   { href: "/my/dashboard", label: "Dashboard" },
   { href: "/my/receipts", label: "Receipts & history" },
   { href: "/student/pay", label: "Pay tuition" },
+  { href: "/student/card", label: "Virtual card" },
   { href: "/my/settings", label: "Password" },
   { href: "/student", label: "Student home" },
   { href: "/", label: "Lobby" },

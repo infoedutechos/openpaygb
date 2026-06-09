@@ -26,10 +26,12 @@ export function isInsufficientFundsMessage(message: string | null | undefined): 
 }
 
 export function checkoutTopupRailFromPayChannel(
-  channel: "ton" | "mbiyo" | "livepay" | "relworx" | "openpay_card" | null,
+  channel: "ton" | "mbiyo" | "livepay" | "relworx" | "vixonpay" | "openpay_card" | null,
 ): CheckoutTopupRail | null {
   if (channel === "ton") return "ton";
-  if (channel === "mbiyo" || channel === "livepay" || channel === "relworx") return "momo";
+  if (channel === "mbiyo" || channel === "livepay" || channel === "relworx" || channel === "vixonpay") {
+    return "momo";
+  }
   return null;
 }
 

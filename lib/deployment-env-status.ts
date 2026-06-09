@@ -6,6 +6,8 @@ import { isLivePayConfigured } from "@/lib/livepay/client";
 import { getLivePayWebhookUrl } from "@/lib/livepay/webhook-url";
 import { isRelworxConfigured } from "@/lib/relworx/client";
 import { getRelworxWebhookUrl } from "@/lib/relworx/webhook-url";
+import { isVixonPayConfigured } from "@/lib/vixonpay/client";
+import { getVixonPayWebhookUrl } from "@/lib/vixonpay/webhook-url";
 
 export type EnvVarSource = "dashboard" | "process" | "unset";
 
@@ -155,6 +157,18 @@ function defaultGroupHealth(id: string): { healthy: boolean | null; note: string
               ? "Set RELWORX_WEBHOOK_KEY for production webhook verification."
               : null
             : "Optional — set RELWORX_API_KEY and RELWORX_ACCOUNT_NO to enable.",
+      };
+    }
+    case "vixonpay": {
+      const configured = isVixonPayConfigured();
+      const webhook = isSet("VIXONPAY_WEBHOOK_SECRET");
+      return {
+        healthy: configured ? (isProductionRuntime() ? webhook : true) : null,
+        note: configured
+          ? isProductionRuntime() && !webhook
+            ? "VixonPay collect works; set VIXONPAY_WEBHOOK_SECRET for production webhooks."
+            : null
+          : "Optional — set VIXONPAY_API_KEY to enable.",
       };
     }
     case "mbiyo": {

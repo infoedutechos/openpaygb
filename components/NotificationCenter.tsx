@@ -123,8 +123,18 @@ export default function NotificationCenter() {
   }, [fetchNotifications]);
 
   useEffect(() => {
-    const id = setInterval(fetchNotifications, 60 * 1000);
-    return () => clearInterval(id);
+    const id = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      void fetchNotifications();
+    }, 90 * 1000);
+    const onVisible = () => {
+      if (!document.hidden) void fetchNotifications();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, [fetchNotifications]);
 
   useEffect(() => {

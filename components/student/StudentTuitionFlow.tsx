@@ -14,9 +14,11 @@ import {
   PAYMENT_RAIL_MBIYO,
   PAYMENT_RAIL_OPENPAY_CARD,
   PAYMENT_RAIL_RELWORX,
+  PAYMENT_RAIL_VIXONPAY,
   livepayRailSectionLabel,
   mbiyoRailSectionLabel,
   relworxRailSectionLabel,
+  vixonpayRailSectionLabel,
   openPayBrandLabel,
   openPayCardRailSectionLabel,
   withOpenPayGlobal,
@@ -269,10 +271,11 @@ export function StudentTuitionFlow() {
   const [chainStatus, setChainStatus] = useState<"pending" | "confirmed">("pending");
   const [confirmedTxHash, setConfirmedTxHash] = useState<string | null>(null);
   const [payChannel, setPayChannel] = useState<
-    "ton" | "mbiyo" | "livepay" | "relworx" | "openpay_card" | null
+    "ton" | "mbiyo" | "livepay" | "relworx" | "vixonpay" | "openpay_card" | null
   >(null);
   const [livepayEnabled, setLivepayEnabled] = useState(false);
   const [relworxEnabled, setRelworxEnabled] = useState(false);
+  const [vixonpayEnabled, setVixonpayEnabled] = useState(false);
   const [openPayCardPlatformEnabled, setOpenPayCardPlatformEnabled] = useState(false);
   const [openPayCardBalanceUgx, setOpenPayCardBalanceUgx] = useState(0);
   const [openPayCardCanPay, setOpenPayCardCanPay] = useState(false);
@@ -344,6 +347,10 @@ export function StudentTuitionFlow() {
       .then((r) => r.json())
       .then((j: { enabled?: boolean }) => setRelworxEnabled(Boolean(j.enabled)))
       .catch(() => setRelworxEnabled(false));
+    void fetch("/api/public/vixonpay-config")
+      .then((r) => r.json())
+      .then((j: { enabled?: boolean }) => setVixonpayEnabled(Boolean(j.enabled)))
+      .catch(() => setVixonpayEnabled(false));
   }, []);
 
   useEffect(() => {
@@ -936,6 +943,65 @@ export function StudentTuitionFlow() {
       setStep("mbiyo_waiting");
     } catch (e) {
       setError(e instanceof Error ? e.message : `Could not start ${PAYMENT_RAIL_MBIYO} payment`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function startStudentVixonpay() {
+    if (!me) return;
+    setError(null);
+    if (!quote) {
+      setError("Load quote first.");
+      return;
+    }
+    const phone = ugandaPhoneToE164(livepayPhone.trim());
+    if (!phone) {
+      setError("Enter a valid Uganda mobile number (e.g. 0777123456).");
+      return;
+    }
+    setBusy(true);
+    try {
+      const body: Record<string, unknown> = {
+        organizationSlug: orgSlug,
+        studentId: me.id,
+        programmeCode: code,
+        year,
+        semester,
+        phone,
+        feeSelectionMode: quote.feeSelectionMode,
+        installmentCount,
+      };
+      if (quote.isFullSelection !== true && quote.lines.length > 0) {
+        body.feeIds = [...quote.lines.map((l) => l.id)].sort();
+      }
+      const r = await fetch("/api/public/checkout/vixonpay-start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body),
+      });
+      const j = (await r.json()) as {
+        error?: string;
+        payment?: { id: string; memo?: string | null };
+        vixonpay?: { message?: string };
+      };
+      if (!r.ok) throw new Error(j.error ?? `Could not start ${PAYMENT_RAIL_VIXONPAY} payment`);
+      if (!j.payment?.id) throw new Error(`Invalid ${PAYMENT_RAIL_VIXONPAY} response`);
+      setPayChannel("vixonpay");
+      setPaymentId(j.payment.id);
+      setPaymentMemo(j.payment.memo ?? null);
+      setPaymentTonAmount(null);
+      setChainStatus("pending");
+      setConfirmedTxHash(null);
+      setWalletNote(j.vixonpay?.message ?? "Approve the mobile money prompt on your phone.");
+      setMbiyoRedirectUrl(null);
+      setMbiyoInstructions(null);
+      setMbiyoAuthMode(null);
+      setMbiyoCollect({ amount: quote.totalUgx, currency: "UGX" });
+      setStep("mbiyo_waiting");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : `Could not start ${PAYMENT_RAIL_VIXONPAY} payment`);
     } finally {
       setBusy(false);
     }
@@ -1714,6 +1780,26 @@ export function StudentTuitionFlow() {
               </div>
             </GlassPanel>
           ) : null}
+          {vixonpayEnabled ? (
+            <GlassPanel className="border-violet-500/25 p-5">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-violet-200/85">{vixonpayRailSectionLabel}</p>
+              <p className="mt-2 text-sm text-slate-400">Uganda MTN/Airtel via VixonPay — UGX {quote.totalUgx.toLocaleString()}.</p>
+              <label className="mt-4 block text-xs text-slate-500">
+                Mobile number
+                <input
+                  value={livepayPhone}
+                  onChange={(e) => setLivepayPhone(e.target.value)}
+                  placeholder="0777123456"
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"
+                />
+              </label>
+              <div className="mt-4">
+                <BtnGhost onClick={() => void startStudentVixonpay()} disabled={busy}>
+                  Pay with {PAYMENT_RAIL_VIXONPAY}
+                </BtnGhost>
+              </div>
+            </GlassPanel>
+          ) : null}
           {relworxEnabled ? (
             <GlassPanel className="border-sky-500/25 p-5">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-sky-200/85">{relworxRailSectionLabel}</p>
@@ -1778,7 +1864,9 @@ export function StudentTuitionFlow() {
                     ? PAYMENT_RAIL_LIVEPAY
                     : payChannel === "relworx"
                       ? PAYMENT_RAIL_RELWORX
-                      : PAYMENT_RAIL_MBIYO}{" "}
+                      : payChannel === "vixonpay"
+                        ? PAYMENT_RAIL_VIXONPAY
+                        : PAYMENT_RAIL_MBIYO}{" "}
                   ({OPEN_PAY_BRAND}). Tuition quoted as UGX {quote.totalUgx.toLocaleString()}; approve the wallet
                   amount shown on your phone. This page updates when your payment confirms.
                 </>
@@ -1949,7 +2037,7 @@ export function StudentTuitionFlow() {
                   <span className="font-bold text-cyan-200">UGX {quote.totalUgx.toLocaleString()}</span> via{" "}
                   {PAYMENT_RAIL_OPENPAY_CARD} has been confirmed.
                 </>
-              ) : payChannel === "mbiyo" || payChannel === "livepay" || payChannel === "relworx" ? (
+              ) : payChannel === "mbiyo" || payChannel === "livepay" || payChannel === "relworx" || payChannel === "vixonpay" ? (
                 <>
                   Your payment of{" "}
                   <span className="font-bold text-cyan-200">UGX {quote.totalUgx.toLocaleString()}</span> via{" "}
@@ -1957,7 +2045,9 @@ export function StudentTuitionFlow() {
                     ? PAYMENT_RAIL_LIVEPAY
                     : payChannel === "relworx"
                       ? PAYMENT_RAIL_RELWORX
-                      : PAYMENT_RAIL_MBIYO}{" "}
+                      : payChannel === "vixonpay"
+                        ? PAYMENT_RAIL_VIXONPAY
+                        : PAYMENT_RAIL_MBIYO}{" "}
                   has been confirmed.
                 </>
               ) : (

@@ -115,6 +115,8 @@ Set `PRISMA_VERBOSE_ERRORS=1` to see full Prisma Atlas errors in the terminal (n
 
 **Master Admin → Environment:** `/admin/master#deployment-environment` audits and **saves** platform deployment variables. Values saved in the dashboard are **encrypted in MongoDB** and override server / Vercel / `.env.local` at runtime (dashboard wins). Leave a field blank and save to clear a dashboard override and fall back to process env. `NEXT_PUBLIC_*` vars still require a rebuild for client bundles; server routes pick up dashboard values immediately after save.
 
+**VixonPay + virtual card (MoMo top-up & tuition):** full setup, webhooks, tunnels, and troubleshooting — **[VIXONPAY_VIRTUAL_CARD_AND_DEV.md](./VIXONPAY_VIRTUAL_CARD_AND_DEV.md)**.
+
 **Relworx (optional MoMo rail):** [Relworx docs](https://payments.relworx.com/docs/). Set in `.env.local`:
 
 | Variable | Purpose |

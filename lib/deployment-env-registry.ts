@@ -146,7 +146,7 @@ export const DEPLOYMENT_ENV_GROUPS: EnvGroupDefinition[] = [
     id: "vixonpay",
     title: "VixonPay (Uganda MoMo)",
     description:
-      "Sandbox/production UGX collections via VixonPay API — https://docs.vixonpay.com/pay (integration pending).",
+      "Uganda UGX mobile money collections via VixonPay API — OpenPayGB card top-ups and checkout.",
     masterUiAnchor: "mobile-money-providers",
     docsPath: "https://docs.vixonpay.com/pay#description/getting-started",
     vars: [

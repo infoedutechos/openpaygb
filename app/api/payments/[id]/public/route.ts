@@ -16,6 +16,12 @@ import {
   relworxFetchRequestStatusForPayment,
 } from "@/lib/relworx/request-status";
 import { isRelworxConfigured } from "@/lib/relworx/client";
+import { confirmVixonPayPaymentIfEligible } from "@/lib/vixonpay/confirm-payment";
+import {
+  isVixonPayTransactionSuccessful,
+  vixonPayFetchTransactionStatus,
+} from "@/lib/vixonpay/transaction-status";
+import { isVixonPayConfigured, vixonPayMerchantReference } from "@/lib/vixonpay/client";
 import { withPrismaRetry } from "@/lib/prisma-retry";
 
 /** Public payment status for UX polling (no auth). Use payment `id` from the checkout response. */
@@ -69,6 +75,46 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
         currency: remote.currency,
         internal_reference: remote.internal_reference,
         customer_reference: remote.customer_reference ?? p.id,
+      });
+      p = await withPrismaRetry(() =>
+        prisma.payment.findUnique({
+          where: { id },
+          select: {
+            id: true,
+            status: true,
+            rail: true,
+            totalUgx: true,
+            momoReference: true,
+            studentId: true,
+            txHash: true,
+            confirmedAt: true,
+            tonAmount: true,
+            memo: true,
+          },
+        }),
+      );
+    }
+  }
+
+  if (!p) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  if (
+    p.status === "pending" &&
+    p.rail === "vixonpay" &&
+    isVixonPayConfigured() &&
+    !rateLimitHit(`vixonpay-status-sync:${id}`, 8, 60_000)
+  ) {
+    const ref = vixonPayMerchantReference(p.id);
+    const remote = await vixonPayFetchTransactionStatus(ref, p.momoReference);
+    if (remote && isVixonPayTransactionSuccessful(remote)) {
+      await confirmVixonPayPaymentIfEligible(p, {
+        transaction_status: remote.transaction_status,
+        transaction_amount: remote.transaction_amount,
+        request_currency: remote.request_currency,
+        internal_reference: remote.internal_reference,
+        merchant_reference: remote.merchant_reference ?? ref,
       });
       p = await withPrismaRetry(() =>
         prisma.payment.findUnique({

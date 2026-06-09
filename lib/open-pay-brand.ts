@@ -16,6 +16,8 @@ export const PAYMENT_RAIL_MBIYO = "Mbiyo";
 export const PAYMENT_RAIL_LIVEPAY = "LivePay";
 /** Ledger rail `relworx` — Relworx Payments API v2 (MoMo collect) */
 export const PAYMENT_RAIL_RELWORX = "Relworx";
+/** Ledger rail `vixonpay` — VixonPay API (Uganda UGX MoMo) */
+export const PAYMENT_RAIL_VIXONPAY = "VixonPay";
 /** Ledger rail `openpay_card` — closed-loop platform virtual card (UGX balance) */
 export const PAYMENT_RAIL_OPENPAY_CARD = "OpenPayGB card";
 
@@ -34,6 +36,8 @@ export const mbiyoRailSectionLabel = `${PAYMENT_RAIL_MBIYO} (${OPEN_PAY_BRAND})`
 export const livepayRailSectionLabel = `${PAYMENT_RAIL_LIVEPAY} (${OPEN_PAY_BRAND})`;
 /** Checkout UI section for Relworx rail */
 export const relworxRailSectionLabel = `${PAYMENT_RAIL_RELWORX} (${OPEN_PAY_BRAND})`;
+/** Checkout UI section for VixonPay rail */
+export const vixonpayRailSectionLabel = `${PAYMENT_RAIL_VIXONPAY} (${OPEN_PAY_BRAND})`;
 
 /** Legacy header — Mbiyo rail under OpenPayGB brand */
 export const openPayGlobalMobileMoneyLabel = mbiyoRailSectionLabel;
@@ -51,7 +55,7 @@ export function withOpenPayGlobal(alternative: string): string {
 }
 
 export function withMobileMoneyRails(alternative: string): string {
-  return `${alternative}, ${PAYMENT_RAIL_MBIYO}, ${PAYMENT_RAIL_LIVEPAY}, or ${PAYMENT_RAIL_RELWORX}`;
+  return `${alternative}, ${PAYMENT_RAIL_MBIYO}, ${PAYMENT_RAIL_LIVEPAY}, ${PAYMENT_RAIL_RELWORX}, or ${PAYMENT_RAIL_VIXONPAY}`;
 }
 
 /** e.g. stepper / status lines */

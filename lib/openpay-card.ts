@@ -77,6 +77,50 @@ export async function creditOpenPayCardBalance(cardId: string, amountUgx: number
   });
 }
 
+export function isOpenPayCardMomoIssueMemo(memo: string): boolean {
+  return memo.startsWith("opcardissuemomo:");
+}
+
+/** Idempotent confirm — MoMo issue fee activates card; fund top-ups credit balance. */
+export async function finalizeOpenPayCardMomoTopup(
+  topupId: string,
+  txHash: string,
+): Promise<{ action: string }> {
+  const topup = await prisma.openPayCardTopup.findUnique({
+    where: { id: topupId },
+    include: { card: true },
+  });
+  if (!topup) return { action: "unknown_topup" };
+  if (topup.status === "confirmed") return { action: "already_confirmed" };
+
+  if (isOpenPayCardMomoIssueMemo(topup.memo)) {
+    if (topup.card.status !== "pending_issue") {
+      return { action: "card_not_pending_issue" };
+    }
+    const activated = await prisma.$transaction(async (tx) => {
+      const updated = await tx.openPayCardTopup.updateMany({
+        where: { id: topupId, status: "pending" },
+        data: { status: "confirmed", txHash },
+      });
+      if (updated.count !== 1) return false;
+      const cardUpdated = await tx.openPayCard.updateMany({
+        where: { id: topup.cardId, status: "pending_issue" },
+        data: {
+          status: "active",
+          issueTxHash: txHash,
+          issuedAt: new Date(),
+          issueMemo: openPayCardIssueMemo(topup.cardId),
+        },
+      });
+      return cardUpdated.count === 1;
+    });
+    return { action: activated ? "card_issue_confirmed" : "confirm_failed" };
+  }
+
+  const ok = await confirmOpenPayCardTopup(topupId, txHash);
+  return { action: ok ? "card_topup_confirmed" : "confirm_failed" };
+}
+
 /** Idempotent confirm — used by TON scan and MoMo webhooks. */
 export async function confirmOpenPayCardTopup(
   topupId: string,

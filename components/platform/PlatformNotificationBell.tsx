@@ -104,8 +104,18 @@ export default function PlatformNotificationBell({ hub = "all" }: PlatformNotifi
 
   useEffect(() => {
     void fetchRows();
-    const id = setInterval(() => void fetchRows(), 60_000);
-    return () => clearInterval(id);
+    const id = setInterval(() => {
+      if (typeof document !== "undefined" && document.hidden) return;
+      void fetchRows();
+    }, 90_000);
+    const onVisible = () => {
+      if (!document.hidden) void fetchRows();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [fetchRows]);
 
   useEffect(() => {

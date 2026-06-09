@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  isOpenPayCardMomoIssueMemo,
   maskedPanForStudent,
   openPayCardFundMemo,
   openPayCardIssueMemo,
@@ -12,6 +13,11 @@ describe("openpay-card memos", () => {
 
   it("formats fund memo", () => {
     expect(openPayCardFundMemo("card1", "top1")).toBe("opcardfund:card1:top1");
+  });
+
+  it("detects MoMo issue vs fund memos", () => {
+    expect(isOpenPayCardMomoIssueMemo("opcardissuemomo:top1")).toBe(true);
+    expect(isOpenPayCardMomoIssueMemo("opcardmomo:top1")).toBe(false);
   });
 });
 

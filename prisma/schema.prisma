@@ -17,6 +17,8 @@ enum PaymentRail {
   livepay
   /** Relworx rail — East Africa MoMo collect (https://payments.relworx.com/docs/). */
   relworx
+  /** VixonPay rail — Uganda UGX MoMo collect (https://docs.vixonpay.com/pay). */
+  vixonpay
   /** Closed-loop OpenPayGB platform virtual card balance (UGX ledger). */
   openpay_card
 }
