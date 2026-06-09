@@ -1,0 +1,95 @@
+.tma-root {
+  min-height: 100dvh;
+  background: var(--tg-theme-bg-color, #0b1020);
+  color: var(--tg-theme-text-color, #f1f5f9);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+.tma-header {
+  padding: 1rem 1rem 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--tg-theme-hint-color, #64748b) 25%, transparent);
+}
+
+.tma-card {
+  margin: 0.75rem 1rem;
+  border-radius: 1rem;
+  background: var(--tg-theme-secondary-bg-color, #141c2e);
+  border: 1px solid color-mix(in srgb, var(--tg-theme-hint-color, #64748b) 20%, transparent);
+  padding: 1rem;
+}
+
+.tma-balance {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.tma-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 2.75rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  background: var(--tg-theme-button-color, #22d3ee);
+  color: var(--tg-theme-button-text-color, #0b1020);
+}
+
+.tma-btn-secondary {
+  background: color-mix(in srgb, var(--tg-theme-button-color, #22d3ee) 18%, transparent);
+  color: var(--tg-theme-text-color, #f1f5f9);
+  border: 1px solid color-mix(in srgb, var(--tg-theme-button-color, #22d3ee) 35%, transparent);
+}
+
+.tma-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.25rem;
+  padding: 0.5rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  background: var(--tg-theme-secondary-bg-color, #0f172a);
+  border-top: 1px solid color-mix(in srgb, var(--tg-theme-hint-color, #64748b) 25%, transparent);
+}
+
+.tma-nav button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  font-size: 0.62rem;
+  color: var(--tg-theme-hint-color, #94a3b8);
+  padding: 0.35rem 0.15rem;
+  border-radius: 0.5rem;
+}
+
+.tma-nav button[data-active="true"] {
+  color: var(--tg-theme-button-color, #22d3ee);
+  background: color-mix(in srgb, var(--tg-theme-button-color, #22d3ee) 12%, transparent);
+}
+
+.tma-virtual-card {
+  border-radius: 1rem;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, #0e7490 0%, #1e3a8a 55%, #312e81 100%);
+  color: #f8fafc;
+  min-height: 9rem;
+}
+
+.tma-progress {
+  height: 0.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tg-theme-hint-color, #64748b) 25%, transparent);
+  overflow: hidden;
+}
+
+.tma-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--tg-theme-button-color, #22d3ee);
+}

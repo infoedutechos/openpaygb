@@ -52,6 +52,7 @@ import { readJsonResponse } from "@/utils/read-json-response";
 import { fetchPaymentPublicStatus } from "@/utils/fetch-payment-public";
 import { usePaymentStatusPoll } from "@/hooks/usePaymentStatusPoll";
 import { InsufficientFundsTopupCallout } from "@/components/pay/InsufficientFundsTopupCallout";
+import { GuestWelcomeBanner } from "@/components/pay/GuestWelcomeBanner";
 import {
   checkoutPaymentErrorMessage,
   checkoutTopupRailFromPayChannel,
@@ -1339,6 +1340,14 @@ export function PayWizard({
       ) : null}
 
       <TuitionCheckoutStepper step={step} payChannel={payChannel} />
+
+      {checkoutStudentId && studentName.trim() && !needsCheckoutSession && step !== "landing" ? (
+        <GuestWelcomeBanner
+          studentId={checkoutStudentId}
+          studentName={studentName}
+          className="mb-4"
+        />
+      ) : null}
 
       {step !== "landing" ? (
         <SchoolCheckoutBanner

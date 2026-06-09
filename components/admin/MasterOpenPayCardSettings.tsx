@@ -70,8 +70,9 @@ export function MasterOpenPayCardSettings() {
       <p className="text-xs font-bold uppercase tracking-[0.22em] text-violet-400/90">Platform card</p>
       <h2 className="mt-2 text-lg font-semibold text-white">{OPEN_PAY_BRAND} virtual card</h2>
       <p className="mt-2 max-w-2xl text-sm text-slate-400">
-        Students may opt in to a closed-loop platform card (UGX balance). Issuance is paid in TON; tuition can be paid from
-        the card balance when enabled.
+        Students may opt in to a closed-loop platform card (UGX balance). Issuance is paid in TON or MoMo; tuition can be
+        paid from the card balance when enabled. See <code className="text-slate-500">docs/OPENPAYGB_PLATFORM_CARD.md</code>{" "}
+        for all user-category benefits.
       </p>
 
       <form onSubmit={(e) => void save(e)} className="mt-6 space-y-4">

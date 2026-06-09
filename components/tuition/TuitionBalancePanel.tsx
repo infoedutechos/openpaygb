@@ -117,25 +117,38 @@ export function TuitionBalancePanel({ balance, variant = "student", onPayInstall
           </p>
           {progress.periods.length > 0 ? (
             <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {progress.periods.map((period) => (
-                <span
-                  key={`${period.year}-${period.semester}`}
-                  className={
-                    period.isCompleted
-                      ? "rounded-md border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 text-xs text-emerald-300"
-                      : isAdmin
-                        ? "rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-600"
-                        : "rounded-md border border-white/10 bg-white/[0.03] px-2 py-1 text-xs text-slate-400"
-                  }
-                  title={
-                    period.hasFeeSchedule
-                      ? `UGX ${period.totalUgx.toLocaleString()} across ${period.feeLineCount} fee line(s)`
-                      : "No fee schedule configured for this period"
-                  }
-                >
-                  Y{period.year} S{period.semester}: {period.isCompleted ? "Done" : "Remaining"}
-                </span>
-              ))}
+              {progress.periods.map((period) => {
+                const paid = period.paidSubtotalUgx ?? 0;
+                const remaining = Math.max(0, period.totalUgx - paid);
+                const amountLabel = period.isCompleted
+                  ? `Paid UGX ${(paid || period.totalUgx).toLocaleString()}`
+                  : paid > 0
+                    ? `UGX ${paid.toLocaleString()} paid · UGX ${remaining.toLocaleString()} left`
+                    : period.hasFeeSchedule
+                      ? `UGX ${period.totalUgx.toLocaleString()} due`
+                      : "No fees set";
+                return (
+                  <span
+                    key={`${period.year}-${period.semester}`}
+                    className={
+                      period.isCompleted
+                        ? "rounded-md border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 text-xs text-emerald-300"
+                        : paid > 0
+                          ? "rounded-md border border-amber-400/30 bg-amber-500/10 px-2 py-1 text-xs text-amber-200"
+                          : isAdmin
+                            ? "rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-600"
+                            : "rounded-md border border-white/10 bg-white/[0.03] px-2 py-1 text-xs text-slate-400"
+                    }
+                    title={
+                      period.hasFeeSchedule
+                        ? `Expected UGX ${period.totalUgx.toLocaleString()} across ${period.feeLineCount} fee line(s)`
+                        : "No fee schedule configured for this period"
+                    }
+                  >
+                    Y{period.year} S{period.semester}: {period.isCompleted ? "Done" : "Remaining"} — {amountLabel}
+                  </span>
+                );
+              })}
             </div>
           ) : null}
         </div>

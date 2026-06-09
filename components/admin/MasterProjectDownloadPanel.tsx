@@ -15,7 +15,25 @@ const PARTS: Part[] = [
   {
     id: "full",
     label: "Whole project",
-    description: "ZIP: tuition data, env, KB, notifications, and source code when available.",
+    description: "ZIP: tuition data, env, KB, notifications, full docs library, and source when available.",
+    highlight: true,
+  },
+  {
+    id: "documentation",
+    label: "Full documentation (ZIP)",
+    description: "All docs/ markdown: project description, user guides, flows, deployment, runbooks.",
+    highlight: true,
+  },
+  {
+    id: "project-description",
+    label: "Project description",
+    description: "Complete product & technical specification (PROJECT_DESCRIPTION.md).",
+    highlight: true,
+  },
+  {
+    id: "user-guides",
+    label: "User guides (ZIP)",
+    description: "Master, school admin, student, guest payer, and partner integrator guides.",
     highlight: true,
   },
   { id: "tuition", label: "Tuition data (full)", description: "All tuition collections JSON (same as System backup)." },

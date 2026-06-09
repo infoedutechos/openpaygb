@@ -51,9 +51,15 @@ const Body = z
 export async function POST(req: Request) {
   try {
     await warmDeploymentEnvCache();
-    if (!isRelworxConfigured()) {
+    const { isRelworxActiveForCheckout } = await import("@/lib/payment-provider-active");
+    if (!(await isRelworxActiveForCheckout())) {
       return NextResponse.json(
-        { error: relworxNotConfiguredMessage(), code: "relworx_not_configured" },
+        {
+          error: isRelworxConfigured()
+            ? "Relworx is disabled by the platform master."
+            : relworxNotConfiguredMessage(),
+          code: "relworx_not_configured",
+        },
         { status: 503 },
       );
     }

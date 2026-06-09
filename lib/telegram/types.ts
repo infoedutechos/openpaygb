@@ -33,8 +33,18 @@ export type TelegramUpdate = {
 
 export type InlineKeyboardButton =
   | { text: string; callback_data: string }
-  | { text: string; url: string };
+  | { text: string; url: string }
+  | { text: string; web_app: { url: string } };
 
-export type ReplyMarkup = {
+export type InlineKeyboardMarkup = {
   inline_keyboard: InlineKeyboardButton[][];
 };
+
+export type ReplyKeyboardMarkup = {
+  keyboard: { text: string }[][];
+  resize_keyboard?: boolean;
+  is_persistent?: boolean;
+  one_time_keyboard?: boolean;
+};
+
+export type ReplyMarkup = InlineKeyboardMarkup | ReplyKeyboardMarkup;

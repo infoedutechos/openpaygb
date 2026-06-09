@@ -97,3 +97,16 @@ export function isTonConnectBridgeConsoleNoise(message: string): boolean {
   }
   return false;
 }
+
+/** Next.js dev-only HMR / Fast Refresh chatter — harmless during reload. */
+export function isNextDevConsoleNoise(message: string): boolean {
+  const s = message.toLowerCase();
+  return (
+    s.includes("[fast refresh]") ||
+    s.includes("webpack-hmr") ||
+    s.includes("_next/webpack-hmr") ||
+    s.includes("connection to ws://") && s.includes("was interrupted") ||
+    s.includes("ns_binding_aborted") ||
+    s.includes("opaqueresponseblocking")
+  );
+}

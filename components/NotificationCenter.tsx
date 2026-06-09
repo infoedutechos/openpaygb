@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { announcements } from '@/images';
 import { triggerHapticFeedback } from '@/utils/ui';
 import { getNotificationSeenIds, markNotificationsAsSeen } from '@/utils/notification-seen';
+import { resolveNotificationSocialIconUrl } from '@/lib/notification-social-icon-url';
 
 export interface NotificationItem {
   id: string;
@@ -229,7 +230,7 @@ export default function NotificationCenter() {
   // Resolve relative URLs to absolute so images load in Telegram WebView / iframes
   const resolveMediaUrl = (url: string): string => {
     if (!url || typeof url !== 'string') return url;
-    const trimmed = url.trim();
+    const trimmed = resolveNotificationSocialIconUrl(url.trim());
     if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
     if (typeof window !== 'undefined' && (trimmed.startsWith('/') || trimmed.startsWith('./'))) {
       const path = trimmed.startsWith('/') ? trimmed : trimmed.slice(1);

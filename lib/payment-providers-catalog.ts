@@ -1,0 +1,164 @@
+/** Master Admin catalog — payment API providers, services, and ODEL HUB routes. */
+
+export type PaymentProviderCatalogEntry = {
+  code: string;
+  name: string;
+  category: "mobile_money" | "on_chain" | "platform" | "messaging";
+  paymentRail: string;
+  brandLabel: string;
+  services: string[];
+  externalApis: string[];
+  ourCheckoutApis: string[];
+  ourWebhookApis: string[];
+  ourConfigApis: string[];
+  envVars: string[];
+  docsUrl?: string;
+  toggleable: boolean;
+};
+
+export const PAYMENT_PROVIDER_CATALOG: PaymentProviderCatalogEntry[] = [
+  {
+    code: "momo",
+    name: "MoMo bridge (MTN / Airtel)",
+    category: "mobile_money",
+    paymentRail: "momo_bridge",
+    brandLabel: "OpenPayGB",
+    services: ["Uganda MoMo collect via upstream bridge", "Webhook payment confirmation"],
+    externalApis: ["POST {MOMO_COLLECTION_URL} (upstream PSP)"],
+    ourCheckoutApis: ["POST /api/public/checkout/payment (rail: momo_bridge)"],
+    ourWebhookApis: ["POST /api/webhooks/momo"],
+    ourConfigApis: [],
+    envVars: ["MOMO_WEBHOOK_SECRET", "MOMO_COLLECTION_URL"],
+    toggleable: true,
+  },
+  {
+    code: "mbiyo",
+    name: "MbiyoPay",
+    category: "mobile_money",
+    paymentRail: "mbiyo",
+    brandLabel: "OpenPayGB (Mbiyo rail)",
+    services: ["Multi-country MoMo pay-in", "Merchant pay-in API", "HMAC webhook"],
+    externalApis: ["POST https://dashboard.mbiyo.africa/api/v1/merchant/payin"],
+    ourCheckoutApis: ["POST /api/public/checkout/mbiyo-start", "POST /api/collect/mbiyo"],
+    ourWebhookApis: ["POST /api/webhooks/mbiyo"],
+    ourConfigApis: ["GET /api/public/mbiyo-config"],
+    envVars: ["MBIYO_SECRET_KEY", "MBIYO_WEBHOOK_SECRET", "MBIYO_API_BASE_URL"],
+    docsUrl: "https://dashboard.mbiyo.africa",
+    toggleable: true,
+  },
+  {
+    code: "livepay",
+    name: "LivePay",
+    category: "mobile_money",
+    paymentRail: "livepay",
+    brandLabel: "OpenPayGB (LivePay rail)",
+    services: ["Uganda MTN/Airtel collect", "OpenPay card MoMo top-up & issue"],
+    externalApis: ["POST https://livepay.me/api/collect-money"],
+    ourCheckoutApis: [
+      "POST /api/public/checkout/livepay-start",
+      "POST /api/student/openpay-card/fund/momo-start",
+      "POST /api/student/openpay-card/issue/momo-start",
+    ],
+    ourWebhookApis: ["POST /api/webhooks/livepay"],
+    ourConfigApis: ["GET /api/public/livepay-config"],
+    envVars: ["LIVEPAY_API_KEY", "LIVEPAY_ACCOUNT_NUMBER", "LIVEPAY_WEBHOOK_SECRET", "LIVEPAY_WEBHOOK_URL"],
+    docsUrl: "https://livepay.me",
+    toggleable: true,
+  },
+  {
+    code: "relworx",
+    name: "Relworx",
+    category: "mobile_money",
+    paymentRail: "relworx",
+    brandLabel: "OpenPayGB (Relworx rail)",
+    services: ["East Africa MoMo (UGX/KES/TZS)", "OpenPay card MoMo top-up & issue"],
+    externalApis: ["POST https://payments.relworx.com/api/mobile-money/request-payment"],
+    ourCheckoutApis: [
+      "POST /api/public/checkout/relworx-start",
+      "POST /api/student/openpay-card/fund/momo-start",
+      "POST /api/student/openpay-card/issue/momo-start",
+    ],
+    ourWebhookApis: ["POST /api/webhooks/relworx"],
+    ourConfigApis: ["GET /api/public/relworx-config"],
+    envVars: [
+      "RELWORX_API_KEY",
+      "RELWORX_ACCOUNT_NO",
+      "RELWORX_WEBHOOK_KEY",
+      "RELWORX_CURRENCY",
+      "RELWORX_ENABLED",
+      "RELWORX_WEBHOOK_URL",
+    ],
+    docsUrl: "https://payments.relworx.com/docs/",
+    toggleable: true,
+  },
+  {
+    code: "vixonpay",
+    name: "VixonPay",
+    category: "mobile_money",
+    paymentRail: "vixonpay",
+    brandLabel: "OpenPayGB (VixonPay rail)",
+    services: ["Uganda UGX MoMo collect", "Virtual card MoMo top-up"],
+    externalApis: ["POST https://my.vixonpay.com/api/v1/collections/initialize"],
+    ourCheckoutApis: [
+      "POST /api/public/checkout/vixonpay-start",
+      "POST /api/student/openpay-card/fund/momo-start",
+    ],
+    ourWebhookApis: ["POST /api/webhooks/vixonpay"],
+    ourConfigApis: ["GET /api/public/vixonpay-config"],
+    envVars: ["VIXONPAY_API_KEY", "VIXONPAY_WEBHOOK_SECRET", "VIXONPAY_WEBHOOK_URL"],
+    docsUrl: "https://docs.vixonpay.com/pay",
+    toggleable: true,
+  },
+  {
+    code: "ton",
+    name: "TON on-chain",
+    category: "on_chain",
+    paymentRail: "telegram",
+    brandLabel: "TON Connect",
+    services: ["Tuition pay-in TON", "OpenPay card issue/fund via TON", "Inbound confirm cron"],
+    externalApis: ["TonAPI / Ton Center (via TONAPI_KEY)"],
+    ourCheckoutApis: [
+      "POST /api/public/checkout/ton-pay-transfer",
+      "POST /api/student/openpay-card/issue/transfer",
+      "POST /api/student/openpay-card/fund/transfer",
+    ],
+    ourWebhookApis: [],
+    ourConfigApis: ["GET /api/public/ton-config"],
+    envVars: ["ODELHUB_TON_WALLET_ADDRESS", "TONAPI_KEY", "TON_CONFIRM_ENABLED", "CRON_SECRET"],
+    toggleable: true,
+  },
+  {
+    code: "openpay_card",
+    name: "OpenPayGB virtual card",
+    category: "platform",
+    paymentRail: "openpay_card",
+    brandLabel: "OpenPayGB",
+    services: ["Platform virtual card", "Tuition pay from card balance", "MoMo/TON top-up"],
+    externalApis: [],
+    ourCheckoutApis: [
+      "POST /api/public/checkout/openpay-card-pay",
+      "GET /api/student/openpay-card",
+      "POST /api/student/openpay-card/opt-in",
+    ],
+    ourWebhookApis: [],
+    ourConfigApis: ["GET /api/public/openpay-card-config", "GET/PATCH /api/master/openpay-card-settings"],
+    envVars: ["openPayCardEnabled (Master Admin)", "openPayCardIssueFeeTon"],
+    toggleable: true,
+  },
+  {
+    code: "telegram",
+    name: "Telegram Mini App & bot",
+    category: "messaging",
+    paymentRail: "telegram",
+    brandLabel: "ODEL HUB Pay bot",
+    services: ["Mini App checkout", "Payment notifications", "Tuition due reminders"],
+    externalApis: ["Telegram Bot API", "Telegram Web App initData"],
+    ourCheckoutApis: ["POST /api/tma/session", "GET /api/tma/me", "GET /api/tma/receipts"],
+    ourWebhookApis: ["POST /api/webhooks/telegram"],
+    ourConfigApis: [],
+    envVars: ["TELEGRAM_BOT_TOKEN", "NEXT_PUBLIC_BOT_USERNAME", "TELEGRAM_WEBHOOK_SECRET"],
+    toggleable: true,
+  },
+];
+
+export const PAYMENT_PROVIDER_CODES = PAYMENT_PROVIDER_CATALOG.map((p) => p.code);

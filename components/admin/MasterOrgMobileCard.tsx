@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { workspaceEmailVerifyStatus } from "@/lib/organization-workspace-verify";
+import { workspaceEmailVerifyStatus } from "@/lib/organization-workspace-verify-shared";
 
 export type MasterOrgRow = {
   id: string;

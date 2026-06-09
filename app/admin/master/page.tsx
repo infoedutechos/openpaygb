@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { AdminAccountPasswordSection } from "@/components/admin/AdminAccountPasswordSection";
 import { MasterPendingSchoolsBanner } from "@/components/admin/MasterPendingSchoolsBanner";
 import { MasterFxSettings } from "@/components/admin/MasterFxSettings";
 import { MasterBackupPanel } from "@/components/admin/MasterBackupPanel";
@@ -18,7 +17,10 @@ import { MasterDeploymentEnvSettings } from "@/components/admin/MasterDeployment
 import { MasterKnowledgeBaseSettings } from "@/components/admin/MasterKnowledgeBaseSettings";
 import { MasterPlatformCommunicationsSettings } from "@/components/admin/MasterPlatformCommunicationsSettings";
 import { MasterHubMaintenanceSettings } from "@/components/admin/MasterHubMaintenanceSettings";
+import { MasterTelegramHubSettings } from "@/components/admin/MasterTelegramHubSettings";
+import { MasterPaymentProviders } from "@/components/admin/MasterPaymentProviders";
 import { readJsonResponse } from "@/utils/read-json-response";
+import { AdminUserProfileSection } from "@/components/profile/AdminUserProfileSection";
 
 type MasterSummary = {
   organizations: { active: number; pending: number; rejected: number; total: number };
@@ -74,6 +76,7 @@ export default function MasterManagerOverviewPage() {
 
   return (
     <div className="space-y-10 text-slate-200">
+      <AdminUserProfileSection includePassword />
       <MasterPendingSchoolsBanner />
       <div>
         <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-400/90">Manager dashboard</p>
@@ -152,6 +155,12 @@ export default function MasterManagerOverviewPage() {
           Manage organizations
         </Link>
         <Link
+          href="/admin/master/tuition-balance"
+          className="rounded-xl border border-cyan-500/35 bg-cyan-950/25 px-5 py-2.5 text-sm font-medium text-cyan-100 hover:border-cyan-400/55"
+        >
+          Tuition balance
+        </Link>
+        <Link
           href="/admin/master/programmes"
           className="rounded-xl border border-amber-500/35 bg-amber-950/25 px-5 py-2.5 text-sm font-medium text-amber-100 hover:border-amber-400/55"
         >
@@ -180,6 +189,12 @@ export default function MasterManagerOverviewPage() {
           className="rounded-xl border border-cyan-500/35 bg-cyan-950/25 px-5 py-2.5 text-sm font-medium text-cyan-100 hover:border-cyan-400/55"
         >
           Project download
+        </Link>
+        <Link
+          href="/admin/master#project-download"
+          className="rounded-xl border border-emerald-500/35 bg-emerald-950/25 px-5 py-2.5 text-sm font-medium text-emerald-100 hover:border-emerald-400/55"
+        >
+          Download docs & guides
         </Link>
         <Link
           href="/admin/master#platform-communications"
@@ -249,9 +264,13 @@ export default function MasterManagerOverviewPage() {
 
       <MasterFxSettings />
 
+      <MasterPaymentProviders />
+
       <MasterMobileMoneyProviders />
 
       <MasterPartnerIntegrations />
+
+      <MasterTelegramHubSettings />
 
       <MasterPlatformSocialSettings />
 
@@ -263,9 +282,6 @@ export default function MasterManagerOverviewPage() {
         Rejected organizations: {data.organizations.rejected} · Total org records: {data.organizations.total}
       </p>
 
-      <section className="rounded-xl border border-amber-500/20 bg-[var(--card)] p-5">
-        <AdminAccountPasswordSection successHeading="Account password" />
-      </section>
     </div>
   );
 }

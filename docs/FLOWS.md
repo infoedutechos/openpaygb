@@ -1,9 +1,11 @@
 # Flow documentation (index)
 
-Canonical narratives for how people and data move through ODEL HUB TON Pay:
+**Download everything:** Master Admin → **Project download** → *Full documentation (ZIP)*, *Project description*, or *User guides (ZIP)*. See [guides/USER_GUIDE_INDEX.md](./guides/USER_GUIDE_INDEX.md).
 
 | Document | Audience / topic |
 |----------|------------------|
+| [PROJECT_DESCRIPTION.md](./PROJECT_DESCRIPTION.md) | **Complete product & technical specification** (no-omission) |
+| [guides/USER_GUIDE_INDEX.md](./guides/USER_GUIDE_INDEX.md) | **User guides index** — master, school admin, student, guest, partner |
 | [USER_FLOW.md](./USER_FLOW.md) | Payers & public UX — home, checkout, payment, receipt |
 | [MULTI_TENANT_FLOW.md](./MULTI_TENANT_FLOW.md) | Workspaces (organizations), slugs, isolation, Telegram tenant |
 | [SCHOOL_ADMIN_LOGIN.md](./SCHOOL_ADMIN_LOGIN.md) | **How school staff sign in** — `/school/login`, provisioning, vs master |

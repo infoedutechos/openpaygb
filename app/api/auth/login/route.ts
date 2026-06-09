@@ -6,6 +6,8 @@ import { signAdminToken, cookieName } from "@/lib/auth";
 import { ADMIN_REMEMBER_MAX_AGE_SEC, ADMIN_SESSION_MAX_AGE_SEC } from "@/lib/admin-password-reset";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
 import { apiErrorResponse } from "@/lib/api-error";
+import { recordAdminLogin } from "@/lib/record-login";
+import { revalidateAdminProfile } from "@/lib/cached-admin-profile";
 
 const Body = z.object({
   email: z.string().email(),
@@ -50,6 +52,9 @@ export async function POST(req: Request) {
       }
       return NextResponse.json(body, { status: 401 });
     }
+    await recordAdminLogin(admin.id);
+    revalidateAdminProfile(admin.id);
+
     const maxAgeSec = parsed.data.rememberMe ? ADMIN_REMEMBER_MAX_AGE_SEC : ADMIN_SESSION_MAX_AGE_SEC;
     const token = await signAdminToken(
       {

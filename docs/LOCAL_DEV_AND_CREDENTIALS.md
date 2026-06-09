@@ -37,7 +37,7 @@ Tenant name: **ODEL HUB (default tenant)** · slug: **`default`**
 | Role | Sign-in URL | Email (default) | Password (default) |
 |------|-------------|-----------------|---------------------|
 | **School admin** (`org_admin`) | http://localhost:3000/school/login | `admin@odelhub.local` | `ChangeMe_Admin123!` |
-| **Platform master** | http://localhost:3000/admin/login?master=1 | `master@odelhub.local` | `ChangeMe_Master123!` |
+| **Platform master** | http://localhost:3000/admin/login?master=1 | `oiptechcore@gmail.com` (production) or seed `master@odelhub.local` | Your password / `ChangeMe_Master123!` |
 
 **After sign-in**
 
@@ -146,8 +146,19 @@ Default dev uses **Turbopack**; the browser may still log `/_next/webpack-hmr` �
 
 ---
 
+## 7. Telegram Mini App (local preview)
+
+| What | URL / command |
+|------|----------------|
+| Browser preview (no Telegram) | http://localhost:3000/tma |
+| Bot + webhook + menu setup | See **[TELEGRAM_MINI_APP.md](./TELEGRAM_MINI_APP.md)** — webhook/menu require **HTTPS** `NEXT_PUBLIC_APP_URL` (production or tunnel) |
+| Link master for TMA sign-in | `npm run admin:link-telegram -- master@odelhub.local YOUR_TELEGRAM_ID` |
+
+---
+
 ## Related docs
 
+- [TELEGRAM_MINI_APP.md](./TELEGRAM_MINI_APP.md) — bot landing, `/tma` screens, setup commands
 - [APP_STATUS_AUDIT.md](./APP_STATUS_AUDIT.md) — holistic scan, gaps, deployment readiness
 - [SCHOOL_ADMIN_PROGRAMMES.md](./SCHOOL_ADMIN_PROGRAMMES.md) — what school admins can customize
 - [USER_FLOW.md](./USER_FLOW.md) — guest pay APIs and receipts

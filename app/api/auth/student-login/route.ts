@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getActiveOrganizationBySlug } from "@/lib/organizations";
 import { signStudentToken, studentCookieName } from "@/lib/student-auth";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
+import { recordStudentLogin } from "@/lib/record-login";
 
 const Body = z.object({
   organizationSlug: z.string().min(2),
@@ -77,6 +78,8 @@ export async function POST(req: Request) {
     if (!ok) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
+
+    await recordStudentLogin(student.id);
 
     const token = await signStudentToken({ sub: student.id, organizationId: student.organizationId });
     const res = NextResponse.json({

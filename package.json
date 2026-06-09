@@ -60,6 +60,11 @@
     "migrate:matrix-labels": "npx prisma generate && npx tsx --tsconfig prisma/tsconfig.migrate.json prisma/update-matrix-labels.ts",
     "fix:team-join-duplicates": "npx prisma generate && npx tsx --tsconfig prisma/tsconfig.migrate.json prisma/fix-team-join-request-duplicates.ts",
     "telegram:set-webhook": "npx tsx scripts/set-telegram-webhook.ts",
+    "telegram:set-menu": "npx tsx scripts/set-telegram-menu-button.ts",
+    "telegram:tuition-reminders": "npx tsx scripts/run-telegram-reminders.ts",
+    "telegram:smoke-cron": "node --require ./scripts/stub-server-only.cjs ./node_modules/tsx/dist/cli.mjs scripts/smoke-telegram-cron.ts",
+    "admin:link-telegram": "npx tsx scripts/link-admin-telegram.ts",
+    "admin:ensure-master-telegram": "npx tsx scripts/ensure-master-telegram.ts",
     "prepare": "husky"
   },
   "dependencies": {

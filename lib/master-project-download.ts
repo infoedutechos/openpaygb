@@ -9,6 +9,12 @@ import { buildTuitionBackupSnapshot } from "@/lib/backup/tuition-snapshot";
 import { buildVercelEnvExport } from "@/lib/deployment-env-export";
 import { deploymentEnv } from "@/lib/deployment-env-resolve";
 import { prisma } from "@/lib/prisma";
+import {
+  appendDocumentationToArchive,
+  buildFullDocumentationDownload,
+  buildProjectDescriptionDownload,
+  buildUserGuidesDownload,
+} from "@/lib/project-documentation";
 
 export type ProjectDownloadPart =
   | "full"
@@ -20,7 +26,10 @@ export type ProjectDownloadPart =
   | "env"
   | "knowledge-base"
   | "notifications"
-  | "source";
+  | "source"
+  | "project-description"
+  | "user-guides"
+  | "documentation";
 
 const SOURCE_SKIP = new Set([
   "node_modules",
@@ -265,6 +274,18 @@ export async function buildProjectDownload(part: ProjectDownloadPart): Promise<D
     };
   }
 
+  if (part === "project-description") {
+    return buildProjectDescriptionDownload();
+  }
+
+  if (part === "user-guides") {
+    return buildUserGuidesDownload();
+  }
+
+  if (part === "documentation") {
+    return buildFullDocumentationDownload();
+  }
+
   if (part === "source") {
     const gitZip = gitArchiveBuffer();
     if (gitZip) {
@@ -302,6 +323,7 @@ export async function buildProjectDownload(part: ProjectDownloadPart): Promise<D
       "data/deployment-env.env",
       "data/knowledge-base.json",
       "data/notifications.json",
+      "documentation/ (full docs/ markdown library)",
       "source/ (code archive when available)",
       "MANIFEST.json",
     ],
@@ -329,6 +351,7 @@ export async function buildProjectDownload(part: ProjectDownloadPart): Promise<D
     archive.append(envText, { name: "data/deployment-env.env" });
     archive.append(JSON.stringify(kb, null, 2), { name: "data/knowledge-base.json" });
     archive.append(JSON.stringify(notes, null, 2), { name: "data/notifications.json" });
+    appendDocumentationToArchive(archive);
 
     void (async () => {
       try {

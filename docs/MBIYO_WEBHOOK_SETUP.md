@@ -49,7 +49,7 @@ Also set keys from the same dashboard page ([API profile](https://dashboard.mbiy
 
 | Mbiyo dashboard | ODELHUB Pay env | Used for |
 |-----------------|-----------------|----------|
-| **API Keys → Live** | `MBIYO_SECRET_KEY` | Production (`odelhubpay.vercel.app`) — server payins, status checks |
+| **API Keys → Live** | `MBIYO_SECRET_KEY` | Production (`odelpay.vercel.app`) — server payins, status checks |
 | **API Keys → Test** | `MBIYO_SECRET_KEY` | Local/sandbox only — fake money, no real mobile-money debit |
 | **Public keys → Live** | `NEXT_PUBLIC_MBIYO_PUBLIC_KEY` | Production — safe in browser (optional today) |
 | **Public keys → Test** | `NEXT_PUBLIC_MBIYO_PUBLIC_KEY` | Local test — pair with Test API key |

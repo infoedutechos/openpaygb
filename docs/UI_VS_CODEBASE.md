@@ -46,11 +46,13 @@ npm run docs:inventory   # writes API_INVENTORY.csv, UI_ROUTES.csv, and this fil
 | /admin/master | (none under /api/admin/master/) | no |
 | /admin/master/organizations | (none under /api/admin/master/) | no |
 | /admin/master/programmes | (none under /api/admin/master/) | no |
+| /admin/master/tuition-balance | (none under /api/admin/master/) | no |
 | /admin/milestone-banners | /api/admin/milestone-banners/[id]<br>/api/admin/milestone-banners | yes |
 | /admin/notifications | /api/admin/notifications/[id]/recall<br>/api/admin/notifications/[id]<br>/api/admin/notifications<br>/api/admin/notifications/upload | yes — Middleware allows this path with URA `admin_session` cookie (see `middleware.ts`). |
 | /admin/onchain-tasks | /api/admin/onchain-tasks/[id]<br>/api/admin/onchain-tasks | yes |
 | /admin/payments | /api/payments<br>/api/payments/[id]<br>/api/payments/export | yes — Payments under `/api/payments`; CSV export at `/api/payments/export`. |
 | /admin/pearls | /api/admin/pearls | yes |
+| /admin/profile | (none under /api/admin/profile/) | no |
 | /admin/programmes | /api/admin/programmes/[id]/fees/[feeId]<br>/api/admin/programmes/[id]/fees<br>/api/admin/programmes/[id]<br>/api/admin/programmes/import<br>/api/admin/programmes | yes |
 | /admin/published-activities | /api/admin/published-activities/[id]<br>/api/admin/published-activities | yes |
 | /admin/quiz | /api/admin/quiz | yes |
@@ -65,7 +67,9 @@ npm run docs:inventory   # writes API_INVENTORY.csv, UI_ROUTES.csv, and this fil
 | /admin/students/[id] | /api/students/[id] | yes — Student APIs under `/api/students`, not `/api/admin/students`. |
 | /admin/tasks | /api/admin/tasks/[id]<br>/api/admin/tasks | yes |
 | /admin/telegram-broadcast | /api/admin/telegram-broadcast | yes |
+| /admin/tuition-balance | (none under /api/admin/tuition-balance/) | no |
 | /admin/users | (none under /api/admin/users/) | no |
+| /admin/virtual-cards | (none under /api/admin/virtual-cards/) | no |
 | /admin/weekly-event | /api/admin/weekly-event | yes |
 
 ## `/api/*` routes outside `/api/admin/*`
@@ -94,9 +98,11 @@ These handlers are not namespaced under `/api/admin/`. Several are still used fr
 - `/api/collect/momo` — `app/api/collect/momo/route.ts`
 - `/api/cron/confirm-ton` — `app/api/cron/confirm-ton/route.ts`
 - `/api/cron/expire-pending-payments` — `app/api/cron/expire-pending-payments/route.ts`
+- `/api/cron/telegram-tuition-reminders` — `app/api/cron/telegram-tuition-reminders/route.ts`
 - `/api/daily-cipher` — `app/api/daily-cipher/route.ts`
 - `/api/daily-combo` — `app/api/daily-combo/route.ts`
 - `/api/daily-reward` — `app/api/daily-reward/route.ts`
+- `/api/docs/[[...path]]` — `app/api/docs/[[...path]]/route.ts`
 - `/api/donate` — `app/api/donate/route.ts`
 - `/api/donations/leaderboard` — `app/api/donations/leaderboard/route.ts`
 - `/api/fx/rate` — `app/api/fx/rate/route.ts`
@@ -107,6 +113,9 @@ These handlers are not namespaced under `/api/admin/`. Several are still used fr
 - `/api/global-tasks` — `app/api/global-tasks/route.ts`
 - `/api/guild/overview` — `app/api/guild/overview/route.ts`
 - `/api/health` — `app/api/health/route.ts`
+- `/api/knowledge/articles/[slug]` — `app/api/knowledge/articles/[slug]/route.ts`
+- `/api/knowledge/articles` — `app/api/knowledge/articles/route.ts`
+- `/api/knowledge/search` — `app/api/knowledge/search/route.ts`
 - `/api/league-challenges/[id]/accept` — `app/api/league-challenges/[id]/accept/route.ts`
 - `/api/league-challenges/[id]/contribute` — `app/api/league-challenges/[id]/contribute/route.ts`
 - `/api/league-challenges/[id]` — `app/api/league-challenges/[id]/route.ts`
@@ -124,6 +133,7 @@ These handlers are not namespaced under `/api/admin/`. Several are still used fr
 - `/api/leagues` — `app/api/leagues/route.ts`
 - `/api/learn/categories` — `app/api/learn/categories/route.ts`
 - `/api/license` — `app/api/license/route.ts`
+- `/api/manifest/tonconnect-icon` — `app/api/manifest/tonconnect-icon/route.ts`
 - `/api/manifest/tonconnect` — `app/api/manifest/tonconnect/route.ts`
 - `/api/marketplace/buy` — `app/api/marketplace/buy/route.ts`
 - `/api/marketplace/listings/[id]/cancel` — `app/api/marketplace/listings/[id]/cancel/route.ts`
@@ -133,13 +143,26 @@ These handlers are not namespaced under `/api/admin/`. Several are still used fr
 - `/api/master/backup/restore` — `app/api/master/backup/restore/route.ts`
 - `/api/master/backup` — `app/api/master/backup/route.ts`
 - `/api/master/backup/status` — `app/api/master/backup/status/route.ts`
+- `/api/master/deployment-env/export` — `app/api/master/deployment-env/export/route.ts`
+- `/api/master/deployment-env/registry` — `app/api/master/deployment-env/registry/route.ts`
+- `/api/master/deployment-env` — `app/api/master/deployment-env/route.ts`
+- `/api/master/deployment-env/vercel-sync` — `app/api/master/deployment-env/vercel-sync/route.ts`
 - `/api/master/fx` — `app/api/master/fx/route.ts`
+- `/api/master/hub-maintenance` — `app/api/master/hub-maintenance/route.ts`
+- `/api/master/knowledge/gaps` — `app/api/master/knowledge/gaps/route.ts`
+- `/api/master/knowledge` — `app/api/master/knowledge/route.ts`
 - `/api/master/mobile-money-providers/[id]` — `app/api/master/mobile-money-providers/[id]/route.ts`
 - `/api/master/mobile-money-providers` — `app/api/master/mobile-money-providers/route.ts`
+- `/api/master/notifications/[id]/recall` — `app/api/master/notifications/[id]/recall/route.ts`
+- `/api/master/notifications/[id]` — `app/api/master/notifications/[id]/route.ts`
+- `/api/master/notifications` — `app/api/master/notifications/route.ts`
+- `/api/master/openpay-card-settings` — `app/api/master/openpay-card-settings/route.ts`
+- `/api/master/openpay-cards` — `app/api/master/openpay-cards/route.ts`
 - `/api/master/organizations/[id]/checkout-platform-fee` — `app/api/master/organizations/[id]/checkout-platform-fee/route.ts`
 - `/api/master/organizations/[id]/destination-wallet` — `app/api/master/organizations/[id]/destination-wallet/route.ts`
 - `/api/master/organizations/[id]/favicon` — `app/api/master/organizations/[id]/favicon/route.ts`
 - `/api/master/organizations/[id]/fx` — `app/api/master/organizations/[id]/fx/route.ts`
+- `/api/master/organizations/[id]/resend-verification` — `app/api/master/organizations/[id]/resend-verification/route.ts`
 - `/api/master/organizations/[id]` — `app/api/master/organizations/[id]/route.ts`
 - `/api/master/organizations` — `app/api/master/organizations/route.ts`
 - `/api/master/partner/keys/[id]` — `app/api/master/partner/keys/[id]/route.ts`
@@ -150,13 +173,16 @@ These handlers are not namespaced under `/api/admin/`. Several are still used fr
 - `/api/master/programmes/[id]` — `app/api/master/programmes/[id]/route.ts`
 - `/api/master/programmes/apply-inferred` — `app/api/master/programmes/apply-inferred/route.ts`
 - `/api/master/programmes` — `app/api/master/programmes/route.ts`
+- `/api/master/project-download` — `app/api/master/project-download/route.ts`
 - `/api/master/school-workspace-registration` — `app/api/master/school-workspace-registration/route.ts`
+- `/api/master/site-ui/copilot-bubble` — `app/api/master/site-ui/copilot-bubble/route.ts`
 - `/api/master/site-ui/logo` — `app/api/master/site-ui/logo/route.ts`
 - `/api/master/site-ui` — `app/api/master/site-ui/route.ts`
 - `/api/master/site-ui/social-icon/[key]` — `app/api/master/site-ui/social-icon/[key]/route.ts`
 - `/api/master/summary` — `app/api/master/summary/route.ts`
 - `/api/milestone-banner` — `app/api/milestone-banner/route.ts`
 - `/api/mini-games` — `app/api/mini-games/route.ts`
+- `/api/notification-social-icon` — `app/api/notification-social-icon/route.ts`
 - `/api/notifications` — `app/api/notifications/route.ts`
 - `/api/onchain-tasks/check` — `app/api/onchain-tasks/check/route.ts`
 - `/api/onchain-tasks` — `app/api/onchain-tasks/route.ts`
@@ -178,25 +204,35 @@ These handlers are not namespaced under `/api/admin/`. Several are still used fr
 - `/api/pearls/swap` — `app/api/pearls/swap/route.ts`
 - `/api/pearls/transfer` — `app/api/pearls/transfer/route.ts`
 - `/api/pearls/withdraw` — `app/api/pearls/withdraw/route.ts`
+- `/api/platform/chat` — `app/api/platform/chat/route.ts`
+- `/api/platform/copilot-bubble` — `app/api/platform/copilot-bubble/route.ts`
 - `/api/platform/logo` — `app/api/platform/logo/route.ts`
+- `/api/platform/notifications` — `app/api/platform/notifications/route.ts`
 - `/api/programmes/[code]/quote` — `app/api/programmes/[code]/quote/route.ts`
 - `/api/programmes` — `app/api/programmes/route.ts`
 - `/api/public/checkout/balance` — `app/api/public/checkout/balance/route.ts`
 - `/api/public/checkout/livepay-start` — `app/api/public/checkout/livepay-start/route.ts`
 - `/api/public/checkout/mbiyo-start` — `app/api/public/checkout/mbiyo-start/route.ts`
+- `/api/public/checkout/openpay-card-eligibility` — `app/api/public/checkout/openpay-card-eligibility/route.ts`
+- `/api/public/checkout/openpay-card-pay` — `app/api/public/checkout/openpay-card-pay/route.ts`
 - `/api/public/checkout/payment/[id]/cancel` — `app/api/public/checkout/payment/[id]/cancel/route.ts`
 - `/api/public/checkout/payment` — `app/api/public/checkout/payment/route.ts`
+- `/api/public/checkout/relworx-start` — `app/api/public/checkout/relworx-start/route.ts`
 - `/api/public/checkout/session` — `app/api/public/checkout/session/route.ts`
 - `/api/public/checkout/student` — `app/api/public/checkout/student/route.ts`
 - `/api/public/checkout/ton-pay-transfer` — `app/api/public/checkout/ton-pay-transfer/route.ts`
+- `/api/public/checkout/vixonpay-start` — `app/api/public/checkout/vixonpay-start/route.ts`
 - `/api/public/livepay-config` — `app/api/public/livepay-config/route.ts`
+- `/api/public/openpay-card-config` — `app/api/public/openpay-card-config/route.ts`
 - `/api/public/organization-register/resend` — `app/api/public/organization-register/resend/route.ts`
 - `/api/public/organization-register` — `app/api/public/organization-register/route.ts`
 - `/api/public/organization-register/verify` — `app/api/public/organization-register/verify/route.ts`
 - `/api/public/organizations` — `app/api/public/organizations/route.ts`
+- `/api/public/relworx-config` — `app/api/public/relworx-config/route.ts`
 - `/api/public/school-workspace-registration-policy` — `app/api/public/school-workspace-registration-policy/route.ts`
 - `/api/public/site-ui` — `app/api/public/site-ui/route.ts`
 - `/api/public/social-icon/[key]` — `app/api/public/social-icon/[key]/route.ts`
+- `/api/public/vixonpay-config` — `app/api/public/vixonpay-config/route.ts`
 - `/api/public/workspace-status` — `app/api/public/workspace-status/route.ts`
 - `/api/published-activities` — `app/api/published-activities/route.ts`
 - `/api/quiz` — `app/api/quiz/route.ts`
@@ -217,6 +253,12 @@ These handlers are not namespaced under `/api/admin/`. Several are still used fr
 - `/api/staking` — `app/api/staking/route.ts`
 - `/api/student/balance` — `app/api/student/balance/route.ts`
 - `/api/student/me` — `app/api/student/me/route.ts`
+- `/api/student/openpay-card/fund/momo-start` — `app/api/student/openpay-card/fund/momo-start/route.ts`
+- `/api/student/openpay-card/fund/transfer` — `app/api/student/openpay-card/fund/transfer/route.ts`
+- `/api/student/openpay-card/issue/momo-start` — `app/api/student/openpay-card/issue/momo-start/route.ts`
+- `/api/student/openpay-card/issue/transfer` — `app/api/student/openpay-card/issue/transfer/route.ts`
+- `/api/student/openpay-card/opt-in` — `app/api/student/openpay-card/opt-in/route.ts`
+- `/api/student/openpay-card` — `app/api/student/openpay-card/route.ts`
 - `/api/student/payments/[id]/cancel` — `app/api/student/payments/[id]/cancel/route.ts`
 - `/api/student/session` — `app/api/student/session/route.ts`
 - `/api/students/[id]/balance` — `app/api/students/[id]/balance/route.ts`
@@ -244,6 +286,9 @@ These handlers are not namespaced under `/api/admin/`. Several are still used fr
 - `/api/teams/list` — `app/api/teams/list/route.ts`
 - `/api/teams/request` — `app/api/teams/request/route.ts`
 - `/api/teams` — `app/api/teams/route.ts`
+- `/api/tma/me` — `app/api/tma/me/route.ts`
+- `/api/tma/receipts` — `app/api/tma/receipts/route.ts`
+- `/api/tma/session` — `app/api/tma/session/route.ts`
 - `/api/transfers/me` — `app/api/transfers/me/route.ts`
 - `/api/transfers/recent` — `app/api/transfers/recent/route.ts`
 - `/api/transfers/send` — `app/api/transfers/send/route.ts`
@@ -262,7 +307,9 @@ These handlers are not namespaced under `/api/admin/`. Several are still used fr
 - `/api/webhooks/mbiyo` — `app/api/webhooks/mbiyo/route.ts`
 - `/api/webhooks/momo` — `app/api/webhooks/momo/route.ts`
 - `/api/webhooks/provider/[code]` — `app/api/webhooks/provider/[code]/route.ts`
+- `/api/webhooks/relworx` — `app/api/webhooks/relworx/route.ts`
 - `/api/webhooks/telegram` — `app/api/webhooks/telegram/route.ts`
+- `/api/webhooks/vixonpay` — `app/api/webhooks/vixonpay/route.ts`
 - `/api/weekly-event` — `app/api/weekly-event/route.ts`
 
 ## Documentation vs tree (manual)

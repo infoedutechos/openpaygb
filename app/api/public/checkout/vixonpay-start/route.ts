@@ -55,9 +55,15 @@ const Body = z
 export async function POST(req: Request) {
   try {
     await warmDeploymentEnvCache();
-    if (!isVixonPayConfigured()) {
+    const { isVixonPayActiveForCheckout } = await import("@/lib/payment-provider-active");
+    if (!(await isVixonPayActiveForCheckout())) {
       return NextResponse.json(
-        { error: vixonPayNotConfiguredMessage(), code: "vixonpay_not_configured" },
+        {
+          error: isVixonPayConfigured()
+            ? "VixonPay is disabled by the platform master."
+            : vixonPayNotConfiguredMessage(),
+          code: "vixonpay_not_configured",
+        },
         { status: 503 },
       );
     }

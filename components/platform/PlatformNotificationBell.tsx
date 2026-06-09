@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PlatformHub } from "@/lib/knowledge-base/types";
+import { resolveNotificationSocialIconUrl } from "@/lib/notification-social-icon-url";
 import { triggerHapticFeedback } from "@/utils/ui";
 
 type NotificationRow = {
@@ -21,7 +22,7 @@ export type PlatformNotificationBellProps = {
 
 function resolveMediaUrl(url: string): string {
   if (!url || typeof url !== "string") return url;
-  const trimmed = url.trim();
+  const trimmed = resolveNotificationSocialIconUrl(url.trim());
   if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
   if (typeof window !== "undefined" && trimmed.startsWith("/")) {
     return `${window.location.origin}${trimmed}`;

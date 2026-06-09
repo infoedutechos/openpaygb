@@ -78,8 +78,8 @@ export default function StudentDashboardPage() {
           <Link href="/my/receipts" className="font-medium text-cyan-400 hover:text-cyan-300 hover:underline">
             Receipts & payment history
           </Link>
-          <Link href="/my/settings" className="font-medium text-cyan-400 hover:text-cyan-300 hover:underline">
-            Change portal password
+          <Link href="/my/profile#password" className="font-medium text-cyan-400 hover:text-cyan-300 hover:underline">
+            Profile &amp; password
           </Link>
         </p>
       </header>

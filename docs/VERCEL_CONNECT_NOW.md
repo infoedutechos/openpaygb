@@ -2,6 +2,8 @@
 
 Use this checklist after pushing `programme-duration-management` (or `main`).
 
+**Production project:** see **[VERCEL_ODELPAY_DEPLOY.md](./VERCEL_ODELPAY_DEPLOY.md)** — Vercel `info.edutechos@gmail.com`, team **odeldevelopers-projects**, project **odelhub-pay**, URL **`https://odelpay.vercel.app`**.
+
 ## 1. Import the GitHub repo (one time)
 
 1. Open [vercel.com/new](https://vercel.com/new).
@@ -79,5 +81,14 @@ CLI linking requires a valid token (`vercel login`). The dashboard import (steps
 
 - `/api/cron/confirm-ton` — every 5 minutes
 - `/api/cron/expire-pending-payments` — hourly
+- `/api/cron/telegram-tuition-reminders` — weekly (Mondays 09:00 UTC)
 
-Requires `CRON_SECRET` and a **Vercel Pro** plan (or compatible cron support on your team).
+Requires `CRON_SECRET` (Vercel sends `Authorization: Bearer <CRON_SECRET>` automatically) and a **Vercel Pro** plan (or compatible cron support on your team).
+
+**Production Telegram env (verify in Vercel → Settings → Environment Variables):**
+
+| Variable | Value |
+|----------|--------|
+| `NEXT_PUBLIC_APP_URL` | `https://odelpay.vercel.app` (no trailing slash) |
+| `TELEGRAM_BOT_TOKEN` or `BOT_TOKEN` | BotFather token for @ODELHUBPayBot |
+| `CRON_SECRET` | Random 32+ char string |

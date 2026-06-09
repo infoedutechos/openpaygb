@@ -10,7 +10,20 @@ export async function GET() {
 
   const row = await prisma.student.findUnique({
     where: { id: session.sub },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      programmeCode: true,
+      year: true,
+      semester: true,
+      organizationId: true,
+      portalPasswordHash: true,
+      googleSub: true,
+      lastLoginAt: true,
+      previousLoginAt: true,
+      createdAt: true,
       organization: { select: { name: true, slug: true } },
       payments: {
         orderBy: { createdAt: "desc" },
@@ -48,6 +61,10 @@ export async function GET() {
       organizationName: row.organization.name,
       organizationSlug: row.organization.slug,
       portalSignInEnabled: Boolean(row.portalPasswordHash),
+      googleSub: row.googleSub ?? null,
+      lastLoginAt: row.lastLoginAt?.toISOString() ?? null,
+      previousLoginAt: row.previousLoginAt?.toISOString() ?? null,
+      createdAt: row.createdAt.toISOString(),
       payments: row.payments,
     },
   });

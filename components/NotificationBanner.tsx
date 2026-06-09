@@ -6,10 +6,11 @@ import { roketicon } from '@/images';
 import { triggerHapticFeedback } from '@/utils/ui';
 import { getNotificationSeenIds, markNotificationsAsSeen } from '@/utils/notification-seen';
 import type { NotificationItem } from '@/components/NotificationCenter';
+import { resolveNotificationSocialIconUrl } from '@/lib/notification-social-icon-url';
 
 function resolveMediaUrl(url: string): string {
   if (!url || typeof url !== 'string') return url;
-  const trimmed = url.trim();
+  const trimmed = resolveNotificationSocialIconUrl(url.trim());
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
   if (typeof window !== 'undefined' && (trimmed.startsWith('/') || trimmed.startsWith('./'))) {
     const path = trimmed.startsWith('/') ? trimmed : trimmed.slice(1);

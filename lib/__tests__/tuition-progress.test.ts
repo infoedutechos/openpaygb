@@ -135,6 +135,24 @@ describe("getProgrammePeriodDetails", () => {
 });
 
 describe("buildStudentProgrammeProgress", () => {
+  it("marks semester incomplete when only one of two fee lines is paid", () => {
+    const p = programme({
+      durationYears: 1,
+      semestersPerYear: 1,
+      fees: [
+        { id: "f-1", year: 1, semester: 1, tuitionUgx: 400, functionalFeesUgx: 100 },
+        { id: "f-2", year: 1, semester: 1, tuitionUgx: 300, functionalFeesUgx: 200 },
+      ],
+    });
+    const payments = [payment({ year: 1, semester: 1, includedFeeIds: ["f-1"] })];
+    const progress = buildStudentProgrammeProgress(p, payments);
+    expect(progress.completedSemesters).toBe(0);
+    expect(progress.remainingSemesters).toBe(1);
+    const period = progress.periods[0];
+    expect(period.isCompleted).toBe(false);
+    expect(period.paidSubtotalUgx).toBe(0);
+  });
+
   it("flags semester periods that have been paid in full via included fee ids", () => {
     const p = programme({
       durationYears: 2,

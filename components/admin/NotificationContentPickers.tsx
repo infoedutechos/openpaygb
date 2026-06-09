@@ -67,7 +67,7 @@ export function NotificationContentPickers({
       <div>
         <p className="text-xs font-semibold uppercase tracking-wide text-sky-200/90">Social media logos</p>
         <p className="mt-1 text-[11px] text-slate-500">
-          Sets the notification image (Telegram photo / in-app bell). Official brand icons via Simple Icons CDN.
+          Sets the notification image (Telegram photo / in-app bell). Brand icons are served from this app.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           {NOTIFICATION_SOCIAL_LOGO_LIBRARY.map((logo) => {
@@ -84,14 +84,13 @@ export function NotificationContentPickers({
                     : "border-white/10 bg-black/25 hover:border-white/25"
                 }`}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={logo.imageUrl}
-                  alt=""
-                  width={28}
-                  height={28}
-                  className="h-7 w-7 rounded-md bg-white/10 object-contain p-0.5"
-                />
+                <span
+                  className="flex h-7 w-7 items-center justify-center rounded-md text-lg"
+                  style={{ backgroundColor: `${logo.brandColor}22` }}
+                  aria-hidden
+                >
+                  {logo.emoji}
+                </span>
                 <span className="text-[9px] text-slate-400">{logo.name}</span>
               </button>
             );

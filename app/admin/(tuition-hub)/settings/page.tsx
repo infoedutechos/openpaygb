@@ -1,12 +1,12 @@
 "use client";
 
-import { AdminAccountPasswordSection } from "@/components/admin/AdminAccountPasswordSection";
+import Link from "next/link";
 import { TuitionHubCheckoutExplainer } from "@/components/admin/TuitionHubCheckoutExplainer";
 import { TenantList } from "@/components/tuition/TenantList";
 import { useAuthMe } from "@/hooks/useAuthMe";
 
 export default function AdminSettingsPage() {
-  const { data: authMe, loading } = useAuthMe();
+  const { data: authMe } = useAuthMe();
   const isMaster = authMe?.admin?.role === "master";
 
   return (
@@ -43,14 +43,13 @@ export default function AdminSettingsPage() {
         ) : null}
       </div>
 
-      <AdminAccountPasswordSection
-        absentTitle="Tuition admin password"
-        absentHint={
-          loading
-            ? "Loading session…"
-            : "Password changes apply to the email/password you use for this tuition hub. Sign in at /school/login with your school admin credentials."
-        }
-      />
+      <p className="text-sm text-slate-400">
+        Account details and password are on{" "}
+        <Link href="/admin/profile" className="text-cyan-300 underline hover:text-cyan-200">
+          Profile
+        </Link>
+        .
+      </p>
     </div>
   );
 }

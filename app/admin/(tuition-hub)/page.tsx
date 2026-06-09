@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useAuthMe } from "@/hooks/useAuthMe";
 import { clientFetchErrorMessage } from "@/lib/client-fetch-error";
 import { TenantList } from "@/components/tuition/TenantList";
+import { AdminUserProfileSection } from "@/components/profile/AdminUserProfileSection";
 
 type Summary = {
   viewer?: {
@@ -168,6 +169,8 @@ function AdminDashboardPageInner() {
 
   return (
     <div className="space-y-6">
+      <AdminUserProfileSection />
+
       {scopedSlug ? (
         <p className="rounded-lg border border-amber-500/30 bg-amber-950/25 px-4 py-2 text-sm text-amber-100/95">
           Viewing dashboard for <strong className="font-mono">{scopedSlug}</strong>.{" "}

@@ -13,7 +13,7 @@ describe("notification-content-libraries", () => {
 
   it("exposes social logo options with image URLs", () => {
     expect(NOTIFICATION_SOCIAL_LOGO_LIBRARY.some((l) => l.id === "telegram")).toBe(true);
-    expect(NOTIFICATION_SOCIAL_LOGO_LIBRARY[0].imageUrl).toMatch(/^https:\/\//);
+    expect(NOTIFICATION_SOCIAL_LOGO_LIBRARY[0].imageUrl).toMatch(/^\/api\/notification-social-icon\?id=/);
   });
 
   it("appends emoji without duplicating", () => {

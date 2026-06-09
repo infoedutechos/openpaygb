@@ -14,6 +14,9 @@ const PARTS = new Set<ProjectDownloadPart>([
   "knowledge-base",
   "notifications",
   "source",
+  "project-description",
+  "user-guides",
+  "documentation",
 ]);
 
 /** Master Admin: download full project bundle or partial exports. */

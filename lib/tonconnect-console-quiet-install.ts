@@ -2,6 +2,7 @@ import {
   isTonConnectAnalyticsNoise,
   isTonConnectBridgeConsoleNoise,
   isTonConnectWalletsListFetchNoise,
+  isNextDevConsoleNoise,
 } from "@/lib/tonconnect-ui-options";
 const GLOBAL_KEY = "__odelhubTonConnectConsoleQuietInstalled";
 
@@ -20,14 +21,15 @@ function shouldSuppressConsoleArgs(args: unknown[]): boolean {
   if (isTonConnectBridgeConsoleNoise(text)) return true;
   const errArg = args.find((a) => a instanceof Error);
   if (isTonConnectWalletsListFetchNoise(errArg ?? text)) return true;
-  return isTonConnectAnalyticsNoise(errArg ?? text);
+  if (isTonConnectAnalyticsNoise(errArg ?? text)) return true;
+  return isNextDevConsoleNoise(text);
 }
 
 function shouldSuppressLogArgs(args: unknown[]): boolean {
   const text = args
     .map((a) => (typeof a === "string" ? a : a instanceof Error ? a.message : String(a)))
     .join(" ");
-  return isTonConnectBridgeConsoleNoise(text);
+  return isTonConnectBridgeConsoleNoise(text) || isNextDevConsoleNoise(text);
 }
 
 /** Install before TonConnectUIProvider mounts — SDK logs wallet-list fetch errors on first paint. */

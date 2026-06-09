@@ -6,18 +6,25 @@ import {
   StudentPaymentsHistory,
   type StudentPaymentRow,
 } from "@/components/student/StudentPaymentsHistory";
+import { profileFromStudentMe } from "@/lib/profile-mappers";
+import { UserProfilePanel } from "@/components/profile/UserProfilePanel";
 
 type Me = {
   student: {
     id: string;
     name: string;
     email: string;
+    phone?: string;
     programmeCode: string;
     year: number;
     semester: number;
     organizationName: string;
     organizationSlug: string;
     portalSignInEnabled?: boolean;
+    googleSub?: string | null;
+    lastLoginAt?: string | null;
+    previousLoginAt?: string | null;
+    createdAt?: string | null;
     payments: StudentPaymentRow[];
   };
 };
@@ -65,21 +72,20 @@ export default function MyDashboardPage() {
   const s = data.student;
   const payHref = `/pay/${encodeURIComponent(s.organizationSlug)}`;
 
+  const profile = profileFromStudentMe(s);
+
   return (
     <section className="space-y-8">
+      <UserProfilePanel profile={profile} showWelcome />
+
       <header className="border-b border-white/10 pb-6">
-        <p className="text-xs uppercase tracking-wider text-cyan-400/80">Dashboard</p>
-        <h1 className="text-2xl font-semibold text-white">{s.name}</h1>
-        <p className="mt-1 text-sm text-slate-400">
-          {s.organizationName} · {s.programmeCode} · Year {s.year} · Semester {s.semester}
-        </p>
-        {s.email ? <p className="mt-1 text-xs text-slate-500">{s.email}</p> : null}
+        <p className="text-xs uppercase tracking-wider text-cyan-400/80">Quick links</p>
         <p className="mt-3 flex flex-wrap gap-3 text-sm text-slate-400">
           <Link href="/my/receipts" className="font-medium text-cyan-400 hover:text-cyan-300 hover:underline">
             Receipts & payment history
           </Link>
-          <Link href="/my/settings" className="font-medium text-cyan-400 hover:text-cyan-300 hover:underline">
-            Change portal password
+          <Link href="/my/profile#password" className="font-medium text-cyan-400 hover:text-cyan-300 hover:underline">
+            Profile &amp; password
           </Link>
         </p>
       </header>

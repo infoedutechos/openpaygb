@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton";
+import { WelcomeBackStrip } from "@/components/profile/WelcomeBackStrip";
+import { useAuthMe } from "@/hooks/useAuthMe";
 
 const nav: { href: string; label: string; desc?: string }[] = [
   { href: "/admin/master", label: "Overview", desc: "Platform totals" },
@@ -15,6 +17,16 @@ const nav: { href: string; label: string; desc?: string }[] = [
     href: "/admin/master/programmes",
     label: "Programmes",
     desc: "Years & semesters per year",
+  },
+  {
+    href: "/admin/master/tuition-balance",
+    label: "Tuition balance",
+    desc: "Paid & remaining by student",
+  },
+  {
+    href: "/admin/master#project-download",
+    label: "Docs & downloads",
+    desc: "Project description & user guides",
   },
   {
     href: "/admin/master#openpay-cards-overview",
@@ -47,9 +59,14 @@ const nav: { href: string; label: string; desc?: string }[] = [
     desc: "Deployment env audit",
   },
   {
+    href: "/admin/master#payment-providers",
+    label: "Payment providers",
+    desc: "PSP APIs & toggles",
+  },
+  {
     href: "/admin/master#mobile-money-providers",
     label: "Mobile money",
-    desc: "PSP webhooks",
+    desc: "Custom PSP webhooks",
   },
   {
     href: "/admin/master#partner-integrations",
@@ -77,6 +94,9 @@ export default function MasterManagerShell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { data: authMe } = useAuthMe();
+  const adminWelcomeName =
+    authMe?.admin?.name?.trim() || authMe?.admin?.email?.trim() || null;
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
@@ -97,10 +117,20 @@ export default function MasterManagerShell({
       ) : null}
       <div className="flex min-h-0 flex-1">
       <aside className="hidden w-56 shrink-0 flex-col border-r border-amber-500/15 bg-gradient-to-b from-[#15100c] to-[#0a0806] py-6 pl-4 pr-2 md:flex">
-        <div className="px-2 pb-6">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-400/90">Master</p>
-          <p className="mt-1 text-sm font-medium text-white">Manager console</p>
-          <p className="mt-2 text-[11px] leading-snug text-slate-500">ODEL HUB platform</p>
+        <div className="space-y-3 px-2 pb-6">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-400/90">Master</p>
+            <p className="mt-1 text-sm font-medium text-white">Manager console</p>
+            <p className="mt-2 text-[11px] leading-snug text-slate-500">ODEL HUB platform</p>
+          </div>
+          {adminWelcomeName ? (
+            <WelcomeBackStrip
+              name={adminWelcomeName}
+              role="master"
+              previousLoginAt={authMe?.admin?.previousLoginAt}
+              className="border-amber-500/20 bg-amber-950/20"
+            />
+          ) : null}
         </div>
 
         <nav className="flex flex-1 flex-col gap-0.5 text-sm">
@@ -124,11 +154,11 @@ export default function MasterManagerShell({
         <div className="mt-6 space-y-1 border-t border-amber-500/10 px-2 pt-4">
           <p className="px-3 text-[10px] uppercase tracking-wider text-slate-600">Operations</p>
           <Link
-            href="/admin/settings#password"
+            href="/admin/profile"
             className="block rounded-lg px-3 py-2 text-sm text-amber-200/85 hover:bg-amber-950/35 hover:text-amber-50"
           >
-            Change password
-            <span className="block text-[11px] text-slate-600">Tuition admin login (email)</span>
+            Profile
+            <span className="block text-[11px] text-slate-600">Account &amp; password</span>
           </Link>
           <Link
             href="/admin"
@@ -156,8 +186,8 @@ export default function MasterManagerShell({
               <p className="text-sm text-white">Manager</p>
             </div>
             <div className="flex shrink-0 gap-3 text-[11px]">
-              <Link href="/admin/settings#password" className="text-amber-400/90">
-                Password
+              <Link href="/admin/profile" className="text-amber-400/90">
+                Profile
               </Link>
               <Link href="/admin" className="text-cyan-400/80">
                 Tuition

@@ -20,6 +20,13 @@ import {
   sendMessageHtml,
 } from "@/lib/telegram/client";
 import { escapeHtml } from "@/lib/telegram/escape";
+import { getTmaAppUrl } from "@/lib/telegram/tma-url";
+import {
+  TMA_REPLY_KEYBOARD_ROUTES,
+  tmaLandingCombinedMarkup,
+  tmaLandingReplyKeyboard,
+  tmaOpenAppInlineKeyboard,
+} from "@/lib/telegram/keyboards";
 import type { CallbackQuery, ReplyMarkup, TelegramUpdate } from "@/lib/telegram/types";
 
 function displayName(from: { first_name?: string; last_name?: string; username?: string; id: number }) {
@@ -134,18 +141,72 @@ function semesterKeyboard(code: string, year: number): ReplyMarkup {
   };
 }
 
+function tmaLandingMessage(): string {
+  return [
+    "<b>ODEL HUB Pay</b>",
+    "<i>Tuition • Wallet • Cards</i>",
+    "",
+    "<b>Welcome to ODEL HUB Pay</b>",
+    "",
+    "Pay Tuition Fees",
+    "Manage OpenPayGB Card",
+    "View Receipts",
+    "Track Tuition Balance",
+    "",
+    "Tap <b>Open App</b> for the full Mini App experience.",
+  ].join("\n");
+}
+
 export async function handleTelegramUpdate(update: TelegramUpdate): Promise<void> {
-  if (update.message?.text?.startsWith("/start")) {
+  if (update.message?.text) {
     const chatId = update.message.chat.id;
-    const text = [
-      "<b>Welcome to ODEL Hub</b>",
-      "",
-      "<b>Tuition Waiver Program</b> — pay your fees in <b>TON</b> with on-chain receipts.",
-      "",
-      "Use the menu below or tap <b>Programmes</b> to choose your cohort, year, and semester.",
-    ].join("\n");
-    await sendMessageHtml(chatId, text, mainMenuKeyboard());
-    return;
+    const text = update.message.text.trim();
+
+    if (text.startsWith("/start")) {
+      await sendMessageHtml(chatId, tmaLandingMessage(), tmaLandingCombinedMarkup());
+      await sendMessageHtml(
+        chatId,
+        "Use the keyboard below for quick actions, or open the Mini App for the full dashboard.",
+        tmaLandingReplyKeyboard(),
+      );
+      return;
+    }
+
+    const tab = TMA_REPLY_KEYBOARD_ROUTES[text];
+    if (tab) {
+      const appUrl = getTmaAppUrl(tab);
+      if (tab === "support") {
+        const support = process.env.NEXT_PUBLIC_SUPPORT_TELEGRAM_URL?.trim();
+        await sendMessageHtml(
+          chatId,
+          support
+            ? `<b>Support</b>\n\n<a href="${escapeHtml(support)}">Contact support on Telegram</a>`
+            : "<b>Support</b>\n\nOpen the Mini App or email your school administrator.",
+          tmaOpenAppInlineKeyboard(tab),
+        );
+        return;
+      }
+      if (tab === "about") {
+        await sendMessageHtml(
+          chatId,
+          [
+            "<b>About ODEL HUB Pay</b>",
+            "",
+            "OpenPayGB tuition, virtual cards, and receipts — built as a Telegram Mini App.",
+            "",
+            `<a href="${escapeHtml(appUrl)}">Open App</a>`,
+          ].join("\n"),
+          tmaOpenAppInlineKeyboard(tab),
+        );
+        return;
+      }
+      await sendMessageHtml(
+        chatId,
+        `<b>${escapeHtml(text)}</b>\n\nOpening in the Mini App…`,
+        tmaOpenAppInlineKeyboard(tab),
+      );
+      return;
+    }
   }
 
   if (!update.callback_query) return;
@@ -175,6 +236,17 @@ async function dispatchCallback(
 ): Promise<void> {
   const tg = String(cq.from.id);
   const organizationId = await getTelegramOrganizationId();
+
+  if (data.startsWith("tma:")) {
+    const tab = data.slice(4) || "home";
+    await editMessageTextHtml(
+      chatId,
+      messageId,
+      `<b>ODEL HUB Pay</b>\n\nTap <b>Open App</b> to continue in the Mini App.`,
+      tmaOpenAppInlineKeyboard(tab),
+    );
+    return;
+  }
 
   if (data === "m:mn" || data === "m:hp") {
     if (data === "m:hp") {

@@ -68,8 +68,17 @@ const Body = z
  */
 export async function POST(req: Request) {
   try {
-    if (!isMbiyoConfigured()) {
-      return NextResponse.json({ error: mbiyoNotConfiguredMessage(), code: "mbiyo_not_configured" }, { status: 503 });
+    const { isMbiyoActiveForCheckout } = await import("@/lib/payment-provider-active");
+    if (!(await isMbiyoActiveForCheckout())) {
+      return NextResponse.json(
+        {
+          error: isMbiyoConfigured()
+            ? "Mbiyo is disabled by the platform master."
+            : mbiyoNotConfiguredMessage(),
+          code: "mbiyo_not_configured",
+        },
+        { status: 503 },
+      );
     }
 
     const ip = clientIp(req);

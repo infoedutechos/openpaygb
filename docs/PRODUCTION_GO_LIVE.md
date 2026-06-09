@@ -5,7 +5,7 @@ Use this after pushing code to `main` and connecting [Vercel](https://vercel.com
 ## 1. Vercel project
 
 1. Import or reconnect the GitHub repo.
-2. Production domain: `odelhubpay.vercel.app` (or your custom domain).
+2. Production domain: `odelpay.vercel.app` ([odeldevelopers-projects/odelhub-pay](https://vercel.com/odeldevelopers-projects/odelhub-pay/settings/domains)) — see [VERCEL_ODELPAY_DEPLOY.md](./VERCEL_ODELPAY_DEPLOY.md).
 3. **Redeploy** after every env change.
 
 If you see `DEPLOYMENT_NOT_FOUND`, the project was deleted or the domain points at a removed deployment — create a new deployment from the repo.
@@ -18,7 +18,7 @@ Copy from your local `.env` (never commit `.env`). Use **Live** Mbiyo keys on pr
 |----------|--------|
 | `DATABASE_URL` | MongoDB Atlas |
 | `JWT_SECRET` | Min 16 chars, random |
-| `NEXT_PUBLIC_APP_URL` | `https://odelhubpay.vercel.app` (no trailing slash) |
+| `NEXT_PUBLIC_APP_URL` | `https://odelpay.vercel.app` (no trailing slash) |
 | `NODE_ENV` | `production` (Vercel sets this automatically) |
 | `CRON_SECRET` | Random; required for `/api/cron/*` |
 | `ODELHUB_TON_WALLET_ADDRESS` | Real TON wallet (not placeholder) |
@@ -42,7 +42,7 @@ Workspace registration flow: [ORGANIZATION_REGISTRATION.md](./ORGANIZATION_REGIS
 
 | Field | Value |
 |-------|--------|
-| Webhook URL | `https://odelhubpay.vercel.app/api/webhooks/mbiyo` |
+| Webhook URL | `https://odelpay.vercel.app/api/webhooks/mbiyo` |
 | Webhook Secret | Identical to `MBIYO_WEBHOOK_SECRET` on Vercel |
 
 Details: [MBIYO_WEBHOOK_SETUP.md](./MBIYO_WEBHOOK_SETUP.md).

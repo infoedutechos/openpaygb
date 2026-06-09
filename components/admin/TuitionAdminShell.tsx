@@ -12,9 +12,13 @@ import { invalidateAuthMeCache, useAuthMe } from "@/hooks/useAuthMe";
 import { DbDegradedBanner } from "@/components/admin/DbDegradedBanner";
 import { WorkspaceEmailUnverifiedBanner } from "@/components/admin/WorkspaceEmailUnverifiedBanner";
 import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton";
+import { WelcomeBackStrip } from "@/components/profile/WelcomeBackStrip";
+import { adminRoleToProfileRole } from "@/lib/profile-mappers";
 
 const SEGMENTS: { suffix: string; label: string }[] = [
   { suffix: "", label: "Dashboard" },
+  { suffix: "/profile", label: "Profile" },
+  { suffix: "/tuition-balance", label: "Tuition balance" },
   { suffix: "/students", label: "Students" },
   { suffix: "/payments", label: "Payments" },
   { suffix: "/virtual-cards", label: "Virtual cards" },
@@ -52,6 +56,9 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
     : schoolName ?? (authMe.admin.role === "master" ? "Platform overview" : "Admin");
   const shellTitle = isSchoolAdmin ? schoolName! : "ODEL HUB";
   const shellSubtitle = isSchoolAdmin ? "School dashboard" : tenantLabel;
+  const adminWelcomeName =
+    authMe?.admin?.name?.trim() || authMe?.admin?.email?.trim() || null;
+  const adminWelcomeRole = authMe?.admin ? adminRoleToProfileRole(authMe.admin.role) : null;
 
   async function logout() {
     invalidateAuthMeCache();
@@ -75,6 +82,15 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
             </p>
           </div>
         </div>
+        {adminWelcomeName && adminWelcomeRole ? (
+          <div className="mb-4 px-2">
+            <WelcomeBackStrip
+              name={adminWelcomeName}
+              role={adminWelcomeRole}
+              previousLoginAt={authMe?.admin?.previousLoginAt}
+            />
+          </div>
+        ) : null}
         <nav className="flex flex-1 flex-col gap-0.5 text-sm">
           {navItems.map((item) => (
             <Link

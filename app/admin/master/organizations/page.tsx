@@ -5,9 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { PasswordRevealInput } from "@/components/PasswordRevealInput";
 import { MasterOrgMobileCard } from "@/components/admin/MasterOrgMobileCard";
-import {
-  workspaceEmailVerifyStatus,
-} from "@/lib/organization-workspace-verify";
+import { workspaceEmailVerifyStatus } from "@/lib/organization-workspace-verify-shared";
 
 type OrgRow = {
   id: string;
@@ -752,7 +750,21 @@ export default function MasterOrganizationsPage() {
                     <td className="max-w-[180px] truncate py-2 pr-3 text-slate-400" title={o.registrationContactEmail}>
                       {o.registrationContactEmail || "—"}
                     </td>
-                    <td className="py-2 pr-3 text-xs">{emailVerifyBadge(o)}</td>
+                    <td className="py-2 pr-3 text-xs">
+                      <div className="flex flex-col gap-1">
+                        {emailVerifyBadge(o)}
+                        {workspaceEmailVerifyStatus(o) === "pending" && o.registrationContactEmail ? (
+                          <button
+                            type="button"
+                            disabled={busyId === o.id}
+                            onClick={() => void resendVerification(o)}
+                            className="text-left text-[10px] font-medium text-amber-200/90 underline hover:text-amber-100 disabled:opacity-50"
+                          >
+                            Resend verify email
+                          </button>
+                        ) : null}
+                      </div>
+                    </td>
                     <td className="py-2 pr-3 align-middle">
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                         {o.hasFavicon ? (

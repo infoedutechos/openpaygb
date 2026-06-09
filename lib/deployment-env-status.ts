@@ -117,6 +117,8 @@ function groupWebhookUrl(id: string): string | null {
       return `${appUrl.replace(/\/$/, "")}/api/webhooks/mbiyo`;
     case "momo":
       return `${appUrl.replace(/\/$/, "")}/api/webhooks/momo`;
+    case "vixonpay":
+      return getVixonPayWebhookUrl();
     default:
       return null;
   }

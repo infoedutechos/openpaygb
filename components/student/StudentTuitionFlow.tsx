@@ -1212,7 +1212,9 @@ export function StudentTuitionFlow() {
     <div className="relative mx-auto min-h-[calc(100dvh-5.5rem)] max-w-md px-4 pb-28 pt-4 text-slate-100">
       <FlowBackdrop />
 
-      {error ? (
+      {insufficientFundsRail ? (
+        <InsufficientFundsTopupCallout rail={insufficientFundsRail} className="mb-4" />
+      ) : error ? (
         <p className="mb-4 rounded-xl border border-rose-500/40 bg-rose-950/40 px-3 py-2 text-sm text-rose-100 shadow-[0_0_20px_rgba(244,63,94,0.2)]">
           {error}
         </p>

@@ -53,9 +53,15 @@ export async function POST(req: Request) {
   try {
     const { warmDeploymentEnvCache } = await import("@/lib/deployment-env-resolve");
     await warmDeploymentEnvCache();
-    if (!isLivePayConfigured()) {
+    const { isLivePayActiveForCheckout } = await import("@/lib/payment-provider-active");
+    if (!(await isLivePayActiveForCheckout())) {
       return NextResponse.json(
-        { error: livePayNotConfiguredMessage(), code: "livepay_not_configured" },
+        {
+          error: isLivePayConfigured()
+            ? "LivePay is disabled by the platform master."
+            : livePayNotConfiguredMessage(),
+          code: "livepay_not_configured",
+        },
         { status: 503 },
       );
     }

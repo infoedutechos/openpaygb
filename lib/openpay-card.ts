@@ -118,6 +118,10 @@ export async function finalizeOpenPayCardMomoTopup(
   }
 
   const ok = await confirmOpenPayCardTopup(topupId, txHash);
+  if (ok) {
+    const { notifyTelegramCardTopup } = await import("@/lib/telegram/notify");
+    notifyTelegramCardTopup(topupId);
+  }
   return { action: ok ? "card_topup_confirmed" : "confirm_failed" };
 }
 

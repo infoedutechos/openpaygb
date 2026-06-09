@@ -222,9 +222,14 @@ model AdminUser {
   organizationId        String?                   @db.ObjectId
   organization          Organization?             @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   passwordResetTokens   AdminPasswordResetToken[]
+  /** Telegram user id for Mini App / bot admin sign-in. */
+  telegramId            String                    @default("")
+  lastLoginAt           DateTime?
+  previousLoginAt       DateTime?
   createdAt             DateTime                  @default(now())
   updatedAt             DateTime                  @updatedAt
 
+  @@index([telegramId])
   @@map("adminusers")
 }
 
@@ -309,6 +314,10 @@ model Student {
   semester             Int
   payments             Payment[]
   openPayCard          OpenPayCard?
+  lastLoginAt          DateTime?
+  previousLoginAt      DateTime?
+  /** Last tuition-due reminder sent via Telegram bot. */
+  telegramDueReminderAt DateTime?
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
 
@@ -455,6 +464,13 @@ model SiteUiSettings {
   openPayCardEnabled     Boolean @default(true)
   /** TON charged once to activate the platform virtual card (master-editable). */
   openPayCardIssueFeeTon Float   @default(5)
+  /** Official Telegram channel — shown in Master Admin and synced to the telegram_channel social link. */
+  telegramOfficialChannelName String @default("")
+  telegramOfficialChannelUrl  String @default("")
+  /** Numeric channel id for operator reference (e.g. -1003916461172); not used for Mini App sign-in. */
+  telegramOfficialChannelId   String @default("")
+  /** Master toggles for built-in payment providers — `{ "livepay": true, "mbiyo": false, ... }`. */
+  paymentProviderPolicy       Json   @default("{}")
   updatedAt        DateTime @updatedAt
   createdAt        DateTime @default(now())
 

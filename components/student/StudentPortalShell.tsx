@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton";
+import { WelcomeBackStrip } from "@/components/profile/WelcomeBackStrip";
+import { useStudentMe } from "@/hooks/useStudentMe";
+import { profileFromStudentMe } from "@/lib/profile-mappers";
 
 export type StudentPortalShellMode = "my" | "student";
 
@@ -19,15 +22,18 @@ function navActive(pathname: string, href: string): boolean {
   if (href === "/my/dashboard") return pathname === "/my/dashboard";
   if (href === "/my/receipts") return pathname === "/my/receipts";
   if (href === "/student/card") return pathname === "/student/card";
+  if (href === "/student/balance") return pathname === "/student/balance";
+  if (href === "/my/profile") return pathname === "/my/profile";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 const NAV: { href: string; label: string }[] = [
   { href: "/my/dashboard", label: "Dashboard" },
+  { href: "/my/profile", label: "Profile" },
+  { href: "/student/balance", label: "Tuition balance" },
   { href: "/my/receipts", label: "Receipts & history" },
   { href: "/student/pay", label: "Pay tuition" },
   { href: "/student/card", label: "Virtual card" },
-  { href: "/my/settings", label: "Password" },
   { href: "/student", label: "Student home" },
   { href: "/", label: "Lobby" },
 ];
@@ -41,6 +47,8 @@ export function StudentPortalShell({
 }) {
   const pathname = usePathname() ?? "";
   const router = useRouter();
+  const { data: studentMe } = useStudentMe();
+  const studentProfile = studentMe?.student ? profileFromStudentMe(studentMe.student) : null;
 
   if (mode === "student" && isBareStudentPath(pathname)) {
     return <>{children}</>;
@@ -55,9 +63,18 @@ export function StudentPortalShell({
   return (
     <div className="flex min-h-dvh bg-[#070b14] text-slate-200">
       <aside className="hidden w-56 shrink-0 flex-col border-r border-white/10 bg-[#0a101f] py-6 pl-4 pr-2 md:flex">
-        <div className="px-2 pb-6">
-          <p className="text-xs font-semibold uppercase tracking-wider text-cyan-300/90">Student portal</p>
-          <p className="mt-1 text-sm text-slate-500">Tuition & receipts</p>
+        <div className="space-y-3 px-2 pb-6">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-cyan-300/90">Student portal</p>
+            <p className="mt-1 text-sm text-slate-500">Tuition & receipts</p>
+          </div>
+          {studentProfile ? (
+            <WelcomeBackStrip
+              name={studentProfile.name}
+              role="student"
+              previousLoginAt={studentProfile.previousLoginAt}
+            />
+          ) : null}
         </div>
         <nav className="flex flex-1 flex-col gap-0.5 text-sm">
           {NAV.map((item) => (

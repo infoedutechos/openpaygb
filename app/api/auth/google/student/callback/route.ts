@@ -13,6 +13,7 @@ import {
 } from "@/lib/google-oauth-student";
 import { signStudentSignupSession, studentSignupCookieName } from "@/lib/student-signup-auth";
 import { signStudentToken, studentCookieName } from "@/lib/student-auth";
+import { recordStudentLogin } from "@/lib/record-login";
 
 function clearGoauthCookies(res: NextResponse) {
   const secure = process.env.NODE_ENV === "production";
@@ -81,6 +82,7 @@ export async function GET(req: Request) {
     }
 
     const student = matches[0];
+    await recordStudentLogin(student.id);
     const token = await signStudentToken({ sub: student.id, organizationId: student.organizationId });
     const res = NextResponse.redirect(new URL("/student", origin).toString());
     clearGoauthCookies(res);

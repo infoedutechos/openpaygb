@@ -30,7 +30,7 @@ VixonPay cannot reach `localhost`. Use a **tunnel** for local dev or your **prod
 | Field | Local dev (tunnel) | Production |
 |-------|-------------------|------------|
 | **Label** | `ODELHUB Pay — local dev` | `ODELHUB Pay — production` |
-| **Webhook URL** | `https://<tunnel-host>/api/webhooks/vixonpay` | `https://odelhubpay.vercel.app/api/webhooks/vixonpay` |
+| **Webhook URL** | `https://<tunnel-host>/api/webhooks/vixonpay` | `https://odelpay.vercel.app/api/webhooks/vixonpay` |
 
 Replace `<tunnel-host>` with the URL printed by `npm run tunnel:dev` (e.g. `lovely-camels-read.loca.lt`).  
 Tunnel URLs **change every restart** — update the dashboard and `VIXONPAY_WEBHOOK_URL` each time.
