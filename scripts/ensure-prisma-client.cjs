@@ -17,6 +17,9 @@ const SCHEMA_FIELD_MARKERS = [
   "NotificationRead",
   "PlatformAudience",
   "copilotBubbleImage",
+  "copilotAssistantName",
+  "schoolWorkspaceAutoGenerateAdminLogin",
+  "registrationWebsiteUrl",
 ];
 
 function paths(root) {

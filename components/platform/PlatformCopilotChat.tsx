@@ -163,13 +163,13 @@ export default function PlatformCopilotChat({
         { role: "assistant", content: reply, kbCitations: data.citations },
       ]);
     } catch {
-      setError("Could not reach the assistant. Please try again or use Talk to an agent.");
+      setError("Could not reach ODEL HUB Copilot. Please try again or use Talk to an agent.");
       setMessages((m) => [
         ...m,
         {
           role: "assistant",
           content:
-            "I'm having trouble connecting. You can still reach our team with **Talk to an agent** below.",
+            "ODEL HUB Copilot is having trouble connecting. You can still reach our team with **Talk to an agent** below.",
         },
       ]);
     } finally {
