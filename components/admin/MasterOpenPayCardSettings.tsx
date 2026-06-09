@@ -7,12 +7,14 @@ import { readJsonResponse } from "@/utils/read-json-response";
 
 type Settings = {
   enabled: boolean;
+  guestCardEnabled: boolean;
   issueFeeTon: number;
 };
 
 export function MasterOpenPayCardSettings() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [enabled, setEnabled] = useState(true);
+  const [guestCardEnabled, setGuestCardEnabled] = useState(true);
   const [feeDraft, setFeeDraft] = useState("5");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +53,7 @@ export function MasterOpenPayCardSettings() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ enabled, issueFeeTon: fee }),
+        body: JSON.stringify({ enabled, guestCardEnabled, issueFeeTon: fee }),
       });
       const parsed = await readJsonResponse<Settings>(r);
       if (!parsed.ok) throw new Error(parsed.error);
@@ -84,6 +86,17 @@ export function MasterOpenPayCardSettings() {
             className="h-4 w-4 rounded border-white/20 bg-black/40"
           />
           Offer OpenPayGB card to students
+        </label>
+
+        <label className="flex cursor-pointer items-center gap-3 text-sm text-slate-300">
+          <input
+            type="checkbox"
+            checked={guestCardEnabled}
+            onChange={(e) => setGuestCardEnabled(e.target.checked)}
+            disabled={!enabled}
+            className="h-4 w-4 rounded border-white/20 bg-black/40"
+          />
+          Allow guest card registration (email + phone OTP at /card/get)
         </label>
 
         <div>

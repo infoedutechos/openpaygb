@@ -5,11 +5,11 @@
   "crons": [
     {
       "path": "/api/cron/confirm-ton",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 6 * * *"
     },
     {
       "path": "/api/cron/expire-pending-payments",
-      "schedule": "0 * * * *"
+      "schedule": "0 7 * * *"
     },
     {
       "path": "/api/cron/telegram-tuition-reminders",

@@ -109,6 +109,7 @@ model Organization {
   partnerWebhookEndpoints    PartnerWebhookEndpoint[]
   mobileMoneyProviders       MobileMoneyProvider[]
   workspaceVerifyToken     OrganizationWorkspaceVerifyToken?
+  paymentRequests            PaymentRequest[]
 
   @@index([tenantStatus])
   @@index([registrationContactEmail])
@@ -345,10 +346,73 @@ model OpenPayCard {
   updatedAt        DateTime  @updatedAt
 
   topups               OpenPayCardTopup[]
+  sentTransfers        WalletTransfer[] @relation("WalletTransferFrom")
+  receivedTransfers    WalletTransfer[] @relation("WalletTransferTo")
 
   @@index([organizationId])
   @@index([status])
   @@map("openpay_cards")
+}
+
+/** Shareable tuition payment request (request money / receive via link). */
+model PaymentRequest {
+  id               String       @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId   String       @db.ObjectId
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdByAdminId String       @db.ObjectId
+  studentId        String?      @db.ObjectId
+  amountUgx        Int
+  memo             String       @default("")
+  programmeCode    String       @default("")
+  year             Int          @default(1)
+  semester         Int          @default(1)
+  feeSelectionMode String       @default("semester")
+  /** pending | paid | expired | cancelled */
+  status           String       @default("pending")
+  expiresAt        DateTime
+  paidPaymentId    String?      @db.ObjectId
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@index([organizationId, status])
+  @@index([expiresAt])
+  @@map("payment_requests")
+}
+
+/** P2P transfer between OpenPayGB card balances (same organization). */
+model WalletTransfer {
+  id           String      @id @default(auto()) @map("_id") @db.ObjectId
+  fromCardId   String      @db.ObjectId
+  fromCard     OpenPayCard @relation("WalletTransferFrom", fields: [fromCardId], references: [id], onDelete: Cascade)
+  toCardId     String      @db.ObjectId
+  toCard       OpenPayCard @relation("WalletTransferTo", fields: [toCardId], references: [id], onDelete: Cascade)
+  amountUgx    Int
+  memo         String      @default("")
+  status       String      @default("completed")
+  createdAt    DateTime    @default(now())
+
+  @@index([fromCardId])
+  @@index([toCardId])
+  @@map("wallet_transfers")
+}
+
+/** Email/phone OTP for guest OpenPayGB card registration (Option B). */
+model GuestCardOtp {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId String   @db.ObjectId
+  email          String
+  phone          String   @default("")
+  name           String   @default("")
+  programmeCode  String   @default("GUEST")
+  otpHash        String
+  attempts       Int      @default(0)
+  expiresAt      DateTime
+  verifiedAt     DateTime?
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId, email])
+  @@index([expiresAt])
+  @@map("guest_card_otps")
 }
 
 /** Top-up crediting OpenPayGB card UGX balance (TON on-chain or mobile money). */
@@ -462,6 +526,8 @@ model SiteUiSettings {
   schoolWorkspaceRequireMasterApproval Boolean @default(true)
   /** When false, students cannot opt in to OpenPayGB platform card or pay tuition with it. */
   openPayCardEnabled     Boolean @default(true)
+  /** When false, guests cannot register for a platform card via email/phone OTP (Option B). */
+  guestCardEnabled       Boolean @default(true)
   /** TON charged once to activate the platform virtual card (master-editable). */
   openPayCardIssueFeeTon Float   @default(5)
   /** Official Telegram channel — shown in Master Admin and synced to the telegram_channel social link. */

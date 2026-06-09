@@ -398,6 +398,30 @@ export function PayWizard({
     void loadGuestBalance(sid);
   }, [searchParams, orgSlug, loadGuestBalance]);
 
+  useEffect(() => {
+    const requestId = searchParams.get("request")?.trim();
+    if (!requestId) return;
+    let cancelled = false;
+    void fetch(`/api/public/payment-requests/${encodeURIComponent(requestId)}`)
+      .then(async (r) => (r.ok ? r.json() : null))
+      .then((j: { request?: { studentId?: string | null; programmeCode?: string; year?: number; semester?: number; amountUgx?: number; memo?: string } } | null) => {
+        if (cancelled || !j?.request) return;
+        const req = j.request;
+        if (req.studentId) {
+          setCheckoutStudentId(req.studentId);
+          void loadGuestBalance(req.studentId);
+        }
+        if (req.programmeCode) setCode(req.programmeCode);
+        if (req.year) setYear(req.year);
+        if (req.semester) setSemester(req.semester);
+        if (req.memo) setPaymentMemo(req.memo);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams, loadGuestBalance]);
+
   async function claimCheckoutSession() {
     if (!checkoutStudentId) return;
     setError(null);

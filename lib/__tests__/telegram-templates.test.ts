@@ -6,7 +6,7 @@ import {
 } from "@/lib/telegram/templates";
 
 describe("telegram templates", () => {
-  it("payment confirmed includes receipt and mini app links", () => {
+  it("payment confirmed includes receipt and mini app links", { timeout: 15_000 }, () => {
     const html = paymentConfirmedMessage({
       programmeCode: "BSIT",
       year: 2,

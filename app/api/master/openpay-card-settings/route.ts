@@ -9,6 +9,7 @@ import { apiErrorResponse } from "@/lib/api-error";
 
 const PatchBody = z.object({
   enabled: z.boolean().optional(),
+  guestCardEnabled: z.boolean().optional(),
   issueFeeTon: z.number().positive().max(10_000).optional(),
 });
 
