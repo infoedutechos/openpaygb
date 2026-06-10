@@ -340,7 +340,35 @@ export function MasterKnowledgeBaseSettings() {
         {saving ? "Saving…" : "Save article"}
       </button>
 
-      <div className="overflow-x-auto rounded-lg border border-[var(--border)]">
+      <div className="space-y-3 lg:hidden">
+        {loading ? (
+          <p className="py-4 text-sm text-slate-500">Loading…</p>
+        ) : articles.length === 0 ? (
+          <p className="py-4 text-sm text-slate-500">No articles — save one or re-import seed.</p>
+        ) : (
+          articles.map((a) => (
+            <article
+              key={a.id}
+              className="rounded-lg border border-[var(--border)] bg-black/20 p-4 text-sm text-slate-300"
+            >
+              <p className="font-mono text-xs text-emerald-200/90">{a.slug}</p>
+              <p className="mt-1 font-medium text-white">{a.title}</p>
+              <p className="mt-2 text-xs text-slate-500">
+                {a.audience} · {a.source}
+              </p>
+              <button
+                type="button"
+                onClick={() => editRow(a)}
+                className="mt-3 text-xs font-semibold text-sky-300 hover:underline"
+              >
+                Edit
+              </button>
+            </article>
+          ))
+        )}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-lg border border-[var(--border)] lg:block">
         <table className="min-w-full text-left text-xs text-slate-300">
           <thead className="bg-slate-900/60 text-slate-500 uppercase tracking-wide">
             <tr>

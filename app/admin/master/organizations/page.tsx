@@ -612,6 +612,7 @@ export default function MasterOrganizationsPage() {
                 <tr className="border-b border-[var(--border)] text-xs uppercase tracking-wide text-slate-500">
                   <th className="py-2 pr-3">Slug</th>
                   <th className="py-2 pr-3">Name</th>
+                  <th className="py-2 pr-3">Unit / parent</th>
                   <th className="py-2 pr-3">Status</th>
                   <th className="py-2 pr-3">Counts</th>
                   <th className="py-2 pr-3">TON treasury</th>

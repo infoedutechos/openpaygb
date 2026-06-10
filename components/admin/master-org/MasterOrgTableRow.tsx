@@ -7,6 +7,7 @@ import { MasterOrgEmailVerify } from "@/components/admin/master-org/MasterOrgEma
 import { MasterOrgFaviconField } from "@/components/admin/master-org/MasterOrgFaviconField";
 import { MasterOrgFeeField } from "@/components/admin/master-org/MasterOrgFeeField";
 import { MasterOrgFxField } from "@/components/admin/master-org/MasterOrgFxField";
+import { MasterOrgUnitSummary } from "@/components/admin/master-org/MasterOrgUnitSummary";
 import { MasterOrgWalletField } from "@/components/admin/master-org/MasterOrgWalletField";
 
 type Props = {
@@ -23,6 +24,9 @@ export function MasterOrgTableRow({ org, drafts, busy, handlers, faviconInputRef
     <tr className="border-b border-[var(--border)]/80">
       <td className="py-2 pr-3 font-mono text-cyan-200/90">{org.slug}</td>
       <td className="py-2 pr-3 text-white">{org.name}</td>
+      <td className="max-w-[160px] py-2 pr-3 align-top">
+        <MasterOrgUnitSummary org={org} />
+      </td>
       <td className={`py-2 pr-3 font-medium ${masterOrgStatusTone(org.tenantStatus)}`}>{org.tenantStatus}</td>
       <td className="py-2 pr-3 text-slate-400">
         p:{org._count.programmes} s:{org._count.students} pay:{org._count.payments}

@@ -263,7 +263,63 @@ export function MasterPlatformCommunicationsSettings() {
         </div>
       </form>
 
-      <div className="overflow-x-auto rounded-lg border border-white/10">
+      <div className="space-y-3 lg:hidden">
+        {loading ? (
+          <p className="py-4 text-sm text-slate-500">Loading…</p>
+        ) : rows.length === 0 ? (
+          <p className="py-4 text-sm text-slate-500">No notifications yet.</p>
+        ) : (
+          rows.map((row) => (
+            <article
+              key={row.id}
+              className="rounded-lg border border-white/10 bg-black/20 p-4 text-sm text-slate-300"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <p className="font-medium text-white">{row.title}</p>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
+                    row.isActive ? "bg-emerald-500/15 text-emerald-300" : "bg-slate-500/15 text-slate-400"
+                  }`}
+                >
+                  {row.isActive ? "active" : "hidden"}
+                </span>
+              </div>
+              <p className="mt-2 text-xs text-slate-500 line-clamp-3">{row.body}</p>
+              <p className="mt-2 text-xs text-slate-600">
+                {row.audience} · {new Date(row.createdAt).toLocaleString()}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void toggleActive(row)}
+                  className="rounded border border-white/15 px-2 py-1 text-xs hover:bg-white/5 disabled:opacity-50"
+                >
+                  {row.isActive ? "Hide" : "Show"}
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void recallTelegram(row)}
+                  className="rounded border border-violet-500/30 px-2 py-1 text-xs text-violet-200 hover:bg-violet-950/30 disabled:opacity-50"
+                >
+                  Recall Telegram
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void remove(row)}
+                  className="rounded border border-rose-500/30 px-2 py-1 text-xs text-rose-300 hover:bg-rose-950/30 disabled:opacity-50"
+                >
+                  Delete
+                </button>
+              </div>
+            </article>
+          ))
+        )}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-lg border border-white/10 lg:block">
         <table className="min-w-full text-left text-xs text-slate-300">
           <thead className="bg-slate-900/60 text-slate-500 uppercase tracking-wide">
             <tr>

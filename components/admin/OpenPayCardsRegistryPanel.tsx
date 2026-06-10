@@ -129,7 +129,41 @@ export function OpenPayCardsRegistryPanel({
         </button>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-[var(--border)]">
+      <div className="space-y-3 lg:hidden">
+        {loading && !data ? (
+          <p className="py-4 text-sm text-slate-500">Loading cards…</p>
+        ) : !data?.cards.length ? (
+          <p className="py-4 text-sm text-slate-500">No virtual cards yet.</p>
+        ) : (
+          data.cards.map((c) => (
+            <article
+              key={c.id}
+              className="rounded-lg border border-[var(--border)] bg-black/20 p-4 text-sm text-slate-300"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <p className="font-medium text-white">{c.studentName}</p>
+                  <p className="text-xs text-slate-500">{c.studentEmail}</p>
+                </div>
+                <StatusBadge status={c.status} />
+              </div>
+              {showSchoolColumn ? <p className="mt-2 text-xs text-slate-500">{c.organizationName}</p> : null}
+              <p className="mt-1 font-mono text-xs text-violet-200/90">{c.maskedPan || "—"}</p>
+              <p className="mt-1 font-mono text-[10px] text-slate-600">{c.programmeCode}</p>
+              <div className="mt-3 flex flex-wrap gap-4 text-xs tabular-nums">
+                <span>
+                  <span className="text-slate-600">Balance:</span> UGX {c.balanceUgx.toLocaleString()}
+                </span>
+                <span>
+                  <span className="text-slate-600">Top-ups:</span> {c.topupCount}
+                </span>
+              </div>
+            </article>
+          ))
+        )}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-lg border border-[var(--border)] lg:block">
         <table className="min-w-full text-left text-xs text-slate-300">
           <thead className="bg-slate-900/60 text-slate-500 uppercase tracking-wide">
             <tr>

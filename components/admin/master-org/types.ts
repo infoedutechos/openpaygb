@@ -2,6 +2,11 @@ export type MasterOrgRow = {
   id: string;
   name: string;
   slug: string;
+  unitKind?: string | null;
+  operatesUnitKinds?: string[];
+  parentOrganizationId?: string | null;
+  externalParentName?: string | null;
+  parentOrganization?: { name: string; slug: string } | null;
   tenantStatus: string;
   registrationContactEmail: string;
   registrationEmailVerifiedAt: string | null;

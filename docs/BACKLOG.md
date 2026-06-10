@@ -51,6 +51,10 @@
 | B-UX-05b | Master org UI consolidation | Shared `components/admin/master-org/*` — table row + mobile card + resend on both |
 | P4 | URA game routes `apiErrorResponse` | `npm run migrate:game-api-errors` — game/play + legacy admin routes hardened |
 | P3 | OpenPayGB virtual card program | Investigation complete — closed-loop shipped; acquiring + LivePay issuing next ([VIRTUAL_CARD_INVESTIGATION.md](./VIRTUAL_CARD_INVESTIGATION.md)) |
+| B-UX-12 | Ledger receipts + school units | TEAM UNIVERSITY ledger format; `OrganizationUnitKind` registration; [LEDGER_RECEIPTS_AND_SCHOOL_UNITS.md](./LEDGER_RECEIPTS_AND_SCHOOL_UNITS.md) |
+| B-UX-13 | Master settings mobile cards | KB, communications, OpenPay registry — `lg` card/table split |
+| B-UX-14 | Master org unit column | Unit type + parent on approval table/cards; `GET /api/master/organizations` |
+| B-TMA-08 | TMA admin mobile-safe deep-links | `TmaApp` tab panels → `/admin/students`, `/admin/master/organizations`, etc. |
 
 ---
 

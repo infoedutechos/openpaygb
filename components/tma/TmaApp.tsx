@@ -25,6 +25,53 @@ const ADMIN_TABS = [
   { id: "settings", label: "Settings", icon: "⚙" },
 ] as const;
 
+/** Web admin routes with mobile card layouts — safe to open from TMA deep-links. */
+const SCHOOL_ADMIN_SAFE_ROUTES: Record<string, { href: string; label: string; hint: string }> = {
+  students: { href: "/admin/students", label: "Students", hint: "Mobile student cards" },
+  payments: { href: "/admin/payments", label: "Payments", hint: "Mobile payment list" },
+  reports: { href: "/admin/reports", label: "Reports", hint: "Responsive charts" },
+  settings: { href: "/admin/profile", label: "Profile & settings", hint: "Account and password" },
+};
+
+const MASTER_ADMIN_SAFE_ROUTES: Record<string, { href: string; label: string; hint: string }> = {
+  students: {
+    href: "/admin/master/organizations",
+    label: "Organizations",
+    hint: "School approval — mobile cards",
+  },
+  payments: { href: "/admin/payments", label: "Payments", hint: "Mobile payment list" },
+  reports: { href: "/admin/reports", label: "Reports", hint: "Responsive charts" },
+  settings: { href: "/admin/master", label: "Manager console", hint: "Master overview" },
+};
+
+function TmaAdminTabLink({
+  tab,
+  routes,
+}: {
+  tab: string;
+  routes: Record<string, { href: string; label: string; hint: string }>;
+}) {
+  const route = routes[tab];
+  if (!route) {
+    return (
+      <div className="p-4">
+        <Link href="/admin" className="tma-btn">
+          Open admin console
+        </Link>
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-3 p-4">
+      <h2 className="text-lg font-semibold">{route.label}</h2>
+      <p className="text-sm opacity-70">{route.hint}</p>
+      <Link href={route.href} className="tma-btn">
+        Open {route.label}
+      </Link>
+    </div>
+  );
+}
+
 function fmtUgx(n: number) {
   return `UGX ${n.toLocaleString()}`;
 }
@@ -282,9 +329,9 @@ function SchoolAdminApp({ data, tab, setTab }: { data: TmaMePayload; tab: string
           </div>
           <div className="grid grid-cols-2 gap-2">
             {[
-              { label: "Students", href: "/admin/students" },
-              { label: "Payments", href: "/admin/payments" },
-              { label: "Reports", href: "/admin/reports" },
+              { label: "Students", href: SCHOOL_ADMIN_SAFE_ROUTES.students.href },
+              { label: "Payments", href: SCHOOL_ADMIN_SAFE_ROUTES.payments.href },
+              { label: "Reports", href: SCHOOL_ADMIN_SAFE_ROUTES.reports.href },
               { label: "Programmes", href: "/admin/programmes" },
             ].map((item) => (
               <Link key={item.href} href={item.href} className="tma-btn-secondary tma-btn text-sm">
@@ -294,11 +341,7 @@ function SchoolAdminApp({ data, tab, setTab }: { data: TmaMePayload; tab: string
           </div>
         </div>
       ) : (
-        <div className="p-4">
-          <Link href="/admin" className="tma-btn">
-            Open full admin console
-          </Link>
-        </div>
+        <TmaAdminTabLink tab={tab} routes={SCHOOL_ADMIN_SAFE_ROUTES} />
       )}
       <nav className="tma-nav">
         {ADMIN_TABS.map((t) => (
@@ -320,44 +363,49 @@ function SchoolAdminApp({ data, tab, setTab }: { data: TmaMePayload; tab: string
 
 function MasterAdminApp({ data, tab, setTab }: { data: TmaMePayload; tab: string; setTab: (t: string) => void }) {
   const m = data.master;
+  const dashboard = tab === "dashboard" || tab === "home";
   return (
     <div>
-      <div className="space-y-3 p-4">
-        <h2 className="text-lg font-semibold">ODEL HUB Master Console</h2>
-        <div className="tma-card !m-0 grid grid-cols-2 gap-3 text-sm">
-          <div>
-            <p className="opacity-60">Active schools</p>
-            <p className="text-xl font-bold">{m?.activeSchools?.toLocaleString() ?? "—"}</p>
+      {dashboard ? (
+        <div className="space-y-3 p-4">
+          <h2 className="text-lg font-semibold">ODEL HUB Master Console</h2>
+          <div className="tma-card !m-0 grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <p className="opacity-60">Active schools</p>
+              <p className="text-xl font-bold">{m?.activeSchools?.toLocaleString() ?? "—"}</p>
+            </div>
+            <div>
+              <p className="opacity-60">Students</p>
+              <p className="text-xl font-bold">{m?.totalStudents?.toLocaleString() ?? "—"}</p>
+            </div>
+            <div>
+              <p className="opacity-60">Payments</p>
+              <p className="text-xl font-bold">{m?.totalPayments?.toLocaleString() ?? "—"}</p>
+            </div>
+            <div>
+              <p className="opacity-60">Active cards</p>
+              <p className="text-xl font-bold">{m?.activeCards?.toLocaleString() ?? "—"}</p>
+            </div>
           </div>
-          <div>
-            <p className="opacity-60">Students</p>
-            <p className="text-xl font-bold">{m?.totalStudents?.toLocaleString() ?? "—"}</p>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { label: "Organizations", href: MASTER_ADMIN_SAFE_ROUTES.students.href },
+              { label: "Payments", href: MASTER_ADMIN_SAFE_ROUTES.payments.href },
+              { label: "Cards", href: "/admin/master#openpay-cards-overview" },
+              { label: "Reports", href: MASTER_ADMIN_SAFE_ROUTES.reports.href },
+            ].map((item) => (
+              <Link key={item.href} href={item.href} className="tma-btn-secondary tma-btn text-sm">
+                {item.label}
+              </Link>
+            ))}
           </div>
-          <div>
-            <p className="opacity-60">Payments</p>
-            <p className="text-xl font-bold">{m?.totalPayments?.toLocaleString() ?? "—"}</p>
-          </div>
-          <div>
-            <p className="opacity-60">Active cards</p>
-            <p className="text-xl font-bold">{m?.activeCards?.toLocaleString() ?? "—"}</p>
-          </div>
+          <Link href="/admin/master" className="tma-btn">
+            Open manager console
+          </Link>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          {[
-            { label: "Organizations", href: "/admin/master/organizations" },
-            { label: "Payments", href: "/admin/payments" },
-            { label: "Cards", href: "/admin/master#openpay-cards-overview" },
-            { label: "Reports", href: "/admin/reports" },
-          ].map((item) => (
-            <Link key={item.href} href={item.href} className="tma-btn-secondary tma-btn text-sm">
-              {item.label}
-            </Link>
-          ))}
-        </div>
-        <Link href="/admin/master" className="tma-btn">
-          Open manager console
-        </Link>
-      </div>
+      ) : (
+        <TmaAdminTabLink tab={tab} routes={MASTER_ADMIN_SAFE_ROUTES} />
+      )}
       <nav className="tma-nav">
         {ADMIN_TABS.map((t) => (
           <button

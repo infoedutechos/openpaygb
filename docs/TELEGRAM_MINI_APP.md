@@ -113,8 +113,8 @@ Implementation: `lib/telegram/flow.ts`, `lib/telegram/keyboards.ts`
 | **Pay** | Institution, programme, amount, methods → in-app checkout |
 | **History** | Receipt list, detail, PDF download, Telegram share |
 | **Profile** | Welcome back + account details |
-| **School admin** | Students, collected fees, links to admin console |
-| **Master admin** | Schools, students, payments, active cards, manager links |
+| **School admin** | Students, collected fees, links to mobile-safe admin routes (`/admin/students`, `/admin/payments`, …) |
+| **Master admin** | Schools, students, payments, active cards, manager links (`/admin/master/organizations`, `#openpay-cards-overview`) |
 
 **Student bottom nav:** Home · Card · Pay · History · Profile  
 

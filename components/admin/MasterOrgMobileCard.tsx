@@ -5,6 +5,7 @@ import { MasterOrgEmailVerify } from "@/components/admin/master-org/MasterOrgEma
 import { MasterOrgFaviconField } from "@/components/admin/master-org/MasterOrgFaviconField";
 import { MasterOrgFeeField } from "@/components/admin/master-org/MasterOrgFeeField";
 import { MasterOrgFxField } from "@/components/admin/master-org/MasterOrgFxField";
+import { MasterOrgUnitSummary } from "@/components/admin/master-org/MasterOrgUnitSummary";
 import { MasterOrgWalletField } from "@/components/admin/master-org/MasterOrgWalletField";
 import type { MasterOrgRow } from "@/components/admin/master-org/types";
 import { masterOrgStatusTone } from "@/components/admin/master-org/utils";
@@ -75,6 +76,7 @@ export function MasterOrgMobileCard({
         </div>
         <p className={`text-xs font-medium ${masterOrgStatusTone(org.tenantStatus)}`}>{org.tenantStatus}</p>
       </div>
+      <MasterOrgUnitSummary org={org} compact />
       <p className="mt-2 text-xs text-slate-500">
         p:{org._count.programmes} · s:{org._count.students} · pay:{org._count.payments}
       </p>
