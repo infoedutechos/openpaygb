@@ -231,7 +231,9 @@ These handlers are not namespaced under `/api/admin/`. Several are still used fr
 - `/api/public/guest-card/send-otp` — `app/api/public/guest-card/send-otp/route.ts`
 - `/api/public/livepay-config` — `app/api/public/livepay-config/route.ts`
 - `/api/public/mbiyo-config` — `app/api/public/mbiyo-config/route.ts`
+- `/api/public/momo-config` — `app/api/public/momo-config/route.ts`
 - `/api/public/openpay-card-config` — `app/api/public/openpay-card-config/route.ts`
+- `/api/public/organization-parent-search` — `app/api/public/organization-parent-search/route.ts`
 - `/api/public/organization-register/resend` — `app/api/public/organization-register/resend/route.ts`
 - `/api/public/organization-register` — `app/api/public/organization-register/route.ts`
 - `/api/public/organization-register/verify` — `app/api/public/organization-register/verify/route.ts`
@@ -241,7 +243,9 @@ These handlers are not namespaced under `/api/admin/`. Several are still used fr
 - `/api/public/school-workspace-registration-policy` — `app/api/public/school-workspace-registration-policy/route.ts`
 - `/api/public/site-ui` — `app/api/public/site-ui/route.ts`
 - `/api/public/social-icon/[key]` — `app/api/public/social-icon/[key]/route.ts`
+- `/api/public/telegram-config` — `app/api/public/telegram-config/route.ts`
 - `/api/public/vixonpay-config` — `app/api/public/vixonpay-config/route.ts`
+- `/api/public/webhook-alignment` — `app/api/public/webhook-alignment/route.ts`
 - `/api/public/workspace-status` — `app/api/public/workspace-status/route.ts`
 - `/api/published-activities` — `app/api/published-activities/route.ts`
 - `/api/quiz` — `app/api/quiz/route.ts`

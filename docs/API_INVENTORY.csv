@@ -203,7 +203,9 @@ url_path,relative_file,http_methods,method_count
 /api/public/guest-card/send-otp,app/api/public/guest-card/send-otp/route.ts,POST,1
 /api/public/livepay-config,app/api/public/livepay-config/route.ts,GET,1
 /api/public/mbiyo-config,app/api/public/mbiyo-config/route.ts,GET,1
+/api/public/momo-config,app/api/public/momo-config/route.ts,GET,1
 /api/public/openpay-card-config,app/api/public/openpay-card-config/route.ts,GET,1
+/api/public/organization-parent-search,app/api/public/organization-parent-search/route.ts,GET,1
 /api/public/organization-register/resend,app/api/public/organization-register/resend/route.ts,POST,1
 /api/public/organization-register,app/api/public/organization-register/route.ts,POST,1
 /api/public/organization-register/verify,app/api/public/organization-register/verify/route.ts,GET,1
@@ -213,7 +215,9 @@ url_path,relative_file,http_methods,method_count
 /api/public/school-workspace-registration-policy,app/api/public/school-workspace-registration-policy/route.ts,GET,1
 /api/public/site-ui,app/api/public/site-ui/route.ts,GET,1
 /api/public/social-icon/[key],app/api/public/social-icon/[key]/route.ts,GET,1
+/api/public/telegram-config,app/api/public/telegram-config/route.ts,GET,1
 /api/public/vixonpay-config,app/api/public/vixonpay-config/route.ts,GET,1
+/api/public/webhook-alignment,app/api/public/webhook-alignment/route.ts,GET,1
 /api/public/workspace-status,app/api/public/workspace-status/route.ts,GET,1
 /api/published-activities,app/api/published-activities/route.ts,GET,1
 /api/quiz,app/api/quiz/route.ts,GET,1

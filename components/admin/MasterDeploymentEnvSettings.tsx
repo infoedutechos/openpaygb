@@ -106,7 +106,12 @@ export function MasterDeploymentEnvSettings() {
   const [loading, setLoading] = useState(true);
   const [probing, setProbing] = useState(false);
   const [savingGroup, setSavingGroup] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({ core: true, livepay: true, relworx: true });
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({
+    core: true,
+    telegram: true,
+    livepay: true,
+    relworx: true,
+  });
   const [copied, setCopied] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [addingRegistry, setAddingRegistry] = useState(false);

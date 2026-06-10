@@ -8,6 +8,9 @@ type TelegramHubSettings = {
   officialChannelUrl: string;
   officialChannelId: string;
   botUsername: string | null;
+  botTokenConfigured: boolean;
+  webhookUrl: string;
+  webhookSecretConfigured: boolean;
   miniAppPath: string;
   masterEmail: string;
   masterTelegramId: string | null;
@@ -158,10 +161,36 @@ export function MasterTelegramHubSettings() {
             </dd>
           </div>
           <div>
+            <dt className="text-slate-500">Bot token</dt>
+            <dd className={data?.botTokenConfigured ? "text-emerald-300" : "text-amber-300"}>
+              {data?.botTokenConfigured ? "Configured (Master / Vercel)" : "Not set — add in Deployment environment"}
+            </dd>
+          </div>
+          <div>
             <dt className="text-slate-500">Mini App path</dt>
             <dd className="font-mono text-slate-200">{data?.miniAppPath ?? "/tma"}</dd>
           </div>
+          <div>
+            <dt className="text-slate-500">Webhook secret</dt>
+            <dd className={data?.webhookSecretConfigured ? "text-emerald-300" : "text-slate-500"}>
+              {data?.webhookSecretConfigured ? "Configured" : "Optional"}
+            </dd>
+          </div>
         </dl>
+        {data?.webhookUrl ? (
+          <p className="mt-3 text-[11px] text-slate-500">
+            Webhook URL: <code className="text-cyan-200/90">{data.webhookUrl}</code> — set via{" "}
+            <code className="text-slate-400">npm run telegram:set-webhook</code>
+          </p>
+        ) : null}
+        <p className="mt-3 text-[11px] text-slate-500">
+          Paste <code className="text-xs">BOT_TOKEN</code> or <code className="text-xs">TELEGRAM_BOT_TOKEN</code> in{" "}
+          <a href="#deployment-environment" className="text-cyan-300 underline hover:text-cyan-200">
+            Deployment environment
+          </a>
+          , then <strong className="text-slate-400">Sync to Vercel</strong>. Run{" "}
+          <code className="text-xs">npm run telegram:alignment-check</code> locally.
+        </p>
       </div>
 
       <div className="mt-4 rounded-lg border border-amber-500/25 bg-amber-950/20 p-4">

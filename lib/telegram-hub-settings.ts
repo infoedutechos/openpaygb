@@ -1,6 +1,8 @@
 import "server-only";
 
+import { warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 import { prisma } from "@/lib/prisma";
+import { getTelegramPublicStatus } from "@/lib/telegram-public-status";
 import {
   invalidatePublicSiteUiCache,
   mergeSocialLinks,
@@ -19,6 +21,9 @@ export type TelegramHubSettings = {
   officialChannelUrl: string;
   officialChannelId: string;
   botUsername: string | null;
+  botTokenConfigured: boolean;
+  webhookUrl: string;
+  webhookSecretConfigured: boolean;
   miniAppPath: string;
   masterEmail: string;
   masterTelegramId: string | null;
@@ -147,12 +152,18 @@ export async function getTelegramHubSettings(master: {
 
   const { name, url, channelId } = resolveChannelFields(row);
 
+  await warmDeploymentEnvCache();
+  const telegram = getTelegramPublicStatus();
+
   return {
     officialChannelName: name,
     officialChannelUrl: url,
     officialChannelId: channelId,
-    botUsername: botUsernameFromEnv(),
-    miniAppPath: "/tma",
+    botUsername: telegram.botUsername ?? botUsernameFromEnv(),
+    botTokenConfigured: telegram.botTokenConfigured,
+    webhookUrl: telegram.webhookUrl,
+    webhookSecretConfigured: telegram.webhookSecretConfigured,
+    miniAppPath: telegram.miniAppPath,
     masterEmail: master.email,
     masterTelegramId: masterRow?.telegramId?.trim() || null,
   };

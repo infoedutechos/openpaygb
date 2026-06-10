@@ -41,6 +41,8 @@ Generated and synced via `npm run deployment:provision-sync`:
 - `MOMO_WEBHOOK_SECRET`, `MBIYO_WEBHOOK_SECRET`, `TELEGRAM_WEBHOOK_SECRET`
 - `LIVEPAY_WEBHOOK_SECRET`, `RELWORX_WEBHOOK_KEY`, `VIXONPAY_WEBHOOK_SECRET`
 
+**Telegram bot token** (`BOT_TOKEN` or `TELEGRAM_BOT_TOKEN`) is **not** auto-generated — paste from BotFather in Master Admin → **Deployment environment** → Telegram group, then **Sync to Vercel**. See [TELEGRAM_BOT_DEPLOYMENT.md](./TELEGRAM_BOT_DEPLOYMENT.md).
+
 Values live in local `.env` and Master Admin overrides (never commit `.env`).
 
 **Still manual:** `ODELHUB_TON_WALLET_ADDRESS` — replace placeholder with a real `UQ…` treasury wallet, then `npm run deployment:sync-vercel`.
@@ -52,6 +54,7 @@ Values live in local `.env` and Master Admin overrides (never commit `.env`).
 ```powershell
 npm run deployment:provision-sync   # generate secrets, save Master overrides, push to Vercel
 npm run deployment:sync-vercel      # re-push registry values only (no secret regeneration)
+npm run telegram:alignment-check      # bot token + webhook URL checklist
 npm run telegram:set-webhook        # register Telegram webhook on production URL
 npx vercel deploy --prod            # redeploy after env changes
 ```

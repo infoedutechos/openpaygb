@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReceiptBreakdown } from "@/lib/receipt-lines";
-import type { ReceiptLedger } from "@/lib/receipt-ledger";
+import type { ReceiptLedger } from "@/lib/receipt-ledger-types";
 import { ReceiptFeeBreakdown } from "@/components/receipt/ReceiptFeeBreakdown";
 import { ReceiptLedgerAccount } from "@/components/receipt/ReceiptLedgerAccount";
 import { TabbedCardPanel } from "@/components/ui/TabbedCardPanel";

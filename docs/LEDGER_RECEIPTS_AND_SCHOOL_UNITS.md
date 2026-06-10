@@ -24,7 +24,9 @@ Tuition receipts now include a **ledger account** section alongside the existing
 
 | Area | Path |
 |------|------|
-| Ledger builder | `lib/receipt-ledger.ts` |
+| Ledger builder (server) | `lib/receipt-ledger.ts` |
+| Client-safe types | `lib/receipt-ledger-types.ts` |
+| Client-safe date format | `lib/receipt-ledger-display.ts` |
 | Web UI (cards + `lg+` table) | `components/receipt/ReceiptLedgerAccount.tsx` |
 | Tabbed receipt panel | `components/receipt/ReceiptViewPanel.tsx`, `components/ui/TabbedCardPanel.tsx` |
 | Email HTML | `lib/receipt-ledger-html.ts` |

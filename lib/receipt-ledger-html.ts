@@ -1,5 +1,5 @@
-import type { ReceiptLedger } from "@/lib/receipt-ledger";
-import { formatLedgerDateDisplay } from "@/lib/receipt-ledger";
+import type { ReceiptLedger } from "@/lib/receipt-ledger-types";
+import { formatLedgerDateDisplay } from "@/lib/receipt-ledger-display";
 
 function money(n: number): string {
   if (n <= 0) return "";

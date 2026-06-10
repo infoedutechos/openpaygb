@@ -66,6 +66,7 @@
     "deployment:provision-sync": "node scripts/provision-and-sync-deployment-env.cjs",
     "deployment:sync-vercel": "node scripts/provision-and-sync-deployment-env.cjs --sync-only",
     "webhooks:alignment-check": "node scripts/print-webhook-alignment.cjs",
+    "telegram:alignment-check": "node scripts/print-telegram-alignment.cjs",
     "migrate:game-api-errors": "node scripts/migrate-game-api-errors.cjs",
     "admin:link-telegram": "npx tsx scripts/link-admin-telegram.ts",
     "admin:ensure-master-telegram": "npx tsx scripts/ensure-master-telegram.ts",

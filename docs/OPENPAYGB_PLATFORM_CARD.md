@@ -4,6 +4,8 @@ The **OpenPayGB platform card** is a **closed-loop UGX ledger** on ODEL HUB Pay 
 
 **Rail:** `openpay_card` · **Brand:** OpenPayGB · **Currency:** UGX balance
 
+**Related:** [VIRTUAL_CARD_INVESTIGATION.md](./VIRTUAL_CARD_INVESTIGATION.md) (closed-loop MVP shipped) · [TELEGRAM_MINI_APP.md](./TELEGRAM_MINI_APP.md) (TMA Card tab)
+
 ---
 
 ## Summary matrix

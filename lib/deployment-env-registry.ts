@@ -402,14 +402,16 @@ export const DEPLOYMENT_ENV_GROUPS: EnvGroupDefinition[] = [
       {
         name: "BOT_TOKEN",
         label: "Play / broadcast bot token",
-        description: "Primary token for DMs, Play admin broadcasts, and Master platform notifications.",
+        description:
+          "Primary BotFather token. Save in Master Admin → Deployment environment, then Sync to Vercel. See docs/TELEGRAM_BOT_DEPLOYMENT.md.",
         sensitive: true,
         requirement: "optional",
       },
       {
         name: "TELEGRAM_BOT_TOKEN",
         label: "Tuition bot token",
-        description: "Tuition webhook bot (falls back when BOT_TOKEN is unset for notify helpers).",
+        description:
+          "Tuition webhook bot (used when BOT_TOKEN is unset). Paste from BotFather; sync to Vercel via Master Admin.",
         sensitive: true,
         requirement: "optional",
       },

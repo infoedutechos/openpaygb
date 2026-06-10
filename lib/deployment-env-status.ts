@@ -119,6 +119,8 @@ function groupWebhookUrl(id: string): string | null {
       return `${appUrl.replace(/\/$/, "")}/api/webhooks/momo`;
     case "vixonpay":
       return getVixonPayWebhookUrl();
+    case "telegram":
+      return `${appUrl.replace(/\/$/, "")}/api/webhooks/telegram`;
     default:
       return null;
   }
@@ -201,6 +203,17 @@ function defaultGroupHealth(id: string): { healthy: boolean | null; note: string
         note: ok
           ? null
           : "BREVO_API_KEY or RESEND_API_KEY plus TRANSACTIONAL_EMAIL_FROM (or RESEND_FROM) required in production.",
+      };
+    }
+    case "telegram": {
+      const token = isSet("BOT_TOKEN") || isSet("TELEGRAM_BOT_TOKEN");
+      const appUrl = isSet("NEXT_PUBLIC_APP_URL");
+      const ok = token && appUrl;
+      return {
+        healthy: ok ? true : null,
+        note: ok
+          ? null
+          : "Set BOT_TOKEN or TELEGRAM_BOT_TOKEN plus NEXT_PUBLIC_APP_URL. Save in Master → Deployment environment, then Sync to Vercel.",
       };
     }
     case "vercel-sync": {

@@ -48,6 +48,8 @@
 | B-COP-01 | ODEL HUB Copilot UX | Markdown article links, typeahead `/api/platform/chat/suggest`, no API disclaimers |
 | B-DEP-01 | Production env autonomous sync | `deployment:provision-sync`, `DEPLOYMENT_ENV_PRODUCTION.md` |
 | B-OPS-02 | Webhook secrets alignment | `webhooks:alignment-check`, `GET /api/public/webhook-alignment`, [WEBHOOK_SECRETS_ALIGNMENT.md](./WEBHOOK_SECRETS_ALIGNMENT.md) |
+| B-OPS-04 | Telegram bot token Master + Vercel | `telegram:alignment-check`, `GET /api/public/telegram-config`, [TELEGRAM_BOT_DEPLOYMENT.md](./TELEGRAM_BOT_DEPLOYMENT.md) |
+| B-BUILD-01 | Vercel Prisma client bundle fix | Split receipt ledger client imports — [VERCEL_BUILD_FAILURES.md](./VERCEL_BUILD_FAILURES.md) |
 | B-UX-05b | Master org UI consolidation | Shared `components/admin/master-org/*` — table row + mobile card + resend on both |
 | P4 | URA game routes `apiErrorResponse` | `npm run migrate:game-api-errors` — game/play + legacy admin routes hardened |
 | P3 | OpenPayGB virtual card program | Investigation complete — closed-loop shipped; acquiring + LivePay issuing next ([VIRTUAL_CARD_INVESTIGATION.md](./VIRTUAL_CARD_INVESTIGATION.md)) |

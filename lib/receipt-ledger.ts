@@ -1,33 +1,10 @@
 import type { PaymentRail, PaymentStatus } from "@prisma/client";
 import { formatFeeKeyLabel } from "@/lib/programme-fee-labels";
 import { buildReceiptBreakdown, type ReceiptBreakdown, type ReceiptPaymentLike } from "@/lib/receipt-lines";
+import type { ReceiptLedger, ReceiptLedgerRow } from "@/lib/receipt-ledger-types";
 
-export type ReceiptLedgerRowKind = "opening_balance" | "transaction" | "closing_balance";
-
-export type ReceiptLedgerRow = {
-  kind: ReceiptLedgerRowKind;
-  date: Date | null;
-  crDr: "" | "Dr" | "Cr";
-  particulars: string;
-  vchType: string;
-  vchNo: string;
-  debitUgx: number;
-  creditUgx: number;
-};
-
-export type ReceiptLedger = {
-  organizationName: string;
-  studentName: string;
-  programmeName: string;
-  programmeCode: string;
-  periodFrom: Date;
-  periodTo: Date;
-  openingBalanceUgx: number;
-  closingBalanceUgx: number;
-  rows: ReceiptLedgerRow[];
-  totalDebitUgx: number;
-  totalCreditUgx: number;
-};
+export type { ReceiptLedger, ReceiptLedgerRow, ReceiptLedgerRowKind } from "@/lib/receipt-ledger-types";
+export { formatLedgerDateDisplay } from "@/lib/receipt-ledger-display";
 
 export type ReceiptLedgerPayment = ReceiptPaymentLike & {
   id: string;
@@ -38,13 +15,6 @@ export type ReceiptLedgerPayment = ReceiptPaymentLike & {
   confirmedAt?: Date | null;
   createdAt: Date;
 };
-
-function formatLedgerDate(d: Date): string {
-  const day = d.getDate();
-  const month = d.getMonth() + 1;
-  const year = d.getFullYear();
-  return `${day}-${month}-${year}`;
-}
 
 function vchNoForPayment(p: ReceiptLedgerPayment): string {
   if (p.momoReference?.trim()) return p.momoReference.trim().slice(0, 12);
@@ -197,9 +167,3 @@ export function buildReceiptLedger(input: {
   };
 }
 
-export function formatLedgerDateDisplay(d: Date | string | null): string {
-  if (!d) return "";
-  const date = typeof d === "string" ? new Date(d) : d;
-  if (Number.isNaN(date.getTime())) return "";
-  return formatLedgerDate(date);
-}

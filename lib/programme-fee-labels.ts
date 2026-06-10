@@ -1,8 +1,8 @@
-import { ProgrammeFeeRecurrence } from "@prisma/client";
+import type { ProgrammeFeeRecurrenceKind } from "@/lib/programme-fee-recurrence-shared";
 
-export function recurrenceLabel(r: ProgrammeFeeRecurrence | null | undefined): string {
-  if (r === ProgrammeFeeRecurrence.once) return "Paid once";
-  if (r === ProgrammeFeeRecurrence.per_year) return "Per year";
+export function recurrenceLabel(r: ProgrammeFeeRecurrenceKind | null | undefined): string {
+  if (r === "once") return "Paid once";
+  if (r === "per_year") return "Per year";
   return "Per semester";
 }
 

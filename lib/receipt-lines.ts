@@ -1,4 +1,4 @@
-import { ProgrammeFeeRecurrence } from "@prisma/client";
+import type { ProgrammeFeeRecurrence } from "@prisma/client";
 import { feeTotal } from "@/lib/money";
 import { formatFeeKeyLabel, recurrenceLabel } from "@/lib/programme-fee-labels";
 import {
