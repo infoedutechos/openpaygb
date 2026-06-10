@@ -113,12 +113,12 @@ export function StudentPortalShell({
               Sign out
             </button>
           </div>
-          <nav className="flex gap-2 overflow-x-auto px-3 pb-3 text-[11px]">
+          <nav className="flex gap-2 overflow-x-auto px-3 pb-3 text-[11px] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {NAV.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`shrink-0 rounded-md px-2 py-1 ${
+                className={`flex min-h-[44px] shrink-0 items-center rounded-lg px-3 py-2 ${
                   navActive(pathname, item.href)
                     ? "bg-cyan-500/15 font-semibold text-cyan-200"
                     : "text-slate-400 hover:text-white"

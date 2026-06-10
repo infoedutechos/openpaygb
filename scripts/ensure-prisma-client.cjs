@@ -20,6 +20,10 @@ const SCHEMA_FIELD_MARKERS = [
   "copilotAssistantName",
   "schoolWorkspaceAutoGenerateAdminLogin",
   "registrationWebsiteUrl",
+  "unitKind",
+  "operatesUnitKinds",
+  "parentOrganizationId",
+  "externalParentName",
 ];
 
 function paths(root) {

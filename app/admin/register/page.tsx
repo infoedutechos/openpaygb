@@ -3,6 +3,8 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { OdelShieldIcon } from "@/components/icons/OdelShieldIcon";
+import { OrganizationUnitKindPicker } from "@/components/admin/OrganizationUnitKindPicker";
+import type { OrganizationUnitKind } from "@/lib/organization-unit-kinds";
 
 function RegisterForm() {
   const [requireMasterApproval, setRequireMasterApproval] = useState(true);
@@ -12,6 +14,11 @@ function RegisterForm() {
   const [contact, setContact] = useState("");
   const [website, setWebsite] = useState("");
   const [note, setNote] = useState("");
+  const [unitKind, setUnitKind] = useState<OrganizationUnitKind>("main_campus");
+  const [operatesUnitKinds, setOperatesUnitKinds] = useState<OrganizationUnitKind[]>([]);
+  const [parentSlug, setParentSlug] = useState("");
+  const [externalParentName, setExternalParentName] = useState("");
+  const [parentOptions, setParentOptions] = useState<Array<{ slug: string; name: string }>>([]);
   const [error, setError] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [devConfirmUrl, setDevConfirmUrl] = useState<string | null>(null);
@@ -40,6 +47,30 @@ function RegisterForm() {
     };
   }, []);
 
+  useEffect(() => {
+    const q = parentSlug.trim();
+    if (q.length < 2) {
+      setParentOptions([]);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const r = await fetch(`/api/public/organization-parent-search?q=${encodeURIComponent(q)}`);
+      if (!r.ok || cancelled) return;
+      const j = (await r.json()) as { organizations?: Array<{ slug: string; name: string }> };
+      if (!cancelled) setParentOptions(j.organizations ?? []);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [parentSlug]);
+
+  function toggleOperates(kind: OrganizationUnitKind) {
+    setOperatesUnitKinds((prev) =>
+      prev.includes(kind) ? prev.filter((k) => k !== kind) : [...prev, kind],
+    );
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -56,6 +87,10 @@ function RegisterForm() {
           registrationContactEmail: contact.trim().toLowerCase(),
           registrationWebsiteUrl: website.trim(),
           registrationNote: note,
+          unitKind,
+          operatesUnitKinds,
+          parentOrganizationSlug: parentSlug.trim(),
+          externalParentName: externalParentName.trim(),
         }),
       });
       const j = (await r.json()) as {
@@ -212,6 +247,17 @@ function RegisterForm() {
                 We may fetch your school favicon from this site for your pay page branding.
               </p>
             </div>
+            <OrganizationUnitKindPicker
+              unitKind={unitKind}
+              operatesUnitKinds={operatesUnitKinds}
+              parentSlug={parentSlug}
+              externalParentName={externalParentName}
+              parentOptions={parentOptions}
+              onUnitKindChange={setUnitKind}
+              onOperatesToggle={toggleOperates}
+              onParentSlugChange={setParentSlug}
+              onExternalParentChange={setExternalParentName}
+            />
             <div>
               <label className="text-xs font-medium text-slate-400">Notes (optional)</label>
               <textarea

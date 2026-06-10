@@ -8,7 +8,8 @@ import { isValidObjectId } from "@/lib/object-id";
 import { absoluteUrl } from "@/lib/public-url";
 import { buildStudentProgrammeProgress, getProgrammeDurationSummary } from "@/lib/tuition-progress";
 import { buildReceiptBreakdown } from "@/lib/receipt-lines";
-import { ReceiptFeeBreakdown } from "@/components/receipt/ReceiptFeeBreakdown";
+import { buildReceiptLedger } from "@/lib/receipt-ledger";
+import { ReceiptViewPanel } from "@/components/receipt/ReceiptViewPanel";
 import { ServerDbUnavailable } from "@/components/ui/ServerDbUnavailable";
 import { tryServerDb } from "@/lib/run-server-db";
 
@@ -69,10 +70,16 @@ export default async function ReceiptPage({
   }
   const issuedAt = payment.confirmedAt ?? payment.createdAt;
 
-  const programme = await prisma.programme.findUnique({
-    where: { organizationId_code: { organizationId: payment.organizationId, code: payment.programmeCode } },
-    include: { fees: true },
-  });
+  const [programme, organization] = await Promise.all([
+    prisma.programme.findUnique({
+      where: { organizationId_code: { organizationId: payment.organizationId, code: payment.programmeCode } },
+      include: { fees: true },
+    }),
+    prisma.organization.findUnique({
+      where: { id: payment.organizationId },
+      select: { name: true },
+    }),
+  ]);
   const studentPayments = programme
     ? await prisma.payment.findMany({
         where: {
@@ -85,6 +92,15 @@ export default async function ReceiptPage({
   const duration = programme ? getProgrammeDurationSummary(programme) : null;
   const progress = programme ? buildStudentProgrammeProgress(programme, studentPayments) : null;
   const breakdown = buildReceiptBreakdown(payment, programme?.fees ?? []);
+  const ledger = buildReceiptLedger({
+    organizationName: organization?.name ?? "ODEL HUB",
+    studentName: payment.student.name ?? "Student",
+    programmeName: programme?.name ?? payment.programmeCode,
+    programmeCode: payment.programmeCode,
+    payments: studentPayments,
+    programmeFees: programme?.fees ?? [],
+    focusPaymentId: paymentId,
+  });
   const verifyUrl = absoluteUrl(`/receipt/${paymentId}`);
   let qrDataUrl: string | null = null;
   if (verifyUrl.startsWith("http")) {
@@ -100,11 +116,11 @@ export default async function ReceiptPage({
   }
 
   return (
-    <div className="mx-auto max-w-lg space-y-6 px-4 py-6 sm:px-0">
-      <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-lg">
+    <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 sm:px-0">
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-lg sm:p-6">
         <p className="text-xs uppercase tracking-[0.2em] text-sky-400">Official receipt</p>
-        <h1 className="mt-2 text-2xl font-semibold text-white">ODEL HUB</h1>
-        <p className="text-sm text-slate-400">TON Pay — tuition waiver program</p>
+        <h1 className="mt-2 text-xl font-semibold text-white sm:text-2xl">{organization?.name ?? "ODEL HUB"}</h1>
+        <p className="text-sm text-slate-400">Ledger account · tuition payment</p>
         <dl className="mt-6 space-y-2 text-sm text-slate-200">
           <div className="flex justify-between gap-4">
             <dt className="text-slate-500">Student</dt>
@@ -134,8 +150,7 @@ export default async function ReceiptPage({
           ) : null}
         </dl>
         <div className="mt-6 border-t border-[var(--border)] pt-4">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Fee breakdown</p>
-          <ReceiptFeeBreakdown breakdown={breakdown} variant="dark" />
+          <ReceiptViewPanel ledger={ledger} breakdown={breakdown} variant="dark" />
         </div>
         <dl className="mt-6 space-y-2 text-sm text-slate-200">
           <div className="flex justify-between gap-4 text-xs">

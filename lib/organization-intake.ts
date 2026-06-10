@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { OrganizationTenantStatus } from "@prisma/client";
+import { OrganizationTenantStatus, OrganizationUnitKind } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { ORGANIZATION_UNIT_KINDS, isChildUnitKind } from "@/lib/organization-unit-kinds";
 
 export const orgSlugSchema = z
   .string()
@@ -8,18 +9,45 @@ export const orgSlugSchema = z
   .max(48)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase letters, numbers, and single hyphens");
 
-export const pendingOrgBodySchema = z.object({
+const unitKindSchema = z.enum(ORGANIZATION_UNIT_KINDS);
+
+const pendingOrgBaseSchema = z.object({
   name: z.string().min(2).max(120),
   slug: z.string().min(2).max(48),
   registrationContactEmail: z.string().email().optional().or(z.literal("")),
   registrationWebsiteUrl: z.string().max(2048).optional().default(""),
   registrationNote: z.string().max(2000).optional().default(""),
+  unitKind: unitKindSchema.optional().default("main_campus"),
+  operatesUnitKinds: z.array(unitKindSchema).optional().default([]),
+  parentOrganizationSlug: z.string().max(48).optional().default(""),
+  externalParentName: z.string().max(200).optional().default(""),
 });
 
+function refineOrgIntake<T extends z.ZodTypeAny>(schema: T) {
+  return schema.superRefine((data, ctx) => {
+    const kind = data.unitKind as OrganizationUnitKind;
+    if (isChildUnitKind(kind)) {
+      const hasParent =
+        Boolean(data.parentOrganizationSlug?.trim()) || Boolean(data.externalParentName?.trim());
+      if (!hasParent) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Select a parent institution on ODEL HUB or enter the parent name",
+          path: ["parentOrganizationSlug"],
+        });
+      }
+    }
+  });
+}
+
+export const pendingOrgBodySchema = refineOrgIntake(pendingOrgBaseSchema);
+
 /** Self-service school registration — contact email required for verification mail. */
-export const pendingOrgPublicBodySchema = pendingOrgBodySchema.extend({
-  registrationContactEmail: z.string().email(),
-});
+export const pendingOrgPublicBodySchema = refineOrgIntake(
+  pendingOrgBaseSchema.extend({
+    registrationContactEmail: z.string().email(),
+  }),
+);
 
 export type PendingOrgInput = z.infer<typeof pendingOrgBodySchema>;
 
@@ -60,6 +88,16 @@ export async function findPendingOrganizationByContactEmail(email: string) {
   );
 }
 
+async function resolveParentOrganizationId(slug: string): Promise<string | null> {
+  const normalized = normalizeOrgSlug(slug);
+  if (!normalized) return null;
+  const parent = await prisma.organization.findFirst({
+    where: { slug: normalized, tenantStatus: OrganizationTenantStatus.active },
+    select: { id: true },
+  });
+  return parent?.id ?? null;
+}
+
 /** Creates a **pending** workspace (school self-serve or master). */
 export async function createPendingOrganization(input: PendingOrgInput) {
   const slugResult = orgSlugSchema.safeParse(normalizeOrgSlug(input.slug));
@@ -71,6 +109,20 @@ export async function createPendingOrganization(input: PendingOrgInput) {
     throw new Error('Slug "default" is reserved for the template tenant');
   }
 
+  const unitKind = (input.unitKind ?? "main_campus") as OrganizationUnitKind;
+  let parentOrganizationId: string | null = null;
+  if (input.parentOrganizationSlug?.trim()) {
+    parentOrganizationId = await resolveParentOrganizationId(input.parentOrganizationSlug);
+    if (!parentOrganizationId && !input.externalParentName?.trim()) {
+      throw new Error("Parent institution slug not found — enter the parent name if they are not on ODEL HUB");
+    }
+  }
+
+  const operatesUnitKinds =
+    unitKind === "main_campus"
+      ? (input.operatesUnitKinds ?? []).filter((k: OrganizationUnitKind) => k !== "main_campus")
+      : [];
+
   try {
     return await prisma.organization.create({
       data: {
@@ -81,6 +133,10 @@ export async function createPendingOrganization(input: PendingOrgInput) {
         registrationWebsiteUrl: (input.registrationWebsiteUrl ?? "").trim(),
         registrationNote: (input.registrationNote ?? "").trim(),
         destinationWallet: "",
+        unitKind,
+        operatesUnitKinds: unitKind === "main_campus" ? ["main_campus", ...operatesUnitKinds] : [],
+        parentOrganizationId,
+        externalParentName: (input.externalParentName ?? "").trim(),
       },
     });
   } catch (e) {

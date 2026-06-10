@@ -574,7 +574,7 @@ export default function MasterOrganizationsPage() {
           <p className="mt-4 text-sm text-slate-500">No organizations yet.</p>
         ) : (
           <>
-            <div className="mt-4 space-y-4 md:hidden">
+            <div className="mt-4 space-y-4 lg:hidden">
               {orgs.map((o) => (
                 <MasterOrgMobileCard
                   key={o.id}
@@ -606,7 +606,7 @@ export default function MasterOrganizationsPage() {
                 />
               ))}
             </div>
-            <div className="mt-4 hidden overflow-x-auto md:block">
+            <div className="mt-4 hidden overflow-x-auto lg:block">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-[var(--border)] text-xs uppercase tracking-wide text-slate-500">

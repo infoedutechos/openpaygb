@@ -4,7 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { absoluteUrl } from "@/lib/public-url";
 import { createReceiptAccessToken } from "@/lib/receipt-access";
 import { receiptBreakdownHtml } from "@/lib/receipt-breakdown-html";
+import { receiptLedgerHtml } from "@/lib/receipt-ledger-html";
 import { buildReceiptBreakdown } from "@/lib/receipt-lines";
+import { buildReceiptLedger } from "@/lib/receipt-ledger";
 import { buildStudentProgrammeProgress } from "@/lib/tuition-progress";
 
 /** Send receipt email when Brevo or Resend is configured and student has email. */
@@ -44,8 +46,21 @@ export async function sendReceiptEmailIfConfigured(paymentId: string): Promise<v
       })
     : [];
   const progress = programme ? buildStudentProgrammeProgress(programme, studentPayments) : null;
+  const organization = await prisma.organization.findUnique({
+    where: { id: payment.organizationId },
+    select: { name: true },
+  });
   const breakdown = buildReceiptBreakdown(payment, programme?.fees ?? []);
-  const feeBreakdownBlock = receiptBreakdownHtml(breakdown);
+  const ledger = buildReceiptLedger({
+    organizationName: organization?.name ?? "ODEL HUB",
+    studentName: payment.student.name ?? "Student",
+    programmeName: programme?.name ?? payment.programmeCode,
+    programmeCode: payment.programmeCode,
+    payments: studentPayments,
+    programmeFees: programme?.fees ?? [],
+    focusPaymentId: payment.id,
+  });
+  const feeBreakdownBlock = `${receiptLedgerHtml(ledger)}<hr style="margin:16px 0;border:none;border-top:1px solid #e5e7eb" />${receiptBreakdownHtml(breakdown)}`;
 
   const periodLine =
     progress && progress.totalSemesters > 0

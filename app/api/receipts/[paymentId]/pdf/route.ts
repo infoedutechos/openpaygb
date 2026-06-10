@@ -5,6 +5,7 @@ import { getAdminFromCookies } from "@/lib/auth";
 import { isValidObjectId } from "@/lib/object-id";
 import { buildStudentProgrammeProgress, getProgrammeDurationSummary } from "@/lib/tuition-progress";
 import { buildReceiptBreakdown } from "@/lib/receipt-lines";
+import { buildReceiptLedger, formatLedgerDateDisplay } from "@/lib/receipt-ledger";
 import { receiptAccessFromRequest } from "@/lib/receipt-request-auth";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
 import { apiErrorResponse } from "@/lib/api-error";
@@ -52,22 +53,35 @@ export async function GET(req: Request, ctx: { params: Promise<{ paymentId: stri
     : [];
   const progress = programme ? buildStudentProgrammeProgress(programme, studentPayments) : null;
   const duration = programme ? getProgrammeDurationSummary(programme) : null;
+  const organization = await prisma.organization.findUnique({
+    where: { id: payment.organizationId },
+    select: { name: true },
+  });
   const breakdown = buildReceiptBreakdown(payment, programme?.fees ?? []);
+  const ledger = buildReceiptLedger({
+    organizationName: organization?.name ?? "ODEL HUB",
+    studentName: payment.student.name ?? "Student",
+    programmeName: programme?.name ?? payment.programmeCode,
+    programmeCode: payment.programmeCode,
+    payments: studentPayments,
+    programmeFees: programme?.fees ?? [],
+    focusPaymentId: paymentId,
+  });
 
   const pdf = await PDFDocument.create();
-  const page = pdf.addPage([420, Math.max(595, 320 + breakdown.lines.length * 14)]);
+  const page = pdf.addPage([842, Math.max(595, 280 + ledger.rows.length * 12)]);
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
 
-  let y = 540;
-  const left = 48;
+  let y = 560;
+  const left = 40;
   const line = (text: string, size = 10, useBold = false, color = rgb(0.1, 0.1, 0.12)) => {
-    page.drawText(text, { x: left, y, size, font: useBold ? bold : font, color });
+    page.drawText(text.slice(0, 110), { x: left, y, size, font: useBold ? bold : font, color });
     y -= size + 6;
   };
 
-  line("ODEL HUB — TON Pay", 14, true);
-  line("Tuition waiver program · Official receipt", 9, false, rgb(0.35, 0.35, 0.38));
+  line(`${organization?.name ?? "ODEL HUB"}`, 14, true);
+  line("Ledger Account · Official receipt", 9, false, rgb(0.35, 0.35, 0.38));
   y -= 8;
   line(`Student: ${payment.student.name}`, 10, true);
   if (programme?.name) {
@@ -84,7 +98,32 @@ export async function GET(req: Request, ctx: { params: Promise<{ paymentId: stri
     line(`Period: Year ${payment.year} · Semester ${payment.semester}`, 10);
   }
   y -= 4;
-  line("Fee breakdown", 11, true);
+  line("Ledger account", 11, true);
+  const cols = [left, left + 52, left + 72, left + 220, left + 300, left + 360, left + 430, left + 500];
+  const drawRow = (cells: string[], boldRow = false) => {
+    const f = boldRow ? bold : font;
+    cells.forEach((c, i) => {
+      page.drawText(c.slice(0, 24), { x: cols[i]!, y, size: 8, font: f, color: rgb(0.15, 0.15, 0.18) });
+    });
+    y -= 10;
+  };
+  drawRow(["Date", "Dr/Cr", "Particulars", "Vch Type", "Vch No", "Debit", "Credit"], true);
+  for (const row of ledger.rows) {
+    const debit = row.debitUgx > 0 ? row.debitUgx.toLocaleString() : "";
+    const credit = row.creditUgx > 0 ? row.creditUgx.toLocaleString() : "";
+    drawRow([
+      formatLedgerDateDisplay(row.date),
+      row.crDr,
+      row.particulars.slice(0, 28),
+      row.vchType,
+      row.vchNo,
+      debit,
+      credit,
+    ]);
+  }
+  drawRow(["", "", "Totals", "", "", ledger.totalDebitUgx.toLocaleString(), ledger.totalCreditUgx.toLocaleString()], true);
+  y -= 6;
+  line("Fee breakdown (this payment)", 11, true);
   if (breakdown.installmentLabel) {
     line(breakdown.installmentLabel, 9, false, rgb(0.45, 0.35, 0.1));
   }

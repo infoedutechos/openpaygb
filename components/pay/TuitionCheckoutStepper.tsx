@@ -94,7 +94,7 @@ export function TuitionCheckoutStepper({
                 {done ? "✓" : i + 1}
               </span>
               <span
-                className={`max-w-[4.5rem] truncate text-center text-[9px] font-semibold uppercase tracking-wide sm:max-w-none sm:text-[10px] ${
+                className={`max-w-[5.5rem] truncate text-center text-[9px] font-semibold uppercase tracking-wide min-[420px]:max-w-none sm:text-[10px] ${
                   current ? "text-cyan-100" : done ? "text-emerald-200/80" : "text-slate-600"
                 }`}
               >

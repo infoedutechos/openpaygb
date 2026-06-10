@@ -4,6 +4,7 @@ import { getAdminFromCookies } from "@/lib/auth";
 import { isValidObjectId } from "@/lib/object-id";
 import { buildStudentProgrammeProgress, getProgrammeDurationSummary } from "@/lib/tuition-progress";
 import { buildReceiptBreakdown } from "@/lib/receipt-lines";
+import { buildReceiptLedger } from "@/lib/receipt-ledger";
 import { createReceiptAccessToken } from "@/lib/receipt-access";
 import { receiptAccessFromRequest } from "@/lib/receipt-request-auth";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
@@ -50,7 +51,20 @@ export async function GET(req: Request, ctx: { params: Promise<{ paymentId: stri
     : [];
   const progress = programme ? buildStudentProgrammeProgress(programme, studentPayments) : null;
   const programmeDuration = programme ? getProgrammeDurationSummary(programme) : null;
+  const organization = await prisma.organization.findUnique({
+    where: { id: payment.organizationId },
+    select: { name: true },
+  });
   const breakdown = buildReceiptBreakdown(payment, programme?.fees ?? []);
+  const ledger = buildReceiptLedger({
+    organizationName: organization?.name ?? "ODEL HUB",
+    studentName: payment.student.name ?? "Student",
+    programmeName: programme?.name ?? payment.programmeCode,
+    programmeCode: payment.programmeCode,
+    payments: studentPayments,
+    programmeFees: programme?.fees ?? [],
+    focusPaymentId: payment.id,
+  });
 
   return NextResponse.json({
     receipt: {
@@ -72,6 +86,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ paymentId: stri
       issuedAt,
       progress,
       feeBreakdown: breakdown,
+      ledger,
       verificationUrl: `/receipt/${payment.id}`,
       receiptAccessToken: createReceiptAccessToken({
         id: payment.id,

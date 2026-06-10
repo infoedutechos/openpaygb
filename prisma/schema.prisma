@@ -41,6 +41,15 @@ enum OrganizationTenantStatus {
   rejected
 }
 
+/** What kind of institution unit this workspace represents. */
+enum OrganizationUnitKind {
+  main_campus
+  branch
+  odel_unit
+  study_campus_center
+  affiliate
+}
+
 /** Every programme belongs to one of two school tracks (admin + checkout grouping). */
 enum ProgrammeTrack {
   inservice
@@ -77,6 +86,16 @@ model Organization {
   registrationWebsiteUrl     String                     @default("")
   /** Set when the applicant confirms their registration email (workspace request). */
   registrationEmailVerifiedAt DateTime?
+  /** What this workspace is (main campus, branch, affiliate, etc.). */
+  unitKind                   OrganizationUnitKind       @default(main_campus)
+  /** Campus/unit types this institution operates (main campus only; multi-select). */
+  operatesUnitKinds          OrganizationUnitKind[]     @default([])
+  /** When this workspace is a branch, ODEL unit, study center, or affiliate of another school. */
+  parentOrganizationId       String?                    @db.ObjectId
+  parentOrganization         Organization?              @relation("OrgHierarchy", fields: [parentOrganizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  childOrganizations         Organization[]             @relation("OrgHierarchy")
+  /** Parent institution name when the parent is not registered on ODEL HUB. */
+  externalParentName         String                     @default("")
   /** Raw favicon.ico (or PNG) bytes; paired with faviconUploadedAt when set via Master Admin. */
   faviconIco                 Bytes?
   faviconUploadedAt          DateTime?
@@ -115,6 +134,8 @@ model Organization {
 
   @@index([tenantStatus])
   @@index([registrationContactEmail])
+  @@index([parentOrganizationId])
+  @@index([unitKind])
   @@map("organizations")
 }
 
