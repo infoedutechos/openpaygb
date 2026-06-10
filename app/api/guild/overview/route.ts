@@ -5,6 +5,7 @@ import prisma from '@/utils/prisma';
 import { validateTelegramWebAppData } from '@/utils/server-checks';
 import { getRegionDisplayName } from '@/utils/ranking-regions';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = 'force-dynamic';
 
 const NATIONAL_LIMIT = 15;
@@ -169,7 +170,6 @@ export async function GET(req: Request) {
       me,
     });
   } catch (e) {
-    console.error('[guild/overview]', e);
-    return NextResponse.json({ error: 'Failed to load guild' }, { status: 500 });
+    return apiErrorResponse(e, { route: "guild/overview", fallback: "Failed to load guild" });
   }
 }

@@ -3,6 +3,7 @@ import { PearlAuditEventType } from '@prisma/client';
 import prisma from '@/utils/prisma';
 import { getAdminAuthError } from '@/utils/admin-session';
 
+import { apiErrorResponse } from "@/lib/api-error";
 type ReceiptAuditMeta = {
   activityId?: string;
   imageData?: string;
@@ -10,6 +11,7 @@ type ReceiptAuditMeta = {
 };
 
 export async function GET(req: Request, context: { params: Promise<{ activityId: string }> }) {
+  try {
   const authError = getAdminAuthError(req);
   if (authError) return NextResponse.json(authError.body, { status: authError.status });
 
@@ -48,4 +50,8 @@ export async function GET(req: Request, context: { params: Promise<{ activityId:
       'Cache-Control': 'private, max-age=300',
     },
   });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/receipt-rush-image/[activityId]/get", fallback: "Request failed" });
+  }
 }

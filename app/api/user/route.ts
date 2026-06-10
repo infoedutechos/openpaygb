@@ -17,6 +17,7 @@ import { calculateEnergyLimit, calculateLevelIndex, calculateMinedPoints, calcul
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { isValidDistrictSlug } from '@/utils/uganda-districts';
 
+import { apiErrorResponse } from "@/lib/api-error";
 const MAX_RETRIES = 3;
 
 /** Optional `district` on POST body: canonical Uganda district slug, or empty string to clear. */
@@ -292,24 +293,7 @@ export async function POST(req: Request) {
     // Always return totalTaps as a number (old DB docs may lack field so persist across deployments)
     const payload = { ...dbUserUpdated, totalTaps: dbUserUpdated.totalTaps ?? 0 };
     return NextResponse.json(payload);
-  } catch (error) {
-    if (error instanceof PrismaClientKnownRequestError) {
-      if (error.code === 'P2002') {
-        console.log('User already exists:', error);
-        return NextResponse.json({ error: 'User already exists', message: 'User already exists' }, { status: 409 });
-      }
-    }
-    console.error('Error fetching/creating user:', error);
-    const rawMsg = error instanceof Error ? error.message : 'Database or server error';
-    const isBusy =
-      isTransientMongoError(error) ||
-      /transaction.*timeout|Transaction already closed|expired transaction/i.test(rawMsg);
-    const message = isBusy
-      ? 'The server is busy. Please try again in a moment.'
-      : rawMsg;
-    return NextResponse.json(
-      { error: 'Failed to fetch/create user', message },
-      { status: 500 }
-    );
+  } catch (e) {
+    return apiErrorResponse(e, { route: "user", fallback: "User already exists" });
   }
 }

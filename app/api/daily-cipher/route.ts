@@ -13,6 +13,7 @@ import { DAILY_CIPHER_MAX_ATTEMPTS, DAILY_CIPHER_REWARD } from '@/utils/consts';
 import { morseToWord, normalizeMorseInput } from '@/utils/morse';
 import { creditWhitePearlsInstant } from '@/utils/pearls';
 
+import { apiErrorResponse } from "@/lib/api-error";
 function getStartOfDayUTC(d: Date): Date {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
 }
@@ -67,6 +68,7 @@ async function getOrCreateTodayCipher(): Promise<{ word: string; hint: string | 
 }
 
 export async function GET(req: Request) {
+  try {
   const { searchParams } = new URL(req.url);
   const initData = searchParams.get('initData');
 
@@ -112,6 +114,10 @@ export async function GET(req: Request) {
     date: today.toISOString().split('T')[0],
     reward: DAILY_CIPHER_REWARD,
   });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "daily-cipher/get", fallback: "Request failed" });
+  }
 }
 
 export async function POST(req: Request) {

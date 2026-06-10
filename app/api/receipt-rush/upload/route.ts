@@ -3,6 +3,7 @@ import { mkdir, writeFile } from 'fs/promises';
 import path from 'path';
 import { validateTelegramWebAppData } from '@/utils/server-checks';
 
+import { apiErrorResponse } from "@/lib/api-error";
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_SIZE = 10 * 1024 * 1024;
 
@@ -38,8 +39,7 @@ export async function POST(req: NextRequest) {
     await writeFile(filePath, Buffer.from(bytes));
 
     return NextResponse.json({ url: `/uploads/receipts/${filename}` });
-  } catch (error) {
-    console.error('Receipt upload error:', error);
-    return NextResponse.json({ error: 'Failed to upload receipt image' }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "receipt-rush/upload", fallback: "Failed to upload receipt image" });
   }
 }

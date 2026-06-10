@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { isAdminAuthorized } from '@/utils/admin-session';
+import { apiErrorResponse } from "@/lib/api-error";
 import {
   sendTelegramMessage,
   sendTelegramPhoto,
@@ -86,8 +87,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, sentCount, totalUsers: users.length });
-  } catch (error) {
-    console.error('[admin/telegram-broadcast]', error);
-    return NextResponse.json({ error: 'Failed to send broadcast' }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/telegram-broadcast", fallback: "Failed to send broadcast" });
   }
 }

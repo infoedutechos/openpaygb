@@ -5,6 +5,7 @@ import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import { validateTelegramWebAppData } from '@/utils/server-checks';
 
+import { apiErrorResponse } from "@/lib/api-error";
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 const MAX_SIZE = 10 * 1024 * 1024; // 10 MB per image
 
@@ -42,8 +43,7 @@ export async function POST(req: NextRequest) {
 
     const urlPath = `/uploads/shop/${filename}`;
     return NextResponse.json({ url: urlPath });
-  } catch (error) {
-    console.error('Shop upload error:', error);
-    return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "shop/upload", fallback: "Failed to upload file" });
   }
 }

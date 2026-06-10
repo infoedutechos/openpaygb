@@ -9,12 +9,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { getAdminAuthError } from '@/utils/admin-session';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function GET(req: NextRequest) {
+  try {
   const authError = getAdminAuthError(req);
   if (authError) return NextResponse.json(authError.body, { status: authError.status });
 
   const cards = await prisma.card.findMany({ orderBy: [{ category: 'asc' }, { order: 'asc' }] });
   return NextResponse.json({ cards });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/cards/get", fallback: "Request failed" });
+  }
 }
 
 export async function POST(req: NextRequest) {

@@ -11,6 +11,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { validateTelegramWebAppData } from '@/utils/server-checks';
 
+import { apiErrorResponse } from "@/lib/api-error";
 interface DisconnectWalletRequestBody {
     initData: string;
 }
@@ -46,8 +47,7 @@ export async function POST(req: Request) {
             message: 'Wallet disconnected successfully',
         });
 
-    } catch (error) {
-        console.error('Error disconnecting wallet:', error);
-        return NextResponse.json({ error: 'Failed to disconnect wallet' }, { status: 500 });
-    }
+    } catch (e) {
+    return apiErrorResponse(e, { route: "wallet/disconnect", fallback: "Failed to disconnect wallet" });
+  }
 }

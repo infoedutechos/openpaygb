@@ -14,6 +14,7 @@ import { trackWeeklyTaskComplete } from '@/utils/weekly-event-tracker';
 import { creditWhitePearlsInstant } from '@/utils/pearls';
 import { Address } from '@ton/ton';
 
+import { apiErrorResponse } from "@/lib/api-error";
 interface NFTCheckResult {
     success: boolean;
     error?: string;
@@ -273,11 +274,7 @@ export async function POST(req: Request) {
             { status: result.status }
         );
 
-    } catch (error) {
-        console.error('Error checking onchain task:', error);
-        return NextResponse.json(
-            { error: error instanceof Error ? error.message : 'Failed to check onchain task' },
-            { status: 500 }
-        );
-    }
+    } catch (e) {
+    return apiErrorResponse(e, { route: "onchain-tasks/check", fallback: "Request failed" });
+  }
 }

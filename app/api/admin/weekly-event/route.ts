@@ -11,7 +11,9 @@ import prisma from '@/utils/prisma';
 import { getWeekKey } from '@/utils/week-utils';
 import { getAdminAuthError } from '@/utils/admin-session';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function GET(req: NextRequest) {
+  try {
   const authError = getAdminAuthError(req);
   if (authError) return NextResponse.json(authError.body, { status: authError.status });
 
@@ -24,6 +26,10 @@ export async function GET(req: NextRequest) {
     overrides,
     currentWeek: getWeekKey(),
   });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/weekly-event/get", fallback: "Request failed" });
+  }
 }
 
 export async function POST(req: NextRequest) {

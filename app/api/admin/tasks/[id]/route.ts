@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { getAdminAuthError } from '@/utils/admin-session';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -30,9 +31,8 @@ export async function PUT(
     });
 
     return NextResponse.json(task);
-  } catch (error) {
-    console.error('Update task error:', error);
-    return NextResponse.json({ error: 'Failed to update task' }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/tasks/[id]", fallback: "Failed to update task" });
   }
 }
 
@@ -49,8 +49,7 @@ export async function DELETE(
       where: { id: routeId },
     });
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Delete task error:', error);
-    return NextResponse.json({ error: 'Failed to delete task' }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/tasks/[id]", fallback: "Failed to delete task" });
   }
 }

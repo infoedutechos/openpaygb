@@ -12,6 +12,7 @@ import prisma from '@/utils/prisma';
 import { validateTelegramWebAppData } from '@/utils/server-checks';
 import { isPlausibleTonAddress, normalizeTonAddress } from '@/lib/ton-address';
 
+import { apiErrorResponse } from "@/lib/api-error";
 interface ConnectWalletRequestBody {
     initData: string;
     walletAddress: string;
@@ -55,8 +56,7 @@ export async function POST(req: Request) {
             walletAddress: updatedUser.tonWalletAddress,
         });
 
-    } catch (error) {
-        console.error('Error connecting wallet:', error);
-        return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to connect wallet' }, { status: 500 });
-    }
+    } catch (e) {
+    return apiErrorResponse(e, { route: "wallet/connect", fallback: "Request failed" });
+  }
 }

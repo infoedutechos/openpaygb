@@ -9,6 +9,7 @@ import { validateTelegramWebAppData } from '@/utils/server-checks';
 import { MITROLABS_QUIZ_REWARD_POINTS } from '@/utils/consts';
 import { maybeApplyAutomatedQuizRotation } from '@/utils/quiz-auto-rotation';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = 'force-dynamic';
 
 /** Normalize display reward to current per-question default (1,000 PEARLS). */
@@ -88,8 +89,7 @@ export async function GET(req: NextRequest) {
       hasCompleted,
       lastAttempt,
     });
-  } catch (error) {
-    console.error('Quiz GET error:', error);
-    return NextResponse.json({ error: 'Failed to load quiz' }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "quiz", fallback: "Failed to load quiz" });
   }
 }

@@ -9,6 +9,7 @@ import { validateTelegramWebAppData } from '@/utils/server-checks';
 import { MITROLABS_QUIZ_REWARD_POINTS } from '@/utils/consts';
 import { creditWhitePearlsInstant } from '@/utils/pearls';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = 'force-dynamic';
 
 /** Normalize per-question rewards to the current default (1,000 PEARLS). */
@@ -142,8 +143,7 @@ export async function POST(req: Request) {
       pointsBalance: refreshed != null ? Math.floor(Number(refreshed.pointsBalance)) : undefined,
       answerReview,
     });
-  } catch (error) {
-    console.error('Quiz submit error:', error);
-    return NextResponse.json({ error: 'Failed to submit quiz' }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "quiz/submit", fallback: "Failed to submit quiz" });
   }
 }

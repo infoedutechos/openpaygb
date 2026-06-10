@@ -11,21 +11,32 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { getAdminAuthError } from '@/utils/admin-session';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function GET(req: NextRequest) {
+  try {
   const authError = getAdminAuthError(req);
   if (authError) return NextResponse.json(authError.body, { status: authError.status });
 
   const tasks = await prisma.task.findMany();
   return NextResponse.json(tasks);
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/tasks/get", fallback: "Request failed" });
+  }
 }
 
 export async function POST(req: NextRequest) {
+  try {
   const authError = getAdminAuthError(req);
   if (authError) return NextResponse.json(authError.body, { status: authError.status });
 
   const taskData = await req.json();
   const task = await prisma.task.create({ data: taskData });
   return NextResponse.json(task);
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/tasks/post", fallback: "Request failed" });
+  }
 }
 
 export async function DELETE(req: NextRequest) {
@@ -61,8 +72,7 @@ export async function DELETE(req: NextRequest) {
       { error: 'Provide ids (string[]) or randomCount (number)' },
       { status: 400 }
     );
-  } catch (error) {
-    console.error('Bulk delete tasks error:', error);
-    return NextResponse.json({ error: 'Failed to delete tasks' }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/tasks", fallback: "Failed to delete tasks" });
   }
 }

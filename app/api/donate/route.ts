@@ -10,6 +10,7 @@ import { validateTelegramWebAppData } from '@/utils/server-checks';
 import { DONATION_MIN } from '@/utils/consts';
 import { getOrCreateFeeRecipientUser } from '@/utils/fee-recipient';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
@@ -38,8 +39,7 @@ export async function GET(req: Request) {
       totalDonatedPoints: dbUser.totalDonatedPoints ?? 0,
     });
   } catch (e) {
-    console.error('[donate GET]', e);
-    return NextResponse.json({ error: 'Failed to load' }, { status: 500 });
+    return apiErrorResponse(e, { route: "donate", fallback: "Failed to load" });
   }
 }
 
@@ -118,7 +118,6 @@ export async function POST(req: Request) {
       totalDonatedPoints: updatedUser.totalDonatedPoints,
     });
   } catch (e) {
-    console.error('[donate POST]', e);
-    return NextResponse.json({ error: 'Donation failed' }, { status: 500 });
+    return apiErrorResponse(e, { route: "donate", fallback: "Donation failed" });
   }
 }

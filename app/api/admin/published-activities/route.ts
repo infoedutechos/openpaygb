@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { getAdminAuthError } from '@/utils/admin-session';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function GET(req: NextRequest) {
   const err = getAdminAuthError(req);
   if (err) return NextResponse.json(err.body, { status: err.status });
@@ -11,8 +12,7 @@ export async function GET(req: NextRequest) {
     });
     return NextResponse.json(items);
   } catch (e) {
-    console.error('[admin/published-activities]', e);
-    return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 });
+    return apiErrorResponse(e, { route: "admin/published-activities", fallback: "Failed to fetch" });
   }
 }
 
@@ -40,7 +40,6 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json(row);
   } catch (e) {
-    console.error('[admin/published-activities POST]', e);
-    return NextResponse.json({ error: 'Failed to create' }, { status: 500 });
+    return apiErrorResponse(e, { route: "admin/published-activities", fallback: "Failed to create" });
   }
 }

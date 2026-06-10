@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { youtubeEmbedUrlFromInput } from '@/utils/youtube-embed';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
@@ -57,7 +58,6 @@ export async function GET() {
 
     return NextResponse.json({ upcoming, past });
   } catch (e) {
-    console.error('[tv-programs GET]', e);
-    return NextResponse.json({ error: 'Failed to load programs' }, { status: 500 });
+    return apiErrorResponse(e, { route: "tv-programs", fallback: "Failed to load programs" });
   }
 }

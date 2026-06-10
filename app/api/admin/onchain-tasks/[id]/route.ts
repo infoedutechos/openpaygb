@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { getAdminAuthError } from '@/utils/admin-session';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     const authError = getAdminAuthError(req);
     if (authError) return NextResponse.json(authError.body, { status: authError.status });
@@ -25,8 +26,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
         });
 
         return NextResponse.json(task);
-    } catch (error) {
-        console.error('Update onchain task error:', error);
-        return NextResponse.json({ error: 'Failed to update onchain task' }, { status: 500 });
-    }
+    } catch (e) {
+    return apiErrorResponse(e, { route: "admin/onchain-tasks/[id]", fallback: "Failed to update onchain task" });
+  }
 }

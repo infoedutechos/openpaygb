@@ -13,6 +13,7 @@ import { getWeekKey, getWeekStartEnd } from '@/utils/week-utils';
 import { WEEKLY_EVENT_DEFAULT_TIERS } from '@/utils/consts';
 import { creditWhitePearlsInstant } from '@/utils/pearls';
 
+import { apiErrorResponse } from "@/lib/api-error";
 interface TierConfig {
   taps: number;
   tasks: number;
@@ -55,6 +56,7 @@ async function getTiersForWeek(weekKey: string): Promise<TierConfig[]> {
 }
 
 export async function GET(req: Request) {
+  try {
   const { searchParams } = new URL(req.url);
   const initData = searchParams.get('initData');
 
@@ -163,6 +165,10 @@ export async function GET(req: Request) {
     },
     myRank,
   });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "weekly-event/get", fallback: "Request failed" });
+  }
 }
 
 export async function POST(req: Request) {

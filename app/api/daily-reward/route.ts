@@ -15,6 +15,7 @@ import { addActivityPoints } from '@/utils/league-points';
 import { creditWhitePearlsInstant } from '@/utils/pearls';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
+import { apiErrorResponse } from "@/lib/api-error";
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 100;
 
@@ -77,6 +78,7 @@ async function getDailyRewardStatus(telegramId: string) {
 }
 
 export async function GET(req: Request) {
+  try {
   const { searchParams } = new URL(req.url);
   const initData = searchParams.get('initData');
 
@@ -100,6 +102,10 @@ export async function GET(req: Request) {
   }
 
   return NextResponse.json(status);
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "daily-reward/get", fallback: "Request failed" });
+  }
 }
 
 export async function POST(req: Request) {

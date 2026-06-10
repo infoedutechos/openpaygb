@@ -3,10 +3,12 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  try {
   const { id } = await params;
   if (!id) {
     return NextResponse.json({ error: 'Missing product id' }, { status: 400 });
@@ -37,4 +39,8 @@ export async function GET(
     sellerId: product.sellerId,
     sellerName: product.seller.name ?? 'Seller',
   });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "shop/products/[id]/get", fallback: "Request failed" });
+  }
 }

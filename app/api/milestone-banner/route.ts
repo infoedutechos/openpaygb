@@ -3,6 +3,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
@@ -12,8 +13,7 @@ export async function GET() {
       orderBy: { updatedAt: 'desc' },
     });
     return NextResponse.json(banner ?? null);
-  } catch (error) {
-    console.error('[milestone-banner]', error);
-    return NextResponse.json(null);
+  } catch (e) {
+    return apiErrorResponse(e, { route: "milestone-banner", fallback: "Request failed" });
   }
 }

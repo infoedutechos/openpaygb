@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAdminAuthError } from '@/utils/admin-session';
 import { getTodayPattern, setTodayPatternOverride, getDailyPatternEnabled, setDailyPatternEnabled, getTodayPatternReward } from '@/utils/daily-pattern';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function GET(req: NextRequest) {
   const authError = getAdminAuthError(req);
   if (authError) return NextResponse.json(authError.body, { status: authError.status });
@@ -16,8 +17,7 @@ export async function GET(req: NextRequest) {
     const [pattern, enabled, reward] = await Promise.all([getTodayPattern(), getDailyPatternEnabled(), getTodayPatternReward()]);
     return NextResponse.json({ pattern, patternDisplay: pattern.replace(/-/g, ' → '), enabled, reward });
   } catch (e) {
-    console.error('Admin daily-pattern GET error:', e);
-    return NextResponse.json({ error: 'Failed to get today\'s pattern' }, { status: 500 });
+    return apiErrorResponse(e, { route: "admin/daily-pattern", fallback: "Failed to get today\\" });
   }
 }
 
@@ -46,9 +46,8 @@ export async function POST(req: NextRequest) {
       const finalReward = await getTodayPatternReward();
       return NextResponse.json({ success: true, pattern, patternDisplay: pattern.replace(/-/g, ' → '), reward: finalReward });
     } catch (e) {
-      const message = e instanceof Error ? e.message : 'Invalid pattern';
-      return NextResponse.json({ error: message }, { status: 400 });
-    }
+    return apiErrorResponse(e, { route: "admin/daily-pattern", fallback: "Request failed" });
+  }
   }
 
   return NextResponse.json({ error: 'Invalid action' }, { status: 400 });

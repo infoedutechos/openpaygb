@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
@@ -59,7 +60,6 @@ export async function GET() {
       officialSiteUrl: 'https://urafc.co.ug/',
     });
   } catch (e) {
-    console.error('[ura-fc/matches GET]', e);
-    return NextResponse.json({ error: 'Failed to load fixtures' }, { status: 500 });
+    return apiErrorResponse(e, { route: "ura-fc/matches", fallback: "Failed to load fixtures" });
   }
 }

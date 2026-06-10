@@ -5,7 +5,9 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function GET(req: Request) {
+  try {
   const { searchParams } = new URL(req.url);
   const code = searchParams.get('code')?.trim().toUpperCase();
   if (!code) return NextResponse.json({ error: 'Missing code' }, { status: 400 });
@@ -16,4 +18,8 @@ export async function GET(req: Request) {
   });
   if (!team) return NextResponse.json({ error: 'Team not found' }, { status: 404 });
   return NextResponse.json(team);
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "teams/by-code/get", fallback: "Request failed" });
+  }
 }

@@ -6,6 +6,7 @@ import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import { isAdminAuthorized } from '@/utils/admin-session';
 
+import { apiErrorResponse } from "@/lib/api-error";
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime']; // quicktime = .mov
 const MAX_SIZE = 50 * 1024 * 1024; // 50 MB
@@ -51,11 +52,7 @@ export async function POST(req: NextRequest) {
 
     const url = `/uploads/notifications/${filename}`;
     return NextResponse.json({ url });
-  } catch (error) {
-    console.error('Error uploading notification media:', error);
-    return NextResponse.json(
-      { error: 'Failed to upload file' },
-      { status: 500 }
-    );
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/notifications/upload", fallback: "Failed to upload file" });
   }
 }

@@ -10,6 +10,7 @@ import { getProgressForTask } from '@/utils/global-tasks';
 import { LEAGUE_TIERS } from '@/utils/consts';
 import { GLOBAL_TASK_SEED_TEAM, GLOBAL_TASK_SEED_LEAGUE } from '@/utils/global-tasks-seed-data';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = 'force-dynamic';
 
 function targetLabel(metric: string, targetValue: number): string {
@@ -22,6 +23,7 @@ function targetLabel(metric: string, targetValue: number): string {
 }
 
 export async function GET(req: Request) {
+  try {
   if (!isAdminAuthorized(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
 
   const [templates, challenges] = await Promise.all([
@@ -96,6 +98,10 @@ export async function GET(req: Request) {
     })),
     challenges: challengeList,
   });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/global-tasks/get", fallback: "Request failed" });
+  }
 }
 
 export async function POST(req: Request) {

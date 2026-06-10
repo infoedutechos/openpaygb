@@ -14,6 +14,7 @@ import { calculateRestoredEnergy, calculatePointsPerClick, calculateEnergyLimit,
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { trackWeeklySync } from '@/utils/weekly-event-tracker';
 
+import { apiErrorResponse } from "@/lib/api-error";
 interface SyncRequestBody {
   initData: string;
   unsynchronizedPoints: number;
@@ -209,23 +210,7 @@ export async function POST(req: Request) {
         }
       }
     }
-  } catch (error) {
-    console.error('Error processing user data:', error);
-    if (error instanceof ValidationError) {
-      if (error.message.includes('Invalid points calculation') && scope.telegramId) {
-        try {
-          await prisma.user.updateMany({
-            where: { telegramId: scope.telegramId },
-            data: { botSuspicionCount: { increment: 1 } },
-          });
-        } catch (e) {
-          console.error('Failed to increment botSuspicionCount:', e);
-        }
-      }
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-    return NextResponse.json({
-      error: 'Failed to process user data: ' + (error instanceof Error ? error.message : String(error))
-    }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "sync", fallback: "Failed to process user data: " });
   }
 }

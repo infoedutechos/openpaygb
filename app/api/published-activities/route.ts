@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server';
 import type { TaskType } from '@prisma/client';
 import prisma from '@/utils/prisma';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = 'force-dynamic';
 
 type TaskDataJson = { link?: string; chatId?: string };
@@ -102,7 +103,6 @@ export async function GET() {
 
     return NextResponse.json({ activities });
   } catch (e) {
-    console.error('[published-activities] prisma', e);
-    return NextResponse.json({ error: 'Failed to load activities' }, { status: 500 });
+    return apiErrorResponse(e, { route: "published-activities", fallback: "Failed to load activities" });
   }
 }

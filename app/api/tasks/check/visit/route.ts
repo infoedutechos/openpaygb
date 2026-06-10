@@ -15,6 +15,7 @@ import { addActivityPoints } from '@/utils/league-points';
 import { TASK_WAIT_TIME, LEAGUE_POINTS } from '@/utils/consts';
 import { creditWhitePearlsInstant } from '@/utils/pearls';
 
+import { apiErrorResponse } from "@/lib/api-error";
 interface CheckVisitTaskRequestBody {
     initData: string;
     taskId: string;
@@ -172,11 +173,7 @@ export async function POST(req: Request) {
             pointsBalance: r.pointsBalance,
         });
 
-    } catch (error) {
-        console.error('Error checking visit task:', error);
-        return NextResponse.json({ 
-            success: false,
-            error: error instanceof Error ? error.message : 'Failed to check visit task' 
-        }, { status: 500 });
-    }
+    } catch (e) {
+    return apiErrorResponse(e, { route: "tasks/check/visit", fallback: "Request failed" });
+  }
 }

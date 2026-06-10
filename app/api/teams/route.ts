@@ -11,7 +11,9 @@ import { TEAM_CREATION_FEE } from '@/utils/consts';
 import { generateInviteCode } from '@/utils/league-points';
 import { getOrCreateFeeRecipientUser } from '@/utils/fee-recipient';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function GET(req: Request) {
+  try {
   const { searchParams } = new URL(req.url);
   const initData = searchParams.get('initData');
 
@@ -57,6 +59,10 @@ export async function GET(req: Request) {
   ];
 
   return NextResponse.json({ teams });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "teams/get", fallback: "Request failed" });
+  }
 }
 
 export async function POST(req: Request) {

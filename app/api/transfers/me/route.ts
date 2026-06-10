@@ -7,7 +7,9 @@ import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { validateTelegramWebAppData } from '@/utils/server-checks';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function GET(req: Request) {
+  try {
   const { searchParams } = new URL(req.url);
   const initData = searchParams.get('initData');
 
@@ -84,4 +86,8 @@ export async function GET(req: Request) {
     received: receivedItems,
     all,
   });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "transfers/me/get", fallback: "Request failed" });
+  }
 }

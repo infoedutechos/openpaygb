@@ -1,8 +1,19 @@
 # Virtual card investigation (holistic)
 
-**Date:** 2026-06-04 · **App:** ODEL HUB Pay / **OpenPayGB** · **Primary market:** Uganda (UGX), multi-rail tuition
+**Date:** 2026-06-09 · **Status:** Investigation complete · **App:** ODEL HUB Pay / **OpenPayGB** · **Primary market:** Uganda (UGX), multi-rail tuition
 
 This document answers: *How could we offer “our own” virtual card?* — legally, technically, and inside the existing ODEL HUB architecture.
+
+### Investigation conclusion (2026-06-09)
+
+| Decision | Recommendation |
+|----------|----------------|
+| **Shipped today** | **Option 4 — closed-loop OpenPayGB Card** (`OpenPayCard` model, UGX balance, tuition pay-from-card, MoMo/TON top-up). Not a Visa/MC network card. |
+| **Next revenue lever** | **Option 3 — card acquiring** on `PayWizard` (pay tuition with bank card) via Flutterwave/Paystack hosted checkout. |
+| **Long-term differentiator** | **Option 1 — LivePay card issuing API** once LivePay provides docs + sandbox (same vendor as MoMo collect). |
+| **Do not pursue** | Option 5 (own BIN / full issuer). Option 2 (second issuer) unless LivePay card API unavailable. |
+
+**Code references (closed-loop MVP):** `lib/openpay-card.ts`, `app/api/student/openpay-card/**`, `app/api/public/checkout/openpay-card-pay`, `components/admin/MasterOpenPayCardSettings.tsx`, `/admin/master#openpay-cards-overview`.
 
 ---
 

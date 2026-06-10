@@ -13,6 +13,7 @@ import { validateTelegramWebAppData } from '@/utils/server-checks';
 import { calculateLevelIndex } from '@/utils/game-mechanics';
 import { LEVELS } from '@/utils/consts';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const telegramInitData = url.searchParams.get('initData');
@@ -69,8 +70,7 @@ export async function GET(req: Request) {
       referrals: referralsWithLevels,
       referralCount: referralsWithLevels.length
     });
-  } catch (error) {
-    console.error('Error fetching user referrals:', error);
-    return NextResponse.json({ error: 'Failed to fetch user referrals' }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "user/referrals", fallback: "Failed to fetch user referrals" });
   }
 }

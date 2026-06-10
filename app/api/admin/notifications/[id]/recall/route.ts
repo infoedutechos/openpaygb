@@ -6,6 +6,7 @@ import prisma from '@/utils/prisma';
 import { isAdminAuthorized } from '@/utils/admin-session';
 import { deleteTelegramMessage } from '@/utils/telegram-notify';
 
+import { apiErrorResponse } from "@/lib/api-error";
 const BATCH_SIZE = 25;
 const DELAY_MS = 1100;
 
@@ -51,11 +52,7 @@ export async function POST(
       message: "Recall started. Messages are being removed from users' chats.",
       total: deliveries.length,
     });
-  } catch (error) {
-    console.error('[admin/notifications] recall failed:', error);
-    return NextResponse.json(
-      { error: 'Failed to recall announcement' },
-      { status: 500 }
-    );
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/notifications/[id]/recall", fallback: "Failed to recall announcement" });
   }
 }

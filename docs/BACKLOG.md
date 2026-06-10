@@ -1,6 +1,6 @@
 # Product & engineering backlog
 
-**Last updated:** 2026-06-09 · **Brand:** **OpenPayGB** · **Rails:** Mbiyo, LivePay
+**Last updated:** 2026-06-09 · **Brand:** **OpenPayGB** · **Rails:** Mbiyo, LivePay, MoMo bridge
 
 ---
 
@@ -47,6 +47,10 @@
 | B-REG-02 | School website favicon fetch | `registrationWebsiteUrl` + `fetchFaviconFromWebsite` on activate |
 | B-COP-01 | ODEL HUB Copilot UX | Markdown article links, typeahead `/api/platform/chat/suggest`, no API disclaimers |
 | B-DEP-01 | Production env autonomous sync | `deployment:provision-sync`, `DEPLOYMENT_ENV_PRODUCTION.md` |
+| B-OPS-02 | Webhook secrets alignment | `webhooks:alignment-check`, `GET /api/public/webhook-alignment`, [WEBHOOK_SECRETS_ALIGNMENT.md](./WEBHOOK_SECRETS_ALIGNMENT.md) |
+| B-UX-05b | Master org UI consolidation | Shared `components/admin/master-org/*` — table row + mobile card + resend on both |
+| P4 | URA game routes `apiErrorResponse` | `npm run migrate:game-api-errors` — game/play + legacy admin routes hardened |
+| P3 | OpenPayGB virtual card program | Investigation complete — closed-loop shipped; acquiring + LivePay issuing next ([VIRTUAL_CARD_INVESTIGATION.md](./VIRTUAL_CARD_INVESTIGATION.md)) |
 
 ---
 
@@ -55,10 +59,10 @@
 | ID | Item | Notes |
 |----|------|-------|
 | B-OPS-01 | Production env | [PRODUCTION_GO_LIVE.md](./PRODUCTION_GO_LIVE.md) |
-| B-UX-05b | Master org UI consolidation | Optional: single `MasterOrgRow` component for table + card (low priority) |
-| P4 | URA game routes `apiErrorResponse` | Out of tuition scope (~200 routes) |
+| B-OPS-03 | PSP dashboard paste | After `deployment:provision-sync`, paste `MBIYO_*` / `MOMO_*` / `LIVEPAY_*` webhook secrets into each provider dashboard ([WEBHOOK_SECRETS_ALIGNMENT.md](./WEBHOOK_SECRETS_ALIGNMENT.md)) |
 | P4 | LivePay KES/GHS/XAF checkout | Stub only until LivePay product expansion |
-| P3 | OpenPayGB virtual card program | Investigation: [VIRTUAL_CARD_INVESTIGATION.md](./VIRTUAL_CARD_INVESTIGATION.md) — pick issuing vs acquiring vs closed-loop; request LivePay card API docs |
+| P3 | Card acquiring on checkout | Flutterwave/Paystack hosted pay — new `PaymentRail.card` (post-investigation) |
+| P3 | LivePay card issuing API | Request docs/sandbox from LivePay; see investigation §6 Phase 2 |
 
 ---
 

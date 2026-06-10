@@ -10,7 +10,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { getAdminAuthError } from '@/utils/admin-session';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function GET(req: NextRequest) {
+  try {
   const authError = getAdminAuthError(req);
   if (authError) return NextResponse.json(authError.body, { status: authError.status });
 
@@ -32,6 +34,10 @@ export async function GET(req: NextRequest) {
     take: 60,
   });
   return NextResponse.json({ combos });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/daily-combo/get", fallback: "Request failed" });
+  }
 }
 
 export async function POST(req: NextRequest) {

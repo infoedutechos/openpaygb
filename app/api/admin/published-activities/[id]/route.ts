@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { getAdminAuthError } from '@/utils/admin-session';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -41,8 +42,7 @@ export async function PATCH(
     });
     return NextResponse.json(row);
   } catch (e) {
-    console.error('[admin/published-activities PATCH]', e);
-    return NextResponse.json({ error: 'Failed to update' }, { status: 500 });
+    return apiErrorResponse(e, { route: "admin/published-activities/[id]", fallback: "Failed to update" });
   }
 }
 
@@ -59,7 +59,6 @@ export async function DELETE(
     await prisma.publishedActivity.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch (e) {
-    console.error('[admin/published-activities DELETE]', e);
-    return NextResponse.json({ error: 'Failed to delete' }, { status: 500 });
+    return apiErrorResponse(e, { route: "admin/published-activities/[id]", fallback: "Failed to delete" });
   }
 }

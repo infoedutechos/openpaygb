@@ -15,6 +15,7 @@ import { addActivityPoints } from '@/utils/league-points';
 import { LEAGUE_POINTS } from '@/utils/consts';
 import { creditWhitePearlsInstant } from '@/utils/pearls';
 
+import { apiErrorResponse } from "@/lib/api-error";
 interface CheckTelegramTaskRequestBody {
     initData: string;
     taskId: string;
@@ -200,8 +201,7 @@ export async function POST(req: Request) {
             pointsBalance: r.pointsBalance,
         });
 
-    } catch (error) {
-        console.error('Error checking Telegram task:', error);
-        return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to check Telegram task' }, { status: 500 });
-    }
+    } catch (e) {
+    return apiErrorResponse(e, { route: "tasks/check/telegram", fallback: "Request failed" });
+  }
 }

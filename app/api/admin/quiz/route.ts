@@ -9,6 +9,7 @@ import prisma from '@/utils/prisma';
 import { getAdminAuthError } from '@/utils/admin-session';
 import { MITROLABS_QUIZ_MAX_OPTIONS, MITROLABS_QUIZ_REWARD_POINTS } from '@/utils/consts';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
@@ -33,9 +34,8 @@ export async function GET(req: NextRequest) {
       lastAutoRotationUtcDate: settings?.lastAutoRotationUtcDate ?? null,
       autoRotationQuestionCount: settings?.autoRotationQuestionCount ?? 5,
     });
-  } catch (error) {
-    console.error('Admin quiz GET error:', error);
-    return NextResponse.json({ error: 'Failed to load questions' }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/quiz", fallback: "Failed to load questions" });
   }
 }
 
@@ -271,8 +271,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ error: 'Invalid action or missing id' }, { status: 400 });
-  } catch (error) {
-    console.error('Admin quiz POST error:', error);
-    return NextResponse.json({ error: 'Failed to save' }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/quiz", fallback: "Failed to save" });
   }
 }

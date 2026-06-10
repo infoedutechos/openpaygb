@@ -6,10 +6,12 @@ import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { validateTelegramWebAppData } from '@/utils/server-checks';
 
+import { apiErrorResponse } from "@/lib/api-error";
 const MIN_IMAGES = 4;
 const MAX_IMAGES = 10;
 
 export async function GET(req: Request) {
+  try {
   const { searchParams } = new URL(req.url);
   const initData = searchParams.get('initData');
   const my = searchParams.get('my') === '1';
@@ -73,6 +75,10 @@ export async function GET(req: Request) {
     sellerName: p.seller.name ?? 'Seller',
   }));
   return NextResponse.json({ products: list });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "shop/products/get", fallback: "Request failed" });
+  }
 }
 
 export async function POST(req: Request) {

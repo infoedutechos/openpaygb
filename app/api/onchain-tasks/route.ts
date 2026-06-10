@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { validateTelegramWebAppData } from '@/utils/server-checks';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const telegramInitData = url.searchParams.get('initData');
@@ -65,8 +66,7 @@ export async function GET(req: NextRequest) {
         }));
 
         return NextResponse.json(tasksWithCompletions);
-    } catch (error) {
-        console.error('Fetch onchain tasks error:', error);
-        return NextResponse.json({ error: 'Failed to fetch onchain tasks' }, { status: 500 });
-    }
+    } catch (e) {
+    return apiErrorResponse(e, { route: "onchain-tasks", fallback: "Failed to fetch onchain tasks" });
+  }
 }

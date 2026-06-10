@@ -17,11 +17,13 @@ import { getTodayPattern, patternsMatch, getDailyPatternEnabled, getTodayPattern
 import { getComboMultiplier, type InnovationTier } from '@/utils/drums-baobab-cards';
 import { creditWhitePearlsInstant } from '@/utils/pearls';
 
+import { apiErrorResponse } from "@/lib/api-error";
 function getStartOfDayUTC(d: Date): Date {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
 }
 
 export async function GET(req: Request) {
+  try {
   const { searchParams } = new URL(req.url);
   const initData = searchParams.get('initData');
 
@@ -88,6 +90,10 @@ export async function GET(req: Request) {
   });
 
   return NextResponse.json({ games });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "mini-games/get", fallback: "Request failed" });
+  }
 }
 
 export async function POST(req: Request) {

@@ -9,6 +9,7 @@ import { validateTelegramWebAppData } from '@/utils/server-checks';
 import { getProgressForTask } from '@/utils/global-tasks';
 import { LEAGUE_TIERS } from '@/utils/consts';
 
+import { apiErrorResponse } from "@/lib/api-error";
 function targetLabel(metric: string, targetValue: number): string {
   if (metric === 'taps') return `${targetValue.toLocaleString()} taps`;
   if (metric === 'tiers') return `Tier ${LEAGUE_TIERS[targetValue] ?? targetValue}`;
@@ -19,6 +20,7 @@ function targetLabel(metric: string, targetValue: number): string {
 }
 
 export async function GET(req: Request) {
+  try {
   const { searchParams } = new URL(req.url);
   const initData = searchParams.get('initData');
   if (!initData) return NextResponse.json({ error: 'Missing initData' }, { status: 400 });
@@ -109,4 +111,8 @@ export async function GET(req: Request) {
   );
 
   return NextResponse.json({ challenges: list });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "global-tasks/challenges/get", fallback: "Request failed" });
+  }
 }

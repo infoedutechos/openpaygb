@@ -6,9 +6,11 @@
 import { NextResponse } from 'next/server';
 import { isAdminAuthorized, ADMIN_ITEM_COOKIE_NAME } from '@/utils/admin-session';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
+  try {
   if (!isAdminAuthorized(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
@@ -22,4 +24,8 @@ export async function POST(req: Request) {
     maxAge: 0,
   });
   return res;
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/clear-item-session/post", fallback: "Request failed" });
+  }
 }

@@ -11,6 +11,7 @@ import { addActivityPoints } from '@/utils/league-points';
 import { LEAGUE_POINTS } from '@/utils/consts';
 import { creditWhitePearlsInstant } from '@/utils/pearls';
 
+import { apiErrorResponse } from "@/lib/api-error";
 interface RedeemCodeRequestBody {
   initData: string;
   taskId: string;
@@ -124,10 +125,6 @@ export async function POST(req: Request) {
       pointsBalance: r.pointsBalance,
     });
   } catch (e) {
-    console.error('[tasks/check/redeem-code]', e);
-    return NextResponse.json(
-      { success: false, error: e instanceof Error ? e.message : 'Failed to redeem code' },
-      { status: 500 }
-    );
+    return apiErrorResponse(e, { route: "tasks/check/redeem-code", fallback: "Request failed" });
   }
 }

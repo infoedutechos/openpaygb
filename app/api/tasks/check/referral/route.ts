@@ -15,6 +15,7 @@ import { addActivityPoints } from '@/utils/league-points';
 import { LEAGUE_POINTS } from '@/utils/consts';
 import { creditWhitePearlsInstant } from '@/utils/pearls';
 
+import { apiErrorResponse } from "@/lib/api-error";
 interface CheckReferralTaskRequestBody {
     initData: string;
     taskId: string;
@@ -181,11 +182,7 @@ export async function POST(req: Request) {
             pointsBalance: r.pointsBalance,
         });
 
-    } catch (error) {
-        console.error('Error checking referral task:', error);
-        if (error instanceof BadRequestError) {
-            return NextResponse.json({ error: error.message, success: false }, { status: 400 });
-        }
-        return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to check referral task' }, { status: 500 });
-    }
+    } catch (e) {
+    return apiErrorResponse(e, { route: "tasks/check/referral", fallback: "Request failed" });
+  }
 }

@@ -7,6 +7,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { validateTelegramWebAppData } from '@/utils/server-checks';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
@@ -43,7 +44,6 @@ export async function GET(req: Request) {
     res.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
     return res;
   } catch (e) {
-    console.error('[donations/leaderboard]', e);
-    return NextResponse.json({ error: 'Failed to load' }, { status: 500 });
+    return apiErrorResponse(e, { route: "donations/leaderboard", fallback: "Failed to load" });
   }
 }

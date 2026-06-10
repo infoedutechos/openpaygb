@@ -11,6 +11,7 @@ import prisma from '@/utils/prisma';
 import { validateTelegramWebAppData } from '@/utils/server-checks';
 import { STAKING_DURATIONS } from '@/utils/consts';
 
+import { apiErrorResponse } from "@/lib/api-error";
 /** Max bonus from config - ignore any stored value above this (legacy bug guard). */
 const MAX_BONUS_PERCENT = 25;
 
@@ -31,6 +32,7 @@ function computeStakeReturn(amountLocked: number, bonusPercent: number): { bonus
 }
 
 export async function GET(req: Request) {
+  try {
   const { searchParams } = new URL(req.url);
   const initData = searchParams.get('initData');
 
@@ -74,6 +76,10 @@ export async function GET(req: Request) {
   });
 
   return NextResponse.json({ stakes, pointsBalance: dbUser.pointsBalance });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "staking/get", fallback: "Request failed" });
+  }
 }
 
 export async function POST(req: Request) {

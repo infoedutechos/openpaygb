@@ -4,9 +4,11 @@ import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { getAdminAuthError } from '@/utils/admin-session';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
+  try {
   const authError = getAdminAuthError(req);
   if (authError) {
     return NextResponse.json(authError.body, { status: authError.status });
@@ -39,6 +41,10 @@ export async function GET(req: Request) {
   }));
 
   return NextResponse.json({ products: list });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/shop/products/get", fallback: "Request failed" });
+  }
 }
 
 export async function PATCH(req: Request) {

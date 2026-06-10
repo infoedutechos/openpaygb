@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { getAdminAuthError } from '@/utils/admin-session';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function GET(req: NextRequest) {
   const err = getAdminAuthError(req);
   if (err) return NextResponse.json(err.body, { status: err.status });
@@ -12,9 +13,8 @@ export async function GET(req: NextRequest) {
       orderBy: { updatedAt: 'desc' },
     });
     return NextResponse.json(banners);
-  } catch (error) {
-    console.error('[admin/milestone-banners]', error);
-    return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/milestone-banners", fallback: "Failed to fetch" });
   }
 }
 
@@ -41,8 +41,7 @@ export async function POST(req: NextRequest) {
       },
     });
     return NextResponse.json(banner);
-  } catch (error) {
-    console.error('[admin/milestone-banners]', error);
-    return NextResponse.json({ error: 'Failed to create' }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/milestone-banners", fallback: "Failed to create" });
   }
 }

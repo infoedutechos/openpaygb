@@ -4,6 +4,7 @@ import { clientIp, rateLimitHit } from "@/lib/rate-limit";
 import { composeCopilotReply } from "@/lib/knowledge-base/copilot-reply";
 import { ensureKnowledgeBaseSeeded } from "@/lib/knowledge-base/seed";
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = "force-dynamic";
 
 const MessageSchema = z.object({
@@ -18,6 +19,7 @@ const BodySchema = z.object({
 
 /** Legacy Clicker endpoint — KB copilot only (no OpenAI). */
 export async function POST(req: NextRequest) {
+  try {
   if (rateLimitHit(`support-chat:${clientIp(req)}`, 30, 60 * 60 * 1000)) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
@@ -46,4 +48,8 @@ export async function POST(req: NextRequest) {
     source: copilot.source,
     citations: copilot.citations,
   });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "support-chat/post", fallback: "Request failed" });
+  }
 }

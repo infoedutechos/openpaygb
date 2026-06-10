@@ -5,6 +5,7 @@ import { calculateLevelIndex } from '@/utils/game-mechanics';
 import { LEVELS } from '@/utils/consts';
 import { getDistrictDisplayName } from '@/utils/uganda-districts';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
@@ -81,7 +82,6 @@ export async function GET(req: Request) {
       })),
     });
   } catch (e) {
-    console.error('rankings/me:', e);
-    return NextResponse.json({ error: 'Failed to load profile' }, { status: 500 });
+    return apiErrorResponse(e, { route: "rankings/me", fallback: "Failed to load profile" });
   }
 }

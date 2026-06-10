@@ -8,6 +8,7 @@ import { isAdminAuthorized } from '@/utils/admin-session';
 import { getAdminFromCookies } from '@/lib/auth';
 import { sendAnnouncementToChannel, broadcastNotificationToUserBotChats } from '@/utils/telegram-notify';
 
+import { apiErrorResponse } from "@/lib/api-error";
 function adminNotificationsAuthorized(req: Request): Promise<boolean> {
   return getAdminFromCookies().then((pay) => Boolean(pay) || isAdminAuthorized(req));
 }
@@ -21,12 +22,8 @@ export async function GET(req: Request) {
       orderBy: { createdAt: 'desc' },
     });
     return NextResponse.json(notifications);
-  } catch (error) {
-    console.error('Error fetching notifications:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch notifications' },
-      { status: 500 }
-    );
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/notifications", fallback: "Failed to fetch notifications" });
   }
 }
 
@@ -96,11 +93,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(notification);
-  } catch (error) {
-    console.error('Error creating notification:', error);
-    return NextResponse.json(
-      { error: 'Failed to create notification' },
-      { status: 500 }
-    );
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/notifications", fallback: "Failed to create notification" });
   }
 }

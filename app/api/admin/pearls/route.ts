@@ -4,7 +4,9 @@ import prisma from '@/utils/prisma';
 import { getAdminAuthError } from '@/utils/admin-session';
 import { BLUE_TO_GOLDISH_RATE, createPearlAudit, convertBlueToGoldish } from '@/utils/pearls';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function GET(req: Request) {
+  try {
   const authError = getAdminAuthError(req);
   if (authError) return NextResponse.json(authError.body, { status: authError.status });
 
@@ -84,6 +86,10 @@ export async function GET(req: Request) {
     pendingWithdrawals,
     recentAudits: audits,
   });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/pearls/get", fallback: "Request failed" });
+  }
 }
 
 export async function POST(req: Request) {

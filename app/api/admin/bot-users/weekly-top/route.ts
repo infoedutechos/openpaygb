@@ -5,6 +5,7 @@ import prisma from '@/utils/prisma';
 import { getAdminAuthError } from '@/utils/admin-session';
 import { getWeekKey } from '@/utils/week-utils';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
@@ -106,8 +107,7 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json({ weekKey, list });
-  } catch (error) {
-    console.error('Error fetching weekly top:', error);
-    return NextResponse.json({ error: 'Failed to fetch weekly top' }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/bot-users/weekly-top", fallback: "Failed to fetch weekly top" });
   }
 }

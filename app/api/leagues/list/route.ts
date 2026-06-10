@@ -8,7 +8,9 @@ import prisma from '@/utils/prisma';
 import { validateTelegramWebAppData } from '@/utils/server-checks';
 import { getWeekKey } from '@/utils/week-utils';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function GET(req: Request) {
+  try {
   const { searchParams } = new URL(req.url);
   const initData = searchParams.get('initData');
   const weekKey = getWeekKey();
@@ -85,4 +87,8 @@ export async function GET(req: Request) {
   });
 
   return NextResponse.json({ leagues: list, weekKey });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "leagues/list/get", fallback: "Request failed" });
+  }
 }

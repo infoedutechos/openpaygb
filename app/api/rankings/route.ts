@@ -2,6 +2,7 @@
 
 import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
+import { apiErrorResponse } from "@/lib/api-error";
 import {
   CANONICAL_DISTRICT_SLUGS,
   DISTRICT_FILTER_NONE,
@@ -296,8 +297,7 @@ export async function GET(req: Request) {
     });
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     return response;
-  } catch (error) {
-    console.error('Error fetching rankings:', error);
-    return NextResponse.json({ error: 'Failed to fetch rankings' }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "rankings", fallback: "Failed to fetch rankings" });
   }
 }

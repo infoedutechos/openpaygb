@@ -8,6 +8,7 @@ import { NextResponse } from 'next/server';
 import type { PrismaClient } from '@prisma/client';
 import prisma from '@/utils/prisma';
 import { validateTelegramWebAppData } from '@/utils/server-checks';
+import { apiErrorResponse } from "@/lib/api-error";
 import {
   TEAM_CHALLENGE_MIN_STAKE,
   TEAM_CHALLENGE_MAX_STAKE,
@@ -18,6 +19,7 @@ import {
 } from '@/utils/consts';
 
 export async function GET(req: Request) {
+  try {
   const { searchParams } = new URL(req.url);
   const initData = searchParams.get('initData');
   if (!initData) return NextResponse.json({ error: 'Missing initData' }, { status: 400 });
@@ -67,6 +69,10 @@ export async function GET(req: Request) {
   }));
 
   return NextResponse.json({ challenges: list });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "team-challenges/get", fallback: "Request failed" });
+  }
 }
 
 export async function POST(req: Request) {

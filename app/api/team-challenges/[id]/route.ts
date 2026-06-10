@@ -6,10 +6,12 @@ import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { validateTelegramWebAppData } from '@/utils/server-checks';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  try {
   const { id: challengeId } = await params;
   const { searchParams } = new URL(req.url);
   const initData = searchParams.get('initData');
@@ -79,6 +81,10 @@ export async function GET(
     progressOpponent: { totalGrowth: progressOpponent.totalGrowth, memberCount: progressOpponent.memberCount, participants: progressOpponent.participants },
     recentContributions: contributions.map((c) => ({ userName: c.user.name ?? 'User', amount: c.amount, createdAt: c.createdAt.toISOString() })),
   });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "team-challenges/[id]/get", fallback: "Request failed" });
+  }
 }
 
 async function getTeamProgress(

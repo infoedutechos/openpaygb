@@ -5,6 +5,7 @@ import prisma from '@/utils/prisma';
 import { getAdminAuthError } from '@/utils/admin-session';
 import { deleteUsersCascade } from '@/utils/delete-users-cascade';
 
+import { apiErrorResponse } from "@/lib/api-error";
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -135,9 +136,8 @@ export async function GET(req: Request) {
         hiddenCount,
       },
     });
-  } catch (error) {
-    console.error('Error fetching accounts:', error);
-    return NextResponse.json({ error: 'Failed to fetch accounts' }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/accounts", fallback: "Failed to fetch accounts" });
   }
 }
 
@@ -182,14 +182,9 @@ export async function POST(req: Request) {
                 energyRefillsLeft: 6,
               },
             });
-          } catch (err) {
-            console.error('Reset all error:', err);
-            const msg = err instanceof Error ? err.message : 'Reset failed';
-            return NextResponse.json(
-              { error: 'Failed to reset all. ' + msg },
-              { status: 500 }
-            );
-          }
+          } catch (e) {
+    return apiErrorResponse(e, { route: "admin/accounts", fallback: "Failed to reset all. " });
+  }
           return NextResponse.json({ success: true, message: 'All users reset successfully' });
         }
 
@@ -256,11 +251,9 @@ export async function POST(req: Request) {
               energyRefillsLeft: 6,
             },
           });
-        } catch (err) {
-          console.error('Reset users error:', err);
-          const msg = err instanceof Error ? err.message : 'Reset failed';
-          return NextResponse.json({ error: 'Failed to reset. ' + msg }, { status: 500 });
-        }
+        } catch (e) {
+    return apiErrorResponse(e, { route: "admin/accounts", fallback: "Failed to reset. " });
+  }
         return NextResponse.json({ success: true, message: `${userIds.length} user(s) reset successfully` });
       }
 
@@ -296,19 +289,16 @@ export async function POST(req: Request) {
         const userObjIds = userIds as string[];
         try {
           await deleteUsersCascade(prisma, userObjIds);
-        } catch (err) {
-          console.error('Delete users error:', err);
-          const msg = err instanceof Error ? err.message : 'Delete failed';
-          return NextResponse.json({ error: 'Failed to delete. ' + msg }, { status: 500 });
-        }
+        } catch (e) {
+    return apiErrorResponse(e, { route: "admin/accounts", fallback: "Failed to delete. " });
+  }
         return NextResponse.json({ success: true, message: `${userIds.length} user(s) deleted permanently` });
       }
 
       default:
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
-  } catch (error) {
-    console.error('Error managing accounts:', error);
-    return NextResponse.json({ error: 'Failed to manage accounts' }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/accounts", fallback: "Failed to manage accounts" });
   }
 }

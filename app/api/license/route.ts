@@ -10,7 +10,9 @@
 import { NextResponse } from 'next/server';
 import { openInnovationsLicensePlainText } from '@/utils/company-info';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function GET() {
+  try {
   return NextResponse.json({ 
     license: openInnovationsLicensePlainText(),
     version: '1.0.0',
@@ -22,4 +24,8 @@ export async function GET() {
       'Cache-Control': 'public, max-age=3600'
     }
   });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "license/get", fallback: "Request failed" });
+  }
 }

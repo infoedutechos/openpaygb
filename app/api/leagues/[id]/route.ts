@@ -8,10 +8,12 @@ import prisma from '@/utils/prisma';
 import { validateTelegramWebAppData } from '@/utils/server-checks';
 import { MIN_TEAMS_FOR_LEAGUE_TASK } from '@/utils/consts';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  try {
   const { id: leagueId } = await params;
   const { searchParams } = new URL(req.url);
   const initData = searchParams.get('initData');
@@ -75,4 +77,8 @@ export async function GET(
     pendingRequestsCount: isCreator ? pendingRequestsCount : undefined,
     leaderboard,
   });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "leagues/[id]/get", fallback: "Request failed" });
+  }
 }

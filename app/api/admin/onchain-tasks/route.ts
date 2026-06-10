@@ -17,12 +17,18 @@ import { Address, Cell, Contract, OpenedContract } from '@ton/core';
 import { TonClient } from '@ton/ton';
 
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function GET(req: NextRequest) {
+  try {
     const authError = getAdminAuthError(req);
     if (authError) return NextResponse.json(authError.body, { status: authError.status });
 
     const onchainTasks = await prisma.onchainTask.findMany();
     return NextResponse.json(onchainTasks);
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/onchain-tasks/get", fallback: "Request failed" });
+  }
 }
 
 function decodeCell(cell: Cell): string {
@@ -57,10 +63,9 @@ export async function POST(req: NextRequest) {
         try {
             address = Address.parse(taskData.smartContractAddress);
             console.log('Parsed address:', address.toString());
-        } catch (error) {
-            console.error('Error parsing address:', error);
-            return NextResponse.json({ error: 'Invalid TON address provided' }, { status: 400 });
-        }
+        } catch (e) {
+    return apiErrorResponse(e, { route: "admin/onchain-tasks", fallback: "Invalid TON address provided" });
+  }
 
         // Check if a task with this address already exists
         const existingTask = await prisma.onchainTask.findFirst({
@@ -85,10 +90,9 @@ export async function POST(req: NextRequest) {
         try {
             openedContract = client.open(contract) as OpenedContract<NftCollection>;
             console.log('Opened contract successfully');
-        } catch (error) {
-            console.error('Error opening contract:', error);
-            return NextResponse.json({ error: 'Failed to open contract. This might not be a valid NFT Collection contract.' }, { status: 400 });
-        }
+        } catch (e) {
+    return apiErrorResponse(e, { route: "admin/onchain-tasks", fallback: "Failed to open contract. This might not be a valid NFT Collection contract." });
+  }
 
         // Fetch data from the smart contract
         let nftPrice, collectionData, itemData, collectionMetadata, itemMetadata;
@@ -154,10 +158,9 @@ export async function POST(req: NextRequest) {
             } else {
                 console.log('No NFT items found in the collection');
             }
-        } catch (error) {
-            console.error('Error fetching data from contract:', error);
-            return NextResponse.json({ error: 'Failed to fetch data from contract. This might not be a valid NFT Collection contract.' }, { status: 400 });
-        }
+        } catch (e) {
+    return apiErrorResponse(e, { route: "admin/onchain-tasks", fallback: "Failed to fetch data from contract. This might not be a valid NFT Collection contract." });
+  }
 
         // Create the task in the database
         try {
@@ -173,12 +176,10 @@ export async function POST(req: NextRequest) {
             });
             console.log('Created task:', task);
             return NextResponse.json(task);
-        } catch (error) {
-            console.error('Error creating task in database:', error);
-            return NextResponse.json({ error: 'Failed to create task in database' }, { status: 500 });
-        }
-    } catch (error) {
-        console.error('Unexpected error:', error);
-        return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
-    }
+        } catch (e) {
+    return apiErrorResponse(e, { route: "admin/onchain-tasks", fallback: "Failed to create task in database" });
+  }
+    } catch (e) {
+    return apiErrorResponse(e, { route: "admin/onchain-tasks", fallback: "An unexpected error occurred" });
+  }
 }

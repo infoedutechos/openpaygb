@@ -17,6 +17,7 @@ import {
 import { generateInviteCode } from '@/utils/league-points';
 import { getOrCreateFeeRecipientUser } from '@/utils/fee-recipient';
 
+import { apiErrorResponse } from "@/lib/api-error";
 function getNextChampionshipWeek(): string {
   const now = new Date();
   const weekKey = getWeekKey(now);
@@ -31,6 +32,7 @@ function getNextChampionshipWeek(): string {
 }
 
 export async function GET(req: Request) {
+  try {
   const { searchParams } = new URL(req.url);
   const initData = searchParams.get('initData');
 
@@ -177,6 +179,10 @@ export async function GET(req: Request) {
   }
 
   return NextResponse.json(payload);
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "leagues/get", fallback: "Request failed" });
+  }
 }
 
 export async function POST(req: Request) {

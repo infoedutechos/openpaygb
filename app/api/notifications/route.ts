@@ -4,6 +4,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
@@ -16,11 +17,7 @@ export async function GET() {
     const res = NextResponse.json(notifications);
     res.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     return res;
-  } catch (error) {
-    console.error('Error fetching notifications:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch notifications' },
-      { status: 500 }
-    );
+  } catch (e) {
+    return apiErrorResponse(e, { route: "notifications", fallback: "Failed to fetch notifications" });
   }
 }

@@ -3,7 +3,9 @@ import { listCardsForUser } from '@/lib/cards-for-user';
 import { validateTelegramWebAppData } from '@/utils/server-checks';
 import prisma from '@/utils/prisma';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function GET(req: NextRequest) {
+  try {
   const initData = req.nextUrl.searchParams.get('initData');
   if (!initData) {
     return NextResponse.json({ error: 'Missing initData' }, { status: 400 });
@@ -40,4 +42,8 @@ export async function GET(req: NextRequest) {
       owned: c.owned,
     })),
   });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "cards/get", fallback: "Request failed" });
+  }
 }

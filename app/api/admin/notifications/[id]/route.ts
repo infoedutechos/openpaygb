@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { isAdminAuthorized } from '@/utils/admin-session';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -33,12 +34,8 @@ export async function PATCH(
       data: updateData,
     });
     return NextResponse.json(notification);
-  } catch (error) {
-    console.error('Error updating notification:', error);
-    return NextResponse.json(
-      { error: 'Failed to update notification' },
-      { status: 500 }
-    );
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/notifications/[id]", fallback: "Failed to update notification" });
   }
 }
 
@@ -55,11 +52,7 @@ export async function DELETE(
       where: { id },
     });
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Error deleting notification:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete notification' },
-      { status: 500 }
-    );
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/notifications/[id]", fallback: "Failed to delete notification" });
   }
 }

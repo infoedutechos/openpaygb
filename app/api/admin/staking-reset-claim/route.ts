@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { isAdminAuthorized } from '@/utils/admin-session';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function POST(req: NextRequest) {
   if (!isAdminAuthorized(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
@@ -65,7 +66,6 @@ export async function POST(req: NextRequest) {
       amountLocked: stake.amountLocked,
     });
   } catch (e) {
-    console.error('[admin/staking-reset-claim]', e);
-    return NextResponse.json({ error: 'Failed to reset claim' }, { status: 500 });
+    return apiErrorResponse(e, { route: "admin/staking-reset-claim", fallback: "Failed to reset claim" });
   }
 }

@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { PasswordRevealInput } from "@/components/PasswordRevealInput";
 import { MasterOrgMobileCard } from "@/components/admin/MasterOrgMobileCard";
-import { workspaceEmailVerifyStatus } from "@/lib/organization-workspace-verify-shared";
+import { MasterOrgTableRow } from "@/components/admin/master-org/MasterOrgTableRow";
+import type { MasterOrgRow } from "@/components/admin/master-org/types";
 
 type OrgRow = {
   id: string;
@@ -25,19 +25,6 @@ type OrgRow = {
   faviconUploadedAt?: string | null;
   _count: { programmes: number; students: number; payments: number };
 };
-
-function statusTone(s: string) {
-  if (s === "active") return "text-emerald-300";
-  if (s === "pending") return "text-amber-300";
-  return "text-rose-300";
-}
-
-function emailVerifyBadge(o: OrgRow) {
-  const s = workspaceEmailVerifyStatus(o);
-  if (s === "none") return <span className="text-slate-600">—</span>;
-  if (s === "verified") return <span className="font-medium text-emerald-400">Verified</span>;
-  return <span className="font-medium text-amber-300">Awaiting email</span>;
-}
 
 export default function MasterOrganizationsPage() {
   const [orgs, setOrgs] = useState<OrgRow[]>([]);
@@ -591,8 +578,7 @@ export default function MasterOrganizationsPage() {
               {orgs.map((o) => (
                 <MasterOrgMobileCard
                   key={o.id}
-                  org={o}
-                  statusTone={statusTone}
+                  org={o as MasterOrgRow}
                   walletDraft={walletDrafts[o.id] ?? o.destinationWallet ?? ""}
                   feeDraft={feeDrafts[o.id] ?? String(o.checkoutPlatformFeeUgx ?? -1)}
                   fxKind={fxKindDrafts[o.id] ?? o.fxOverrideKind ?? "inherit"}
@@ -616,6 +602,7 @@ export default function MasterOrganizationsPage() {
                   onApprove={() => void patchOrg(o.id, "approve")}
                   onReject={() => void patchOrg(o.id, "reject")}
                   onReopen={() => void patchOrg(o.id, "reopen")}
+                  onResendVerification={() => void resendVerification(o)}
                 />
               ))}
             </div>
@@ -638,232 +625,38 @@ export default function MasterOrganizationsPage() {
               </thead>
               <tbody>
                 {orgs.map((o) => (
-                  <tr key={o.id} className="border-b border-[var(--border)]/80">
-                    <td className="py-2 pr-3 font-mono text-cyan-200/90">{o.slug}</td>
-                    <td className="py-2 pr-3 text-white">{o.name}</td>
-                    <td className={`py-2 pr-3 font-medium ${statusTone(o.tenantStatus)}`}>{o.tenantStatus}</td>
-                    <td className="py-2 pr-3 text-slate-400">
-                      p:{o._count.programmes} s:{o._count.students} pay:{o._count.payments}
-                    </td>
-                    <td className="max-w-[220px] py-2 pr-3 align-top">
-                      <div className="flex flex-col gap-1">
-                        <input
-                          type="text"
-                          value={walletDrafts[o.id] ?? o.destinationWallet ?? ""}
-                          onChange={(e) =>
-                            setWalletDrafts((prev) => ({
-                              ...prev,
-                              [o.id]: e.target.value,
-                            }))
-                          }
-                          placeholder="EQ… / UQ… (empty = env)"
-                          className="w-full min-w-0 rounded border border-[var(--border)] bg-[#0d1526] px-2 py-1 font-mono text-[10px] text-white"
-                          aria-label={`TON destination wallet for ${o.slug}`}
-                        />
-                        <button
-                          type="button"
-                          disabled={walletBusyId === o.id}
-                          onClick={() => void saveDestinationWallet(o.id)}
-                          className="rounded border border-cyan-500/40 bg-cyan-950/40 px-2 py-0.5 text-[11px] font-semibold text-cyan-100 hover:bg-cyan-900/50 disabled:opacity-50"
-                        >
-                          {walletBusyId === o.id ? "…" : "Save wallet"}
-                        </button>
-                      </div>
-                    </td>
-                    <td className="max-w-[200px] py-2 pr-3 align-top">
-                      <div className="flex flex-col gap-1">
-                        <input
-                          type="number"
-                          min={-1}
-                          step={1}
-                          value={feeDrafts[o.id] ?? String(o.checkoutPlatformFeeUgx ?? -1)}
-                          onChange={(e) =>
-                            setFeeDrafts((prev) => ({
-                              ...prev,
-                              [o.id]: e.target.value,
-                            }))
-                          }
-                          className="w-full min-w-0 rounded border border-[var(--border)] bg-[#0d1526] px-2 py-1 font-mono text-xs text-white"
-                          aria-label={`Transaction processing charge UGX for ${o.slug}`}
-                        />
-                        <button
-                          type="button"
-                          disabled={feeBusyId === o.id}
-                          onClick={() => void savePlatformFee(o.id)}
-                          className="rounded border border-amber-500/40 bg-amber-950/40 px-2 py-0.5 text-[11px] font-semibold text-amber-100 hover:bg-amber-900/50 disabled:opacity-50"
-                        >
-                          {feeBusyId === o.id ? "…" : "Save fee"}
-                        </button>
-                        <span className="text-[10px] text-slate-600">-1 = env</span>
-                      </div>
-                    </td>
-                    <td className="max-w-[220px] py-2 pr-3 align-top">
-                      <div className="flex flex-col gap-1">
-                        <select
-                          value={fxKindDrafts[o.id] ?? o.fxOverrideKind ?? "inherit"}
-                          onChange={(e) =>
-                            setFxKindDrafts((prev) => ({ ...prev, [o.id]: e.target.value }))
-                          }
-                          className="w-full min-w-0 rounded border border-[var(--border)] bg-[#0d1526] px-2 py-1 text-[11px] text-white"
-                          aria-label={`FX override kind for ${o.slug}`}
-                        >
-                          <option value="inherit">inherit</option>
-                          <option value="none">none</option>
-                          <option value="fixed">fixed</option>
-                          <option value="buffer_pct">buffer %</option>
-                        </select>
-                        {(fxKindDrafts[o.id] ?? o.fxOverrideKind) === "fixed" ? (
-                          <input
-                            type="number"
-                            min={1}
-                            step={1}
-                            value={fxUgxDrafts[o.id] ?? ""}
-                            onChange={(e) =>
-                              setFxUgxDrafts((prev) => ({ ...prev, [o.id]: e.target.value }))
-                            }
-                            placeholder="UGX / TON"
-                            className="w-full min-w-0 rounded border border-[var(--border)] bg-[#0d1526] px-2 py-1 font-mono text-[10px] text-white"
-                          />
-                        ) : null}
-                        {(fxKindDrafts[o.id] ?? o.fxOverrideKind) === "buffer_pct" ? (
-                          <input
-                            type="number"
-                            step={0.1}
-                            value={fxBufferDrafts[o.id] ?? "0"}
-                            onChange={(e) =>
-                              setFxBufferDrafts((prev) => ({ ...prev, [o.id]: e.target.value }))
-                            }
-                            placeholder="Buffer %"
-                            className="w-full min-w-0 rounded border border-[var(--border)] bg-[#0d1526] px-2 py-1 font-mono text-[10px] text-white"
-                          />
-                        ) : null}
-                        <button
-                          type="button"
-                          disabled={fxBusyId === o.id}
-                          onClick={() => void saveOrgFx(o.id)}
-                          className="rounded border border-cyan-500/40 bg-cyan-950/40 px-2 py-0.5 text-[11px] font-semibold text-cyan-100 hover:bg-cyan-900/50 disabled:opacity-50"
-                        >
-                          {fxBusyId === o.id ? "…" : "Save FX"}
-                        </button>
-                      </div>
-                    </td>
-                    <td className="max-w-[180px] truncate py-2 pr-3 text-slate-400" title={o.registrationContactEmail}>
-                      {o.registrationContactEmail || "—"}
-                    </td>
-                    <td className="py-2 pr-3 text-xs">
-                      <div className="flex flex-col gap-1">
-                        {emailVerifyBadge(o)}
-                        {workspaceEmailVerifyStatus(o) === "pending" && o.registrationContactEmail ? (
-                          <button
-                            type="button"
-                            disabled={busyId === o.id}
-                            onClick={() => void resendVerification(o)}
-                            className="text-left text-[10px] font-medium text-amber-200/90 underline hover:text-amber-100 disabled:opacity-50"
-                          >
-                            Resend verify email
-                          </button>
-                        ) : null}
-                      </div>
-                    </td>
-                    <td className="py-2 pr-3 align-middle">
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                        {o.hasFavicon ? (
-                          <Image
-                            src={`/api/org/${encodeURIComponent(o.slug)}/favicon?v=${encodeURIComponent(o.faviconUploadedAt ?? "")}`}
-                            alt=""
-                            width={32}
-                            height={32}
-                            unoptimized
-                            className="h-8 w-8 shrink-0 rounded border border-white/10 bg-black/30 object-cover"
-                          />
-                        ) : (
-                          <span className="text-[11px] text-slate-600">—</span>
-                        )}
-                        <input
-                          type="file"
-                          accept=".ico,.png,image/x-icon,image/png,image/vnd.microsoft.icon"
-                          className="sr-only"
-                          ref={(el) => {
-                            inputRefs.current[o.id] = el;
-                          }}
-                          disabled={Boolean(faviconBusyId)}
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            e.target.value = "";
-                            if (file) void uploadFavicon(o, file);
-                          }}
-                        />
-                        <button
-                          type="button"
-                          disabled={Boolean(faviconBusyId)}
-                          onClick={() => inputRefs.current[o.id]?.click()}
-                          className="rounded border border-white/15 px-2 py-0.5 text-[11px] font-medium text-slate-200 hover:border-amber-400/40 hover:text-white disabled:opacity-50"
-                        >
-                          {faviconBusyId === o.id ? "…" : "Upload"}
-                        </button>
-                        {o.hasFavicon ? (
-                          <button
-                            type="button"
-                            disabled={Boolean(faviconBusyId)}
-                            onClick={() => void removeFavicon(o)}
-                            className="text-[11px] text-rose-300 underline hover:text-rose-200 disabled:opacity-50"
-                          >
-                            Remove
-                          </button>
-                        ) : null}
-                      </div>
-                    </td>
-                    <td className="py-2">
-                      {o.slug === "default" ? (
-                        <span className="text-xs text-slate-500">template</span>
-                      ) : o.tenantStatus === "pending" ? (
-                        <div className="flex flex-col gap-1">
-                          {workspaceEmailVerifyStatus(o) === "pending" ? (
-                            <span className="max-w-[180px] text-[10px] leading-snug text-amber-300/90">
-                              Email not verified — you may approve anyway; their dashboard will prompt them to confirm.
-                            </span>
-                          ) : null}
-                          <div className="flex flex-wrap gap-1">
-                          <button
-                            type="button"
-                            disabled={busyId === o.id}
-                            title="Approve workspace"
-                            onClick={() => void patchOrg(o.id, "approve")}
-                            className="rounded bg-emerald-700/80 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
-                          >
-                            Approve workspace
-                          </button>
-                          <button
-                            type="button"
-                            disabled={busyId === o.id}
-                            onClick={() => void patchOrg(o.id, "reject")}
-                            className="rounded bg-rose-800/80 px-2 py-1 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-50"
-                          >
-                            Reject
-                          </button>
-                          </div>
-                        </div>
-                      ) : o.tenantStatus === "active" ? (
-                        <Link
-                          href={`/admin?orgSlug=${encodeURIComponent(o.slug)}`}
-                          className="text-xs text-sky-300 underline hover:text-white"
-                        >
-                          Open tuition dashboard
-                        </Link>
-                      ) : o.tenantStatus === "rejected" ? (
-                        <button
-                          type="button"
-                          disabled={busyId === o.id}
-                          onClick={() => void patchOrg(o.id, "reopen")}
-                          className="rounded bg-amber-700/80 px-2 py-1 text-xs font-semibold text-white hover:bg-amber-600 disabled:opacity-50"
-                        >
-                          Reopen for review
-                        </button>
-                      ) : (
-                        <span className="text-xs text-slate-500">—</span>
-                      )}
-                    </td>
-                  </tr>
+                  <MasterOrgTableRow
+                    key={o.id}
+                    org={o as MasterOrgRow}
+                    drafts={{
+                      wallet: walletDrafts[o.id] ?? o.destinationWallet ?? "",
+                      fee: feeDrafts[o.id] ?? String(o.checkoutPlatformFeeUgx ?? -1),
+                      fxKind: fxKindDrafts[o.id] ?? o.fxOverrideKind ?? "inherit",
+                      fxUgx: fxUgxDrafts[o.id] ?? "",
+                      fxBuffer: fxBufferDrafts[o.id] ?? String(o.fxOverrideBufferPct ?? 0),
+                    }}
+                    busy={{ busyId, faviconBusyId, feeBusyId, walletBusyId, fxBusyId }}
+                    handlers={{
+                      onWalletChange: (v) => setWalletDrafts((prev) => ({ ...prev, [o.id]: v })),
+                      onFeeChange: (v) => setFeeDrafts((prev) => ({ ...prev, [o.id]: v })),
+                      onFxKindChange: (v) => setFxKindDrafts((prev) => ({ ...prev, [o.id]: v })),
+                      onFxUgxChange: (v) => setFxUgxDrafts((prev) => ({ ...prev, [o.id]: v })),
+                      onFxBufferChange: (v) => setFxBufferDrafts((prev) => ({ ...prev, [o.id]: v })),
+                      onSaveWallet: () => void saveDestinationWallet(o.id),
+                      onSaveFee: () => void savePlatformFee(o.id),
+                      onSaveFx: () => void saveOrgFx(o.id),
+                      onFaviconFile: (file) => void uploadFavicon(o, file),
+                      onRemoveFavicon: () => void removeFavicon(o),
+                      onApprove: () => void patchOrg(o.id, "approve"),
+                      onReject: () => void patchOrg(o.id, "reject"),
+                      onReopen: () => void patchOrg(o.id, "reopen"),
+                      onResendVerification: () => void resendVerification(o),
+                    }}
+                    faviconInputRef={(el) => {
+                      inputRefs.current[o.id] = el;
+                    }}
+                    onFaviconUploadClick={() => inputRefs.current[o.id]?.click()}
+                  />
                 ))}
               </tbody>
             </table>

@@ -8,6 +8,7 @@ import prisma from '@/utils/prisma';
 import { LEAGUE_TIERS } from '@/utils/consts';
 import { GLOBAL_TASK_SEED_TEAM, GLOBAL_TASK_SEED_LEAGUE } from '@/utils/global-tasks-seed-data';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = 'force-dynamic';
 
 function targetLabel(metric: string, targetValue: number): string {
@@ -35,6 +36,7 @@ async function ensureGlobalTasksSeeded() {
 }
 
 export async function GET() {
+  try {
   await ensureGlobalTasksSeeded();
   const tasks = await prisma.globalTask.findMany({
     orderBy: [{ participantType: 'asc' }, { createdAt: 'asc' }],
@@ -52,4 +54,8 @@ export async function GET() {
   }));
 
   return NextResponse.json({ tasks: list });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "global-tasks/get", fallback: "Request failed" });
+  }
 }

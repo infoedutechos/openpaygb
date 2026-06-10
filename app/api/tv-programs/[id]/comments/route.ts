@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { validateTelegramWebAppData } from '@/utils/server-checks';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = 'force-dynamic';
 
 const MAX_BODY = 2000;
@@ -30,8 +31,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       })),
     });
   } catch (e) {
-    console.error('[tv-programs comments GET]', e);
-    return NextResponse.json({ error: 'Failed to load comments' }, { status: 500 });
+    return apiErrorResponse(e, { route: "tv-programs/[id]/comments", fallback: "Failed to load comments" });
   }
 }
 
@@ -92,7 +92,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       },
     });
   } catch (e) {
-    console.error('[tv-programs comments POST]', e);
-    return NextResponse.json({ error: 'Failed to post comment' }, { status: 500 });
+    return apiErrorResponse(e, { route: "tv-programs/[id]/comments", fallback: "Failed to post comment" });
   }
 }

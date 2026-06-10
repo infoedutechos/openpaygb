@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { getAdminAuthError } from '@/utils/admin-session';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
@@ -116,9 +117,8 @@ export async function GET(req: Request) {
         totalPages: Math.ceil(total / limit),
       },
     });
-  } catch (error) {
-    console.error('Error fetching bot users:', error);
-    return NextResponse.json({ error: 'Failed to fetch bot users' }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/bot-users", fallback: "Failed to fetch bot users" });
   }
 }
 
@@ -170,8 +170,7 @@ export async function POST(req: Request) {
       default:
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
-  } catch (error) {
-    console.error('Error in bot-users action:', error);
-    return NextResponse.json({ error: 'Failed to perform action' }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/bot-users", fallback: "Failed to perform action" });
   }
 }

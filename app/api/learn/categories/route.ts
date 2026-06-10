@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { LEARN_CATEGORY_DEFAULTS } from '@/data/learn-defaults';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = 'force-dynamic';
 const COLLECTION = 'LearnCategoryContent';
 
@@ -55,8 +56,7 @@ export async function GET() {
     }
 
     return NextResponse.json({ categories: docs });
-  } catch (error) {
-    console.error('[api/learn/categories] GET failed:', error);
-    return NextResponse.json({ categories: LEARN_CATEGORY_DEFAULTS });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "learn/categories", fallback: "Request failed" });
   }
 }

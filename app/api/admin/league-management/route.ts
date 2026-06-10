@@ -11,6 +11,7 @@ import { generateInviteCode } from '@/utils/league-points';
 import { getWeekKey } from '@/utils/week-utils';
 import { LEAGUE_CUSTOM_MAX_MEMBERS } from '@/utils/consts';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = 'force-dynamic';
 
 function uniqueInviteCode(prisma: typeof import('@/utils/prisma').default, forTeam: boolean): Promise<string> {
@@ -75,8 +76,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ teams: teamList, leagues: leagueList });
   } catch (e) {
-    console.error('Admin league-management GET:', e);
-    return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 });
+    return apiErrorResponse(e, { route: "admin/league-management", fallback: "Failed to fetch" });
   }
 }
 
@@ -222,7 +222,6 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
     }
   } catch (e) {
-    console.error('Admin league-management POST:', e);
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Failed' }, { status: 500 });
+    return apiErrorResponse(e, { route: "admin/league-management", fallback: "Request failed" });
   }
 }

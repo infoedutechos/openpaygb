@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { getAdminAuthError } from '@/utils/admin-session';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
@@ -130,8 +131,7 @@ export async function GET(
           : null,
       })),
     });
-  } catch (error) {
-    console.error('Error fetching bot user detail:', error);
-    return NextResponse.json({ error: 'Failed to fetch user detail' }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/bot-users/[id]", fallback: "Failed to fetch user detail" });
   }
 }

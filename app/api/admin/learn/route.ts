@@ -3,6 +3,7 @@ import prisma from '@/utils/prisma';
 import { getAdminAuthError } from '@/utils/admin-session';
 import { LEARN_CATEGORY_DEFAULTS } from '@/data/learn-defaults';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = 'force-dynamic';
 const COLLECTION = 'LearnCategoryContent';
 
@@ -54,9 +55,8 @@ export async function GET(req: NextRequest) {
     });
     const categories = ((result as MongoFindResult).cursor?.firstBatch ?? []).map(normalize);
     return NextResponse.json({ categories });
-  } catch (error) {
-    console.error('[api/admin/learn] GET failed:', error);
-    return NextResponse.json({ error: 'Failed to load learn categories' }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/learn", fallback: "Failed to load learn categories" });
   }
 }
 
@@ -175,8 +175,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
-  } catch (error) {
-    console.error('[api/admin/learn] POST failed:', error);
-    return NextResponse.json({ error: 'Failed to save learn content' }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/learn", fallback: "Failed to save learn content" });
   }
 }

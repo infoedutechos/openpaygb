@@ -12,6 +12,7 @@ import prisma from '@/utils/prisma';
 import { User } from '@prisma/client';
 import { getAdminAuthError } from '@/utils/admin-session';
 
+import { apiErrorResponse } from "@/lib/api-error";
 const PAGE_SIZE = 100000; // Adjust based on your needs and server capabilities
 
 export async function POST(req: NextRequest) {
@@ -39,8 +40,7 @@ export async function POST(req: NextRequest) {
             totalPages,
             hasMore: page < totalPages - 1
         });
-    } catch (error) {
-        console.error('Export error:', error);
-        return NextResponse.json({ error: 'Export failed' }, { status: 500 });
-    }
+    } catch (e) {
+    return apiErrorResponse(e, { route: "admin/export", fallback: "Export failed" });
+  }
 }

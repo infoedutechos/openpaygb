@@ -8,7 +8,9 @@ import prisma from '@/utils/prisma';
 import { validateTelegramWebAppData } from '@/utils/server-checks';
 import { TEAM_MAX_MEMBERS } from '@/utils/consts';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function GET(req: Request) {
+  try {
   const { searchParams } = new URL(req.url);
   const initData = searchParams.get('initData');
 
@@ -49,4 +51,8 @@ export async function GET(req: Request) {
   }));
 
   return NextResponse.json({ teams: list });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "teams/list/get", fallback: "Request failed" });
+  }
 }

@@ -11,6 +11,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { validateTelegramWebAppData } from '@/utils/server-checks';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const telegramInitData = url.searchParams.get('initData');
@@ -72,8 +73,7 @@ export async function GET(req: Request) {
     return NextResponse.json({
       tasks: tasksData,
     });
-  } catch (error) {
-    console.error('Error fetching user tasks:', error);
-    return NextResponse.json({ error: 'Failed to fetch user tasks' }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "tasks", fallback: "Failed to fetch user tasks" });
   }
 }

@@ -3,6 +3,7 @@ import prisma from '@/utils/prisma';
 import { validateTelegramWebAppData } from '@/utils/server-checks';
 import { deleteUsersCascade } from '@/utils/delete-users-cascade';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
@@ -64,9 +65,7 @@ export async function POST(req: Request) {
     await deleteUsersCascade(prisma, [dbUser.id]);
 
     return NextResponse.json({ success: true, message: 'Account deleted permanently' });
-  } catch (err) {
-    console.error('User self-delete error:', err);
-    const msg = err instanceof Error ? err.message : 'Delete failed';
-    return NextResponse.json({ error: 'Could not delete account. ' + msg }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "user/delete", fallback: "Could not delete account. " });
   }
 }

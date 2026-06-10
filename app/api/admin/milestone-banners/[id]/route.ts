@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { isAdminAuthorized } from '@/utils/admin-session';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -33,9 +34,8 @@ export async function PATCH(
       data: updateData,
     });
     return NextResponse.json(banner);
-  } catch (error) {
-    console.error('[admin/milestone-banners] PATCH', error);
-    return NextResponse.json({ error: 'Failed to update' }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/milestone-banners/[id]", fallback: "Failed to update" });
   }
 }
 
@@ -50,8 +50,7 @@ export async function DELETE(
   try {
     await prisma.milestoneBanner.delete({ where: { id } });
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('[admin/milestone-banners] DELETE', error);
-    return NextResponse.json({ error: 'Failed to delete' }, { status: 500 });
+  } catch (e) {
+    return apiErrorResponse(e, { route: "admin/milestone-banners/[id]", fallback: "Failed to delete" });
   }
 }

@@ -9,6 +9,7 @@ import prisma from '@/utils/prisma';
 import { getAdminAuthError } from '@/utils/admin-session';
 import { STAKING_DURATIONS } from '@/utils/consts';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export const dynamic = 'force-dynamic';
 
 function getExpectedBonusPercent(durationId: string): number {
@@ -105,8 +106,7 @@ export async function GET(req: Request) {
       report,
     });
   } catch (e) {
-    console.error('[admin/staking-audit]', e);
-    return NextResponse.json({ error: 'Failed to run audit' }, { status: 500 });
+    return apiErrorResponse(e, { route: "admin/staking-audit", fallback: "Failed to run audit" });
   }
 }
 
@@ -133,7 +133,6 @@ export async function POST(req: Request) {
     }
     return NextResponse.json({ ok: true, updated });
   } catch (e) {
-    console.error('[admin/staking-audit]', e);
-    return NextResponse.json({ error: 'Failed to correct' }, { status: 500 });
+    return apiErrorResponse(e, { route: "admin/staking-audit", fallback: "Failed to correct" });
   }
 }

@@ -7,10 +7,12 @@ import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { validateTelegramWebAppData } from '@/utils/server-checks';
 
+import { apiErrorResponse } from "@/lib/api-error";
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  try {
   const { id: leagueId } = await params;
   const { searchParams } = new URL(req.url);
   const initData = searchParams.get('initData');
@@ -49,6 +51,10 @@ export async function GET(
       createdAt: r.createdAt,
     })),
   });
+
+  } catch (e) {
+    return apiErrorResponse(e, { route: "leagues/[id]/requests/get", fallback: "Request failed" });
+  }
 }
 
 export async function POST(

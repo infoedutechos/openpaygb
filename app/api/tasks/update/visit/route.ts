@@ -11,6 +11,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
 import { validateTelegramWebAppData } from '@/utils/server-checks';
 
+import { apiErrorResponse } from "@/lib/api-error";
 interface UpdateTaskRequestBody {
     initData: string;
     taskId: string;
@@ -99,8 +100,7 @@ export async function POST(req: Request) {
             taskStartTimestamp: result.taskStartTimestamp,
         });
 
-    } catch (error) {
-        console.error('Error updating task:', error);
-        return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to update task' }, { status: 500 });
-    }
+    } catch (e) {
+    return apiErrorResponse(e, { route: "tasks/update/visit", fallback: "Request failed" });
+  }
 }
