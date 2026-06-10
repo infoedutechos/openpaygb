@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { workspacePortalPath } from "@/lib/workspace-portal-url";
 
 type OrgRow = {
   id: string;
@@ -172,6 +173,14 @@ export function MasterPendingSchoolsBanner() {
                       <p className="mt-2 text-xs leading-relaxed text-slate-500">{o.registrationNote}</p>
                     ) : null}
                     <p className="mt-2 text-[10px] text-slate-600">Submitted {formatWhen(o.createdAt)}</p>
+                    <Link
+                      href={workspacePortalPath({ slug: o.slug, email: o.registrationContactEmail })}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 inline-flex min-h-[40px] items-center rounded-lg border border-violet-500/35 px-3 py-2 text-xs font-semibold text-violet-200 hover:border-violet-400/55 hover:text-white"
+                    >
+                      Open applicant workspace portal
+                    </Link>
                   </li>
                 ))}
               </ul>

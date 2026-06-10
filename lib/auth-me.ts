@@ -16,6 +16,8 @@ export type AuthMeAdmin = {
   role: string;
   organizationId: string | null;
   organization: AuthMeOrganization | null;
+  hasProfileImage?: boolean;
+  profileImageUrl?: string | null;
   createdAt?: string | null;
   lastLoginAt?: string | null;
   previousLoginAt?: string | null;

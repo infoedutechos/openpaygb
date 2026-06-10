@@ -45,6 +45,11 @@ export default function DexHubPage() {
           so routing, landing tabs, and cross-links stay consistent. Add partners, liquidity, or jurisdictions by extending
           that registry and plugging API routes — without forking Tuition or Play shells.
         </p>
+        <p className="mt-3 leading-relaxed">
+          <span className="text-slate-300">OpenPay Global Token (OPGB)</span> — internal settlement across MoMo, TON, and
+          crypto — see <code className="text-[11px] text-violet-100/90">docs/OPGB_TOKEN_ECOSYSTEM.md</code> in the repo.
+          Today&apos;s shipped piece is the OpenPayGB UGX card; multi-currency wallet and hybrid DEX are phased next.
+        </p>
       </section>
     </div>
   );

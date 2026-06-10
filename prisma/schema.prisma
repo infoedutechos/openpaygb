@@ -250,6 +250,9 @@ model AdminUser {
   telegramId            String                    @default("")
   lastLoginAt           DateTime?
   previousLoginAt       DateTime?
+  /** Optional profile photo (PNG, JPEG, WebP, ICO) — served from /api/auth/admin/profile-image. */
+  profileImage          Bytes?
+  profileImageUploadedAt DateTime?
   createdAt             DateTime                  @default(now())
   updatedAt             DateTime                  @updatedAt
 

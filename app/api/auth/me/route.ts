@@ -75,6 +75,11 @@ export async function GET() {
         }
       : null;
 
+    const hasProfileImage = Boolean(admin.profileImageUploadedAt);
+    const profileImageUrl = hasProfileImage
+      ? `/api/auth/admin/profile-image?v=${admin.profileImageUploadedAt!.getTime()}`
+      : null;
+
     const body: AuthMeJson = {
       admin: {
         id: admin.id,
@@ -83,6 +88,8 @@ export async function GET() {
         role: admin.role,
         organizationId: admin.organizationId,
         organization,
+        hasProfileImage,
+        profileImageUrl,
         createdAt: admin.createdAt.toISOString(),
         lastLoginAt: admin.lastLoginAt?.toISOString() ?? null,
         previousLoginAt: admin.previousLoginAt?.toISOString() ?? null,

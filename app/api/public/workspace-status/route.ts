@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { apiErrorResponse } from "@/lib/api-error";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
 import { getSchoolWorkspaceRegistrationPolicy } from "@/lib/school-workspace-registration-policy";
+import { buildWorkspaceVerificationSteps } from "@/lib/workspace-verification-steps";
+import { workspacePortalPath } from "@/lib/workspace-portal-url";
 
 const Query = z.object({
   slug: z.string().min(2).max(64).optional(),
@@ -71,6 +73,8 @@ export async function GET(req: Request) {
       nextSteps = "Email verified. A platform operator will review and approve your school workspace.";
     }
 
+    const verificationSteps = buildWorkspaceVerificationSteps(org, policy.autoRegistrationEnabled);
+
     return NextResponse.json({
       found: true,
       name: org.name,
@@ -79,6 +83,11 @@ export async function GET(req: Request) {
       emailVerified: Boolean(org.registrationEmailVerifiedAt),
       autoRegistrationEnabled: policy.autoRegistrationEnabled,
       payUrl: `/pay/${org.slug}`,
+      workspacePortalUrl: workspacePortalPath({
+        slug: org.slug,
+        email: parsed.data.email ?? undefined,
+      }),
+      verificationSteps,
       nextSteps,
     });
   } catch (e) {

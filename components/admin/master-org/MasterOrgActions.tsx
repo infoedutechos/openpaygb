@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { workspaceEmailVerifyStatus } from "@/lib/organization-workspace-verify-shared";
+import { workspacePortalPath } from "@/lib/workspace-portal-url";
 import type { MasterOrgRow } from "@/components/admin/master-org/types";
 
 type Props = {
@@ -12,6 +13,23 @@ type Props = {
   onReject: () => void;
   onReopen: () => void;
 };
+
+function WorkspacePortalLink({ org, compact }: { org: MasterOrgRow; compact?: boolean }) {
+  return (
+    <Link
+      href={workspacePortalPath({ slug: org.slug, email: org.registrationContactEmail })}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={
+        compact
+          ? "inline-flex min-h-[44px] items-center text-xs text-violet-300 underline hover:text-white"
+          : "text-xs text-violet-300 underline hover:text-white"
+      }
+    >
+      Open applicant workspace portal
+    </Link>
+  );
+}
 
 export function MasterOrgActions({ org, busyId, compact, onApprove, onReject, onReopen }: Props) {
   if (org.slug === "default") {
@@ -61,39 +79,46 @@ export function MasterOrgActions({ org, busyId, compact, onApprove, onReject, on
             Reject
           </button>
         </div>
+        <WorkspacePortalLink org={org} compact={compact} />
       </div>
     );
   }
 
   if (org.tenantStatus === "active") {
     return (
-      <Link
-        href={`/admin?orgSlug=${encodeURIComponent(org.slug)}`}
-        className={
-          compact
-            ? "inline-flex min-h-[44px] items-center text-xs text-sky-300 underline"
-            : "text-xs text-sky-300 underline hover:text-white"
-        }
-      >
-        Open tuition dashboard
-      </Link>
+      <div className={compact ? "flex flex-col gap-2" : "flex flex-col gap-1"}>
+        <Link
+          href={`/admin?orgSlug=${encodeURIComponent(org.slug)}`}
+          className={
+            compact
+              ? "inline-flex min-h-[44px] items-center text-xs text-sky-300 underline"
+              : "text-xs text-sky-300 underline hover:text-white"
+          }
+        >
+          Open tuition dashboard
+        </Link>
+        <WorkspacePortalLink org={org} compact={compact} />
+      </div>
     );
   }
 
   if (org.tenantStatus === "rejected") {
     return (
-      <button
-        type="button"
-        disabled={busyId === org.id}
-        onClick={onReopen}
-        className={
-          compact
-            ? "min-h-[44px] w-full rounded-lg bg-amber-700/80 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
-            : "rounded bg-amber-700/80 px-2 py-1 text-xs font-semibold text-white hover:bg-amber-600 disabled:opacity-50"
-        }
-      >
-        Reopen for review
-      </button>
+      <div className={compact ? "flex flex-col gap-2" : "flex flex-col gap-1"}>
+        <button
+          type="button"
+          disabled={busyId === org.id}
+          onClick={onReopen}
+          className={
+            compact
+              ? "min-h-[44px] w-full rounded-lg bg-amber-700/80 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
+              : "rounded bg-amber-700/80 px-2 py-1 text-xs font-semibold text-white hover:bg-amber-600 disabled:opacity-50"
+          }
+        >
+          Reopen for review
+        </button>
+        <WorkspacePortalLink org={org} compact={compact} />
+      </div>
     );
   }
 
