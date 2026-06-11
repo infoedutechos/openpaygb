@@ -15,6 +15,8 @@ type StatusJson = {
   tenantStatus?: string;
   emailVerified?: boolean;
   autoRegistrationEnabled?: boolean;
+  deferEmailVerification?: boolean;
+  autoGenerateAdminLogin?: boolean;
   payUrl?: string;
   workspacePortalUrl?: string;
   verificationSteps?: WorkspaceVerificationStep[];
@@ -48,8 +50,11 @@ function WorkspaceStatusInner() {
   const email = searchParams.get("email")?.trim().toLowerCase() ?? "";
   const justVerified = searchParams.get("verified") === "1";
   const justActivated = searchParams.get("activated") === "1";
+  const justSubmitted = searchParams.get("submitted") === "1";
   const [data, setData] = useState<StatusJson | null>(null);
   const [loading, setLoading] = useState(true);
+  const [resendBusy, setResendBusy] = useState(false);
+  const [resendMsg, setResendMsg] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!slug && !email) {
@@ -77,6 +82,27 @@ function WorkspaceStatusInner() {
     void load();
   }, [load]);
 
+  async function onResendEmail() {
+    if (!email) return;
+    setResendBusy(true);
+    setResendMsg(null);
+    try {
+      const r = await fetch("/api/public/organization-register/resend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const j = (await r.json()) as { error?: string; message?: string };
+      if (!r.ok) throw new Error(j.error ?? "Could not send verification email");
+      setResendMsg(j.message ?? "If a pending workspace exists, a verification link was sent.");
+      void load();
+    } catch (e) {
+      setResendMsg(e instanceof Error ? e.message : "Could not send verification email");
+    } finally {
+      setResendBusy(false);
+    }
+  }
+
   useEffect(() => {
     if (!data?.found || data.tenantStatus === "active" || data.tenantStatus === "rejected") return;
     const id = window.setInterval(() => void load(), 15_000);
@@ -98,7 +124,15 @@ function WorkspaceStatusInner() {
         Verification status and next steps for your registration. Bookmark this page to check progress.
       </p>
 
-      {justVerified || justActivated ? (
+      {justSubmitted ? (
+        <p className="mt-6 rounded-lg border border-cyan-500/35 bg-cyan-950/35 px-4 py-3 text-sm text-cyan-100/95">
+          {justActivated
+            ? "Registration received — your workspace is active. Confirm your email when ready, then sign in below."
+            : "Registration received — track your workspace progress here and confirm your email when ready."}
+        </p>
+      ) : null}
+
+      {justVerified || (justActivated && !justSubmitted) ? (
         <p className="mt-6 rounded-lg border border-emerald-500/35 bg-emerald-950/35 px-4 py-3 text-sm text-emerald-200/95">
           {justActivated
             ? "Email confirmed — your workspace is now active. Sign in below when your admin account is ready."
@@ -154,6 +188,25 @@ function WorkspaceStatusInner() {
 
           {data.nextSteps ? (
             <p className="text-slate-300 leading-relaxed">{data.nextSteps}</p>
+          ) : null}
+
+          {!data.emailVerified && email ? (
+            <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Email confirmation</p>
+              <p className="mt-2 text-sm text-slate-400">
+                Send a verification link to <span className="font-mono text-slate-300">{email}</span> when you are
+                ready to confirm.
+              </p>
+              <button
+                type="button"
+                disabled={resendBusy}
+                onClick={() => void onResendEmail()}
+                className="mt-3 min-h-[44px] rounded-lg border border-cyan-500/35 bg-cyan-950/40 px-4 py-2 text-sm font-medium text-cyan-100 hover:bg-cyan-900/50 disabled:opacity-50"
+              >
+                {resendBusy ? "Sending…" : "Send verification email"}
+              </button>
+              {resendMsg ? <p className="mt-2 text-xs text-slate-400">{resendMsg}</p> : null}
+            </div>
           ) : null}
 
           {data.tenantStatus === "active" ? (

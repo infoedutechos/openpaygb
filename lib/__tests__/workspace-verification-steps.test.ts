@@ -21,6 +21,18 @@ describe("buildWorkspaceVerificationSteps", () => {
     expect(master?.skipped).toBe(true);
   });
 
+  it("allows master review while email is deferred", () => {
+    const steps = buildWorkspaceVerificationSteps(
+      { tenantStatus: "pending", registrationEmailVerifiedAt: null },
+      false,
+      true,
+    );
+    const master = steps.find((s) => s.id === "master");
+    expect(master?.pending).toBe(true);
+    const email = steps.find((s) => s.id === "email");
+    expect(email?.label).toContain("when ready");
+  });
+
   it("includes rejected step when tenant is rejected", () => {
     const steps = buildWorkspaceVerificationSteps(
       { tenantStatus: "rejected", registrationEmailVerifiedAt: new Date() },

@@ -14,6 +14,7 @@ type OrgSnapshot = {
 export function buildWorkspaceVerificationSteps(
   org: OrgSnapshot,
   autoRegistrationEnabled: boolean,
+  deferEmailVerification = false,
 ): WorkspaceVerificationStep[] {
   const emailVerified = Boolean(org.registrationEmailVerifiedAt);
   const active = org.tenantStatus === "active";
@@ -31,23 +32,41 @@ export function buildWorkspaceVerificationSteps(
         id: "master",
         label: "Platform master review",
         done: active,
-        pending: emailVerified && pending && !rejected,
+        pending: pending && !rejected && (deferEmailVerification || emailVerified),
       };
+
+  const emailStep: WorkspaceVerificationStep = deferEmailVerification
+    ? {
+        id: "email",
+        label: "Confirm registration email (when ready)",
+        done: emailVerified,
+        pending: !emailVerified && !rejected,
+      }
+    : {
+        id: "email",
+        label: "Registration email verified",
+        done: emailVerified,
+        pending: !emailVerified && !rejected,
+      };
+
+  const activePending =
+    !active &&
+    !rejected &&
+    (autoRegistrationEnabled
+      ? deferEmailVerification
+        ? pending
+        : emailVerified
+      : deferEmailVerification || emailVerified);
 
   return [
     { id: "submitted", label: "Application submitted", done: true },
-    {
-      id: "email",
-      label: "Registration email verified",
-      done: emailVerified,
-      pending: !emailVerified && !rejected,
-    },
+    emailStep,
     masterReview,
     {
       id: "active",
       label: "Workspace active",
       done: active,
-      pending: !active && !rejected && (autoRegistrationEnabled ? emailVerified : false),
+      pending: activePending,
     },
     ...(rejected
       ? [{ id: "rejected", label: "Request not approved", done: false, pending: false }]

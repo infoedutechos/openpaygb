@@ -7,6 +7,8 @@ type Policy = {
   requireMasterApproval: boolean;
   autoRegistrationEnabled: boolean;
   autoGenerateAdminLogin: boolean;
+  deferEmailVerification: boolean;
+  autoRedirectAfterRegister: boolean;
 };
 
 export function MasterSchoolWorkspaceRegistrationSettings() {
@@ -28,7 +30,11 @@ export function MasterSchoolWorkspaceRegistrationSettings() {
     };
   }, []);
 
-  async function patch(updates: Partial<Pick<Policy, "requireMasterApproval" | "autoGenerateAdminLogin">>) {
+  async function patch(
+    updates: Partial<
+      Pick<Policy, "requireMasterApproval" | "autoGenerateAdminLogin" | "deferEmailVerification">
+    >,
+  ) {
     setBusy(true);
     setError(null);
     setSaved(null);
@@ -39,6 +45,9 @@ export function MasterSchoolWorkspaceRegistrationSettings() {
       }
       if (updates.autoGenerateAdminLogin !== undefined) {
         body.autoGenerateAdminLogin = updates.autoGenerateAdminLogin;
+      }
+      if (updates.deferEmailVerification !== undefined) {
+        body.deferEmailVerification = updates.deferEmailVerification;
       }
       const r = await fetch("/api/master/school-workspace-registration", {
         method: "PATCH",
@@ -60,6 +69,7 @@ export function MasterSchoolWorkspaceRegistrationSettings() {
   const requireMaster = policy?.requireMasterApproval ?? true;
   const autoRegistration = policy?.autoRegistrationEnabled ?? false;
   const autoAdmin = policy?.autoGenerateAdminLogin ?? false;
+  const deferEmail = policy?.deferEmailVerification ?? false;
 
   return (
     <section
@@ -69,10 +79,9 @@ export function MasterSchoolWorkspaceRegistrationSettings() {
       <h2 className="text-sm font-semibold text-amber-100">School workspace self-registration</h2>
       <p className="mt-2 max-w-3xl text-sm text-slate-400">
         Schools request a workspace at{" "}
-        <span className="font-mono text-slate-300">/admin/register</span>. After they confirm their
-        email, the workspace can be activated automatically (programmes and fees copied from the
-        platform template).{" "}
-        <strong className="text-slate-300">Email verification is always required.</strong>
+        <span className="font-mono text-slate-300">/admin/register</span>. Use the toggles below to
+        control master approval, immediate redirect to the workspace portal, deferred email
+        confirmation, and automatic school admin login provisioning.
       </p>
 
       <label className="mt-5 flex min-h-[44px] cursor-pointer items-start gap-3 rounded-lg border border-white/10 bg-black/20 px-4 py-3 md:min-h-0 md:items-center">
@@ -89,6 +98,25 @@ export function MasterSchoolWorkspaceRegistrationSettings() {
             {requireMaster
               ? "Auto-registration is off — tenants stay pending until you approve on /admin/master/organizations."
               : "Auto-registration is on — after email verification, workspace becomes active and template programmes/FX are cloned."}
+          </span>
+        </span>
+      </label>
+
+      <label className="mt-3 flex min-h-[44px] cursor-pointer items-start gap-3 rounded-lg border border-white/10 bg-black/20 px-4 py-3 md:min-h-0 md:items-center">
+        <input
+          type="checkbox"
+          className="mt-1 shrink-0 md:mt-0"
+          checked={deferEmail}
+          disabled={busy || policy === null}
+          onChange={(e) => void patch({ deferEmailVerification: e.target.checked })}
+        />
+        <span className="text-sm text-slate-200">
+          <strong className="font-medium text-white">Defer email verification + auto-redirect</strong>
+          <span className="mt-1 block text-xs leading-relaxed text-slate-500">
+            After submit, applicants go straight to{" "}
+            <span className="font-mono text-slate-400">/school/workspace-status</span> instead of
+            waiting for an inbox link. They confirm email later from that portal. With
+            auto-registration on, the workspace activates immediately on submit.
           </span>
         </span>
       </label>
@@ -122,6 +150,12 @@ export function MasterSchoolWorkspaceRegistrationSettings() {
           label="Auto-registration"
           active={autoRegistration}
           activeClass="border-emerald-500/40 bg-emerald-950/40 text-emerald-100"
+          inactiveClass="border-slate-600/40 bg-slate-900/40 text-slate-500"
+        />
+        <StatusPill
+          label="Defer email + redirect"
+          active={deferEmail}
+          activeClass="border-violet-500/40 bg-violet-950/40 text-violet-100"
           inactiveClass="border-slate-600/40 bg-slate-900/40 text-slate-500"
         />
         <StatusPill

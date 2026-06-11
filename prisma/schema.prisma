@@ -669,6 +669,11 @@ model SiteUiSettings {
   schoolWorkspaceRequireMasterApproval Boolean @default(true)
   /** When true, create org_admin + invite email for registration contact on workspace activation. */
   schoolWorkspaceAutoGenerateAdminLogin Boolean @default(false)
+  /**
+   * When true, applicants go straight to /school/workspace-status after submit (email confirm later).
+   * With auto-registration on, workspace activates immediately without waiting for email verify.
+   */
+  schoolWorkspaceDeferEmailVerification Boolean @default(false)
   /** Floating help copilot display name. */
   copilotAssistantName       String  @default("ODEL HUB Copilot")
   /** When false, students cannot opt in to OpenPayGB platform card or pay tuition with it. */

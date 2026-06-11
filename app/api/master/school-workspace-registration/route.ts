@@ -8,6 +8,7 @@ import { getSchoolWorkspaceRegistrationPolicy } from "@/lib/school-workspace-reg
 const PatchBody = z.object({
   requireMasterApproval: z.boolean().optional(),
   autoGenerateAdminLogin: z.boolean().optional(),
+  deferEmailVerification: z.boolean().optional(),
 });
 
 export async function GET() {
@@ -29,7 +30,8 @@ export async function PATCH(req: Request) {
   }
   if (
     parsed.data.requireMasterApproval === undefined &&
-    parsed.data.autoGenerateAdminLogin === undefined
+    parsed.data.autoGenerateAdminLogin === undefined &&
+    parsed.data.deferEmailVerification === undefined
   ) {
     return NextResponse.json({ error: "No settings to update" }, { status: 400 });
   }
@@ -39,6 +41,7 @@ export async function PATCH(req: Request) {
     select: {
       schoolWorkspaceRequireMasterApproval: true,
       schoolWorkspaceAutoGenerateAdminLogin: true,
+      schoolWorkspaceDeferEmailVerification: true,
     },
   });
 
@@ -46,6 +49,8 @@ export async function PATCH(req: Request) {
     parsed.data.requireMasterApproval ?? current?.schoolWorkspaceRequireMasterApproval ?? true;
   const autoGenerateAdminLogin =
     parsed.data.autoGenerateAdminLogin ?? current?.schoolWorkspaceAutoGenerateAdminLogin ?? false;
+  const deferEmailVerification =
+    parsed.data.deferEmailVerification ?? current?.schoolWorkspaceDeferEmailVerification ?? false;
 
   await prisma.siteUiSettings.upsert({
     where: { key: PLATFORM_SITE_UI_KEY },
@@ -53,10 +58,12 @@ export async function PATCH(req: Request) {
       key: PLATFORM_SITE_UI_KEY,
       schoolWorkspaceRequireMasterApproval: requireMasterApproval,
       schoolWorkspaceAutoGenerateAdminLogin: autoGenerateAdminLogin,
+      schoolWorkspaceDeferEmailVerification: deferEmailVerification,
     },
     update: {
       schoolWorkspaceRequireMasterApproval: requireMasterApproval,
       schoolWorkspaceAutoGenerateAdminLogin: autoGenerateAdminLogin,
+      schoolWorkspaceDeferEmailVerification: deferEmailVerification,
     },
   });
 

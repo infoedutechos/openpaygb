@@ -6,11 +6,13 @@ import {
   pendingOrgPublicBodySchema,
 } from "@/lib/organization-intake";
 import { sendOrganizationRegistrationEmail } from "@/lib/organization-registration-email";
+import { completeDeferredSchoolWorkspaceRegistration } from "@/lib/school-workspace-post-register";
 import { getSchoolWorkspaceRegistrationPolicy } from "@/lib/school-workspace-registration-policy";
 import {
   issueOrganizationWorkspaceVerifyToken,
   organizationWorkspaceVerifyUrlForRequest,
 } from "@/lib/organization-workspace-verify";
+import { prisma } from "@/lib/prisma";
 import { apiErrorResponse } from "@/lib/api-error";
 import { warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 
@@ -35,6 +37,38 @@ export async function POST(req: Request) {
     const policy = await getSchoolWorkspaceRegistrationPolicy();
     const org = await createPendingOrganization(body);
     const contactEmail = body.registrationContactEmail;
+
+    if (policy.deferEmailVerification) {
+      const deferred = await completeDeferredSchoolWorkspaceRegistration(
+        org.id,
+        org.slug,
+        contactEmail,
+        policy,
+      );
+      const refreshed = await prisma.organization.findUnique({
+        where: { id: org.id },
+        select: { tenantStatus: true },
+      });
+      return NextResponse.json(
+        {
+          organization: {
+            id: org.id,
+            name: org.name,
+            slug: org.slug,
+            tenantStatus: refreshed?.tenantStatus ?? org.tenantStatus,
+          },
+          message: deferred.message,
+          emailSent: false,
+          deferEmailVerification: true,
+          redirectUrl: deferred.redirectUrl,
+          activated: deferred.activated,
+          requireMasterApproval: policy.requireMasterApproval,
+          autoRegistrationEnabled: policy.autoRegistrationEnabled,
+          autoGenerateAdminLogin: policy.autoGenerateAdminLogin,
+        },
+        { status: 201 },
+      );
+    }
 
     const plain = await issueOrganizationWorkspaceVerifyToken(org.id);
     const emailSent = await sendOrganizationRegistrationEmail(
@@ -61,6 +95,8 @@ export async function POST(req: Request) {
       emailSent: boolean;
       requireMasterApproval: boolean;
       autoRegistrationEnabled: boolean;
+      deferEmailVerification: boolean;
+      autoGenerateAdminLogin: boolean;
       devConfirmUrl?: string;
     } = {
       organization: {
@@ -75,6 +111,8 @@ export async function POST(req: Request) {
       emailSent,
       requireMasterApproval: policy.requireMasterApproval,
       autoRegistrationEnabled: policy.autoRegistrationEnabled,
+      deferEmailVerification: false,
+      autoGenerateAdminLogin: policy.autoGenerateAdminLogin,
     };
 
     if (!emailSent && process.env.NODE_ENV !== "production") {

@@ -40,13 +40,15 @@ On **Master Admin Console** (`/admin/master`), section **School workspace regist
 
 | Mode | Behavior |
 |------|----------|
-| **Master approval required** (default) | Workspace stays **pending** until a master approves (after email verification). |
-| **Auto-registration** | After the applicant verifies email, the workspace becomes **active** automatically (programmes/FX cloned from `default`). Master still creates org admin credentials. |
+| **Master approval required** (default) | Workspace stays **pending** until a master approves (after email verification, unless deferred). |
+| **Auto-registration** | Workspace becomes **active** automatically — on email verify, or **immediately on submit** when defer-email is on. |
+| **Defer email + auto-redirect** | After submit, applicant is sent to **`/school/workspace-status`**; email confirm is a later step on that portal. |
+| **Auto-generate school admin logins** | On activation, platform creates `org_admin` and emails a password-set link (no manual master provisioning). |
 
-API: `GET` / `PATCH` **`/api/master/school-workspace-registration`** with `{ "requireMasterApproval": true \| false }`.  
+API: `GET` / `PATCH` **`/api/master/school-workspace-registration`** with `{ requireMasterApproval, autoGenerateAdminLogin, deferEmailVerification }`.  
 Public read: **`GET /api/public/school-workspace-registration-policy`**.
 
-Prisma: `SiteUiSettings.schoolWorkspaceRequireMasterApproval` (default `true`). Run `npm run db:push` after pulling.
+Prisma: `schoolWorkspaceRequireMasterApproval`, `schoolWorkspaceAutoGenerateAdminLogin`, `schoolWorkspaceDeferEmailVerification`. Run `npm run db:push` after pulling.
 
 ---
 

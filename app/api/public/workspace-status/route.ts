@@ -57,11 +57,24 @@ export async function GET(req: Request) {
 
     let nextSteps: string;
     if (org.tenantStatus === "active") {
-      nextSteps =
-        "Your workspace is active. Sign in at /school/login once your platform operator has created your admin account.";
+      if (!org.registrationEmailVerifiedAt && policy.deferEmailVerification) {
+        nextSteps = policy.autoGenerateAdminLogin
+          ? "Your workspace is active. Confirm your email when ready, then use the password-set link in your inbox to sign in at /school/login."
+          : "Your workspace is active. Confirm your email when ready, then sign in at /school/login when your admin account is ready.";
+      } else if (policy.autoGenerateAdminLogin) {
+        nextSteps =
+          "Your workspace is active. Check your contact email for the password-set link, then sign in at /school/login.";
+      } else {
+        nextSteps =
+          "Your workspace is active. Sign in at /school/login when your school admin account is ready.";
+      }
     } else if (org.tenantStatus === "rejected") {
       nextSteps =
         "This workspace request was not approved. Contact ODEL HUB support if you believe this is an error.";
+    } else if (!org.registrationEmailVerifiedAt && policy.deferEmailVerification) {
+      nextSteps = policy.autoRegistrationEnabled
+        ? "Your workspace is being prepared. Confirm your registration email when ready using the button below."
+        : "Your application is on file. Confirm your email when ready, then wait for platform master approval.";
     } else if (!org.registrationEmailVerifiedAt) {
       nextSteps = policy.autoRegistrationEnabled
         ? "Verify your registration email. Your workspace will activate automatically after you confirm (no master approval step)."
@@ -73,7 +86,11 @@ export async function GET(req: Request) {
       nextSteps = "Email verified. A platform operator will review and approve your school workspace.";
     }
 
-    const verificationSteps = buildWorkspaceVerificationSteps(org, policy.autoRegistrationEnabled);
+    const verificationSteps = buildWorkspaceVerificationSteps(
+      org,
+      policy.autoRegistrationEnabled,
+      policy.deferEmailVerification,
+    );
 
     return NextResponse.json({
       found: true,
@@ -82,6 +99,8 @@ export async function GET(req: Request) {
       tenantStatus: org.tenantStatus,
       emailVerified: Boolean(org.registrationEmailVerifiedAt),
       autoRegistrationEnabled: policy.autoRegistrationEnabled,
+      deferEmailVerification: policy.deferEmailVerification,
+      autoGenerateAdminLogin: policy.autoGenerateAdminLogin,
       payUrl: `/pay/${org.slug}`,
       workspacePortalUrl: workspacePortalPath({
         slug: org.slug,

@@ -2,14 +2,17 @@
 
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { OdelShieldIcon } from "@/components/icons/OdelShieldIcon";
 import { workspacePortalPath } from "@/lib/workspace-portal-url";
 import { OrganizationUnitKindPicker } from "@/components/admin/OrganizationUnitKindPicker";
 import type { OrganizationUnitKind } from "@/lib/organization-unit-kinds";
 
 function RegisterForm() {
+  const router = useRouter();
   const [requireMasterApproval, setRequireMasterApproval] = useState(true);
   const [autoGenerateAdminLogin, setAutoGenerateAdminLogin] = useState(false);
+  const [deferEmailVerification, setDeferEmailVerification] = useState(false);
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [contact, setContact] = useState("");
@@ -35,12 +38,16 @@ function RegisterForm() {
       const j = (await r.json()) as {
         requireMasterApproval?: boolean;
         autoGenerateAdminLogin?: boolean;
+        deferEmailVerification?: boolean;
       };
       if (!cancelled && typeof j.requireMasterApproval === "boolean") {
         setRequireMasterApproval(j.requireMasterApproval);
       }
       if (!cancelled && typeof j.autoGenerateAdminLogin === "boolean") {
         setAutoGenerateAdminLogin(j.autoGenerateAdminLogin);
+      }
+      if (!cancelled && typeof j.deferEmailVerification === "boolean") {
+        setDeferEmailVerification(j.deferEmailVerification);
       }
     })();
     return () => {
@@ -99,6 +106,8 @@ function RegisterForm() {
         message?: string;
         emailSent?: boolean;
         devConfirmUrl?: string;
+        redirectUrl?: string;
+        deferEmailVerification?: boolean;
       };
       const email = contact.trim().toLowerCase();
       const submitted = { slug: slug.trim().toLowerCase(), email };
@@ -109,6 +118,10 @@ function RegisterForm() {
           return;
         }
         throw new Error(j.error ?? "Registration failed");
+      }
+      if (j.redirectUrl && j.deferEmailVerification) {
+        router.push(j.redirectUrl);
+        return;
       }
       setSubmission(submitted);
       setMsg(j.message ?? "Request submitted. Check your email for the ODEL HUB verification link.");
@@ -155,7 +168,24 @@ function RegisterForm() {
             <h1 className="text-2xl font-semibold text-white">Request school workspace</h1>
             <p className="mt-1 text-sm font-medium text-cyan-200/90">Self-register on our platform</p>
             <p className="mt-2 text-sm text-slate-500">
-              {requireMasterApproval ? (
+              {deferEmailVerification ? (
+                <>
+                  After you submit, you go straight to your{" "}
+                  <strong className="text-slate-400">workspace portal</strong>. Email confirmation is a later step on
+                  that page.
+                  {!requireMasterApproval ? (
+                    <>
+                      {" "}
+                      Your workspace is <strong className="text-slate-400">activated automatically</strong> on submit.
+                      {autoGenerateAdminLogin
+                        ? " You will receive a password-set link for school admin sign-in."
+                        : null}
+                    </>
+                  ) : (
+                    <> A platform master reviews your request after you are on the portal.</>
+                  )}
+                </>
+              ) : requireMasterApproval ? (
                 <>
                   Your workspace is created as <strong className="text-slate-400">pending</strong> until a platform
                   master approves it after you confirm your email.
@@ -166,37 +196,66 @@ function RegisterForm() {
                   (programmes and fees copied from the platform template).
                   {autoGenerateAdminLogin
                     ? " You will receive an email to set your school admin password."
-                    : " A platform operator still creates your admin login."}
+                    : " Sign in at /school/login when your admin account is ready."}
                 </>
               )}
             </p>
             <ul className="mt-3 space-y-1.5 text-left text-xs text-slate-500">
               <li>1. Submit this form</li>
-              <li>2. Open the <strong className="text-slate-400">ODEL HUB verification email</strong> (registration details included)</li>
-              <li>3. Click the link — you are taken to the school sign-in page</li>
-              {requireMasterApproval ? (
+              {deferEmailVerification ? (
                 <>
-                  <li>4. Master approves the workspace and creates your admin login</li>
                   <li>
-                    5. Sign in at{" "}
+                    2. Open your{" "}
+                    <Link href="/school/workspace-status" className="font-mono text-cyan-300/90 hover:underline">
+                      workspace portal
+                    </Link>{" "}
+                    (automatic redirect after submit)
+                  </li>
+                  <li>3. Confirm your registration email when ready</li>
+                  {requireMasterApproval ? (
+                    <li>4. Master approves the workspace</li>
+                  ) : (
+                    <li>4. Guest pay goes live at <span className="font-mono">/pay/your-slug</span></li>
+                  )}
+                  <li>
+                    {requireMasterApproval ? "5" : "5"}. Sign in at{" "}
                     <Link href="/school/login" className="font-mono text-cyan-300/90 hover:underline">
                       /school/login
-                    </Link>{" "}
-                    with credentials from ODEL HUB
+                    </Link>
+                    {autoGenerateAdminLogin
+                      ? " using the password-set link sent to your contact email"
+                      : " when your school admin account is ready"}
                   </li>
                 </>
               ) : (
                 <>
-                  <li>4. Your workspace goes live automatically — guest pay at <span className="font-mono">/pay/your-slug</span></li>
-                  <li>
-                    5. Sign in at{" "}
-                    <Link href="/school/login" className="font-mono text-cyan-300/90 hover:underline">
-                      /school/login
-                    </Link>{" "}
-                    {autoGenerateAdminLogin
-                      ? "using the password-set link sent to your contact email"
-                      : "once the platform operator shares admin credentials"}
-                  </li>
+                  <li>2. Open the <strong className="text-slate-400">ODEL HUB verification email</strong> (registration details included)</li>
+                  <li>3. Click the link — you are taken to your workspace portal</li>
+                  {requireMasterApproval ? (
+                    <>
+                      <li>4. Master approves the workspace and creates your admin login</li>
+                      <li>
+                        5. Sign in at{" "}
+                        <Link href="/school/login" className="font-mono text-cyan-300/90 hover:underline">
+                          /school/login
+                        </Link>{" "}
+                        with credentials from ODEL HUB
+                      </li>
+                    </>
+                  ) : (
+                    <>
+                      <li>4. Your workspace goes live automatically — guest pay at <span className="font-mono">/pay/your-slug</span></li>
+                      <li>
+                        5. Sign in at{" "}
+                        <Link href="/school/login" className="font-mono text-cyan-300/90 hover:underline">
+                          /school/login
+                        </Link>{" "}
+                        {autoGenerateAdminLogin
+                          ? "using the password-set link sent to your contact email"
+                          : "when your school admin account is ready"}
+                      </li>
+                    </>
+                  )}
                 </>
               )}
             </ul>

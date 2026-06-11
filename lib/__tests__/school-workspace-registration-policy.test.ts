@@ -54,6 +54,16 @@ describe("school-workspace-registration-policy", () => {
     expect(await isSchoolWorkspaceAutoAdminLoginEnabled()).toBe(true);
   });
 
+  it("reads deferEmailVerification and mirrors autoRedirectAfterRegister", async () => {
+    vi.mocked(prisma.siteUiSettings.findUnique).mockResolvedValue({
+      schoolWorkspaceRequireMasterApproval: false,
+      schoolWorkspaceDeferEmailVerification: true,
+    } as never);
+    const policy = await getSchoolWorkspaceRegistrationPolicy();
+    expect(policy.deferEmailVerification).toBe(true);
+    expect(policy.autoRedirectAfterRegister).toBe(true);
+  });
+
   it("isUnknownSchoolWorkspacePolicyFieldError detects stale Prisma client", () => {
     const err = {
       name: "PrismaClientValidationError",
