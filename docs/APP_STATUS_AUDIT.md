@@ -26,7 +26,7 @@ flowchart TD
   R["/admin/register"] --> API["POST organization-register"]
   API --> E["ODEL HUB email\n(details + timestamp)"]
   E --> V["GET .../verify?token"]
-  V --> L["/school/login?workspaceVerified=1"]
+  V --> L["/school/workspace-status?verified=1"]
   L --> M["Master approves"]
   M --> A["Master creates org_admin"]
   A --> S["/school/login → /admin"]

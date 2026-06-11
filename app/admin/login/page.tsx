@@ -267,14 +267,19 @@ function AdminLoginForm() {
               {workspaceActivated ? (
                 <>
                   Your school workspace email is confirmed and your tuition workspace is now{" "}
-                  <strong className="text-emerald-100">active</strong>. Guest pay is available at your school slug once
-                  configured. A platform operator still needs to create your school admin login — you will receive those
-                  credentials separately.
+                  <strong className="text-emerald-100">active</strong>. Track status on your{" "}
+                  <a href="/school/workspace-status" className="text-cyan-300 underline hover:text-cyan-200">
+                    workspace portal
+                  </a>
+                  . Sign in here once you have admin credentials.
                 </>
               ) : (
                 <>
-                  Your school workspace email is confirmed. A platform master will review your request and share admin
-                  login credentials when approved.
+                  Your school workspace email is confirmed. Track approval on your{" "}
+                  <a href="/school/workspace-status" className="text-cyan-300 underline hover:text-cyan-200">
+                    workspace portal
+                  </a>
+                  . A platform master will share admin login credentials when approved.
                 </>
               )}
             </p>

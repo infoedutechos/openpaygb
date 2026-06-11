@@ -16,7 +16,7 @@ An `Organization` row must exist; it starts as **`tenantStatus: pending`**.
 
 1. Open **`/admin/register`** (“Request a school workspace”).
 2. Submit **school name**, URL **slug** (unique), **contact email** (required), and optional note.
-3. The form calls **`POST /api/public/organization-register`**, which creates the org with **`tenantStatus: pending`** and emails an ODEL HUB **verification link** (registration details + timestamp). **`GET /api/public/organization-register/verify?token=…`** marks the email confirmed and redirects to **`/school/login`**.
+3. The form calls **`POST /api/public/organization-register`**, which creates the org with **`tenantStatus: pending`** and emails an ODEL HUB **verification link** (registration details + timestamp). **`GET /api/public/organization-register/verify?token=…`** marks the email confirmed and redirects to **`/school/workspace-status?slug=…&verified=1`**.
 4. Resend: **`POST /api/public/organization-register/resend`** with `{ "email": "…" }` (rate-limited), or the button on `/admin/register`.
 
 **Email content:** ODEL HUB branding, product summary, table of school name, slug, contact email, **submitted date/time** (Africa/Kampala), optional notes, and a **Confirm email** button. Plain-text part included for mail clients without HTML.
@@ -92,7 +92,7 @@ The API **returns 400** if the organization is not **active** (“Organization m
 | Step | Who | Result |
 |------|-----|--------|
 | Request workspace | School (self-serve) or master | `Organization` with **`pending`** |
-| Confirm email | Applicant (link in inbox) | **`registrationEmailVerifiedAt`** set; redirect to **`/school/login`** |
+| Confirm email | Applicant (link in inbox) | **`registrationEmailVerifiedAt`** set; redirect to **`/school/workspace-status`** |
 | Approve workspace | Master | **`active`**, programmes/FX cloned from **`default`** |
 | Create org admin | Master | **`AdminUser`** `org_admin` linked to org |
 | Operate school | Org admin | Dashboard at **`/admin`**, pay at **`/pay/<slug>`** when configured |

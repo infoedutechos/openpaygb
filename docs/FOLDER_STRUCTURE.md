@@ -23,7 +23,7 @@ Top-level layout matches **[ura-pearl-data-center](https://github.com/urapearlug
 | Area | Path / pattern |
 |------|----------------|
 | Public home | `/` |
-| Pay | `/pay` (tenant slug may be selected in-app or added later as `/pay/[orgSlug]`) |
+| Pay | `/pay`, `/pay/[orgSlug]` (tenant-specific checkout) |
 | Receipt | `/receipt/[paymentId]` |
 | URA clicker (synced from upstream) | `/clicker`, `/clicker/terms`, `/clicker/privacy` — populate with **`npm run sync:ura-clicker`** |
 | Admin | `/admin`, `/admin/login`, `/admin/students`, `/admin/students/[id]`, `/admin/payments` |

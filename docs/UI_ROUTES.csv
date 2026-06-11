@@ -2,6 +2,7 @@ ui_route,relative_file
 /admin,app/admin/(tuition-hub)/page.tsx
 /admin/payment-requests,app/admin/(tuition-hub)/payment-requests/page.tsx
 /admin/payments,app/admin/(tuition-hub)/payments/page.tsx
+/admin/profile,app/admin/(tuition-hub)/profile/page.tsx
 /admin/programmes,app/admin/(tuition-hub)/programmes/page.tsx
 /admin/receipts,app/admin/(tuition-hub)/receipts/page.tsx
 /admin/reports,app/admin/(tuition-hub)/reports/page.tsx
@@ -31,7 +32,6 @@ ui_route,relative_file
 /admin/notifications,app/admin/notifications/page.tsx
 /admin/onchain-tasks,app/admin/onchain-tasks/page.tsx
 /admin/pearls,app/admin/pearls/page.tsx
-/admin/profile,app/admin/profile/page.tsx
 /admin/published-activities,app/admin/published-activities/page.tsx
 /admin/quiz,app/admin/quiz/page.tsx
 /admin/register,app/admin/register/page.tsx

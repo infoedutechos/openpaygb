@@ -9,7 +9,7 @@
 | Area | Grade | Notes |
 |------|-------|-------|
 | Tuition product (pay + admin) | **Production-capable** | Needs `RESEND_*`, `JWT_SECRET`, `DATABASE_URL`, Mbiyo keys for live UGX alternative |
-| School workspace onboarding | **Complete** | Register → email verify → master approve → org admin → `/school/login` |
+| School workspace onboarding | **Complete** | Register → email verify → **`/school/workspace-status`** → master approve → org admin → `/school/login` |
 | Programme customization (org admin) | **Complete** | CRUD + fees + CSV import at `/admin/programmes` |
 | UI vs codebase | **Mostly aligned** | 59 routes match inventory; minor doc/UX gaps fixed this pass |
 | LivePay | **Integrated** (env opt-in) | Checkout + webhook + status poll — [LIVEPAY_INTEGRATION_ASSESSMENT.md](./LIVEPAY_INTEGRATION_ASSESSMENT.md) |
@@ -135,7 +135,8 @@ See **[BACKLOG.md](./BACKLOG.md)**. Prior 2026-06-04 items (admin search, orgSlu
 ## 8. LivePay & virtual cards
 
 - **MoMo collect:** implemented — [LIVEPAY_INTEGRATION_ASSESSMENT.md](./LIVEPAY_INTEGRATION_ASSESSMENT.md)
-- **Virtual card (Visa/MC issuing or checkout acquiring):** not implemented — holistic options in [VIRTUAL_CARD_INVESTIGATION.md](./VIRTUAL_CARD_INVESTIGATION.md)
+- **OpenPayGB closed-loop card (UGX):** implemented — `/admin/virtual-cards`, `/student/card`, checkout openpay routes
+- **Visa/MC issuing or external acquiring:** not implemented — options in [VIRTUAL_CARD_INVESTIGATION.md](./VIRTUAL_CARD_INVESTIGATION.md)
 
 ---
 

@@ -1,6 +1,7 @@
 /** Routes with their own shell or dock — skip global bottom nav / extra footer clearance. */
 export const HIDE_SITE_CHROME_NAV_PREFIXES = [
   "/admin",
+  "/school",
   "/school-admin",
   "/pay",
   "/student",

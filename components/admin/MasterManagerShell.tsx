@@ -100,7 +100,7 @@ export default function MasterManagerShell({
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-    router.replace("/admin/login");
+    router.replace("/admin/login?master=1");
     router.refresh();
   }
 

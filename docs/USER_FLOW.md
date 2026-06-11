@@ -10,7 +10,7 @@ For local URLs and seed credentials see **[LOCAL_DEV_AND_CREDENTIALS.md](./LOCAL
 
 | Actor | Typical entry |
 |-------|----------------|
-| Prospective payer | `/` (home), header links |
+| Prospective payer | `/` (home), hub tabs, bottom nav |
 | Payer for a **specific school** | `/pay/<orgSlug>` or `/pay` (school picker) |
 | Payer with bookmark | `/pay/<orgSlug>` (must be **active** tenant) |
 | Receipt verifier | `/receipt/<paymentId>` (confirmed payment or admin preview) |
@@ -28,7 +28,7 @@ flowchart LR
   E --> F["Guest identity\nname + email"]
   F --> G["POST /api/public/checkout/student"]
   G --> H["POST /api/public/checkout/payment"]
-  H --> I["TON Connect or Mbiyo"]
+  H --> I["TON / Mbiyo / LivePay / Relworx / Vixonpay / OpenPay card"]
   I --> J["Polling / public status"]
   J --> K["Confirmed → /receipt/id"]
 ```
@@ -38,20 +38,27 @@ flowchart LR
 3. **Programme & term** — Client loads programmes and requests a **quote** (UGX fees + FX → TON amount + destination wallet).
 4. **Checkout session** — `POST /api/public/checkout/session` when resuming with `studentId` from a link.
 5. **Student record** — `POST /api/public/checkout/student` creates or updates a **Student** in that org (rate-limited). Legacy **`POST /api/students`** requires an admin session.
-6. **Pending payment** — `POST /api/public/checkout/payment` creates a **Payment**; Mbiyo via **`POST /api/public/checkout/mbiyo-start`** when enabled.
+6. **Pending payment** — `POST /api/public/checkout/payment` creates a **Payment**; rails via **`POST /api/public/checkout/mbiyo-start`**, **`livepay-start`**, **`relworx-start`**, **`vixonpay-start`**, **`openpay-card-charge`**, or TON transfer as configured.
 7. **Wallet** — TON Connect sends transfer; memo carries **`ref:<paymentId>`** for matching.
 8. **Confirmation** — TonAPI cron (`/api/cron/confirm-ton`) and/or admin `PATCH` can set **confirmed**; client may poll public payment status.
 9. **Receipt** — User opens **`/receipt/<paymentId>`** (or API `GET /api/receipts/:id`, PDF route) when allowed.
 
 ---
 
-## 3. Mobile Money (Mbiyo / OpenPay)
+## 3. Payment rails (PayWizard)
 
-- **Start:** `POST /api/public/checkout/mbiyo-start` from `PayWizard` after checkout payment is created.
-- **Webhook:** `POST /api/webhooks/mbiyo` validates secret and confirms payment.
-- Legacy **`POST /api/collect/momo`** and **`POST /api/collect/mbiyo`** exist for older integrations; the tuition hub UI uses **public checkout** routes.
+| Rail | Start route | Webhook / confirm |
+|------|-------------|-------------------|
+| **Mbiyo / MoMo** | `POST /api/public/checkout/mbiyo-start` | `POST /api/webhooks/mbiyo` |
+| **LivePay** | `POST /api/public/checkout/livepay-start` | `POST /api/webhooks/livepay` |
+| **Relworx** | `POST /api/public/checkout/relworx-start` | `POST /api/webhooks/relworx` |
+| **Vixonpay** | `POST /api/public/checkout/vixonpay-start` | `POST /api/webhooks/vixonpay` |
+| **OpenPayGB card** | `POST /api/public/checkout/openpay-card-pay` | Internal balance debit |
+| **TON** | `POST /api/public/checkout/ton-pay-transfer` | TonAPI cron + memo match |
 
-See [MBIYO_WEBHOOK_SETUP.md](./MBIYO_WEBHOOK_SETUP.md).
+Legacy **`POST /api/collect/momo`** returns **410 Gone**; tuition UI uses **`/api/public/checkout/*`** only.
+
+See [MBIYO_WEBHOOK_SETUP.md](./MBIYO_WEBHOOK_SETUP.md), [LIVEPAY_INTEGRATION_ASSESSMENT.md](./LIVEPAY_INTEGRATION_ASSESSMENT.md).
 
 ---
 
@@ -66,9 +73,10 @@ See [MBIYO_WEBHOOK_SETUP.md](./MBIYO_WEBHOOK_SETUP.md).
 
 | Surface | Purpose |
 |---------|---------|
-| `GET /api/public/organization?slug=` | Display name for **active** org |
+| `GET /api/public/organizations` | List / resolve **active** orgs (tenant picker) |
+| `GET /api/public/workspace-status?slug=&email=` | Applicant workspace verification checklist |
 | `POST /api/public/organization-register` | Request workspace (**pending**); sends verification email |
-| `GET /api/public/organization-register/verify?token=` | Confirm email → redirect **`/school/login`** |
+| `GET /api/public/organization-register/verify?token=` | Confirm email → redirect **`/school/workspace-status`** |
 | `POST /api/public/organization-register/resend` | Resend verification link |
 | `GET /api/programmes?orgSlug=` | Programme list (active org) |
 | `GET /api/fx/rate?orgSlug=` | Active FX for quotes |

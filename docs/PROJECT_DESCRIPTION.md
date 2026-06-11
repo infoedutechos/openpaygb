@@ -293,16 +293,16 @@ Reference inventories:
 
 From `docs/API_INVENTORY.csv`:
 
-- Total discovered API routes: 240.
-- Major namespaces:
-  - `/api/admin/*`: 47
-  - `/api/master/*`: 27
-  - `/api/auth/*`: 17
-  - `/api/public/checkout/*`: 8 (+ additional `/api/public/*`)
+- Total discovered API routes: **~300** (run `npm run docs:inventory` for exact count).
+- Major namespaces (approximate):
+  - `/api/admin/*`: ~50
+  - `/api/master/*`: ~43
+  - `/api/auth/*`: ~19 (includes admin profile + profile-image)
+  - `/api/public/checkout/*`: ~12 (+ additional `/api/public/*`)
   - `/api/partner/v1/*`: 3
-  - `/api/student/*`: 4
+  - `/api/student/*`: ~11
   - `/api/payments*`: 6
-  - `/api/webhooks/*`: inventory includes 5 (current codebase also contains `relworx` and `vixonpay` webhook routes)
+  - `/api/webhooks/*`: ~7
 
 Tuition-critical API groups:
 

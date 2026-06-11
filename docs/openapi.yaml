@@ -3,6 +3,10 @@ info:
   title: ODEL HUB TON Pay API
   version: 0.1.0
   description: |
+    **Partial OpenAPI** — tuition-core subset only (~15 paths). The full API surface (~300 routes) is in
+    `docs/API_INVENTORY.csv` (regenerate with `npm run docs:inventory`). This file does not list
+    `/api/master/*`, most `/api/public/checkout/*`, partner APIs, TMA, or URA game routes.
+
     HTTP API for the ODEL HUB tuition payment platform (UGX fees, TON settlement, MongoDB persistence).
     Deployed as **Next.js Route Handlers** on **Vercel**. Admin routes require JWT cookie (`odelhub_admin`) from `POST /api/auth/login`.
 

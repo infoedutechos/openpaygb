@@ -70,7 +70,7 @@ npm run test:ecosystem
 ## 4. Inventory scale
 
 - **~239 API routes** in `docs/API_INVENTORY.csv` (tuition + URA game)
-- **59 UI pages** in `docs/UI_ROUTES.csv`
+- **73 UI pages** in `docs/UI_ROUTES.csv`
 - Tuition-critical LivePay APIs: `livepay-start`, `livepay-config`, `webhooks/livepay`
 
 ---

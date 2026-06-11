@@ -21,6 +21,7 @@ const SEGMENTS: { suffix: string; label: string }[] = [
   { suffix: "/tuition-balance", label: "Tuition balance" },
   { suffix: "/students", label: "Students" },
   { suffix: "/payments", label: "Payments" },
+  { suffix: "/payment-requests", label: "Payment requests" },
   { suffix: "/virtual-cards", label: "Virtual cards" },
   { suffix: "/programmes", label: "Programs" },
   { suffix: "/receipts", label: "Receipts" },

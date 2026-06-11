@@ -52,8 +52,8 @@ export async function POST(req: Request) {
     );
 
     const afterVerifyMessage = policy.requireMasterApproval
-      ? "After you confirm, you will be directed to the school sign-in page while a platform administrator reviews your workspace."
-      : "After you confirm your email, your workspace will be activated automatically (programmes and fees copied from the platform template). You can sign in at the school admin page once a platform operator creates your admin account.";
+      ? "After you confirm, you will see your workspace status portal while a platform administrator reviews your request."
+      : "After you confirm your email, your workspace will be activated automatically (programmes and fees copied from the platform template). The status portal will update when your workspace is live.";
 
     const payload: {
       organization: { id: string; name: string; slug: string; tenantStatus: string };

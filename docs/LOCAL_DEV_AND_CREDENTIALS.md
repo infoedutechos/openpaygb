@@ -68,7 +68,7 @@ Demo student is on programme **BEP-ENG/RE**, year **1**, semester **1**.
 | Step | URL / action |
 |------|----------------|
 | Request workspace | http://localhost:3000/admin/register |
-| Verify email (from inbox) | Link in ODEL HUB email → marks verified → **http://localhost:3000/school/login?workspaceVerified=1** |
+| Verify email (from inbox) | Link in ODEL HUB email → **`GET /api/public/organization-register/verify`** → **`http://localhost:3000/school/workspace-status?slug=…&verified=1`** |
 | Resend verification | Same page → **Resend verification email** or `POST /api/public/organization-register/resend` |
 | Master approve | http://localhost:3000/admin/master/organizations |
 | Master create school admin | Same page → **Create org admin** |

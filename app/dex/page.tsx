@@ -27,6 +27,12 @@ export default function DexHubPage() {
             Start offramp
           </Link>
           <Link
+            href={HUBS.dex.routes!.convert!}
+            className="rounded-xl border border-white/15 bg-white/[0.06] px-5 py-3 text-center text-sm font-semibold text-slate-100 hover:border-violet-400/40"
+          >
+            Convert
+          </Link>
+          <Link
             href={HUBS.tuition.basePath}
             className="rounded-xl px-5 py-3 text-center text-sm font-medium text-slate-400 hover:text-white"
           >

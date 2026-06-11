@@ -21,8 +21,8 @@ npm run docs:inventory   # writes API_INVENTORY.csv, UI_ROUTES.csv, and this fil
 | UI route | Typical or dedicated APIs |
 |----------|---------------------------|
 | / | (marketing shell; may call /api/programmes, /api/fx/rate from client) |
-| /pay | /api/programmes, /api/programmes/[code]/quote, /api/public/checkout/student, /api/public/checkout/payment, /api/public/checkout/ton-pay-transfer, /api/payments/[id]/public, /api/payments, /api/payments/[id], /api/manifest/tonconnect, /api/collect/momo |
-| /pay/[orgSlug] | /api/programmes, /api/programmes/[code]/quote, /api/public/checkout/student, /api/public/checkout/payment, /api/public/checkout/ton-pay-transfer, /api/payments/[id]/public, /api/payments, /api/payments/[id], /api/manifest/tonconnect, /api/collect/momo |
+| /pay | /api/programmes, /api/programmes/[code]/quote, /api/public/checkout/session, /api/public/checkout/student, /api/public/checkout/payment, /api/public/checkout/ton-pay-transfer, /api/public/checkout/mbiyo-start, /api/public/checkout/livepay-start, /api/public/checkout/relworx-start, /api/public/checkout/vixonpay-start, /api/public/checkout/openpay-card-pay, /api/public/checkout/openpay-card-eligibility, /api/public/checkout/balance, /api/payments/[id]/public, /api/payments, /api/payments/[id], /api/manifest/tonconnect |
+| /pay/[orgSlug] | /api/programmes, /api/programmes/[code]/quote, /api/public/checkout/session, /api/public/checkout/student, /api/public/checkout/payment, /api/public/checkout/ton-pay-transfer, /api/public/checkout/mbiyo-start, /api/public/checkout/livepay-start, /api/public/checkout/relworx-start, /api/public/checkout/vixonpay-start, /api/public/checkout/openpay-card-pay, /api/public/checkout/openpay-card-eligibility, /api/public/checkout/balance, /api/payments/[id]/public, /api/payments, /api/payments/[id], /api/manifest/tonconnect |
 | /receipt/[paymentId] | /api/receipts/[paymentId], /api/receipts/[paymentId]/pdf |
 | /clicker | (URA Telegram mini-app shell; uses `components/*`, `utils/consts` `WALLET_MANIFEST_URL`, TonConnect in `app/clicker/layout.tsx`) |
 
@@ -42,35 +42,35 @@ npm run docs:inventory   # writes API_INVENTORY.csv, UI_ROUTES.csv, and this fil
 | /admin/global-tasks | /api/admin/global-tasks | yes |
 | /admin/league-management | /api/admin/league-management | yes |
 | /admin/learn | /api/admin/learn | yes |
-| /admin/login | /api/admin/login<br>/api/admin/logout | yes — Logout is POST-only; login uses `/api/admin/login`. |
-| /admin/master | (none under /api/admin/master/) | no |
-| /admin/master/organizations | (none under /api/admin/master/) | no |
-| /admin/master/programmes | (none under /api/admin/master/) | no |
-| /admin/master/tuition-balance | (none under /api/admin/master/) | no |
+| /admin/login | /api/auth/login<br>/api/auth/logout<br>/api/auth/forgot-password<br>/api/auth/reset-password | yes — Tuition login uses `POST /api/auth/login` (not legacy `/api/admin/login` URA game shell). |
+| /admin/master | /api/master/admins<br>/api/master/backup/restore<br>/api/master/backup<br>/api/master/backup/status<br>/api/master/deployment-env/export<br>/api/master/deployment-env/registry<br>/api/master/deployment-env<br>/api/master/deployment-env/vercel-sync<br>/api/master/fx<br>/api/master/hub-maintenance<br>/api/master/knowledge/gaps<br>/api/master/knowledge<br>/api/master/mobile-money-providers/[id]<br>/api/master/mobile-money-providers<br>/api/master/notifications/[id]/recall<br>/api/master/notifications/[id]<br>/api/master/notifications<br>/api/master/openpay-card-settings<br>/api/master/openpay-cards<br>/api/master/organizations/[id]/checkout-platform-fee<br>/api/master/organizations/[id]/destination-wallet<br>/api/master/organizations/[id]/favicon<br>/api/master/organizations/[id]/fx<br>/api/master/organizations/[id]/resend-verification<br>/api/master/organizations/[id]<br>/api/master/organizations<br>/api/master/partner/keys/[id]<br>/api/master/partner/keys<br>/api/master/partner/webhooks/[id]<br>/api/master/partner/webhooks<br>/api/master/payment-providers<br>/api/master/platform-checkout-fee<br>/api/master/programmes/[id]<br>/api/master/programmes/apply-inferred<br>/api/master/programmes<br>/api/master/project-download<br>/api/master/school-workspace-registration<br>/api/master/site-ui/copilot-bubble<br>/api/master/site-ui/logo<br>/api/master/site-ui<br>/api/master/site-ui/social-icon/[key]<br>/api/master/summary<br>/api/master/telegram-hub | yes — Master console uses `/api/master/*`, not `/api/admin/master/*`. |
+| /admin/master/organizations | /api/master/admins<br>/api/master/backup/restore<br>/api/master/backup<br>/api/master/backup/status<br>/api/master/deployment-env/export<br>/api/master/deployment-env/registry<br>/api/master/deployment-env<br>/api/master/deployment-env/vercel-sync<br>/api/master/fx<br>/api/master/hub-maintenance<br>/api/master/knowledge/gaps<br>/api/master/knowledge<br>/api/master/mobile-money-providers/[id]<br>/api/master/mobile-money-providers<br>/api/master/notifications/[id]/recall<br>/api/master/notifications/[id]<br>/api/master/notifications<br>/api/master/openpay-card-settings<br>/api/master/openpay-cards<br>/api/master/organizations/[id]/checkout-platform-fee<br>/api/master/organizations/[id]/destination-wallet<br>/api/master/organizations/[id]/favicon<br>/api/master/organizations/[id]/fx<br>/api/master/organizations/[id]/resend-verification<br>/api/master/organizations/[id]<br>/api/master/organizations<br>/api/master/partner/keys/[id]<br>/api/master/partner/keys<br>/api/master/partner/webhooks/[id]<br>/api/master/partner/webhooks<br>/api/master/payment-providers<br>/api/master/platform-checkout-fee<br>/api/master/programmes/[id]<br>/api/master/programmes/apply-inferred<br>/api/master/programmes<br>/api/master/project-download<br>/api/master/school-workspace-registration<br>/api/master/site-ui/copilot-bubble<br>/api/master/site-ui/logo<br>/api/master/site-ui<br>/api/master/site-ui/social-icon/[key]<br>/api/master/summary<br>/api/master/telegram-hub | yes — Master console uses `/api/master/*`, not `/api/admin/master/*`. |
+| /admin/master/programmes | /api/master/admins<br>/api/master/backup/restore<br>/api/master/backup<br>/api/master/backup/status<br>/api/master/deployment-env/export<br>/api/master/deployment-env/registry<br>/api/master/deployment-env<br>/api/master/deployment-env/vercel-sync<br>/api/master/fx<br>/api/master/hub-maintenance<br>/api/master/knowledge/gaps<br>/api/master/knowledge<br>/api/master/mobile-money-providers/[id]<br>/api/master/mobile-money-providers<br>/api/master/notifications/[id]/recall<br>/api/master/notifications/[id]<br>/api/master/notifications<br>/api/master/openpay-card-settings<br>/api/master/openpay-cards<br>/api/master/organizations/[id]/checkout-platform-fee<br>/api/master/organizations/[id]/destination-wallet<br>/api/master/organizations/[id]/favicon<br>/api/master/organizations/[id]/fx<br>/api/master/organizations/[id]/resend-verification<br>/api/master/organizations/[id]<br>/api/master/organizations<br>/api/master/partner/keys/[id]<br>/api/master/partner/keys<br>/api/master/partner/webhooks/[id]<br>/api/master/partner/webhooks<br>/api/master/payment-providers<br>/api/master/platform-checkout-fee<br>/api/master/programmes/[id]<br>/api/master/programmes/apply-inferred<br>/api/master/programmes<br>/api/master/project-download<br>/api/master/school-workspace-registration<br>/api/master/site-ui/copilot-bubble<br>/api/master/site-ui/logo<br>/api/master/site-ui<br>/api/master/site-ui/social-icon/[key]<br>/api/master/summary<br>/api/master/telegram-hub | yes — Master console uses `/api/master/*`, not `/api/admin/master/*`. |
+| /admin/master/tuition-balance | /api/master/admins<br>/api/master/backup/restore<br>/api/master/backup<br>/api/master/backup/status<br>/api/master/deployment-env/export<br>/api/master/deployment-env/registry<br>/api/master/deployment-env<br>/api/master/deployment-env/vercel-sync<br>/api/master/fx<br>/api/master/hub-maintenance<br>/api/master/knowledge/gaps<br>/api/master/knowledge<br>/api/master/mobile-money-providers/[id]<br>/api/master/mobile-money-providers<br>/api/master/notifications/[id]/recall<br>/api/master/notifications/[id]<br>/api/master/notifications<br>/api/master/openpay-card-settings<br>/api/master/openpay-cards<br>/api/master/organizations/[id]/checkout-platform-fee<br>/api/master/organizations/[id]/destination-wallet<br>/api/master/organizations/[id]/favicon<br>/api/master/organizations/[id]/fx<br>/api/master/organizations/[id]/resend-verification<br>/api/master/organizations/[id]<br>/api/master/organizations<br>/api/master/partner/keys/[id]<br>/api/master/partner/keys<br>/api/master/partner/webhooks/[id]<br>/api/master/partner/webhooks<br>/api/master/payment-providers<br>/api/master/platform-checkout-fee<br>/api/master/programmes/[id]<br>/api/master/programmes/apply-inferred<br>/api/master/programmes<br>/api/master/project-download<br>/api/master/school-workspace-registration<br>/api/master/site-ui/copilot-bubble<br>/api/master/site-ui/logo<br>/api/master/site-ui<br>/api/master/site-ui/social-icon/[key]<br>/api/master/summary<br>/api/master/telegram-hub | yes — Master console uses `/api/master/*`, not `/api/admin/master/*`. |
 | /admin/milestone-banners | /api/admin/milestone-banners/[id]<br>/api/admin/milestone-banners | yes |
-| /admin/notifications | /api/admin/notifications/[id]/recall<br>/api/admin/notifications/[id]<br>/api/admin/notifications<br>/api/admin/notifications/upload | yes — Middleware allows this path with URA `admin_session` cookie (see `middleware.ts`). |
+| /admin/notifications | /api/admin/notifications/[id]/recall<br>/api/admin/notifications/[id]<br>/api/admin/notifications<br>/api/admin/notifications/upload | yes — URA game admin surface; requires `admin_session` cookie per `middleware.ts` (not a public bypass). |
 | /admin/onchain-tasks | /api/admin/onchain-tasks/[id]<br>/api/admin/onchain-tasks | yes |
-| /admin/payment-requests | /api/admin/payment-requests | yes |
+| /admin/payment-requests | /api/admin/payment-requests<br>/api/public/payment-requests/[id] | yes |
 | /admin/payments | /api/payments<br>/api/payments/[id]<br>/api/payments/export | yes — Payments under `/api/payments`; CSV export at `/api/payments/export`. |
 | /admin/pearls | /api/admin/pearls | yes |
-| /admin/profile | (none under /api/admin/profile/) | no |
-| /admin/programmes | /api/admin/programmes/[id]/fees/[feeId]<br>/api/admin/programmes/[id]/fees<br>/api/admin/programmes/[id]<br>/api/admin/programmes/import<br>/api/admin/programmes | yes |
+| /admin/profile | /api/auth/me<br>/api/auth/admin/profile<br>/api/auth/admin/profile-image | yes |
+| /admin/programmes | /api/admin/programmes<br>/api/admin/programmes/[id]<br>/api/admin/programmes/[id]/fees | yes |
 | /admin/published-activities | /api/admin/published-activities/[id]<br>/api/admin/published-activities | yes |
 | /admin/quiz | /api/admin/quiz | yes |
-| /admin/receipts | (none under /api/admin/receipts/) | no |
-| /admin/register | (none under /api/admin/register/) | no |
-| /admin/reports | (none under /api/admin/reports/) | no |
-| /admin/reset-password | (none under /api/admin/reset-password/) | no |
-| /admin/settings | (none under /api/admin/settings/) | no |
+| /admin/receipts | /api/receipts/[paymentId]<br>/api/receipts/[paymentId]/pdf | yes |
+| /admin/register | (none under /api/admin/register/ — see UI_API_MAP in export-api-inventory.cjs) | no |
+| /admin/reports | /api/admin/summary<br>/api/payments/export | yes |
+| /admin/reset-password | (none under /api/admin/reset-password/ — see UI_API_MAP in export-api-inventory.cjs) | no |
+| /admin/settings | /api/auth/me<br>/api/fx/rate | yes |
 | /admin/shop | /api/admin/shop/products<br>/api/admin/shop/settings | yes |
 | /admin/staking-audit | /api/admin/staking-audit | yes |
 | /admin/students | /api/students | yes — Student APIs under `/api/students`, not `/api/admin/students`. |
 | /admin/students/[id] | /api/students/[id] | yes — Student APIs under `/api/students`, not `/api/admin/students`. |
 | /admin/tasks | /api/admin/tasks/[id]<br>/api/admin/tasks | yes |
 | /admin/telegram-broadcast | /api/admin/telegram-broadcast | yes |
-| /admin/tuition-balance | (none under /api/admin/tuition-balance/) | no |
-| /admin/users | (none under /api/admin/users/) | no |
-| /admin/virtual-cards | (none under /api/admin/virtual-cards/) | no |
+| /admin/tuition-balance | /api/admin/tuition-balances | yes |
+| /admin/users | /api/admin/org-users | yes |
+| /admin/virtual-cards | /api/admin/openpay-cards | yes |
 | /admin/weekly-event | /api/admin/weekly-event | yes |
 
 ## `/api/*` routes outside `/api/admin/*`
@@ -78,6 +78,8 @@ npm run docs:inventory   # writes API_INVENTORY.csv, UI_ROUTES.csv, and this fil
 These handlers are not namespaced under `/api/admin/`. Several are still used from **admin** pages (e.g. `/admin/payments` → `/api/payments`, `/admin/students` → `/api/students`). Others are **integration-only** (cron, webhooks, TON manifest) or **public pay**.
 
 - `/api/auth/admin/change-password` — `app/api/auth/admin/change-password/route.ts`
+- `/api/auth/admin/profile-image` — `app/api/auth/admin/profile-image/route.ts`
+- `/api/auth/admin/profile` — `app/api/auth/admin/profile/route.ts`
 - `/api/auth/forgot-password` — `app/api/auth/forgot-password/route.ts`
 - `/api/auth/google/student/callback` — `app/api/auth/google/student/callback/route.ts`
 - `/api/auth/google/student` — `app/api/auth/google/student/route.ts`

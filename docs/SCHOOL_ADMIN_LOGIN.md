@@ -51,7 +51,7 @@ Redirect logic: `lib/admin-dashboard.ts` → `adminDashboardHref()`, and `app/ad
 flowchart TD
   A[School submits /admin/register] --> B[ODEL HUB verification email]
   B --> C[Applicant clicks link]
-  C --> D["/school/login?workspaceVerified=1"]
+  C --> D["/school/workspace-status?slug=…&verified=1"]
   D --> E{Master approval required?}
   E -->|Yes default| F[Master approves tenant]
   E -->|Auto mode| G[Workspace may activate on verify]
@@ -69,7 +69,7 @@ flowchart TD
 1. Open **`/admin/register`**.
 2. Submit school name, URL slug, **contact email** (required), and optional notes.
 3. API: **`POST /api/public/organization-register`** → org with `tenantStatus: pending` and an ODEL HUB **verification email** (registration details + submitted time).
-4. Applicant clicks the link → **`GET /api/public/organization-register/verify`** → redirect **`/school/login?workspaceVerified=1`**.
+4. Applicant clicks the link → **`GET /api/public/organization-register/verify`** → redirect **`/school/workspace-status?slug=…&verified=1`** (or `activated=1` when auto-activate is on).
 
 **Important:** This step does **not** create a dashboard login account. After email confirmation, a platform master still must **approve** the workspace and **create org admin** credentials.
 
@@ -159,12 +159,17 @@ After `org_admin` login, the **Tuition Hub** shell (`components/admin/TuitionAdm
 | Area | Route |
 |------|--------|
 | Overview | `/admin` |
+| Profile (name, photo, password) | `/admin/profile` |
+| Tuition balance | `/admin/tuition-balance` |
 | Students | `/admin/students`, `/admin/students/[id]` |
 | Payments | `/admin/payments` |
-| Receipts | `/admin/receipts` |
+| Payment requests | `/admin/payment-requests` |
+| Virtual cards | `/admin/virtual-cards` |
 | Programmes | `/admin/programmes` |
+| Receipts | `/admin/receipts` |
 | Reports | `/admin/reports` |
-| Settings (password) | `/admin/settings` |
+| Users | `/admin/users` |
+| Settings (org config) | `/admin/settings` |
 
 Public pay for their school: **`/pay/<orgSlug>`** (only when tenant is **active**).
 

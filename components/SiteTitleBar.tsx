@@ -1,8 +1,8 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
-function pageLabel(pathname: string): string {
+function pageLabel(pathname: string, masterLogin: boolean): string {
   if (pathname === "/") return "Home";
   if (pathname.startsWith("/student/login")) return "Student sign in";
   if (pathname.startsWith("/student/register")) return "Student register";
@@ -11,15 +11,19 @@ function pageLabel(pathname: string): string {
   if (pathname.startsWith("/pay/")) return "Checkout";
   if (pathname === "/pay") return "Pay";
   if (pathname.startsWith("/admin/master")) return "Manager console";
-  if (pathname === "/school/login" || pathname.startsWith("/admin/login")) return "School admin sign in";
+  if (pathname.startsWith("/school/workspace-status")) return "Workspace status";
+  if (pathname === "/school/login") return "School admin sign in";
+  if (pathname.startsWith("/admin/login")) return masterLogin ? "Master sign in" : "School admin sign in";
   if (pathname.startsWith("/admin/register")) return "Request workspace";
   if (pathname.startsWith("/admin")) return "Admin";
   return "Portal";
 }
 
 export function SiteTitleBar() {
-  const pathname = usePathname();
-  const label = pageLabel(pathname || "/");
+  const pathname = usePathname() ?? "/";
+  const searchParams = useSearchParams();
+  const masterLogin = pathname.startsWith("/admin/login") && searchParams.get("master") === "1";
+  const label = pageLabel(pathname, masterLogin);
 
   return (
     <div

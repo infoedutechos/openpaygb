@@ -15,47 +15,57 @@ flowchart LR
   P --> Q["All list APIs scope\npaymentWhereForAdmin / studentWhereForAdmin"]
 ```
 
-1. School staff open **`/school/login`** or **`/admin/login?school=1`** (same form; optional **`?orgSlug=`** for UI banner via public org endpoint). Platform masters use **`/admin/login?master=1`**.
+1. School staff open **`/school/login`** or **`/admin/login?school=1`** (same form; optional **`?orgSlug=`** for UI banner via `GET /api/public/organizations`). Platform masters use **`/admin/login?master=1`**.
 2. **`POST /api/auth/login`** validates credentials; issues JWT with **`role: org_admin`** and **`organizationId`**.
 3. **`GET /api/auth/me`** returns profile + **`organizationSlug`** / name for the workspace bar.
 
 **Redirects:** Cannot land on **`/admin/master`** — server layout redirects to **`/admin`**.
 
+**Aliases:** **`/school-admin`** rewrites to **`/admin`** (`next.config.ts`).
+
 ---
 
-## 2. Primary navigation
+## 2. Primary navigation (`TuitionAdminShell`)
 
-| Step | Route | Backend |
-|------|-------|---------|
-| Dashboard | `/admin` | `GET /api/admin/summary` (scoped) |
-| Students | `/admin/students` | `GET /api/students` |
-| Student detail | `/admin/students/[id]` | `GET /api/students/:id` (403 if wrong org) |
-| Payments | `/admin/payments` | `GET /api/payments`, filters |
-| Export | button | `GET /api/payments/export` |
+| Route | Label | Backend |
+|-------|-------|---------|
+| `/admin` | Dashboard | `GET /api/admin/summary` |
+| `/admin/profile` | Profile | `GET /api/auth/me`, `PATCH /api/auth/admin/profile`, profile image routes |
+| `/admin/tuition-balance` | Tuition balance | `GET /api/admin/tuition-balances` |
+| `/admin/students` | Students | `GET /api/students` |
+| `/admin/students/[id]` | Student detail | `GET /api/students/:id` |
+| `/admin/payments` | Payments | `GET /api/payments`, filters |
+| `/admin/payment-requests` | Payment requests | `GET /api/admin/payment-requests` |
+| `/admin/virtual-cards` | Virtual cards | `GET /api/admin/openpay-cards` |
+| `/admin/programmes` | Programmes | `GET/POST /api/admin/programmes`, fees |
+| `/admin/receipts` | Receipts | `GET /api/receipts/:id`, PDF |
+| `/admin/reports` | Reports | `GET /api/admin/summary`, `GET /api/payments/export` |
+| `/admin/users` | Users | `GET /api/admin/org-users` |
+| `/admin/settings` | Settings | Org config; password on **Profile** |
 
-All **`GET`** list/export calls use **`paymentWhereForAdmin` / `studentWhereForAdmin`** → **`organizationId`** from JWT only.
+All list/export calls use **`paymentWhereForAdmin` / `studentWhereForAdmin`** → **`organizationId`** from JWT only.
 
 ---
 
 ## 3. Workspace bar & search
 
-- **`AdminWorkspaceBar`** (in **`admin/layout.tsx`**) shows **workspace name**, **`/pay/<slug>`** link, bookmarkable login link.
-- **`AdminGlobalSearch`** — search students/payments **within the org** only (masters get extra behaviour; org admin never sees other orgs).
+- **`AdminWorkspaceBar`** shows **workspace name**, **`/pay/<slug>`** link, bookmarkable login link.
+- **`AdminGlobalSearch`** — search students/payments **within the org** only.
 
 ---
 
 ## 4. Dashboard extras
 
-- **FX block** — Loads **`GET /api/fx/rate`** without `orgSlug` (session resolves org). **`POST`** records a new FX row for **this** org only.
-- **Monthly chart / KPIs** — From **`/api/admin/summary`** scoped to the org.
+- **FX block** — `GET /api/fx/rate` (session org). **`POST`** records FX for this org.
+- **Monthly chart / KPIs** — From **`/api/admin/summary`**.
 
 ---
 
 ## 5. Payment operations
 
 - **List / filter** — Query params `status`, `rail`, `studentId`, `limit`.
-- **Detail / patch** — **`/api/payments/:id`** — update status, tx hash, MoMo reference if payment belongs to org.
-- **Receipts** — **`/api/receipts/:id`**, PDF route — admin can preview non-confirmed where implemented.
+- **Detail / patch** — **`/api/payments/:id`**
+- **Receipts** — **`/api/receipts/:id`**, PDF route
 
 ---
 
@@ -63,9 +73,9 @@ All **`GET`** list/export calls use **`paymentWhereForAdmin` / `studentWhereForA
 
 | Action | Reason |
 |--------|--------|
-| Open **`/admin/master`** | Server **layout** enforces **master** only |
-| Pass **`?orgSlug=`** to “see” another school | **JWT** scope wins; slug query is ignored for org-scoped reads |
-| Approve workspace requests | **Master** APIs only |
+| Open **`/admin/master`** | Master layout enforces **master** role |
+| Pass **`?orgSlug=`** to see another school | JWT scope wins |
+| Approve workspace requests | Master APIs only |
 
 ---
 
@@ -74,5 +84,5 @@ All **`GET`** list/export calls use **`paymentWhereForAdmin` / `studentWhereForA
 | Area | Location |
 |------|----------|
 | Scope helpers | `lib/scope.ts` |
-| Admin layout / bar | `app/admin/layout.tsx`, `AdminWorkspaceBar.tsx`, `AdminGlobalSearch.tsx` |
-| Admin pages | `app/admin/page.tsx`, `students/`, `payments/` |
+| Tuition shell | `app/admin/(tuition-hub)/layout.tsx`, `TuitionAdminShell.tsx` |
+| Admin pages | `app/admin/(tuition-hub)/**` |

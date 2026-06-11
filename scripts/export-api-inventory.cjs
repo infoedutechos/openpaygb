@@ -67,26 +67,71 @@ function apisUnderAdminSegment(segment) {
   return walkFiles(base, (fp, n) => n === "route.ts").sort();
 }
 
+const PAY_CHECKOUT_APIS = [
+  "/api/programmes",
+  "/api/programmes/[code]/quote",
+  "/api/public/checkout/session",
+  "/api/public/checkout/student",
+  "/api/public/checkout/payment",
+  "/api/public/checkout/ton-pay-transfer",
+  "/api/public/checkout/mbiyo-start",
+  "/api/public/checkout/livepay-start",
+  "/api/public/checkout/relworx-start",
+  "/api/public/checkout/vixonpay-start",
+  "/api/public/checkout/openpay-card-pay",
+  "/api/public/checkout/openpay-card-eligibility",
+  "/api/public/checkout/balance",
+  "/api/payments/[id]/public",
+  "/api/payments",
+  "/api/payments/[id]",
+  "/api/manifest/tonconnect",
+];
+
+/** Explicit UI → API mappings (segment heuristics miss cross-namespace routes). */
+const UI_API_MAP = {
+  "/admin/login": ["/api/auth/login", "/api/auth/logout", "/api/auth/forgot-password", "/api/auth/reset-password"],
+  "/admin/profile": ["/api/auth/me", "/api/auth/admin/profile", "/api/auth/admin/profile-image"],
+  "/admin/tuition-balance": ["/api/admin/tuition-balances"],
+  "/admin/virtual-cards": ["/api/admin/openpay-cards"],
+  "/admin/users": ["/api/admin/org-users"],
+  "/admin/payment-requests": ["/api/admin/payment-requests", "/api/public/payment-requests/[id]"],
+  "/admin/receipts": ["/api/receipts/[paymentId]", "/api/receipts/[paymentId]/pdf"],
+  "/admin/reports": ["/api/admin/summary", "/api/payments/export"],
+  "/admin/programmes": ["/api/admin/programmes", "/api/admin/programmes/[id]", "/api/admin/programmes/[id]/fees"],
+  "/admin/settings": ["/api/auth/me", "/api/fx/rate"],
+  "/school/workspace-status": ["/api/public/workspace-status"],
+  "/school/login": ["/api/auth/login"],
+};
+
 function inferPayApis(uiRoute) {
   if (uiRoute === "/") {
     return ["(marketing shell; may call /api/programmes, /api/fx/rate from client)"];
   }
   if (uiRoute === "/pay" || uiRoute === "/pay/[orgSlug]") {
-    return [
-      "/api/programmes",
-      "/api/programmes/[code]/quote",
-      "/api/public/checkout/student",
-      "/api/public/checkout/payment",
-      "/api/public/checkout/ton-pay-transfer",
-      "/api/payments/[id]/public",
-      "/api/payments",
-      "/api/payments/[id]",
-      "/api/manifest/tonconnect",
-      "/api/collect/momo",
-    ];
+    return PAY_CHECKOUT_APIS;
   }
   if (uiRoute.startsWith("/receipt/")) {
     return ["/api/receipts/[paymentId]", "/api/receipts/[paymentId]/pdf"];
+  }
+  return [];
+}
+
+function apisForAdminUi(ui, allApiUrls) {
+  if (UI_API_MAP[ui]) return UI_API_MAP[ui];
+  if (ui === "/admin") return ["/api/admin/summary"];
+  if (ui === "/admin/payments") return ["/api/payments", "/api/payments/[id]", "/api/payments/export"];
+  if (ui === "/admin/students") return ["/api/students"];
+  if (/^\/admin\/students\//.test(ui)) return ["/api/students/[id]"];
+  if (ui === "/admin/export") return ["/api/admin/export"];
+  if (ui.startsWith("/admin/master")) {
+    return allApiUrls.filter((u) => u.startsWith("/api/master/"));
+  }
+  const seg = /^\/admin\/([^/]+)/.exec(ui);
+  if (seg) {
+    const files = apisUnderAdminSegment(seg[1]);
+    const apis = files.map(routeFileToUrl);
+    if (apis.length) return apis;
+    return [`(none under /api/admin/${seg[1]}/ — see UI_API_MAP in export-api-inventory.cjs)`];
   }
   return [];
 }
@@ -161,39 +206,22 @@ const adminPageFiles = pageFiles
   .filter((pf) => pageFileToUiRoute(pf).startsWith("/admin"))
   .sort((a, b) => pageFileToUiRoute(a).localeCompare(pageFileToUiRoute(b)));
 
+const allApiUrls = routeFiles.map(routeFileToUrl);
+
 for (const pf of adminPageFiles) {
   const ui = pageFileToUiRoute(pf);
-  let apis = [];
+  const apis = apisForAdminUi(ui, allApiUrls);
   const notes = [];
-  if (ui === "/admin/login") {
-    apis = ["/api/admin/login", "/api/admin/logout"];
-  } else if (ui === "/admin") {
-    apis = ["/api/admin/summary"];
-  } else if (ui === "/admin/payments") {
-    apis = ["/api/payments", "/api/payments/[id]", "/api/payments/export"];
-  } else if (ui === "/admin/students") {
-    apis = ["/api/students"];
-  } else if (/^\/admin\/students\//.test(ui)) {
-    apis = ["/api/students/[id]"];
-  } else if (ui === "/admin/export") {
-    apis = ["/api/admin/export"];
-  } else {
-    const seg = /^\/admin\/([^/]+)/.exec(ui);
-    if (seg) {
-      const files = apisUnderAdminSegment(seg[1]);
-      apis = files.map(routeFileToUrl);
-      if (!apis.length) apis = [`(none under /api/admin/${seg[1]}/)`];
-    }
-  }
   const resolved = apis.filter((u) => !u.startsWith("("));
   const exists = (u) => apiUrlSet.has(u);
   const match =
     resolved.length && resolved.every(exists) ? "yes" : resolved.some(exists) ? "partial" : "no";
-  if (ui === "/admin/login") notes.push("Logout is POST-only; login uses `/api/admin/login`.");
+  if (ui === "/admin/login") notes.push("Tuition login uses `POST /api/auth/login` (not legacy `/api/admin/login` URA game shell).");
   if (ui.startsWith("/admin/students")) notes.push("Student APIs under `/api/students`, not `/api/admin/students`.");
   if (ui === "/admin/payments") notes.push("Payments under `/api/payments`; CSV export at `/api/payments/export`.");
+  if (ui.startsWith("/admin/master")) notes.push("Master console uses `/api/master/*`, not `/api/admin/master/*`.");
   if (ui === "/admin/notifications") {
-    notes.push("Middleware allows this path with URA `admin_session` cookie (see `middleware.ts`).");
+    notes.push("URA game admin surface; requires `admin_session` cookie per `middleware.ts` (not a public bypass).");
   }
   const noteStr = notes.length ? ` — ${notes.join(" ")}` : "";
   lines.push(`| ${ui} | ${apis.join("<br>")} | ${match}${noteStr} |`);

@@ -57,6 +57,9 @@ export function SiteFooter({ settings, bottomNavClearance }: Props) {
               <Link href="/admin/register" className={choiceCompactNav} title="Self-register on our platform">
                 Request school workspace
               </Link>
+              <Link href="/school/workspace-status" className={choiceCompactNav} title="Track school workspace registration">
+                Workspace status
+              </Link>
               <Link href="/school/login" className={choiceCompactNav}>
                 School admin
               </Link>

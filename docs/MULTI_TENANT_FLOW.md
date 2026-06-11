@@ -65,7 +65,7 @@ sequenceDiagram
   API->>Mail: verification link + registration details
   U->>V: click link
   V->>DB: registrationEmailVerifiedAt
-  V-->>U: redirect /school/login
+  V-->>U: redirect /school/workspace-status
   M->>DB: PATCH approve (after email verified)
   DB->>DB: tenantStatus=active + clone from default
   M->>DB: POST master/admins org_admin
@@ -73,7 +73,7 @@ sequenceDiagram
 ```
 
 1. **`POST /api/public/organization-register`** creates org **`pending`** (rate limited) and emails a **verification link** (registration details + timestamp).
-2. Applicant opens **`GET /api/public/organization-register/verify?token=…`** → **`registrationEmailVerifiedAt`** → redirect **`/school/login`**.
+2. Applicant opens **`GET /api/public/organization-register/verify?token=…`** → **`registrationEmailVerifiedAt`** → redirect **`/school/workspace-status?slug=…&verified=1`**.
 3. **`POST /api/public/organization-register/resend`** if the link expired (rate limited).
 4. Master **approves** via **`PATCH /api/master/organizations/:id`** (`action: approve`) — blocked until email verified when contact email was provided — or **reject**.
 5. **Approve** sets **`active`** and runs **`provisionOrganizationFromTemplate`** (clone programmes + FX from **`default`** when it exists).

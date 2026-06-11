@@ -23,7 +23,7 @@
 |------|----------------|-------|
 | TON | Ton Pay + cron confirm | `/api/public/checkout/ton-pay-transfer` |
 | Mbiyo | MbiyoPay API + webhook (OpenPayGB brand) | `/api/public/checkout/mbiyo-start`, `/api/webhooks/mbiyo` |
-| MoMo bridge | Collect + webhook | `/api/collect/momo`, `/api/webhooks/momo` |
+| MoMo bridge | Checkout + webhook | `POST /api/public/checkout/mbiyo-start`, `POST /api/webhooks/mbiyo` (legacy `/api/collect/momo` → 410) |
 | Generic PSP | `MobileMoneyProvider` | `/api/webhooks/provider/{code}` |
 
 Guest checkout is centralized in **`PayWizard`** + **`/api/public/checkout/*`** (legacy `/api/collect/*` is deprecated).

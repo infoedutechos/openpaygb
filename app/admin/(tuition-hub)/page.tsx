@@ -103,10 +103,10 @@ function PendingPaymentsChart({ rows }: { rows: { m: string; count: number }[] }
 
 function StatCard({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-white/10 bg-[#0d1526]/80 p-5">
       <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-2 text-2xl font-semibold text-slate-900">{value}</p>
-      <p className="mt-1 text-xs font-medium text-emerald-600">{sub}</p>
+      <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
+      <p className="mt-1 text-xs font-medium text-emerald-400/90">{sub}</p>
     </div>
   );
 }
@@ -194,12 +194,20 @@ function AdminDashboardPageInner() {
                   : "Platform overview"}
           </p>
         </div>
-        <Link
-          href="/admin/settings"
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 shadow-sm hover:bg-slate-50"
-        >
-          Settings
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/admin/payment-requests"
+            className="rounded-lg border border-cyan-500/30 bg-cyan-950/30 px-3 py-2 text-xs font-medium text-cyan-200 hover:border-cyan-400/50"
+          >
+            Payment requests
+          </Link>
+          <Link
+            href="/admin/settings"
+            className="rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs font-medium text-slate-300 hover:bg-white/10"
+          >
+            Settings
+          </Link>
+        </div>
       </div>
 
       {summary.viewer?.role === "master" ? (
@@ -225,13 +233,13 @@ function AdminDashboardPageInner() {
       </div>
 
       {summary.collectionsByRail && summary.collectionsByRail.length > 0 ? (
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-base font-semibold text-slate-900">Collections by rail</h2>
-          <ul className="mt-3 divide-y divide-slate-100 text-sm">
+        <section className="rounded-xl border border-white/10 bg-[#0d1526]/80 p-5">
+          <h2 className="text-base font-semibold text-white">Collections by rail</h2>
+          <ul className="mt-3 divide-y divide-white/10 text-sm">
             {summary.collectionsByRail.map((r) => (
               <li key={r.rail} className="flex justify-between gap-4 py-2">
-                <span className="font-medium capitalize text-slate-800">{r.rail.replace(/_/g, " ")}</span>
-                <span className="text-slate-600">
+                <span className="font-medium capitalize text-slate-200">{r.rail.replace(/_/g, " ")}</span>
+                <span className="text-slate-400">
                   {r.count} · UGX {r.totalUgx.toLocaleString()} · {r.tonAmount} TON
                 </span>
               </li>
@@ -240,17 +248,17 @@ function AdminDashboardPageInner() {
         </section>
       ) : null}
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="rounded-xl border border-white/10 bg-[#0d1526]/80 p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-base font-semibold text-slate-900">Pending Payments</h2>
+          <h2 className="text-base font-semibold text-white">Pending Payments</h2>
           <Link
             href="/admin/payments?status=pending"
-            className="text-xs font-medium text-blue-600 hover:underline"
+            className="text-xs font-medium text-cyan-300 hover:underline"
           >
             View all pending
           </Link>
         </div>
-        <ul className="mt-4 divide-y divide-slate-100">
+        <ul className="mt-4 divide-y divide-white/10">
           {(summary.pendingPayments ?? []).length === 0 ? (
             <li className="py-4 text-sm text-slate-500">No pending payments right now.</li>
           ) : (
@@ -258,16 +266,16 @@ function AdminDashboardPageInner() {
               <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
                 <Link
                   href={`/admin/students/${p.studentId}`}
-                  className="min-w-0 font-medium text-blue-700 hover:underline"
+                  className="min-w-0 font-medium text-cyan-300 hover:underline"
                 >
                   {p.studentName}
                 </Link>
-                <span className="font-mono text-slate-700">
+                <span className="font-mono text-slate-300">
                   {p.tonAmount > 0 ? `${p.tonAmount.toFixed(2)} TON` : `UGX ${p.totalUgx.toLocaleString()}`}
                 </span>
                 <Link
                   href={`/admin/payments?highlight=${p.id}`}
-                  className="shrink-0 text-xs font-medium text-amber-700 hover:underline"
+                  className="shrink-0 text-xs font-medium text-amber-300/90 hover:underline"
                 >
                   Pending · {new Date(p.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
                 </Link>
@@ -276,21 +284,21 @@ function AdminDashboardPageInner() {
           )}
         </ul>
         {(summary.monthlyPending ?? []).length > 0 ? (
-          <div className="mt-6 border-t border-slate-100 pt-4">
+          <div className="mt-6 border-t border-white/10 pt-4">
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Pending trend (7 months)</p>
             <PendingPaymentsChart rows={summary.monthlyPending ?? []} />
           </div>
         ) : null}
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="rounded-xl border border-white/10 bg-[#0d1526]/80 p-5">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-base font-semibold text-slate-900">Recent Payments</h2>
-          <Link href="/admin/payments" className="text-xs font-medium text-blue-600 hover:underline">
+          <h2 className="text-base font-semibold text-white">Recent Payments</h2>
+          <Link href="/admin/payments" className="text-xs font-medium text-cyan-300 hover:underline">
             View all
           </Link>
         </div>
-        <ul className="mt-4 divide-y divide-slate-100">
+        <ul className="mt-4 divide-y divide-white/10">
           {summary.recentPayments.length === 0 ? (
             <li className="py-4 text-sm text-slate-500">No payments yet.</li>
           ) : (
@@ -298,11 +306,11 @@ function AdminDashboardPageInner() {
               <li key={p.id} className="flex items-center justify-between gap-4 py-3 text-sm">
                 <Link
                   href={`/admin/students/${p.studentId}`}
-                  className="font-medium text-blue-700 hover:underline"
+                  className="font-medium text-cyan-300 hover:underline"
                 >
                   {p.studentName}
                 </Link>
-                <span className="font-mono text-slate-700">{p.tonAmount.toFixed(2)} TON</span>
+                <span className="font-mono text-slate-300">{p.tonAmount.toFixed(2)} TON</span>
                 <span className="shrink-0 text-slate-500">
                   {new Date(p.createdAt).toLocaleDateString(undefined, {
                     day: "numeric",

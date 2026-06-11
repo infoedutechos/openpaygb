@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/pay/SiteHeader";
 /** Routes with their own shell — skip global header + `/api/student/session` probe. */
 const HIDE_HEADER_PREFIXES = [
   "/admin",
+  "/school",
   "/school-admin",
   "/pay",
   "/student",

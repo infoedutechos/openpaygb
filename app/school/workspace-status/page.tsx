@@ -44,6 +44,8 @@ function WorkspaceStatusInner() {
   const searchParams = useSearchParams();
   const slug = searchParams.get("slug")?.trim().toLowerCase() ?? "";
   const email = searchParams.get("email")?.trim().toLowerCase() ?? "";
+  const justVerified = searchParams.get("verified") === "1";
+  const justActivated = searchParams.get("activated") === "1";
   const [data, setData] = useState<StatusJson | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -88,6 +90,14 @@ function WorkspaceStatusInner() {
       <p className="mt-2 text-sm text-slate-400">
         Verification status and next steps for your registration. Bookmark this page to check progress.
       </p>
+
+      {justVerified || justActivated ? (
+        <p className="mt-6 rounded-lg border border-emerald-500/35 bg-emerald-950/35 px-4 py-3 text-sm text-emerald-200/95">
+          {justActivated
+            ? "Email confirmed — your workspace is now active. Sign in below when your admin account is ready."
+            : "Email confirmed — track your workspace approval progress on this page."}
+        </p>
+      ) : null}
 
       {loading ? <p className="mt-6 text-sm text-slate-500">Loading…</p> : null}
       {!loading && data?.error ? <p className="mt-6 text-sm text-rose-400">{data.error}</p> : null}

@@ -34,7 +34,7 @@ Operational reference for tenant registration, tuition pay URLs, student portal,
 
 ### Middleware and public admin routes
 
-- [`middleware.ts`](../middleware.ts) allows **`/admin/login`**, **`/school/login`** (rewrites to school admin login), **`/admin/register`**, **`/admin/reset-password`**, **`/admin/notifications`** without admin cookies.
+- [`middleware.ts`](../middleware.ts) allows **`/admin/login`**, **`/admin/register`**, **`/admin/reset-password`** without tuition JWT. **`/school/login`** rewrites to school admin login. **`/admin/notifications`** and other URA game admin pages require a valid **`admin_session`** cookie (see [SECURITY_HARDENING.md](./SECURITY_HARDENING.md)).
 - **`/student/*`** requires **`odelhub_student`** cookie except **`/student/login`**.
 
 ### Admin layout bypass

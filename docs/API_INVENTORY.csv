@@ -50,6 +50,8 @@ url_path,relative_file,http_methods,method_count
 /api/admin/verify-item-password,app/api/admin/verify-item-password/route.ts,POST,1
 /api/admin/weekly-event,app/api/admin/weekly-event/route.ts,GET;POST,2
 /api/auth/admin/change-password,app/api/auth/admin/change-password/route.ts,POST,1
+/api/auth/admin/profile-image,app/api/auth/admin/profile-image/route.ts,DELETE;GET;POST,3
+/api/auth/admin/profile,app/api/auth/admin/profile/route.ts,PATCH,1
 /api/auth/forgot-password,app/api/auth/forgot-password/route.ts,POST,1
 /api/auth/google/student/callback,app/api/auth/google/student/callback/route.ts,GET,1
 /api/auth/google/student,app/api/auth/google/student/route.ts,GET,1

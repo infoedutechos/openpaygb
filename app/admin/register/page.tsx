@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { OdelShieldIcon } from "@/components/icons/OdelShieldIcon";
+import { workspacePortalPath } from "@/lib/workspace-portal-url";
 import { OrganizationUnitKindPicker } from "@/components/admin/OrganizationUnitKindPicker";
 import type { OrganizationUnitKind } from "@/lib/organization-unit-kinds";
 
@@ -25,6 +26,7 @@ function RegisterForm() {
   const [busy, setBusy] = useState(false);
   const [resendBusy, setResendBusy] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
+  const [submittedSlug, setSubmittedSlug] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -103,12 +105,14 @@ function RegisterForm() {
       if (!r.ok) {
         if (r.status === 503 && j.message) {
           setSubmittedEmail(email);
+          setSubmittedSlug(slug.trim().toLowerCase());
           setMsg(j.message);
           return;
         }
         throw new Error(j.error ?? "Registration failed");
       }
       setSubmittedEmail(email);
+      setSubmittedSlug(slug.trim().toLowerCase());
       setMsg(j.message ?? "Request submitted. Check your email for the ODEL HUB verification link.");
       if (j.devConfirmUrl) setDevConfirmUrl(j.devConfirmUrl);
     } catch (err) {
@@ -269,6 +273,17 @@ function RegisterForm() {
             </div>
             {error ? <p className="text-sm text-rose-400">{error}</p> : null}
             {msg ? <p className="text-sm text-emerald-400">{msg}</p> : null}
+            {submittedSlug && submittedEmail ? (
+              <p className="text-sm text-slate-300">
+                Track progress anytime:{" "}
+                <Link
+                  href={workspacePortalPath({ slug: submittedSlug, email: submittedEmail })}
+                  className="font-medium text-violet-300 underline hover:text-violet-200"
+                >
+                  Open your workspace portal
+                </Link>
+              </p>
+            ) : null}
             {devConfirmUrl ? (
               <p className="break-all rounded-lg border border-amber-500/25 bg-amber-950/30 p-3 text-xs text-amber-100/90">
                 Dev verification link:{" "}
