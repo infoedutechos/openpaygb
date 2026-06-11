@@ -468,17 +468,60 @@ model OpenPayCardTopup {
  * OpenPayGB card balance stays in sync for card holders.
  */
 model OpgbWallet {
-  id             String            @id @default(auto()) @map("_id") @db.ObjectId
-  studentId      String            @unique @db.ObjectId
-  student        Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  organizationId String            @db.ObjectId
-  balanceMinor   Int               @default(0)
+  id             String              @id @default(auto()) @map("_id") @db.ObjectId
+  studentId      String              @unique @db.ObjectId
+  student        Student             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  organizationId String              @db.ObjectId
+  balanceMinor   Int                 @default(0)
   entries        OpgbLedgerEntry[]
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  assetBalances  OpgbAssetBalance[]
+  withdraws      OpgbWithdrawRequest[]
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
 
   @@index([organizationId])
   @@map("opgb_wallets")
+}
+
+/** Custodial multi-asset balance (crypto custody; OPGB settlement stays in balanceMinor). */
+model OpgbAssetBalance {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  walletId  String     @db.ObjectId
+  wallet    OpgbWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  /** ton | usdt | btc | eth */
+  asset     String
+  amount    Float      @default(0)
+  updatedAt DateTime   @updatedAt
+
+  @@unique([walletId, asset])
+  @@index([asset])
+  @@map("opgb_asset_balances")
+}
+
+/** OPGB or crypto withdraw request (custodial payout queue). */
+model OpgbWithdrawRequest {
+  id             String     @id @default(auto()) @map("_id") @db.ObjectId
+  walletId       String     @db.ObjectId
+  wallet         OpgbWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  studentId      String     @db.ObjectId
+  organizationId String     @db.ObjectId
+  /** opgb | ton | usdt | btc | eth | momo */
+  asset          String
+  amount         Float
+  amountUgx      Int
+  /** momo | ton | bank */
+  rail           String
+  destination    String     @default("")
+  /** pending | processing | completed | failed */
+  status         String     @default("pending")
+  referenceKey   String     @unique
+  memo           String     @default("")
+  createdAt      DateTime   @default(now())
+  completedAt    DateTime?
+
+  @@index([studentId, status])
+  @@index([status, createdAt])
+  @@map("opgb_withdraw_requests")
 }
 
 /** Immutable OPGB ledger line (credit/debit in UGX minor units = OPGB). */
@@ -526,19 +569,35 @@ model DexAmmSwap {
 
 /** Fiat → crypto buy queue (settles via onramp / ops). */
 model DexBuyOrder {
-  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  studentId      String?   @db.ObjectId
+  organizationId String?   @db.ObjectId
   crypto         String
   fiatAmountUgx  Int
   cryptoAmount   Float
   feeUgx         Int
-  /** queued | settled */
-  status         String   @default("queued")
-  referenceKey   String   @unique
-  contactEmail   String   @default("")
-  createdAt      DateTime @default(now())
+  /** queued | settled | failed */
+  status         String    @default("queued")
+  referenceKey   String    @unique
+  contactEmail   String    @default("")
+  settlementNote String    @default("")
+  createdAt      DateTime  @default(now())
+  settledAt      DateTime?
 
   @@index([status, createdAt])
+  @@index([studentId, createdAt])
   @@map("dex_buy_orders")
+}
+
+/** AMM liquidity pool reserves (custodial constant-product). */
+model DexAmmPool {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  pair           String   @unique
+  reserveOpgbUgx Int
+  reserveCrypto  Float
+  updatedAt      DateTime @updatedAt
+
+  @@map("dex_amm_pools")
 }
 
 /** Autonomous P2P offer book entry. */
@@ -563,20 +622,39 @@ model DexP2pOffer {
 
 /** P2P escrow hold — OPGB locked until release (Phase 3). */
 model DexP2pEscrow {
-  id             String      @id @default(auto()) @map("_id") @db.ObjectId
-  offerId        String      @db.ObjectId
-  offer          DexP2pOffer @relation(fields: [offerId], references: [id], onDelete: Cascade)
-  takerStudentId String      @db.ObjectId
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+  offerId        String         @db.ObjectId
+  offer          DexP2pOffer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  takerStudentId String         @db.ObjectId
   amountUgx      Int
-  /** held | released | cancelled */
-  status         String      @default("held")
-  referenceKey   String      @unique
-  createdAt      DateTime    @default(now())
+  /** held | released | cancelled | disputed */
+  status         String         @default("held")
+  referenceKey   String         @unique
+  autoReleaseAt  DateTime?
+  createdAt      DateTime       @default(now())
   releasedAt     DateTime?
+  dispute        DexP2pDispute?
 
   @@index([offerId])
   @@index([takerStudentId, status])
+  @@index([status, autoReleaseAt])
   @@map("dex_p2p_escrows")
+}
+
+/** P2P escrow dispute escalation. */
+model DexP2pDispute {
+  id           String       @id @default(auto()) @map("_id") @db.ObjectId
+  escrowId     String       @unique @db.ObjectId
+  escrow       DexP2pEscrow @relation(fields: [escrowId], references: [id], onDelete: Cascade)
+  escalatedBy  String       @db.ObjectId
+  reason       String
+  /** open | resolved_refund | resolved_release */
+  status       String       @default("open")
+  createdAt    DateTime     @default(now())
+  resolvedAt   DateTime?
+
+  @@index([status, createdAt])
+  @@map("dex_p2p_disputes")
 }
 
 /** One-time email verification + org pick for self-service student portal registration. */

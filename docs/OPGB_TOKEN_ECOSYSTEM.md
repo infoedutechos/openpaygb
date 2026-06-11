@@ -11,7 +11,7 @@ OPGB is a **universal internal settlement token** for ODEL HUB / OpenPay Global.
 
 **Comparable products:** Binance Pay + Revolut + Mobile Money + hybrid DEX + internal settlement token.
 
-**Today in code:** OpenPayGB UGX card (`OPGB ••••`), **OPGB wallet ledger** (`OpgbWallet` / `OpgbLedgerEntry`), deposit→OPGB auto-credit on card top-ups, tuition debit ledger, **Phase 2 FX basket** on `GET /api/student/opgb-wallet`, `GET /api/public/dex/buy-quote`, `POST /api/public/dex/buy`, **`/dex/buy` wizard UI**, **Phase 3 custodial** AMM (`POST /api/student/dex/amm-swap`, `/dex/amm`) and P2P escrow (`POST /api/student/dex/p2p/escrow`, `/dex/p2p`), Dex Hub onramp/offramp/convert, Mbiyo/LivePay/Relworx checkout rails. **Not yet built:** on-chain auto-release, full liquidity pools, P2P dispute dashboard.
+**Today in code (Phase 4):** OpenPayGB card, **OPGB wallet ledger**, deposit→OPGB on card top-ups + wallet P2P sync, **custodial crypto balances** (`OpgbAssetBalance`), **withdraw** (`POST /api/student/opgb-wallet/withdraw`, `/dex/offramp`), **real AMM pools** (`DexAmmPool`), instant student buy (`POST /api/student/dex/buy`), P2P release/cancel/dispute + 24h auto-release cron (`/api/cron/dex-settle`). **Pending:** on-chain settlement, live MoMo disbursement API, master dispute ops UI.
 
 ---
 
@@ -149,7 +149,11 @@ Do **not** mix multiple pegs in Phase 1 — all external currencies convert **th
 | **Deposit → OPGB auto-convert** | **On card top-ups** | `confirmOpenPayCardTopup` → `creditOpgbDeposit` |
 | **Hybrid DEX / AMM / P2P** | **Phase 3 shipped (custodial)** | `POST /api/student/dex/amm-swap`, `POST /api/student/dex/p2p/escrow`, `/dex/amm`, `/dex/p2p` |
 | **Fiat buy crypto wizard (8 steps)** | **Shipped** | `/dex/buy`, `GET /api/public/dex/buy-quote` |
-| **Multi-currency wallet display** | **Phase 2 shipped** | FX-quoted basket on `GET /api/student/opgb-wallet` |
+| **Multi-currency wallet display** | **Phase 4 shipped** | Real crypto custody + FX preview on `GET /api/student/opgb-wallet` |
+| **Withdraw OPGB/crypto** | **Phase 4 shipped** | `POST /api/student/opgb-wallet/withdraw`, `/dex/offramp` |
+| **AMM liquidity pools** | **Phase 4 shipped** | `DexAmmPool`, `lib/dex-amm-pool.ts` |
+| **P2P release / cancel / dispute** | **Phase 4 shipped** | `lib/dex-p2p-release.ts`, escrow APIs |
+| **Auto buy settlement (student)** | **Phase 4 shipped** | `POST /api/student/dex/buy` → instant OPGB debit + crypto credit |
 
 ---
 
@@ -171,12 +175,20 @@ Do **not** mix multiple pegs in Phase 1 — all external currencies convert **th
 3. Portfolio value line (`portfolioValueUgx`).  
 4. Fiat-buy wizard at `/dex/buy`; buy queue API at `POST /api/public/dex/buy`.
 
-### Phase 3 — Hybrid DEX + P2P (**custodial execution shipped**)
+### Phase 3 — Hybrid DEX + P2P (**shipped**)
 
 1. AMM: quote `GET /api/public/dex/amm-quote` · execute `POST /api/student/dex/amm-swap` · UI `/dex/amm`.  
 2. P2P: book `GET /api/public/dex/p2p` · escrow `POST /api/student/dex/p2p/escrow` · UI `/dex/p2p`.  
-3. Buy orders persisted: `DexBuyOrder` via `POST /api/public/dex/buy`.  
-4. **Pending:** on-chain auto-release, full AMM liquidity pools, dispute ops dashboard.
+3. Buy orders: `DexBuyOrder` via public queue or student instant settle.
+
+### Phase 4 — Full ecosystem loop (**shipped**)
+
+1. **Custodial crypto:** `OpgbAssetBalance` — AMM/buy credits TON/USDT/BTC/ETH.  
+2. **Withdraw:** `OpgbWithdrawRequest` + `/dex/offramp` UI.  
+3. **AMM pools:** `DexAmmPool` constant-product reserves (not demo constant).  
+4. **P2P lifecycle:** release, cancel, dispute, 24h auto-release via `/api/cron/dex-settle`.  
+5. **Wallet P2P → OPGB:** card transfers sync ledger debit/credit.  
+6. **Pending:** on-chain delivery, live payout disbursement, master dispute dashboard.
 
 **Checkout card:** [OPGB_CHECKOUT_CARD.md](./OPGB_CHECKOUT_CARD.md)
 

@@ -6,5 +6,7 @@ describe("dex-p2p-escrow", () => {
     const policy = p2pEscrowPolicy();
     expect(policy.phase).toBe(3);
     expect(policy.shipped).toContain("escrow_hold");
+    expect(policy.shipped).toContain("auto_release");
+    expect(policy.shipped).toContain("dispute_escalation");
   });
 });

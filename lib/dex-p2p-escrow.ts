@@ -3,6 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { debitOpgb, ensureOpgbWallet, reconcileOpgbWalletWithCard } from "@/lib/opgb-ledger";
 import { getStudentOpenPayCard } from "@/lib/openpay-card";
+import { p2pAutoReleaseAt } from "@/lib/dex-p2p-release";
 
 export type P2pOfferSide = "buy" | "sell";
 export type P2pAsset = "TON" | "USDT";
@@ -55,8 +56,16 @@ export function p2pEscrowPolicy() {
     settlementAsset: "OPGB",
     peg: { opgbPerUgx: 1 },
     features: ["offer_book", "escrow_hold", "auto_release", "dispute_escalation"],
-    shipped: ["offer_book", "escrow_hold", "student_create_offer"],
-    pending: ["on_chain_release", "dispute_dashboard"],
+    shipped: [
+      "offer_book",
+      "escrow_hold",
+      "student_create_offer",
+      "auto_release",
+      "escrow_release",
+      "escrow_cancel",
+      "dispute_escalation",
+    ],
+    pending: ["on_chain_release", "dispute_ops_dashboard"],
   };
 }
 
@@ -154,6 +163,7 @@ export async function acceptP2pEscrow(opts: {
           amountUgx: offer.totalUgx,
           status: "held",
           referenceKey,
+          autoReleaseAt: p2pAutoReleaseAt(),
         },
       });
     });

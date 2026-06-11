@@ -248,3 +248,30 @@ export async function debitOpgb(
     tx,
   );
 }
+
+export async function creditOpgb(
+  opts: {
+    studentId: string;
+    organizationId: string;
+    amountUgx: number;
+    kind: OpgbLedgerKind;
+    referenceKey: string;
+    sourceRail?: string;
+    memo?: string;
+  },
+  tx?: TxClient,
+) {
+  return writeOpgbLedgerEntry(
+    {
+      studentId: opts.studentId,
+      organizationId: opts.organizationId,
+      direction: "credit",
+      amountMinor: ugxToOpgbMinor(opts.amountUgx),
+      kind: opts.kind,
+      referenceKey: opts.referenceKey,
+      sourceRail: opts.sourceRail ?? "opgb",
+      memo: opts.memo,
+    },
+    tx,
+  );
+}

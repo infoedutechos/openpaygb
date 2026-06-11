@@ -1,6 +1,12 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
+import {
+  creditOpgb,
+  debitOpgb,
+  ensureOpgbWallet,
+  reconcileOpgbWalletWithCard,
+} from "@/lib/opgb-ledger";
 
 export async function sendWalletBetweenCards(input: {
   fromCardId: string;
@@ -33,7 +39,7 @@ export async function sendWalletBetweenCards(input: {
       data: { balanceUgx: { increment: amountUgx } },
     });
 
-    return tx.walletTransfer.create({
+    const transfer = await tx.walletTransfer.create({
       data: {
         fromCardId: from.id,
         toCardId: to.id,
@@ -42,5 +48,46 @@ export async function sendWalletBetweenCards(input: {
         status: "completed",
       },
     });
+
+    const fromStudentId = from.studentId;
+    const toStudentId = to.studentId;
+    await reconcileOpgbWalletWithCard(
+      { studentId: fromStudentId, organizationId: from.organizationId, cardBalanceUgx: from.balanceUgx - amountUgx },
+      tx,
+    );
+    await reconcileOpgbWalletWithCard(
+      { studentId: toStudentId, organizationId: to.organizationId, cardBalanceUgx: to.balanceUgx },
+      tx,
+    );
+    await ensureOpgbWallet(fromStudentId, from.organizationId);
+    await ensureOpgbWallet(toStudentId, to.organizationId);
+
+    const refBase = `wallet-transfer:${transfer.id}`;
+    await debitOpgb(
+      {
+        studentId: fromStudentId,
+        organizationId: from.organizationId,
+        amountUgx,
+        kind: "swap",
+        referenceKey: `${refBase}:debit`,
+        sourceRail: "wallet_p2p",
+        memo: input.memo ?? "Card P2P send",
+      },
+      tx,
+    );
+    await creditOpgb(
+      {
+        studentId: toStudentId,
+        organizationId: to.organizationId,
+        amountUgx,
+        kind: "deposit_card_topup",
+        referenceKey: `${refBase}:credit`,
+        sourceRail: "wallet_p2p",
+        memo: input.memo ?? "Card P2P receive",
+      },
+      tx,
+    );
+
+    return transfer;
   });
 }

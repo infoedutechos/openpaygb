@@ -2,6 +2,8 @@ import "server-only";
 
 import { prisma } from "@/lib/prisma";
 import { debitOpgb, ensureOpgbWallet, reconcileOpgbWalletWithCard } from "@/lib/opgb-ledger";
+import { creditOpgbAsset } from "@/lib/opgb-asset-balance";
+import { executeAmmPoolSwap } from "@/lib/dex-amm-pool";
 import { getStudentOpenPayCard } from "@/lib/openpay-card";
 import { quoteAmmSwap, type AmmPair } from "@/lib/dex-amm-quote";
 import { dexSettlementNextPath, dexSettlementNote } from "@/lib/dex-settlement";
@@ -49,11 +51,16 @@ export async function executeAmmSwap(opts: {
 
   try {
     const swap = await prisma.$transaction(async (tx) => {
+      const poolSwap = await executeAmmPoolSwap(
+        { pair: opts.pair, inputOpgbUgx: opts.inputAmountUgx },
+        tx,
+      );
+
       const debited = await debitOpgb(
         {
           studentId: opts.studentId,
           organizationId: opts.organizationId,
-          amountUgx: opts.inputAmountUgx,
+          amountUgx: poolSwap.inputOpgbUgx,
           kind: "amm_swap",
           referenceKey,
           sourceRail: "dex_amm",
@@ -63,17 +70,29 @@ export async function executeAmmSwap(opts: {
       );
       if (!debited.ok) throw new Error("Insufficient OPGB balance");
 
+      const wallet = await tx.opgbWallet.findUniqueOrThrow({
+        where: { studentId: opts.studentId },
+      });
+      await creditOpgbAsset(
+        {
+          walletId: wallet.id,
+          asset: poolSwap.cryptoAsset,
+          amount: poolSwap.outputCrypto,
+        },
+        tx,
+      );
+
       return tx.dexAmmSwap.create({
         data: {
           studentId: opts.studentId,
           organizationId: opts.organizationId,
           pair: opts.pair,
-          inputAmountUgx: opts.inputAmountUgx,
-          outputAsset: quote.outputAsset,
-          outputAmount: quote.outputAmount,
+          inputAmountUgx: poolSwap.inputOpgbUgx,
+          outputAsset: poolSwap.outputAsset,
+          outputAmount: poolSwap.outputCrypto,
           status: "completed",
           referenceKey,
-          settlementNote: dexSettlementNote(quote.outputAsset),
+          settlementNote: dexSettlementNote(poolSwap.outputAsset),
         },
       });
     });
@@ -86,7 +105,7 @@ export async function executeAmmSwap(opts: {
       outputAmount: swap.outputAmount,
       inputAmountUgx: swap.inputAmountUgx,
       nextPath: dexSettlementNextPath(swap.outputAsset),
-      message: dexSettlementNote(swap.outputAsset),
+      message: `${swap.outputAmount} ${swap.outputAsset} credited to your wallet.`,
     };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Swap failed";

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getOpgbFxSnapshot } from "@/lib/opgb-fx-rates";
+import { ensureAmmPools, getAmmPool, quoteAmmFromPool } from "@/lib/dex-amm-pool";
 
 export type AmmPair = "OPGB_TON" | "OPGB_USDT";
 
@@ -14,9 +14,8 @@ export type AmmQuote = {
   poolLiquidityUgx: number;
   executionPhase: 3;
   status: "quoted";
+  feeBps: number;
 };
-
-const DEMO_POOL_LIQUIDITY_UGX = 50_000_000;
 
 export async function quoteAmmSwap(opts: {
   pair: AmmPair;
@@ -24,33 +23,30 @@ export async function quoteAmmSwap(opts: {
   direction: "exact_in";
 }): Promise<AmmQuote | null> {
   if (!Number.isFinite(opts.inputAmount) || opts.inputAmount <= 0) return null;
-  const fx = await getOpgbFxSnapshot();
 
-  if (opts.pair === "OPGB_TON") {
-    const outputTon = opts.inputAmount / fx.ugxPerTon;
-    return {
-      pair: opts.pair,
-      inputAsset: "OPGB",
-      outputAsset: "TON",
-      inputAmount: opts.inputAmount,
-      outputAmount: Math.round(outputTon * 1e9) / 1e9,
-      priceImpactBps: Math.min(50, Math.round((opts.inputAmount / DEMO_POOL_LIQUIDITY_UGX) * 10_000)),
-      poolLiquidityUgx: DEMO_POOL_LIQUIDITY_UGX,
-      executionPhase: 3,
-      status: "quoted",
-    };
-  }
+  await ensureAmmPools();
+  const pool = await getAmmPool(opts.pair);
+  if (!pool) return null;
 
-  const outputUsdt = opts.inputAmount / fx.ugxPerUsdt;
+  const quote = quoteAmmFromPool({
+    reserveOpgbUgx: pool.reserveOpgbUgx,
+    reserveCrypto: pool.reserveCrypto,
+    inputOpgbUgx: opts.inputAmount,
+  });
+  if (!quote) return null;
+
+  const outputAsset = opts.pair === "OPGB_TON" ? "TON" : "USDT";
+
   return {
     pair: opts.pair,
     inputAsset: "OPGB",
-    outputAsset: "USDT",
-    inputAmount: opts.inputAmount,
-    outputAmount: Math.round(outputUsdt * 1e6) / 1e6,
-    priceImpactBps: Math.min(50, Math.round((opts.inputAmount / DEMO_POOL_LIQUIDITY_UGX) * 10_000)),
-    poolLiquidityUgx: DEMO_POOL_LIQUIDITY_UGX,
+    outputAsset,
+    inputAmount: quote.inputOpgbUgx,
+    outputAmount: quote.outputCrypto,
+    priceImpactBps: quote.priceImpactBps,
+    poolLiquidityUgx: quote.poolLiquidityUgx,
     executionPhase: 3,
     status: "quoted",
+    feeBps: quote.feeBps,
   };
 }

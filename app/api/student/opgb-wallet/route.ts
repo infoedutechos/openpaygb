@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getStudentFromCookies } from "@/lib/student-auth";
 import { prisma } from "@/lib/prisma";
 import { ensureOpgbWallet, getOpgbWalletSummary } from "@/lib/opgb-ledger";
+import { getOpgbAssetBalances } from "@/lib/opgb-asset-balance";
 import { buildOpgbWalletDisplay } from "@/lib/opgb-wallet-display";
 import { apiErrorResponse } from "@/lib/api-error";
 
@@ -20,9 +21,10 @@ export async function GET() {
       return NextResponse.json({ error: "Student not found" }, { status: 404 });
     }
 
-    await ensureOpgbWallet(session.sub, student.organizationId);
+    const walletRow = await ensureOpgbWallet(session.sub, student.organizationId);
     const wallet = await getOpgbWalletSummary(session.sub);
-    const display = await buildOpgbWalletDisplay(wallet?.balanceMinor ?? 0);
+    const assetMap = await getOpgbAssetBalances(walletRow.id);
+    const display = await buildOpgbWalletDisplay(wallet?.balanceMinor ?? 0, assetMap);
 
     return NextResponse.json({
       peg: display.peg,

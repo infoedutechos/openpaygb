@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { readJsonResponse } from "@/utils/read-json-response";
 
@@ -68,14 +67,22 @@ export default function DexBuyPage() {
     setError(null);
     setMsg(null);
     try {
-      const r = await fetch("/api/public/dex/buy", {
+      let r = await fetch("/api/student/dex/buy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ crypto: quote.crypto, fiatAmountUgx: quote.fiatAmount }),
       });
+      if (r.status === 401) {
+        r = await fetch("/api/public/dex/buy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ crypto: quote.crypto, fiatAmountUgx: quote.fiatAmount }),
+        });
+      }
       const parsed = await readJsonResponse<{ message?: string; nextPath?: string; error?: string }>(r);
       if (!parsed.ok) throw new Error(parsed.error);
-      setMsg(parsed.data.message ?? "Buy queued.");
+      setMsg(parsed.data.message ?? "Buy complete.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Buy failed");
     } finally {
@@ -152,11 +159,7 @@ export default function DexBuyPage() {
             {buyBusy ? "Processing…" : "Step 6 — Buy"}
           </button>
           <p className="text-xs text-slate-500">
-            Phase 3: hybrid DEX / AMM / P2P escrow completes on-chain settlement. Until then, continue via{" "}
-            <Link href="/dex/onramp" className="text-cyan-300 underline">
-              onramp
-            </Link>
-            .
+            Signed-in students settle instantly from OPGB balance. Guests queue for ops settlement.
           </p>
         </div>
       ) : null}
