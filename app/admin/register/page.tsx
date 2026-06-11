@@ -25,8 +25,7 @@ function RegisterForm() {
   const [devConfirmUrl, setDevConfirmUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [resendBusy, setResendBusy] = useState(false);
-  const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
-  const [submittedSlug, setSubmittedSlug] = useState<string | null>(null);
+  const [submission, setSubmission] = useState<{ slug: string; email: string } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -102,17 +101,16 @@ function RegisterForm() {
         devConfirmUrl?: string;
       };
       const email = contact.trim().toLowerCase();
+      const submitted = { slug: slug.trim().toLowerCase(), email };
       if (!r.ok) {
         if (r.status === 503 && j.message) {
-          setSubmittedEmail(email);
-          setSubmittedSlug(slug.trim().toLowerCase());
+          setSubmission(submitted);
           setMsg(j.message);
           return;
         }
         throw new Error(j.error ?? "Registration failed");
       }
-      setSubmittedEmail(email);
-      setSubmittedSlug(slug.trim().toLowerCase());
+      setSubmission(submitted);
       setMsg(j.message ?? "Request submitted. Check your email for the ODEL HUB verification link.");
       if (j.devConfirmUrl) setDevConfirmUrl(j.devConfirmUrl);
     } catch (err) {
@@ -123,7 +121,7 @@ function RegisterForm() {
   }
 
   async function onResend() {
-    const email = submittedEmail ?? contact.trim().toLowerCase();
+    const email = submission?.email ?? contact.trim().toLowerCase();
     if (!email) return;
     setResendBusy(true);
     setError(null);
@@ -273,11 +271,11 @@ function RegisterForm() {
             </div>
             {error ? <p className="text-sm text-rose-400">{error}</p> : null}
             {msg ? <p className="text-sm text-emerald-400">{msg}</p> : null}
-            {submittedSlug && submittedEmail ? (
+            {submission ? (
               <p className="text-sm text-slate-300">
                 Track progress anytime:{" "}
                 <Link
-                  href={workspacePortalPath({ slug: submittedSlug, email: submittedEmail })}
+                  href={workspacePortalPath({ slug: submission.slug, email: submission.email })}
                   className="font-medium text-violet-300 underline hover:text-violet-200"
                 >
                   Open your workspace portal
@@ -299,7 +297,7 @@ function RegisterForm() {
             >
               {busy ? "Submitting…" : "Submit request"}
             </button>
-            {submittedEmail ? (
+            {submission ? (
               <button
                 type="button"
                 disabled={resendBusy}
