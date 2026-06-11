@@ -101,6 +101,27 @@ const UI_API_MAP = {
   "/admin/settings": ["/api/auth/me", "/api/fx/rate"],
   "/school/workspace-status": ["/api/public/workspace-status"],
   "/school/login": ["/api/auth/login"],
+  "/dex": [
+    "/api/public/dex/amm-quote",
+    "/api/public/dex/buy-quote",
+    "/api/public/dex/p2p",
+  ],
+  "/dex/buy": ["/api/public/dex/buy-quote", "/api/public/dex/buy"],
+  "/dex/amm": ["/api/public/dex/amm-quote", "/api/student/dex/amm-swap"],
+  "/dex/p2p": [
+    "/api/public/dex/p2p",
+    "/api/student/dex/p2p/escrow",
+    "/api/student/dex/p2p/offers",
+  ],
+  "/student": ["/api/student/opgb-wallet", "/api/student/openpay-card", "/api/auth/me"],
+  "/student/card": [
+    "/api/student/openpay-card",
+    "/api/student/openpay-card/opt-in",
+    "/api/student/openpay-card/issue/transfer",
+    "/api/student/openpay-card/issue/momo-start",
+    "/api/student/openpay-card/fund/transfer",
+    "/api/student/openpay-card/fund/momo-start",
+  ],
 };
 
 function inferPayApis(uiRoute) {
@@ -225,6 +246,27 @@ for (const pf of adminPageFiles) {
   }
   const noteStr = notes.length ? ` — ${notes.join(" ")}` : "";
   lines.push(`| ${ui} | ${apis.join("<br>")} | ${match}${noteStr} |`);
+}
+
+lines.push("");
+lines.push("## Dex / student / school UI → typical APIs");
+lines.push("");
+lines.push("| UI route | Mapped API paths | Match |");
+lines.push("|----------|------------------|-------|");
+for (const ui of [
+  "/dex",
+  "/dex/buy",
+  "/dex/amm",
+  "/dex/p2p",
+  "/student",
+  "/student/card",
+  "/school/workspace-status",
+  "/school/login",
+]) {
+  const apis = UI_API_MAP[ui] ?? [];
+  const exists = (u) => apiUrlSet.has(u);
+  const match = apis.length && apis.every(exists) ? "yes" : apis.some(exists) ? "partial" : "no";
+  lines.push(`| ${ui} | ${apis.join("<br>")} | ${match} |`);
 }
 
 lines.push("");

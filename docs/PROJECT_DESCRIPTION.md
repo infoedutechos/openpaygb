@@ -41,6 +41,7 @@ Core characteristics:
 - Student portal: `app/student/**`, `app/my/**`, `app/api/student/**`.
 - Virtual card: `app/student/card`, `app/api/student/openpay-card/**`, `lib/openpay-card*`.
 - Partner API/webhooks: `app/api/partner/v1/**`, `app/api/master/partner/**`.
+- Dex Hub + OPGB ledger: `app/dex/**`, `lib/opgb-ledger.ts`, `app/api/public/dex/**`, `app/api/student/dex/**` (custodial Phase 1–3; see `docs/OPGB_TOKEN_ECOSYSTEM.md`).
 
 ## Multi-tenancy model
 
@@ -366,9 +367,11 @@ Primary operational docs:
 - `docs/BACKUP_AND_RECOVERY.md`
 - `docs/VERCEL_ENV_SETUP.md`
 - `docs/DEPLOYMENT_ARCHITECTURE.md`
-- `docs/UI_VS_CODEBASE.md`
+- `docs/UI_VS_CODEBASE.md` (regenerate: `npm run docs:inventory` — **76 UI routes**, **308 API handlers**)
 - `docs/API_INVENTORY.csv`
 - `docs/UI_ROUTES.csv`
+- `docs/HOLISTIC_APP_AUDIT.md`, `docs/APP_STATUS_AUDIT.md`
+- `docs/OPGB_TOKEN_ECOSYSTEM.md`, `docs/OPGB_CHECKOUT_CARD.md`
 
 Role guides:
 

@@ -1,6 +1,6 @@
 # Holistic app audit (deep scan)
 
-**Date:** 2026-06-04 · **App:** ODEL HUB Pay (Next.js 15 + Prisma/MongoDB + merged URA game surface) · **Backlog:** [BACKLOG.md](./BACKLOG.md)
+**Date:** 2026-06-03 · **App:** ODEL HUB Pay (Next.js 15 + Prisma/MongoDB + merged URA game surface) · **Backlog:** [BACKLOG.md](./BACKLOG.md)
 
 ---
 
@@ -11,7 +11,8 @@
 | Tuition product (pay + admin) | **Production-capable** | Needs `RESEND_*`, `JWT_SECRET`, `DATABASE_URL`, Mbiyo keys for live UGX alternative |
 | School workspace onboarding | **Complete** | Register → email verify → **`/school/workspace-status`** → master approve → org admin → `/school/login` |
 | Programme customization (org admin) | **Complete** | CRUD + fees + CSV import at `/admin/programmes` |
-| UI vs codebase | **Mostly aligned** | 59 routes match inventory; minor doc/UX gaps fixed this pass |
+| UI vs codebase | **Aligned** | **76** UI routes, **308** API handlers — `npm run docs:inventory` |
+| OPGB / Dex Hub | **Phase 1–3 shipped (custodial)** | Ledger, FX basket, `/dex/buy`, AMM swap, P2P escrow — [OPGB_TOKEN_ECOSYSTEM.md](./OPGB_TOKEN_ECOSYSTEM.md) |
 | LivePay | **Integrated** (env opt-in) | Checkout + webhook + status poll — [LIVEPAY_INTEGRATION_ASSESSMENT.md](./LIVEPAY_INTEGRATION_ASSESSMENT.md) |
 | Deployment | **Ready with checklist** | `npm run verify`, `PRODUCTION_GO_LIVE.md` |
 
@@ -21,8 +22,8 @@
 
 - **Tenants:** `Organization` with `tenantStatus` pending | active | rejected
 - **Auth:** Tuition JWT (`odelhub_admin`) + legacy URA `admin_session` + student JWT
-- **APIs:** ~230 routes — inventory in `docs/API_INVENTORY.csv`
-- **UI:** 59 `page.tsx` files — inventory in `docs/UI_ROUTES.csv`
+- **APIs:** **308** routes — inventory in `docs/API_INVENTORY.csv`
+- **UI:** **76** `page.tsx` files — inventory in `docs/UI_ROUTES.csv`
 - **Game/URA:** Legacy `/admin/*` game pages coexist; tuition hub is `(tuition-hub)` group
 
 ---
@@ -31,8 +32,8 @@
 
 | Mode | Master setting | Flow |
 |------|----------------|------|
-| **Email verify + master approval** (default) | `schoolWorkspaceRequireMasterApproval: true` | Register → ODEL HUB email (details + timestamp) → click link → `/school/login` → master approves → master creates org admin |
-| **Email verify + auto-activate** | `requireMasterApproval: false` | Same email → verify may activate tenant immediately → master still creates org admin credentials |
+| **Email verify + master approval** (default) | `schoolWorkspaceRequireMasterApproval: true` | Register → ODEL HUB email (details + timestamp) → click link → **`/school/workspace-status?verified=1`** → master approves → master creates org admin → **`/school/login`** |
+| **Email verify + auto-activate** | `requireMasterApproval: false` | Same email → verify may activate tenant immediately → **`/school/workspace-status?activated=1`** → master still creates org admin credentials |
 
 Master toggle: `components/admin/MasterSchoolWorkspaceRegistrationSettings.tsx`  
 Policy API: `GET/PATCH /api/master/school-workspace-registration`
@@ -81,6 +82,18 @@ See [SCHOOL_ADMIN_PROGRAMMES.md](./SCHOOL_ADMIN_PROGRAMMES.md).
 - Logout / gate redirects use `/school/login`
 - Org admin settings no longer link to inaccessible master org screen
 - Verification email expanded with ODEL HUB platform details
+
+### OPGB / Dex Hub (2026-06-03)
+
+| Module | UI | APIs | Status |
+|--------|-----|------|--------|
+| OPGB ledger (1 OPGB = 1 UGX) | `/student` wallet panel | `GET /api/student/opgb-wallet` | Shipped |
+| Fiat buy wizard | `/dex/buy` | `buy-quote`, `buy` | Shipped |
+| AMM swap (custodial) | `/dex/amm` | `amm-quote`, `amm-swap` | Shipped |
+| P2P escrow (custodial) | `/dex/p2p` | `p2p`, `p2p/escrow`, `p2p/offers` | Shipped |
+| Checkout card rail | PayWizard, `/student/card` | `openpay-card-pay`, `openpay-card-eligibility` | Shipped |
+
+Hub home (`/dex`) links AMM/P2P; bottom nav keeps onramp/offramp/convert/buy (AMM/P2P via hub cards). **Open:** on-chain auto-release, dispute UI.
 
 ### Remaining backlog
 

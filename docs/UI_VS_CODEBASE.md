@@ -73,6 +73,19 @@ npm run docs:inventory   # writes API_INVENTORY.csv, UI_ROUTES.csv, and this fil
 | /admin/virtual-cards | /api/admin/openpay-cards | yes |
 | /admin/weekly-event | /api/admin/weekly-event | yes |
 
+## Dex / student / school UI → typical APIs
+
+| UI route | Mapped API paths | Match |
+|----------|------------------|-------|
+| /dex | /api/public/dex/amm-quote<br>/api/public/dex/buy-quote<br>/api/public/dex/p2p | yes |
+| /dex/buy | /api/public/dex/buy-quote<br>/api/public/dex/buy | yes |
+| /dex/amm | /api/public/dex/amm-quote<br>/api/student/dex/amm-swap | yes |
+| /dex/p2p | /api/public/dex/p2p<br>/api/student/dex/p2p/escrow<br>/api/student/dex/p2p/offers | yes |
+| /student | /api/student/opgb-wallet<br>/api/student/openpay-card<br>/api/auth/me | yes |
+| /student/card | /api/student/openpay-card<br>/api/student/openpay-card/opt-in<br>/api/student/openpay-card/issue/transfer<br>/api/student/openpay-card/issue/momo-start<br>/api/student/openpay-card/fund/transfer<br>/api/student/openpay-card/fund/momo-start | yes |
+| /school/workspace-status | /api/public/workspace-status | yes |
+| /school/login | /api/auth/login | yes |
+
 ## `/api/*` routes outside `/api/admin/*`
 
 These handlers are not namespaced under `/api/admin/`. Several are still used from **admin** pages (e.g. `/admin/payments` → `/api/payments`, `/admin/students` → `/api/students`). Others are **integration-only** (cron, webhooks, TON manifest) or **public pay**.

@@ -38,7 +38,7 @@ flowchart LR
 3. **Programme & term** — Client loads programmes and requests a **quote** (UGX fees + FX → TON amount + destination wallet).
 4. **Checkout session** — `POST /api/public/checkout/session` when resuming with `studentId` from a link.
 5. **Student record** — `POST /api/public/checkout/student` creates or updates a **Student** in that org (rate-limited). Legacy **`POST /api/students`** requires an admin session.
-6. **Pending payment** — `POST /api/public/checkout/payment` creates a **Payment**; rails via **`POST /api/public/checkout/mbiyo-start`**, **`livepay-start`**, **`relworx-start`**, **`vixonpay-start`**, **`openpay-card-charge`**, or TON transfer as configured.
+6. **Pending payment** — `POST /api/public/checkout/payment` creates a **Payment**; rails via **`POST /api/public/checkout/mbiyo-start`**, **`livepay-start`**, **`relworx-start`**, **`vixonpay-start`**, **`openpay-card-pay`**, or TON transfer as configured.
 7. **Wallet** — TON Connect sends transfer; memo carries **`ref:<paymentId>`** for matching.
 8. **Confirmation** — TonAPI cron (`/api/cron/confirm-ton`) and/or admin `PATCH` can set **confirmed**; client may poll public payment status.
 9. **Receipt** — User opens **`/receipt/<paymentId>`** (or API `GET /api/receipts/:id`, PDF route) when allowed.
@@ -94,7 +94,33 @@ See [MBIYO_WEBHOOK_SETUP.md](./MBIYO_WEBHOOK_SETUP.md), [LIVEPAY_INTEGRATION_ASS
 
 ---
 
-## 7. Related code (map)
+## 7. Student portal & OPGB wallet (signed-in)
+
+| Surface | Purpose |
+|---------|---------|
+| `/student`, `/student/login` | Dashboard, tuition progress, OPGB wallet panel |
+| `GET /api/student/opgb-wallet` | OPGB balance + FX-quoted multi-currency basket (display) |
+| `GET /api/student/openpay-card` | OpenPayGB virtual card status and UGX balance |
+| `/student/card` | Card opt-in, issue fee, MoMo/TON top-up |
+
+Checkout from card balance uses **`POST /api/public/checkout/openpay-card-pay`** (same rail as PayWizard “OpenPayGB card”). See [OPGB_CHECKOUT_CARD.md](./OPGB_CHECKOUT_CARD.md).
+
+---
+
+## 8. Dex Hub (fiat ↔ crypto, OPGB swaps)
+
+| UI | Typical APIs |
+|----|----------------|
+| `/dex`, `/dex/onramp`, `/dex/offramp`, `/dex/convert` | Public quote/onramp helpers under `/api/public/dex/*` |
+| `/dex/buy` | `GET /api/public/dex/buy-quote`, `POST /api/public/dex/buy` |
+| `/dex/amm` | `GET /api/public/dex/amm-quote`, `POST /api/student/dex/amm-swap` (student session) |
+| `/dex/p2p` | `GET /api/public/dex/p2p`, `POST /api/student/dex/p2p/escrow`, `POST /api/student/dex/p2p/offers` |
+
+Phase 3 execution is **custodial** (ledger debits/credits); on-chain auto-release is backlog. See [OPGB_TOKEN_ECOSYSTEM.md](./OPGB_TOKEN_ECOSYSTEM.md).
+
+---
+
+## 9. Related code (map)
 
 | Area | Location |
 |------|----------|
@@ -102,4 +128,6 @@ See [MBIYO_WEBHOOK_SETUP.md](./MBIYO_WEBHOOK_SETUP.md), [LIVEPAY_INTEGRATION_ASS
 | Pay | `app/pay/*`, `PayWizard.tsx`, `PayProviders.tsx` |
 | Receipt | `app/receipt/[paymentId]/page.tsx` |
 | Public checkout | `app/api/public/checkout/**` |
+| Dex Hub | `app/dex/**`, `lib/ecosystem/hubs.ts` |
+| OPGB ledger | `lib/opgb-ledger.ts`, `lib/opgb-fx-rates.ts` |
 | Legacy admin student create | `app/api/students/route.ts` |

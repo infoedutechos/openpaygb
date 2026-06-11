@@ -1,6 +1,6 @@
 # App status audit (holistic scan)
 
-**Last reviewed:** 2026-06-04 · **Scope:** registration, approval, email verification, auth, pay, programmes, UI/docs sync, deployment.
+**Last reviewed:** 2026-06-03 · **Scope:** registration, approval, email verification, auth, pay, programmes, OPGB/Dex, UI/docs sync, deployment.
 
 **Full holistic scan:** [HOLISTIC_APP_AUDIT.md](./HOLISTIC_APP_AUDIT.md) · **Backlog (canonical):** [BACKLOG.md](./BACKLOG.md) · **LivePay:** [LIVEPAY_INTEGRATION_ASSESSMENT.md](./LIVEPAY_INTEGRATION_ASSESSMENT.md)
 
@@ -10,7 +10,7 @@
 
 | Area | Status |
 |------|--------|
-| School workspace self-register + email verify → `/school/login` | **Implemented** |
+| School workspace self-register + email verify → `/school/workspace-status` | **Implemented** |
 | Master approve / reject + email gate before approve | **Implemented** |
 | School admin login after master creates `org_admin` | **Implemented** (manual provisioning) |
 | Guest pay (`PayWizard` + public checkout APIs) | **Implemented** |
@@ -36,7 +36,7 @@ flowchart TD
 |------|--------|
 | Register | `tenantStatus: pending`, contact email **required** on self-serve |
 | Email | HTML + plain text; 72h token; includes school name, slug, email, submitted time (Africa/Kampala), notes |
-| Verify redirect | **`/school/login`** (rewrites to `/admin/login?school=1`) |
+| Verify redirect | **`/school/workspace-status?slug=…&verified=1`** (or `activated=1` when auto-activate); errors → `/school/login?workspaceVerifyError=` |
 | Approve gate | Master cannot approve until email verified (when contact email set) |
 | Dashboard access | Master creates **`org_admin`** on **active** org only; school uses **`/school/login`** |
 
@@ -125,9 +125,9 @@ Prioritized inventory: **[BACKLOG.md](./BACKLOG.md)**. Items from the 2026-06-04
 |------|-----------|
 | Ops | Production TON wallet + webhook dashboard alignment — [DEPLOYMENT_ENV_PRODUCTION.md](./DEPLOYMENT_ENV_PRODUCTION.md) |
 | Product | OpenPayGB virtual card program — [VIRTUAL_CARD_INVESTIGATION.md](./VIRTUAL_CARD_INVESTIGATION.md) |
-| Product | **OPGB settlement ledger** (Phase 1 shipped: 1 OPGB = 1 UGX) — [OPGB_TOKEN_ECOSYSTEM.md](./OPGB_TOKEN_ECOSYSTEM.md) |
-| Low | Master org UI consolidation (single `MasterOrgRow`); URA game `apiErrorResponse` (~200 routes) |
-| Docs | Regenerate `docs:inventory` after new routes (`/api/platform/chat/suggest`) |
+| Product | **OPGB on-chain settlement** (custodial Phase 1–3 shipped; auto-release + dispute UI open) — [OPGB_TOKEN_ECOSYSTEM.md](./OPGB_TOKEN_ECOSYSTEM.md) |
+| Low | Master org UI consolidation (single `MasterOrgRow`); URA game `apiErrorResponse` |
+| Docs | Inventories at **76 UI / 308 API** — regenerate with `npm run docs:inventory` after new routes |
 
 ---
 

@@ -11,7 +11,7 @@ OPGB is a **universal internal settlement token** for ODEL HUB / OpenPay Global.
 
 **Comparable products:** Binance Pay + Revolut + Mobile Money + hybrid DEX + internal settlement token.
 
-**Today in code:** OpenPayGB UGX card (`OPGB ••••`), **OPGB wallet ledger** (`OpgbWallet` / `OpgbLedgerEntry`), deposit→OPGB auto-credit on card top-ups, tuition debit ledger, **Phase 2 FX basket** on `GET /api/student/opgb-wallet`, `GET /api/public/dex/buy-quote`, `POST /api/public/dex/buy` (queue), **`/dex/buy` wizard UI**, Dex Hub onramp/offramp/convert, Mbiyo/LivePay/Relworx checkout rails. **Not yet built:** on-chain AMM settlement, P2P escrow execution.
+**Today in code:** OpenPayGB UGX card (`OPGB ••••`), **OPGB wallet ledger** (`OpgbWallet` / `OpgbLedgerEntry`), deposit→OPGB auto-credit on card top-ups, tuition debit ledger, **Phase 2 FX basket** on `GET /api/student/opgb-wallet`, `GET /api/public/dex/buy-quote`, `POST /api/public/dex/buy`, **`/dex/buy` wizard UI**, **Phase 3 custodial** AMM (`POST /api/student/dex/amm-swap`, `/dex/amm`) and P2P escrow (`POST /api/student/dex/p2p/escrow`, `/dex/p2p`), Dex Hub onramp/offramp/convert, Mbiyo/LivePay/Relworx checkout rails. **Not yet built:** on-chain auto-release, full liquidity pools, P2P dispute dashboard.
 
 ---
 
