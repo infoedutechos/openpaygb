@@ -125,12 +125,22 @@ async function patchMasterOverrides(updates) {
   return saved;
 }
 
+function vercelCliEnv() {
+  const { projectId, orgId } = readProjectJson();
+  const env = { ...process.env };
+  // Vercel CLI requires VERCEL_ORG_ID whenever VERCEL_PROJECT_ID is inherited.
+  env.VERCEL_ORG_ID = orgId;
+  env.VERCEL_PROJECT_ID = projectId;
+  return env;
+}
+
 function vercelEnvRm(key, target) {
   return new Promise((resolvePromise) => {
     const child = spawn("npx", ["vercel", "env", "rm", key, target, "--yes"], {
       cwd: process.cwd(),
       shell: true,
       stdio: "ignore",
+      env: vercelCliEnv(),
     });
     child.on("close", () => resolvePromise());
     child.on("error", () => resolvePromise());
@@ -143,6 +153,7 @@ function vercelEnvAdd(key, value, target) {
       cwd: process.cwd(),
       shell: true,
       stdio: ["pipe", "pipe", "pipe"],
+      env: vercelCliEnv(),
     });
     let err = "";
     child.stderr?.on("data", (d) => {

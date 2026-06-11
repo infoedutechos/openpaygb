@@ -30,7 +30,7 @@
     "docs:serve": "npx serve docs -p 8787",
     "docs:build-index": "node scripts/build-docs-manifest.mjs",
     "vercel:login": "vercel login",
-    "vercel:link": "vercel link --yes --project odelhub-pay --team odeldevelopers-projects",
+    "vercel:link": "vercel link --yes --non-interactive --project odelpay --scope odeldevelopers-projects",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",

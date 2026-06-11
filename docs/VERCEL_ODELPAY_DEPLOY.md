@@ -2,7 +2,7 @@
 
 **Vercel login:** `info.edutechos@gmail.com`  
 **Team:** [odeldevelopers-projects](https://vercel.com/odeldevelopers-projects)  
-**Project (dashboard name):** [odelhub-pay](https://vercel.com/odeldevelopers-projects/odelhub-pay/settings/domains)  
+**Project (dashboard name):** [odelpay](https://vercel.com/odeldevelopers-projects/odelpay/settings/domains)  
 **Production domain:** **`https://odelpay.vercel.app`** (no trailing slash)  
 **GitHub:** [openpayglobal/openpaygb](https://github.com/openpayglobal/openpaygb)
 
@@ -24,7 +24,7 @@
 ## Fix 1 — Vercel team access
 
 1. Log in at [vercel.com](https://vercel.com) as **`info.edutechos@gmail.com`**.
-2. [odelhub-pay → Settings → Members](https://vercel.com/odeldevelopers-projects/odelhub-pay/settings) — invite every GitHub committer (especially **infoedutechos**).
+2. [odelpay → Settings → Members](https://vercel.com/odeldevelopers-projects/odelpay/settings) — invite every GitHub committer (especially **infoedutechos**).
 3. GitHub → **Settings → Emails** — commit email must match a Vercel team member.
 4. Re-push `main` or **Redeploy** latest commit.
 
@@ -32,7 +32,7 @@
 
 ## Fix 2 — Connect Git
 
-1. [Settings → Git](https://vercel.com/odeldevelopers-projects/odelhub-pay/settings/git)
+1. [Settings → Git](https://vercel.com/odeldevelopers-projects/odelpay/settings/git)
 2. Team: **odeldevelopers-projects**
 3. Repo: **`openpayglobal/openpaygb`**
 4. Production branch: **`main`**
@@ -98,7 +98,7 @@ npm run telegram:set-menu
 
 | Variable | Where to get it |
 |----------|-----------------|
-| `VERCEL_PROJECT_ID` | `.vercel/project.json` → `prj_J5WZp67C2DB4zR6LzjLYZ0j8Nebk` — or Vercel → **odelhub-pay** → Settings → General → **Project ID** |
+| `VERCEL_PROJECT_ID` | `.vercel/project.json` → `prj_J5WZp67C2DB4zR6LzjLYZ0j8Nebk` — or Vercel → **odelpay** → Settings → General → **Project ID** |
 | `VERCEL_TEAM_ID` | `.vercel/project.json` → `team_HSziNLJNu74t46uP691K8XG4` — or Team → Settings → General → **Team ID** |
 | `VERCEL_ACCESS_TOKEN` | [vercel.com/account/tokens](https://vercel.com/account/tokens) — create token while logged in as **info.edutechos@gmail.com** (needs project env read/write) |
 
@@ -118,7 +118,7 @@ npm run deployment:sync-vercel      # re-push registry values only
 ```powershell
 npx vercel login
 npx vercel link
-# Team: odeldevelopers-projects → Project: odelhub-pay (domain odelpay.vercel.app)
+# Team: odeldevelopers-projects → Project: odelpay (domain odelpay.vercel.app)
 npx vercel env ls
 npx vercel env pull .env.local
 ```

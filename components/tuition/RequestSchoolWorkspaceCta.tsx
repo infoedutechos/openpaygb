@@ -2,8 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { SCHOOL_ADMIN_LOGIN_PATH } from "@/lib/admin-auth-entry";
-
 type Policy = {
   requireMasterApproval?: boolean;
   autoRegistrationEnabled?: boolean;
