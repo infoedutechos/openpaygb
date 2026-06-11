@@ -4,7 +4,9 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { PUBLIC_SCHOOL_LOGIN_PATH } from "@/lib/admin-auth-entry";
+import { clientFetchErrorMessage } from "@/lib/client-fetch-error";
 import type { WorkspaceVerificationStep } from "@/lib/workspace-verification-steps";
+import { fetchJson } from "@/utils/fetch-json";
 
 type StatusJson = {
   found: boolean;
@@ -59,11 +61,16 @@ function WorkspaceStatusInner() {
     if (slug) sp.set("slug", slug);
     if (email) sp.set("email", email);
     setLoading(true);
-    const r = await fetch(`/api/public/workspace-status?${sp.toString()}`);
-    const j = (await r.json()) as StatusJson;
-    if (!r.ok) setData({ found: false, error: j.error ?? "Could not load status" });
-    else setData(j);
-    setLoading(false);
+    try {
+      const r = await fetchJson(`/api/public/workspace-status?${sp.toString()}`);
+      const j = (await r.json()) as StatusJson;
+      if (!r.ok) setData({ found: false, error: j.error ?? "Could not load status" });
+      else setData(j);
+    } catch (e) {
+      setData((prev) => prev ?? { found: false, error: clientFetchErrorMessage(e) });
+    } finally {
+      setLoading(false);
+    }
   }, [slug, email]);
 
   useEffect(() => {

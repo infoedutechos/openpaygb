@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { clientFetchErrorMessage } from "@/lib/client-fetch-error";
 import { readJsonResponse } from "@/utils/read-json-response";
+import { fetchJson } from "@/utils/fetch-json";
 
 type Offer = {
   id: string;
@@ -27,11 +29,11 @@ export default function DexP2pPage() {
 
   const load = useCallback(async () => {
     try {
-      const r = await fetch("/api/public/dex/p2p");
+      const r = await fetchJson("/api/public/dex/p2p");
       if (!r.ok) throw new Error("Could not load P2P book");
       setData((await r.json()) as P2pPayload);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Load failed");
+      setError(clientFetchErrorMessage(e, "Could not load P2P book. Wait for dev Ready, then refresh."));
     }
   }, []);
 
