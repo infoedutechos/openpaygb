@@ -34,8 +34,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: result.error }, { status: result.status });
     }
 
-    const { ok: _ok, ...payload } = result;
-    return NextResponse.json({ ok: true, ...payload });
+    return NextResponse.json({
+      ok: true,
+      escrowId: result.escrowId,
+      referenceKey: result.referenceKey,
+      message: result.message,
+    });
   } catch (e) {
     return apiErrorResponse(e, { route: "POST /api/student/dex/p2p/escrow" });
   }

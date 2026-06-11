@@ -44,8 +44,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: result.error }, { status: result.status });
     }
 
-    const { ok: _ok, ...payload } = result;
-    return NextResponse.json({ ok: true, ...payload });
+    return NextResponse.json({
+      ok: true,
+      swapId: result.swapId,
+      referenceKey: result.referenceKey,
+      outputAsset: result.outputAsset,
+      outputAmount: result.outputAmount,
+      inputAmountUgx: result.inputAmountUgx,
+      nextPath: result.nextPath,
+      message: result.message,
+    });
   } catch (e) {
     return apiErrorResponse(e, { route: "POST /api/student/dex/amm-swap" });
   }
