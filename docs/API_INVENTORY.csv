@@ -243,6 +243,9 @@ url_path,relative_file,http_methods,method_count
 /api/shop/upload,app/api/shop/upload/route.ts,POST,1
 /api/staking,app/api/staking/route.ts,GET;POST,2
 /api/student/balance,app/api/student/balance/route.ts,GET,1
+/api/student/dex/amm-swap,app/api/student/dex/amm-swap/route.ts,POST,1
+/api/student/dex/p2p/escrow,app/api/student/dex/p2p/escrow/route.ts,POST,1
+/api/student/dex/p2p/offers,app/api/student/dex/p2p/offers/route.ts,POST,1
 /api/student/me,app/api/student/me/route.ts,GET,1
 /api/student/openpay-card/fund/momo-start,app/api/student/openpay-card/fund/momo-start/route.ts,POST,1
 /api/student/openpay-card/fund/transfer,app/api/student/openpay-card/fund/transfer/route.ts,POST,1

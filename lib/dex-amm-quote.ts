@@ -13,7 +13,7 @@ export type AmmQuote = {
   priceImpactBps: number;
   poolLiquidityUgx: number;
   executionPhase: 3;
-  status: "quote_only";
+  status: "quoted";
 };
 
 const DEMO_POOL_LIQUIDITY_UGX = 50_000_000;
@@ -37,7 +37,7 @@ export async function quoteAmmSwap(opts: {
       priceImpactBps: Math.min(50, Math.round((opts.inputAmount / DEMO_POOL_LIQUIDITY_UGX) * 10_000)),
       poolLiquidityUgx: DEMO_POOL_LIQUIDITY_UGX,
       executionPhase: 3,
-      status: "quote_only",
+      status: "quoted",
     };
   }
 
@@ -51,6 +51,6 @@ export async function quoteAmmSwap(opts: {
     priceImpactBps: Math.min(50, Math.round((opts.inputAmount / DEMO_POOL_LIQUIDITY_UGX) * 10_000)),
     poolLiquidityUgx: DEMO_POOL_LIQUIDITY_UGX,
     executionPhase: 3,
-    status: "quote_only",
+    status: "quoted",
   };
 }

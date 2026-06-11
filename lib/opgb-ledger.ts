@@ -12,6 +12,9 @@ export type OpgbLedgerKind =
   | "tuition_pay"
   | "withdraw"
   | "swap"
+  | "amm_swap"
+  | "p2p_escrow_hold"
+  | "p2p_escrow_release"
   | "adjustment";
 
 export type OpgbLedgerDirection = "credit" | "debit";
@@ -217,4 +220,31 @@ export async function debitOpgbForTuition(
     sourceRail: "openpay_card",
     memo: opts.memo ?? "Tuition payment",
   }, tx);
+}
+
+export async function debitOpgb(
+  opts: {
+    studentId: string;
+    organizationId: string;
+    amountUgx: number;
+    kind: OpgbLedgerKind;
+    referenceKey: string;
+    sourceRail?: string;
+    memo?: string;
+  },
+  tx?: TxClient,
+) {
+  return writeOpgbLedgerEntry(
+    {
+      studentId: opts.studentId,
+      organizationId: opts.organizationId,
+      direction: "debit",
+      amountMinor: ugxToOpgbMinor(opts.amountUgx),
+      kind: opts.kind,
+      referenceKey: opts.referenceKey,
+      sourceRail: opts.sourceRail ?? "opgb",
+      memo: opts.memo,
+    },
+    tx,
+  );
 }

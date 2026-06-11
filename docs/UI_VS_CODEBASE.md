@@ -271,6 +271,9 @@ These handlers are not namespaced under `/api/admin/`. Several are still used fr
 - `/api/shop/upload` — `app/api/shop/upload/route.ts`
 - `/api/staking` — `app/api/staking/route.ts`
 - `/api/student/balance` — `app/api/student/balance/route.ts`
+- `/api/student/dex/amm-swap` — `app/api/student/dex/amm-swap/route.ts`
+- `/api/student/dex/p2p/escrow` — `app/api/student/dex/p2p/escrow/route.ts`
+- `/api/student/dex/p2p/offers` — `app/api/student/dex/p2p/offers/route.ts`
 - `/api/student/me` — `app/api/student/me/route.ts`
 - `/api/student/openpay-card/fund/momo-start` — `app/api/student/openpay-card/fund/momo-start/route.ts`
 - `/api/student/openpay-card/fund/transfer` — `app/api/student/openpay-card/fund/transfer/route.ts`

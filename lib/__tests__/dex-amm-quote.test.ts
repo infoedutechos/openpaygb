@@ -16,7 +16,7 @@ describe("dex-amm-quote", () => {
   it("quotes OPGB to TON swap (phase 3 preview)", async () => {
     const q = await quoteAmmSwap({ pair: "OPGB_TON", inputAmount: 400_000, direction: "exact_in" });
     expect(q?.outputAmount).toBe(1);
-    expect(q?.status).toBe("quote_only");
+    expect(q?.status).toBe("quoted");
     expect(q?.executionPhase).toBe(3);
   });
 });

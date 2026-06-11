@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       quote,
-      note: "Phase 3 — hybrid AMM execution not live; use /dex/buy or onramp for settlement today.",
+      note: "Execute via POST /api/student/dex/amm-swap (OPGB debit) then complete delivery at /dex/onramp.",
     });
   } catch (e) {
     return apiErrorResponse(e, { route: "GET /api/public/dex/amm-quote" });

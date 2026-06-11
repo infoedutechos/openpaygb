@@ -147,7 +147,7 @@ Do **not** mix multiple pegs in Phase 1 — all external currencies convert **th
 | **MoMo / Mbiyo / LivePay / Relworx** | Integrated | `/api/public/checkout/*`, webhooks |
 | **OPGB ledger wallet** | **Phase 1 shipped** | `lib/opgb-ledger.ts`, `GET /api/student/opgb-wallet` |
 | **Deposit → OPGB auto-convert** | **On card top-ups** | `confirmOpenPayCardTopup` → `creditOpgbDeposit` |
-| **Hybrid DEX / AMM / P2P** | **Phase 3 preview** | `GET /api/public/dex/amm-quote`, `GET /api/public/dex/p2p`, `/dex/p2p` |
+| **Hybrid DEX / AMM / P2P** | **Phase 3 shipped (custodial)** | `POST /api/student/dex/amm-swap`, `POST /api/student/dex/p2p/escrow`, `/dex/amm`, `/dex/p2p` |
 | **Fiat buy crypto wizard (8 steps)** | **Shipped** | `/dex/buy`, `GET /api/public/dex/buy-quote` |
 | **Multi-currency wallet display** | **Phase 2 shipped** | FX-quoted basket on `GET /api/student/opgb-wallet` |
 
@@ -171,11 +171,14 @@ Do **not** mix multiple pegs in Phase 1 — all external currencies convert **th
 3. Portfolio value line (`portfolioValueUgx`).  
 4. Fiat-buy wizard at `/dex/buy`; buy queue API at `POST /api/public/dex/buy`.
 
-### Phase 3 — Hybrid DEX + P2P (**preview shipped**)
+### Phase 3 — Hybrid DEX + P2P (**custodial execution shipped**)
 
-1. AMM quotes: `GET /api/public/dex/amm-quote` (`lib/dex-amm-quote.ts`) — execution pending.  
-2. Autonomous P2P book preview: `GET /api/public/dex/p2p`, `/dex/p2p` (`lib/dex-p2p-escrow.ts`).  
-3. **Pending:** custodial liquidity pools, escrow wallets, on-chain release, live matching.
+1. AMM: quote `GET /api/public/dex/amm-quote` · execute `POST /api/student/dex/amm-swap` · UI `/dex/amm`.  
+2. P2P: book `GET /api/public/dex/p2p` · escrow `POST /api/student/dex/p2p/escrow` · UI `/dex/p2p`.  
+3. Buy orders persisted: `DexBuyOrder` via `POST /api/public/dex/buy`.  
+4. **Pending:** on-chain auto-release, full AMM liquidity pools, dispute ops dashboard.
+
+**Checkout card:** [OPGB_CHECKOUT_CARD.md](./OPGB_CHECKOUT_CARD.md)
 
 ---
 

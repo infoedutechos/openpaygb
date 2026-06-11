@@ -45,6 +45,7 @@ ui_route,relative_file
 /clicker,app/clicker/page.tsx
 /clicker/privacy,app/clicker/privacy/page.tsx
 /clicker/terms,app/clicker/terms/page.tsx
+/dex/amm,app/dex/amm/page.tsx
 /dex/buy,app/dex/buy/page.tsx
 /dex/convert,app/dex/convert/page.tsx
 /dex/offramp,app/dex/offramp/page.tsx

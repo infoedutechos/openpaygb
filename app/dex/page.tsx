@@ -39,10 +39,16 @@ export default function DexHubPage() {
             Buy crypto
           </Link>
           <Link
+            href={HUBS.dex.routes!.amm!}
+            className="rounded-xl border border-white/15 bg-white/[0.06] px-5 py-3 text-center text-sm font-semibold text-slate-100 hover:border-violet-400/40"
+          >
+            AMM swap
+          </Link>
+          <Link
             href={HUBS.dex.routes!.p2p!}
             className="rounded-xl border border-white/15 bg-white/[0.06] px-5 py-3 text-center text-sm font-semibold text-slate-100 hover:border-violet-400/40"
           >
-            P2P (preview)
+            P2P market
           </Link>
           <Link
             href={HUBS.tuition.basePath}

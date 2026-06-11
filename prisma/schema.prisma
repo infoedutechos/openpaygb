@@ -505,6 +505,80 @@ model OpgbLedgerEntry {
   @@map("opgb_ledger_entries")
 }
 
+/** Custodial AMM swap — OPGB debited; crypto settlement via onramp (Phase 3). */
+model DexAmmSwap {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  studentId      String   @db.ObjectId
+  organizationId String   @db.ObjectId
+  pair           String
+  inputAmountUgx Int
+  outputAsset    String
+  outputAmount   Float
+  /** completed | failed */
+  status         String   @default("completed")
+  referenceKey   String   @unique
+  settlementNote String   @default("")
+  createdAt      DateTime @default(now())
+
+  @@index([studentId, createdAt])
+  @@map("dex_amm_swaps")
+}
+
+/** Fiat → crypto buy queue (settles via onramp / ops). */
+model DexBuyOrder {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  crypto         String
+  fiatAmountUgx  Int
+  cryptoAmount   Float
+  feeUgx         Int
+  /** queued | settled */
+  status         String   @default("queued")
+  referenceKey   String   @unique
+  contactEmail   String   @default("")
+  createdAt      DateTime @default(now())
+
+  @@index([status, createdAt])
+  @@map("dex_buy_orders")
+}
+
+/** Autonomous P2P offer book entry. */
+model DexP2pOffer {
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
+  makerStudentId   String?   @db.ObjectId
+  side             String
+  asset            String
+  amount           Float
+  priceUgxPerUnit  Int
+  totalUgx         Int
+  /** open | matched | cancelled | expired */
+  status           String    @default("open")
+  expiresAt        DateTime
+  createdAt        DateTime  @default(now())
+  escrows          DexP2pEscrow[]
+
+  @@index([status, asset])
+  @@index([expiresAt])
+  @@map("dex_p2p_offers")
+}
+
+/** P2P escrow hold — OPGB locked until release (Phase 3). */
+model DexP2pEscrow {
+  id             String      @id @default(auto()) @map("_id") @db.ObjectId
+  offerId        String      @db.ObjectId
+  offer          DexP2pOffer @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  takerStudentId String      @db.ObjectId
+  amountUgx      Int
+  /** held | released | cancelled */
+  status         String      @default("held")
+  referenceKey   String      @unique
+  createdAt      DateTime    @default(now())
+  releasedAt     DateTime?
+
+  @@index([offerId])
+  @@index([takerStudentId, status])
+  @@map("dex_p2p_escrows")
+}
+
 /** One-time email verification + org pick for self-service student portal registration. */
 model StudentSignupToken {
   id           String    @id @default(auto()) @map("_id") @db.ObjectId

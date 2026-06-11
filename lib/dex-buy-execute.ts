@@ -1,6 +1,8 @@
 import "server-only";
 
+import { prisma } from "@/lib/prisma";
 import { quoteDexBuy, type DexBuyCrypto } from "@/lib/dex-buy-quote";
+import { dexSettlementNextPath, dexSettlementNote } from "@/lib/dex-settlement";
 
 export type DexBuyExecutionResult =
   | { ok: true; status: "queued"; referenceId: string; message: string; nextPath: string }
@@ -19,12 +21,23 @@ export async function queueDexBuy(opts: {
     return { ok: false, error: "Liquidity feed unavailable — try again shortly", status: 503 };
   }
 
-  const referenceId = `dexbuy:${opts.crypto}:${Date.now()}`;
+  const referenceKey = `dexbuy:${opts.crypto}:${opts.fiatAmountUgx}:${Date.now()}`;
+  const order = await prisma.dexBuyOrder.create({
+    data: {
+      crypto: opts.crypto,
+      fiatAmountUgx: quote.fiatAmount,
+      cryptoAmount: quote.cryptoAmount,
+      feeUgx: quote.feeUgx,
+      status: "queued",
+      referenceKey,
+    },
+  });
+
   return {
     ok: true,
     status: "queued",
-    referenceId,
-    message: `Buy queued: ${quote.cryptoAmount} ${opts.crypto} for UGX ${quote.fiatAmount.toLocaleString()}. Settlement books through OPGB.`,
-    nextPath: "/dex/onramp",
+    referenceId: order.referenceKey,
+    message: `${dexSettlementNote(opts.crypto)} Buy queued: ${quote.cryptoAmount} ${opts.crypto} for UGX ${quote.fiatAmount.toLocaleString()}.`,
+    nextPath: dexSettlementNextPath(opts.crypto),
   };
 }
