@@ -65,6 +65,8 @@ export const HUBS: Record<HubKey, HubDefinition> = {
       onramp: "/dex/onramp",
       offramp: "/dex/offramp",
       convert: "/dex/convert",
+      buy: "/dex/buy",
+      p2p: "/dex/p2p",
     },
   },
 };

@@ -1,33 +1,54 @@
 import { OPGB_DISPLAY_CURRENCIES, opgbMinorToUgx } from "@/lib/opgb-peg";
+import { getOpgbFxSnapshot, ugxToCryptoAmount, type OpgbFxSnapshot } from "@/lib/opgb-fx-rates";
 
 export type OpgbBalanceLine = {
   currency: string;
   amount: number;
   unit: string;
-  /** Phase 2 preview — not a live on-chain / MoMo balance yet. */
+  /** True when amount is an FX quote from OPGB settlement balance (not a separate custodial wallet). */
+  quotedFromOpgb: boolean;
   previewOnly: boolean;
 };
 
-/** Phase 1: OPGB is live; other basket lines are placeholders until Phase 2 FX wallets. */
-export function buildOpgbWalletDisplay(opgbBalanceMinor: number): {
+export function buildOpgbWalletDisplayFromFx(
+  opgbBalanceMinor: number,
+  fx: OpgbFxSnapshot,
+): {
   peg: { opgbPerUgx: number };
-  phase: 1 | 2;
+  phase: 2;
+  portfolioValueUgx: number;
+  fx: OpgbFxSnapshot;
   balances: OpgbBalanceLine[];
 } {
   const opgbUgx = opgbMinorToUgx(opgbBalanceMinor);
   const balances: OpgbBalanceLine[] = OPGB_DISPLAY_CURRENCIES.map((currency) => {
     if (currency === "opgb") {
-      return { currency, amount: opgbUgx, unit: "OPGB", previewOnly: false };
+      return { currency, amount: opgbUgx, unit: "OPGB", quotedFromOpgb: false, previewOnly: false };
     }
     if (currency === "momo") {
-      return { currency, amount: 0, unit: "UGX", previewOnly: true };
+      return { currency, amount: opgbUgx, unit: "UGX", quotedFromOpgb: true, previewOnly: false };
     }
-    return { currency, amount: 0, unit: currency.toUpperCase(), previewOnly: true };
+    const amount = ugxToCryptoAmount(currency, opgbUgx, fx);
+    return {
+      currency,
+      amount,
+      unit: currency.toUpperCase(),
+      quotedFromOpgb: true,
+      previewOnly: false,
+    };
   });
 
   return {
     peg: { opgbPerUgx: 1 },
-    phase: 1,
+    phase: 2,
+    portfolioValueUgx: opgbUgx,
+    fx,
     balances,
   };
+}
+
+/** Phase 2: FX-quoted multi-currency basket from OPGB settlement balance. */
+export async function buildOpgbWalletDisplay(opgbBalanceMinor: number) {
+  const fx = await getOpgbFxSnapshot();
+  return buildOpgbWalletDisplayFromFx(opgbBalanceMinor, fx);
 }

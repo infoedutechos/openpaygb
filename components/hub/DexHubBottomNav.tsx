@@ -11,13 +11,14 @@ import {
 } from "@/components/hub/tuition-nav-icons";
 import { HUBS } from "@/lib/ecosystem/hubs";
 
-type DexTab = "home" | "onramp" | "offramp" | "convert";
+type DexTab = "home" | "onramp" | "offramp" | "convert" | "buy";
 
 function tabFromPath(pathname: string | null): DexTab {
   if (!pathname) return "home";
   if (pathname.startsWith("/dex/onramp")) return "onramp";
   if (pathname.startsWith("/dex/offramp")) return "offramp";
   if (pathname.startsWith("/dex/convert")) return "convert";
+  if (pathname.startsWith("/dex/buy")) return "buy";
   return "home";
 }
 
@@ -40,6 +41,7 @@ const ITEMS: {
   { id: "onramp", name: "Onramp", href: HUBS.dex.routes!.onramp!, icon: IconRampIn, tab: "onramp" },
   { id: "offramp", name: "Offramp", href: HUBS.dex.routes!.offramp!, icon: IconRampOut, tab: "offramp" },
   { id: "convert", name: "Convert", href: HUBS.dex.routes!.convert!, icon: IconDex, tab: "convert" },
+  { id: "buy", name: "Buy", href: HUBS.dex.routes!.buy!, icon: IconRampIn, tab: "buy" },
   { id: "pay", name: "Pay", href: HUBS.tuition.basePath, icon: IconPay },
   { id: "play", name: "Play", href: HUBS.play.basePath, icon: IconPlayHub },
 ];

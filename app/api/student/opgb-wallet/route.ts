@@ -22,11 +22,13 @@ export async function GET() {
 
     await ensureOpgbWallet(session.sub, student.organizationId);
     const wallet = await getOpgbWalletSummary(session.sub);
-    const display = buildOpgbWalletDisplay(wallet?.balanceMinor ?? 0);
+    const display = await buildOpgbWalletDisplay(wallet?.balanceMinor ?? 0);
 
     return NextResponse.json({
       peg: display.peg,
       phase: display.phase,
+      portfolioValueUgx: display.portfolioValueUgx,
+      fx: display.fx,
       balanceMinor: wallet?.balanceMinor ?? 0,
       balanceUgx: wallet?.balanceMinor ?? 0,
       balances: display.balances,

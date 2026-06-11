@@ -229,7 +229,10 @@ These handlers are not namespaced under `/api/admin/`. Several are still used fr
 - `/api/public/checkout/ton-pay-transfer` — `app/api/public/checkout/ton-pay-transfer/route.ts`
 - `/api/public/checkout/vixonpay-start` — `app/api/public/checkout/vixonpay-start/route.ts`
 - `/api/public/convert/quote` — `app/api/public/convert/quote/route.ts`
+- `/api/public/dex/amm-quote` — `app/api/public/dex/amm-quote/route.ts`
 - `/api/public/dex/buy-quote` — `app/api/public/dex/buy-quote/route.ts`
+- `/api/public/dex/buy` — `app/api/public/dex/buy/route.ts`
+- `/api/public/dex/p2p` — `app/api/public/dex/p2p/route.ts`
 - `/api/public/guest-card/register` — `app/api/public/guest-card/register/route.ts`
 - `/api/public/guest-card/send-otp` — `app/api/public/guest-card/send-otp/route.ts`
 - `/api/public/livepay-config` — `app/api/public/livepay-config/route.ts`

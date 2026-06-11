@@ -33,6 +33,18 @@ export default function DexHubPage() {
             Convert
           </Link>
           <Link
+            href={HUBS.dex.routes!.buy!}
+            className="rounded-xl border border-cyan-500/30 bg-cyan-950/30 px-5 py-3 text-center text-sm font-semibold text-cyan-100 hover:border-cyan-400/50"
+          >
+            Buy crypto
+          </Link>
+          <Link
+            href={HUBS.dex.routes!.p2p!}
+            className="rounded-xl border border-white/15 bg-white/[0.06] px-5 py-3 text-center text-sm font-semibold text-slate-100 hover:border-violet-400/40"
+          >
+            P2P (preview)
+          </Link>
+          <Link
             href={HUBS.tuition.basePath}
             className="rounded-xl px-5 py-3 text-center text-sm font-medium text-slate-400 hover:text-white"
           >
@@ -54,7 +66,15 @@ export default function DexHubPage() {
         <p className="mt-3 leading-relaxed">
           <span className="text-slate-300">OpenPay Global Token (OPGB)</span> — internal settlement across MoMo, TON, and
           crypto — see <code className="text-[11px] text-violet-100/90">docs/OPGB_TOKEN_ECOSYSTEM.md</code> in the repo.
-          Today&apos;s shipped piece is the OpenPayGB UGX card; multi-currency wallet and hybrid DEX are phased next.
+          Phase 2 ships OPGB ledger, FX-quoted multi-currency wallet display, and the fiat buy wizard at{" "}
+          <Link href="/dex/buy" className="text-cyan-300 underline">
+            /dex/buy
+          </Link>
+          . Phase 3 adds hybrid AMM execution and autonomous P2P escrow at{" "}
+          <Link href="/dex/p2p" className="text-cyan-300 underline">
+            /dex/p2p
+          </Link>
+          .
         </p>
       </section>
     </div>

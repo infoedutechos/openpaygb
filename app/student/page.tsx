@@ -11,6 +11,7 @@ import {
   type StudentPaymentRow,
 } from "@/components/student/StudentPaymentsHistory";
 import { OpenPayCardPanel } from "@/components/student/OpenPayCardPanel";
+import { OpgbWalletPanel } from "@/components/student/OpgbWalletPanel";
 
 type Me = {
   student: {
@@ -85,6 +86,7 @@ export default function StudentDashboardPage() {
       </header>
 
       <OpenPayCardPanel />
+      <OpgbWalletPanel />
 
       {balance ? (
         <TuitionBalancePanel

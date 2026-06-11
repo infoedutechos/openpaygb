@@ -11,7 +11,7 @@ OPGB is a **universal internal settlement token** for ODEL HUB / OpenPay Global.
 
 **Comparable products:** Binance Pay + Revolut + Mobile Money + hybrid DEX + internal settlement token.
 
-**Today in code:** OpenPayGB UGX card (`OPGB ••••`), **OPGB wallet ledger** (`OpgbWallet` / `OpgbLedgerEntry`), deposit→OPGB auto-credit on card top-ups, tuition debit ledger, `GET /api/student/opgb-wallet`, `GET /api/public/dex/buy-quote` (8-step quote), Dex Hub onramp/offramp/convert, Mbiyo/LivePay/Relworx checkout rails. **Not yet built:** live multi-currency balances, hybrid DEX execution / AMM / P2P escrow UI.
+**Today in code:** OpenPayGB UGX card (`OPGB ••••`), **OPGB wallet ledger** (`OpgbWallet` / `OpgbLedgerEntry`), deposit→OPGB auto-credit on card top-ups, tuition debit ledger, **Phase 2 FX basket** on `GET /api/student/opgb-wallet`, `GET /api/public/dex/buy-quote`, `POST /api/public/dex/buy` (queue), **`/dex/buy` wizard UI**, Dex Hub onramp/offramp/convert, Mbiyo/LivePay/Relworx checkout rails. **Not yet built:** on-chain AMM settlement, P2P escrow execution.
 
 ---
 
@@ -147,8 +147,9 @@ Do **not** mix multiple pegs in Phase 1 — all external currencies convert **th
 | **MoMo / Mbiyo / LivePay / Relworx** | Integrated | `/api/public/checkout/*`, webhooks |
 | **OPGB ledger wallet** | **Phase 1 shipped** | `lib/opgb-ledger.ts`, `GET /api/student/opgb-wallet` |
 | **Deposit → OPGB auto-convert** | **On card top-ups** | `confirmOpenPayCardTopup` → `creditOpgbDeposit` |
-| **Hybrid DEX / AMM / P2P** | Not built | Quote only; execution later |
-| **Fiat buy crypto wizard (8 steps)** | **Quote API** | `GET /api/public/dex/buy-quote` |
+| **Hybrid DEX / AMM / P2P** | **Phase 3 preview** | `GET /api/public/dex/amm-quote`, `GET /api/public/dex/p2p`, `/dex/p2p` |
+| **Fiat buy crypto wizard (8 steps)** | **Shipped** | `/dex/buy`, `GET /api/public/dex/buy-quote` |
+| **Multi-currency wallet display** | **Phase 2 shipped** | FX-quoted basket on `GET /api/student/opgb-wallet` |
 
 ---
 
@@ -161,19 +162,20 @@ Do **not** mix multiple pegs in Phase 1 — all external currencies convert **th
 3. Tuition from OpenPayGB card → `debitOpgbForTuition` + legacy `reconcileOpgbWalletWithCard`.  
 4. Student API: `GET /api/student/opgb-wallet` (Phase 2 basket preview lines).  
 5. Dex buy quote: `GET /api/public/dex/buy-quote`.  
-6. **Ops:** run `npm run db:push` after deploy to create `opgb_wallets` / `opgb_ledger_entries`.
+6. **Ops:** `npm run db:push` — creates `opgb_wallets` / `opgb_ledger_entries` (applied on Atlas).
 
-### Phase 2 — Multi-currency wallet UI
+### Phase 2 — Multi-currency wallet UI (**shipped**)
 
-1. FX from `FxRate` + external feeds.  
-2. Display basket (MoMo, TON, USDT, BTC, ETH, OPGB) with hide/show.  
-3. Portfolio value line.
+1. FX from live TON feed + static fallbacks (`lib/opgb-fx-rates.ts`).  
+2. Display basket (MoMo, TON, USDT, BTC, ETH, OPGB) — amounts **quoted from OPGB** (`quotedFromOpgb: true`).  
+3. Portfolio value line (`portfolioValueUgx`).  
+4. Fiat-buy wizard at `/dex/buy`; buy queue API at `POST /api/public/dex/buy`.
 
-### Phase 3 — Hybrid DEX + P2P
+### Phase 3 — Hybrid DEX + P2P (**preview shipped**)
 
-1. Liquidity pools (custodial MVP).  
-2. Eight-step buy flow.  
-3. P2P escrow offers.
+1. AMM quotes: `GET /api/public/dex/amm-quote` (`lib/dex-amm-quote.ts`) — execution pending.  
+2. Autonomous P2P book preview: `GET /api/public/dex/p2p`, `/dex/p2p` (`lib/dex-p2p-escrow.ts`).  
+3. **Pending:** custodial liquidity pools, escrow wallets, on-chain release, live matching.
 
 ---
 

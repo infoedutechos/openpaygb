@@ -201,7 +201,10 @@ url_path,relative_file,http_methods,method_count
 /api/public/checkout/ton-pay-transfer,app/api/public/checkout/ton-pay-transfer/route.ts,POST,1
 /api/public/checkout/vixonpay-start,app/api/public/checkout/vixonpay-start/route.ts,POST,1
 /api/public/convert/quote,app/api/public/convert/quote/route.ts,POST,1
+/api/public/dex/amm-quote,app/api/public/dex/amm-quote/route.ts,GET,1
 /api/public/dex/buy-quote,app/api/public/dex/buy-quote/route.ts,GET,1
+/api/public/dex/buy,app/api/public/dex/buy/route.ts,POST,1
+/api/public/dex/p2p,app/api/public/dex/p2p/route.ts,GET,1
 /api/public/guest-card/register,app/api/public/guest-card/register/route.ts,POST,1
 /api/public/guest-card/send-otp,app/api/public/guest-card/send-otp/route.ts,POST,1
 /api/public/livepay-config,app/api/public/livepay-config/route.ts,GET,1
