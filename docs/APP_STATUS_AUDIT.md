@@ -125,8 +125,24 @@ Prioritized inventory: **[BACKLOG.md](./BACKLOG.md)**. Items from the 2026-06-04
 |------|-----------|
 | Ops | Production TON wallet + webhook dashboard alignment — [DEPLOYMENT_ENV_PRODUCTION.md](./DEPLOYMENT_ENV_PRODUCTION.md) |
 | Product | OpenPayGB virtual card program — [VIRTUAL_CARD_INVESTIGATION.md](./VIRTUAL_CARD_INVESTIGATION.md) |
+| Product | **OPGB settlement ledger** (Phase 1 shipped: 1 OPGB = 1 UGX) — [OPGB_TOKEN_ECOSYSTEM.md](./OPGB_TOKEN_ECOSYSTEM.md) |
 | Low | Master org UI consolidation (single `MasterOrgRow`); URA game `apiErrorResponse` (~200 routes) |
 | Docs | Regenerate `docs:inventory` after new routes (`/api/platform/chat/suggest`) |
+
+---
+
+## 10. Documentation index (where topics are saved)
+
+| Topic | Document |
+|-------|----------|
+| OPGB / DEX / wallet architecture | [OPGB_TOKEN_ECOSYSTEM.md](./OPGB_TOKEN_ECOSYSTEM.md) |
+| Workspace self-register + verify portal | [SCHOOL_WORKSPACE_SELF_REGISTER.md](./SCHOOL_WORKSPACE_SELF_REGISTER.md), [ORGANIZATION_REGISTRATION.md](./ORGANIZATION_REGISTRATION.md) |
+| `.env` ↔ Master Admin | [LOCAL_DEV_AND_CREDENTIALS.md](./LOCAL_DEV_AND_CREDENTIALS.md) — `npm run deployment:env-audit` |
+| Vercel deploy (`info.edutechos@gmail.com`) | [VERCEL_ODELPAY_DEPLOY.md](./VERCEL_ODELPAY_DEPLOY.md), [DEPLOYMENT_ENV_PRODUCTION.md](./DEPLOYMENT_ENV_PRODUCTION.md) |
+| Vercel Preview “Blocked” | [VERCEL_BUILD_FAILURES.md](./VERCEL_BUILD_FAILURES.md) |
+| Telegram bot | [TELEGRAM_BOT_DEPLOYMENT.md](./TELEGRAM_BOT_DEPLOYMENT.md) |
+| API / UI inventories | `npm run docs:inventory` → [API_INVENTORY.csv](./API_INVENTORY.csv), [UI_ROUTES.csv](./UI_ROUTES.csv) |
+| Holistic counts | [HOLISTIC_APP_AUDIT.md](./HOLISTIC_APP_AUDIT.md) |
 
 ---
 

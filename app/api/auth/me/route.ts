@@ -8,6 +8,7 @@ import { workspaceEmailVerifyStatus } from "@/lib/organization-workspace-verify"
 import { apiErrorResponse } from "@/lib/api-error";
 import { isTransientMongoError } from "@/lib/prisma-retry";
 import { ADMIN_SESSION_COOKIE_NAME, hasAdminShellAccess } from "@/utils/admin-session";
+import { toEpochMs, toIsoString } from "@/lib/iso-date";
 
 export async function GET() {
   try {
@@ -65,9 +66,7 @@ export async function GET() {
           name: admin.organization.name,
           slug: admin.organization.slug,
           registrationContactEmail: admin.organization.registrationContactEmail ?? "",
-          registrationEmailVerifiedAt: admin.organization.registrationEmailVerifiedAt
-            ? admin.organization.registrationEmailVerifiedAt.toISOString()
-            : null,
+          registrationEmailVerifiedAt: toIsoString(admin.organization.registrationEmailVerifiedAt),
           emailVerifyStatus: workspaceEmailVerifyStatus({
             registrationContactEmail: admin.organization.registrationContactEmail ?? "",
             registrationEmailVerifiedAt: admin.organization.registrationEmailVerifiedAt,
@@ -75,9 +74,10 @@ export async function GET() {
         }
       : null;
 
-    const hasProfileImage = Boolean(admin.profileImageUploadedAt);
+    const profileImageMs = toEpochMs(admin.profileImageUploadedAt);
+    const hasProfileImage = profileImageMs != null;
     const profileImageUrl = hasProfileImage
-      ? `/api/auth/admin/profile-image?v=${admin.profileImageUploadedAt!.getTime()}`
+      ? `/api/auth/admin/profile-image?v=${profileImageMs}`
       : null;
 
     const body: AuthMeJson = {
@@ -90,9 +90,9 @@ export async function GET() {
         organization,
         hasProfileImage,
         profileImageUrl,
-        createdAt: admin.createdAt.toISOString(),
-        lastLoginAt: admin.lastLoginAt?.toISOString() ?? null,
-        previousLoginAt: admin.previousLoginAt?.toISOString() ?? null,
+        createdAt: toIsoString(admin.createdAt),
+        lastLoginAt: toIsoString(admin.lastLoginAt),
+        previousLoginAt: toIsoString(admin.previousLoginAt),
       },
       tuitionSession: true,
       adminShellAccess,

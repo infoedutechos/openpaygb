@@ -341,6 +341,7 @@ model Student {
   semester             Int
   payments             Payment[]
   openPayCard          OpenPayCard?
+  opgbWallet           OpgbWallet?
   lastLoginAt          DateTime?
   previousLoginAt      DateTime?
   /** Last tuition-due reminder sent via Telegram bot. */
@@ -460,6 +461,48 @@ model OpenPayCardTopup {
   @@index([cardId, status])
   @@index([fundingRail, status])
   @@map("openpay_card_topups")
+}
+
+/**
+ * Universal OPGB settlement wallet (Phase 1: 1 OPGB minor unit = 1 UGX).
+ * OpenPayGB card balance stays in sync for card holders.
+ */
+model OpgbWallet {
+  id             String            @id @default(auto()) @map("_id") @db.ObjectId
+  studentId      String            @unique @db.ObjectId
+  student        Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  organizationId String            @db.ObjectId
+  balanceMinor   Int               @default(0)
+  entries        OpgbLedgerEntry[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([organizationId])
+  @@map("opgb_wallets")
+}
+
+/** Immutable OPGB ledger line (credit/debit in UGX minor units = OPGB). */
+model OpgbLedgerEntry {
+  id                String     @id @default(auto()) @map("_id") @db.ObjectId
+  walletId          String     @db.ObjectId
+  wallet            OpgbWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  /** credit | debit */
+  direction         String
+  amountMinor       Int
+  /** deposit_momo | deposit_ton | deposit_card_topup | tuition_pay | withdraw | swap | adjustment */
+  kind              String
+  /** Idempotency key — payment id, topup id, transfer id, etc. */
+  referenceKey      String     @unique
+  sourceRail        String     @default("")
+  sourceCurrency    String     @default("UGX")
+  sourceAmountMinor Int        @default(0)
+  memo              String     @default("")
+  balanceAfterMinor Int
+  createdAt         DateTime   @default(now())
+
+  @@index([walletId, createdAt])
+  @@index([kind])
+  @@map("opgb_ledger_entries")
 }
 
 /** One-time email verification + org pick for self-service student portal registration. */

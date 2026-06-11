@@ -229,6 +229,7 @@ These handlers are not namespaced under `/api/admin/`. Several are still used fr
 - `/api/public/checkout/ton-pay-transfer` — `app/api/public/checkout/ton-pay-transfer/route.ts`
 - `/api/public/checkout/vixonpay-start` — `app/api/public/checkout/vixonpay-start/route.ts`
 - `/api/public/convert/quote` — `app/api/public/convert/quote/route.ts`
+- `/api/public/dex/buy-quote` — `app/api/public/dex/buy-quote/route.ts`
 - `/api/public/guest-card/register` — `app/api/public/guest-card/register/route.ts`
 - `/api/public/guest-card/send-otp` — `app/api/public/guest-card/send-otp/route.ts`
 - `/api/public/livepay-config` — `app/api/public/livepay-config/route.ts`
@@ -274,6 +275,7 @@ These handlers are not namespaced under `/api/admin/`. Several are still used fr
 - `/api/student/openpay-card/issue/transfer` — `app/api/student/openpay-card/issue/transfer/route.ts`
 - `/api/student/openpay-card/opt-in` — `app/api/student/openpay-card/opt-in/route.ts`
 - `/api/student/openpay-card` — `app/api/student/openpay-card/route.ts`
+- `/api/student/opgb-wallet` — `app/api/student/opgb-wallet/route.ts`
 - `/api/student/payments/[id]/cancel` — `app/api/student/payments/[id]/cancel/route.ts`
 - `/api/student/session` — `app/api/student/session/route.ts`
 - `/api/student/wallet/send` — `app/api/student/wallet/send/route.ts`

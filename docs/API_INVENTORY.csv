@@ -201,6 +201,7 @@ url_path,relative_file,http_methods,method_count
 /api/public/checkout/ton-pay-transfer,app/api/public/checkout/ton-pay-transfer/route.ts,POST,1
 /api/public/checkout/vixonpay-start,app/api/public/checkout/vixonpay-start/route.ts,POST,1
 /api/public/convert/quote,app/api/public/convert/quote/route.ts,POST,1
+/api/public/dex/buy-quote,app/api/public/dex/buy-quote/route.ts,GET,1
 /api/public/guest-card/register,app/api/public/guest-card/register/route.ts,POST,1
 /api/public/guest-card/send-otp,app/api/public/guest-card/send-otp/route.ts,POST,1
 /api/public/livepay-config,app/api/public/livepay-config/route.ts,GET,1
@@ -246,6 +247,7 @@ url_path,relative_file,http_methods,method_count
 /api/student/openpay-card/issue/transfer,app/api/student/openpay-card/issue/transfer/route.ts,POST,1
 /api/student/openpay-card/opt-in,app/api/student/openpay-card/opt-in/route.ts,POST,1
 /api/student/openpay-card,app/api/student/openpay-card/route.ts,GET,1
+/api/student/opgb-wallet,app/api/student/opgb-wallet/route.ts,GET,1
 /api/student/payments/[id]/cancel,app/api/student/payments/[id]/cancel/route.ts,POST,1
 /api/student/session,app/api/student/session/route.ts,GET,1
 /api/student/wallet/send,app/api/student/wallet/send/route.ts,POST,1

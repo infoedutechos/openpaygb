@@ -5,6 +5,11 @@ import { prisma } from "@/lib/prisma";
 import { defaultTonWallet } from "@/lib/constants";
 import { createPendingPayment } from "@/lib/create-payment";
 import { handleFirstTimeConfirmation } from "@/lib/on-payment-confirmed";
+import {
+  creditOpgbDeposit,
+  debitOpgbForTuition,
+  reconcileOpgbWalletWithCard,
+} from "@/lib/opgb-ledger";
 import { getOpenPayCardPlatformSettings } from "@/lib/openpay-card-settings";
 import { withPrismaRetry } from "@/lib/prisma-retry";
 import type { ProgrammeFeeSelectionMode } from "@/lib/programmes";
@@ -130,8 +135,18 @@ export async function confirmOpenPayCardTopup(
   topupId: string,
   txHash: string,
 ): Promise<boolean> {
-  const topup = await prisma.openPayCardTopup.findUnique({ where: { id: topupId } });
+  const topup = await prisma.openPayCardTopup.findUnique({
+    where: { id: topupId },
+    include: { card: true },
+  });
   if (!topup || topup.status === "confirmed") return false;
+
+  const railKind =
+    topup.fundingRail === "ton"
+      ? "deposit_ton"
+      : topup.fundingRail === "livepay" || topup.fundingRail === "relworx"
+        ? "deposit_momo"
+        : "deposit_card_topup";
 
   await prisma.$transaction(async (tx) => {
     const updated = await tx.openPayCardTopup.updateMany({
@@ -143,6 +158,18 @@ export async function confirmOpenPayCardTopup(
       where: { id: topup.cardId },
       data: { balanceUgx: { increment: topup.amountUgx } },
     });
+    await creditOpgbDeposit(
+      {
+        studentId: topup.card.studentId,
+        organizationId: topup.card.organizationId,
+        amountUgx: topup.amountUgx,
+        referenceKey: `topup:${topupId}`,
+        kind: railKind,
+        sourceRail: topup.fundingRail,
+        memo: topup.memo,
+      },
+      tx,
+    );
   });
   return true;
 }
@@ -189,6 +216,14 @@ export async function payTuitionFromOpenPayCard(opts: {
   }
 
   const updated = await prisma.$transaction(async (tx) => {
+    await reconcileOpgbWalletWithCard(
+      {
+        studentId: opts.studentId,
+        organizationId: card.organizationId,
+        cardBalanceUgx: card.balanceUgx,
+      },
+      tx,
+    );
     const debited = await tx.openPayCard.updateMany({
       where: { id: card.id, studentId: opts.studentId, balanceUgx: { gte: pending.totalUgx } },
       data: { balanceUgx: { decrement: pending.totalUgx } },
@@ -196,7 +231,7 @@ export async function payTuitionFromOpenPayCard(opts: {
     if (debited.count !== 1) {
       throw new Error("Could not debit OpenPayGB card balance. Try again.");
     }
-    return tx.payment.update({
+    const payment = await tx.payment.update({
       where: { id: pending.id },
       data: {
         status: PaymentStatus.confirmed,
@@ -204,6 +239,16 @@ export async function payTuitionFromOpenPayCard(opts: {
         momoReference: `opcard-${card.id}`,
       },
     });
+    await debitOpgbForTuition(
+      {
+        studentId: opts.studentId,
+        organizationId: card.organizationId,
+        amountUgx: pending.totalUgx,
+        paymentId: pending.id,
+      },
+      tx,
+    );
+    return payment;
   });
 
   await handleFirstTimeConfirmation(updated);
