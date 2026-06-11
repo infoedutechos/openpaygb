@@ -37,8 +37,43 @@ function routesManifestLooksValid() {
   }
 }
 
+/** Turbopack on Windows can leave _buildManifest.js.tmp.* without the final manifest (ENOENT spam). */
+function devBuildManifestCorrupted() {
+  const devStatic = path.join(nextDir, "static", "development");
+  if (!fs.existsSync(devStatic)) return false;
+  try {
+    const entries = fs.readdirSync(devStatic);
+    const tmpManifests = entries.filter((n) => /^_buildManifest\.js\.tmp\./.test(n));
+    const hasManifest = fs.existsSync(path.join(devStatic, "_buildManifest.js"));
+    const serverExists = fs.existsSync(path.join(nextDir, "server"));
+    if (tmpManifests.length >= 3) return true;
+    if (serverExists && !hasManifest && tmpManifests.length > 0) return true;
+  } catch {
+    return false;
+  }
+  return false;
+}
+
+/** Partial server compile — route tree exists but per-route app-paths-manifest.json is missing. */
+function appPathsManifestIncomplete() {
+  const serverApp = path.join(nextDir, "server", "app");
+  if (!fs.existsSync(serverApp)) return false;
+  const suspect = path.join(
+    serverApp,
+    "api",
+    "platform",
+    "notifications",
+    "[__metadata_id__]",
+    "route",
+    "app-paths-manifest.json",
+  );
+  const metaDir = path.dirname(suspect);
+  return fs.existsSync(metaDir) && !fs.existsSync(suspect);
+}
+
 function hasDamagedNext() {
   if (!fs.existsSync(nextDir)) return false;
+  if (devBuildManifestCorrupted() || appPathsManifestIncomplete()) return true;
   if (routesManifestLooksValid()) return false;
   let entries = [];
   try {
@@ -51,8 +86,8 @@ function hasDamagedNext() {
 
 if (hasDamagedNext()) {
   console.warn("");
-  console.warn("[dev] Damaged or incomplete .next (missing or invalid routes-manifest.json). Cleaning…");
-  console.warn("[dev] Common causes: dev stopped mid-compile, antivirus/backup locking files, or editing .next while dev runs.");
+  console.warn("[dev] Damaged or incomplete .next (stale Turbopack manifests or invalid routes-manifest.json). Cleaning…");
+  console.warn("[dev] Common causes: dev stopped mid-compile, two dev servers, antivirus locking files, or paths with spaces on Windows.");
   const ok = cleanNext({ killDevPort: true });
   if (!ok) {
     console.error("[dev] Could not remove .next. Run: npm run dev:reset");
@@ -105,12 +140,19 @@ if (isPortListening(devPort) || isPortListening(devPort + 1)) {
   console.warn("");
 }
 
-/** Turbopack compiles routes much faster on Windows (set NEXT_DEV_TURBO=0 to use Webpack). */
-const useTurbo = process.env.NEXT_DEV_TURBO !== "0";
+/**
+ * Turbopack is faster but races on Windows (ENOENT _buildManifest.js.tmp.*).
+ * Default: Webpack on win32; Turbopack elsewhere. Override with NEXT_DEV_TURBO=1 or =0.
+ */
+const turboEnv = process.env.NEXT_DEV_TURBO;
+const useTurbo =
+  turboEnv === "1" || (turboEnv !== "0" && process.platform !== "win32");
 const devArgs = ["dev", "-p", String(devPort)];
 if (useTurbo) devArgs.push("--turbo");
 if (useTurbo) {
   console.log("[dev] Using Turbopack (NEXT_DEV_TURBO=0 for Webpack)\n");
+} else if (process.platform === "win32" && turboEnv !== "0") {
+  console.log("[dev] Using Webpack on Windows (stable; set NEXT_DEV_TURBO=1 to force Turbopack)\n");
 }
 
 function prismaStampForChildEnv() {

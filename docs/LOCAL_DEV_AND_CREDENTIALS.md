@@ -97,7 +97,7 @@ Full lifecycle: **[ORGANIZATION_REGISTRATION.md](./ORGANIZATION_REGISTRATION.md)
 | Command | When to use |
 |---------|-------------|
 | `npm run dev:clean` | Clears `.next`, kills port **3000**, restarts dev (fixes stale Turbopack / Prisma client) |
-| `npm run dev:reset` | Full reset: kill Node on port, `prisma generate`, clean `.next`, start dev |
+| `npm run dev:reset` / `npm run dev:fix` | Full reset: kill Node on port, `prisma generate`, clean `.next`, start dev |
 | `npx prisma generate` | After `schema.prisma` changes — stop dev first on Windows if you see **EPERM** on `query_engine` |
 
 **Atlas timeouts** (`Server selection timeout`, `connection forcibly closed` / Windows error **10054**):
@@ -142,7 +142,15 @@ Harmless in development — hot reload lost connection. Common on this project b
 | Two `npm run dev` processes | One terminal only; or `npm run dev:reset` |
 | Stale tab after `dev:clean` | Close tab, open fresh `http://localhost:3000` |
 
-Default dev uses **Turbopack**; the browser may still log `/_next/webpack-hmr` — ignore if the app loads after refresh. Force Webpack only if needed: `NEXT_DEV_TURBO=0 npm run dev` (slower).
+On **Windows**, dev defaults to **Webpack** (avoids `ENOENT` on `_buildManifest.js.tmp.*` and missing `app-paths-manifest.json`). On macOS/Linux, **Turbopack** is used unless `NEXT_DEV_TURBO=0`. Force Turbopack on Windows: `NEXT_DEV_TURBO=1 npm run dev`.
+
+### Terminal spam: `ENOENT` `_buildManifest.js.tmp.*` or `app-paths-manifest.json`
+
+Corrupted `.next` after a interrupted compile or two dev servers fighting over the cache.
+
+1. Stop every `npm run dev` terminal (`Ctrl+C`).
+2. Run **`npm run dev:fix`** (alias for `dev:reset`).
+3. Wait for **`✓ Ready`**, then open **`http://localhost:3000`** (not a LAN IP).
 
 ---
 

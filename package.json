@@ -13,6 +13,7 @@
     "dev:kill": "node scripts/clean-next.cjs --kill-port",
     "dev:clean": "node scripts/clean-next.cjs --kill-port && node scripts/run-next-dev.cjs",
     "dev:reset": "node scripts/dev-reset.cjs",
+    "dev:fix": "node scripts/dev-reset.cjs",
     "build": "prisma generate && next build",
     "build:full": "node scripts/build-full.cjs",
     "build:next": "next build",
