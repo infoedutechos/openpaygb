@@ -57,9 +57,10 @@ Full list: [VERCEL_ENV_SETUP.md](./VERCEL_ENV_SETUP.md)
 
 ## Fix 4 — Deploy & verify
 
-1. Push to **`main`** — **done**; CI is green on [Actions](https://github.com/openpayglobal/openpaygb/actions).
-2. Vercel **Deployments** → Production **Ready** (after Fix 1–3).
+1. Push to **`main`** — CI is green on [Actions](https://github.com/openpayglobal/openpaygb/actions).
+2. Vercel **Deployments** → Production **Ready** (after Fix 1–3). If pushes do not auto-deploy, use **Redeploy** on the latest `main` commit or workflow **Vercel Production Deploy** (requires GitHub secrets).
 3. `GET https://odelpay.vercel.app/api/health` → JSON (not 404).
+4. **Stale deploy check:** `GET https://odelpay.vercel.app/api/public/school-workspace-registration-policy` must include `deferEmailVerification`, `autoGenerateAdminLogin`, and `buildSha` (matching the latest `main` SHA). If only `requireMasterApproval` / `autoRegistrationEnabled` are returned, production is on an old build.
 
 ### Fix 4b — GitHub Action deploy (if Vercel Git hook stays blocked)
 

@@ -30,7 +30,7 @@
     "docs:serve": "npx serve docs -p 8787",
     "docs:build-index": "node scripts/build-docs-manifest.mjs",
     "vercel:login": "vercel login",
-    "vercel:link": "vercel link",
+    "vercel:link": "vercel link --yes --project odelhub-pay --team odeldevelopers-projects",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
@@ -123,6 +123,7 @@
     "tsconfig-paths": "^4.2.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
+    "vercel": "^54.6.1",
     "vite": "^6.3.5",
     "vitest": "^3.2.4"
   }
