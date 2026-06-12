@@ -1,4 +1,5 @@
-import type { PaymentRail, PaymentStatus } from "@prisma/client";
+import type { InstitutionTier, PaymentRail, PaymentStatus } from "@prisma/client";
+import { receiptYearPeriodLabel } from "@/lib/academic-period";
 import { formatFeeKeyLabel } from "@/lib/programme-fee-labels";
 import { buildReceiptBreakdown, type ReceiptBreakdown, type ReceiptPaymentLike } from "@/lib/receipt-lines";
 import type { ReceiptLedger, ReceiptLedgerRow } from "@/lib/receipt-ledger-types";
@@ -45,15 +46,14 @@ function railReceiptLabel(rail: PaymentRail): string {
   }
 }
 
-function invoiceRowsFromBreakdown(breakdown: ReceiptBreakdown, payment: ReceiptLedgerPayment): ReceiptLedgerRow[] {
+function invoiceRowsFromBreakdown(
+  breakdown: ReceiptBreakdown,
+  payment: ReceiptLedgerPayment,
+  institutionTier?: InstitutionTier | string | null,
+): ReceiptLedgerRow[] {
   const date = payment.confirmedAt ?? payment.createdAt;
   return breakdown.lines.map((line) => {
-    const period =
-      line.semester > 0
-        ? `Yr ${line.year} Sem ${line.semester}`
-        : line.year > 0
-          ? `Yr ${line.year}`
-          : "";
+    const period = receiptYearPeriodLabel(line.year, line.semester, institutionTier);
     const particulars = [formatFeeKeyLabel(line.feeKey), line.recurrenceLabel, period].filter(Boolean).join(" — ");
     return {
       kind: "transaction" as const,
@@ -96,6 +96,7 @@ export function buildReceiptLedger(input: {
   payments: ReceiptLedgerPayment[];
   programmeFees: Parameters<typeof buildReceiptBreakdown>[1];
   focusPaymentId: string;
+  institutionTier?: InstitutionTier | string | null;
 }): ReceiptLedger {
   const confirmed = input.payments
     .filter((p) => p.status === "confirmed")
@@ -129,8 +130,8 @@ export function buildReceiptLedger(input: {
   });
 
   for (const payment of slice) {
-    const breakdown = buildReceiptBreakdown(payment, input.programmeFees);
-    for (const inv of invoiceRowsFromBreakdown(breakdown, payment)) {
+    const breakdown = buildReceiptBreakdown(payment, input.programmeFees, input.institutionTier);
+    for (const inv of invoiceRowsFromBreakdown(breakdown, payment, input.institutionTier)) {
       rows.push(inv);
       totalDebit += inv.debitUgx;
     }

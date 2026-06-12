@@ -18,6 +18,8 @@ import { payProgrammesHref, payTenantBasePath } from "@/lib/tuition-nav";
 type ActiveMatch = "lobby" | "programmes" | "pay" | "receipt" | "workspace" | "admin" | "play" | "dex";
 
 function activeKey(pathname: string, searchParams: URLSearchParams): ActiveMatch | null {
+  if (pathname === "/opgb" || pathname.startsWith("/opgb/")) return "dex";
+  if (pathname === "/OdelPayUniversities" || pathname === "/OdelPaySchools") return "lobby";
   if (pathname.startsWith("/dex")) return "dex";
   if (pathname === "/admin/register" || pathname.startsWith("/admin/register/")) return "workspace";
   if (pathname === "/pay" || pathname.startsWith("/pay/")) {

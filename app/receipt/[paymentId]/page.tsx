@@ -77,7 +77,7 @@ export default async function ReceiptPage({
     }),
     prisma.organization.findUnique({
       where: { id: payment.organizationId },
-      select: { name: true },
+      select: { name: true, institutionTier: true },
     }),
   ]);
   const studentPayments = programme
@@ -91,7 +91,8 @@ export default async function ReceiptPage({
     : [];
   const duration = programme ? getProgrammeDurationSummary(programme) : null;
   const progress = programme ? buildStudentProgrammeProgress(programme, studentPayments) : null;
-  const breakdown = buildReceiptBreakdown(payment, programme?.fees ?? []);
+  const institutionTier = organization?.institutionTier;
+  const breakdown = buildReceiptBreakdown(payment, programme?.fees ?? [], institutionTier);
   const ledger = buildReceiptLedger({
     organizationName: organization?.name ?? "ODEL HUB",
     studentName: payment.student.name ?? "Student",
@@ -100,6 +101,7 @@ export default async function ReceiptPage({
     payments: studentPayments,
     programmeFees: programme?.fees ?? [],
     focusPaymentId: paymentId,
+    institutionTier,
   });
   const verifyUrl = absoluteUrl(`/receipt/${paymentId}`);
   let qrDataUrl: string | null = null;

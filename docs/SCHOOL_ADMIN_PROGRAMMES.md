@@ -12,7 +12,7 @@ After a workspace is **active** and the school admin signs in at **`/school/logi
 | Create programme (code, name, track, duration) | `POST /api/admin/programmes` |
 | Update programme metadata | `PATCH /api/admin/programmes/[id]` |
 | Delete programme (blocked if payments exist) | `DELETE /api/admin/programmes/[id]` |
-| Add / edit / delete fee slots (year, semester, tuition, functional) | `.../fees`, `.../fees/[feeId]` |
+| Add / edit / delete fee slots (year, period index, tuition, functional) | `.../fees`, `.../fees/[feeId]` |
 | CSV import (up to 250 rows) | `POST /api/admin/programmes/import` |
 
 **UI:** `components/admin/AdminProgrammesManager.tsx`
@@ -40,4 +40,4 @@ After a workspace is **active** and the school admin signs in at **`/school/logi
 2. School admin signs in → **`/admin/programmes`** → adjust codes, names, tracks, and per-semester fees.
 3. Guest pay goes live at **`/pay/<slug>`** for payers.
 
-See **[ORGANIZATION_REGISTRATION.md](./ORGANIZATION_REGISTRATION.md)** and **[ADMIN_FLOW.md](./ADMIN_FLOW.md)**.
+See **[ORGANIZATION_REGISTRATION.md](./ORGANIZATION_REGISTRATION.md)**, **[PRODUCT_LINES_AND_SCHOOL_TERMS.md](./PRODUCT_LINES_AND_SCHOOL_TERMS.md)**, and **[ADMIN_FLOW.md](./ADMIN_FLOW.md)**.

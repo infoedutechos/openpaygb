@@ -48,9 +48,10 @@ export async function sendReceiptEmailIfConfigured(paymentId: string): Promise<v
   const progress = programme ? buildStudentProgrammeProgress(programme, studentPayments) : null;
   const organization = await prisma.organization.findUnique({
     where: { id: payment.organizationId },
-    select: { name: true },
+    select: { name: true, institutionTier: true },
   });
-  const breakdown = buildReceiptBreakdown(payment, programme?.fees ?? []);
+  const institutionTier = organization?.institutionTier;
+  const breakdown = buildReceiptBreakdown(payment, programme?.fees ?? [], institutionTier);
   const ledger = buildReceiptLedger({
     organizationName: organization?.name ?? "ODEL HUB",
     studentName: payment.student.name ?? "Student",
@@ -59,8 +60,9 @@ export async function sendReceiptEmailIfConfigured(paymentId: string): Promise<v
     payments: studentPayments,
     programmeFees: programme?.fees ?? [],
     focusPaymentId: payment.id,
+    institutionTier,
   });
-  const feeBreakdownBlock = `${receiptLedgerHtml(ledger)}<hr style="margin:16px 0;border:none;border-top:1px solid #e5e7eb" />${receiptBreakdownHtml(breakdown)}`;
+  const feeBreakdownBlock = `${receiptLedgerHtml(ledger)}<hr style="margin:16px 0;border:none;border-top:1px solid #e5e7eb" />${receiptBreakdownHtml(breakdown, institutionTier)}`;
 
   const periodLine =
     progress && progress.totalSemesters > 0

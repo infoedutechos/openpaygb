@@ -16,6 +16,7 @@ export function getCachedAdminProfile(adminUserId: string) {
                 id: true,
                 name: true,
                 slug: true,
+                institutionTier: true,
                 registrationContactEmail: true,
                 registrationEmailVerifiedAt: true,
               },

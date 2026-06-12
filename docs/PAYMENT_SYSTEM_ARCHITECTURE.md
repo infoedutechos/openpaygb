@@ -37,6 +37,8 @@ flowchart TB
 
 **Current reality:** One Next.js app serves all tenants via `Organization` rows. Schools and universities differ by **`institutionTier`** (`university` | `school`), programme structure, fee CSV, and branding — not separate deployments.
 
+**Standalone lobbies (shipped):** Each product line has a dedicated entry route — `/OdelPayUniversities`, `/OdelPaySchools`, `/opgb` — configured in `lib/ecosystem/product-lines.ts`. School tenants show **Term 1–3** in checkout and receipts while the DB still uses the `semester` column; see **[PRODUCT_LINES_AND_SCHOOL_TERMS.md](./PRODUCT_LINES_AND_SCHOOL_TERMS.md)**.
+
 **Schema (shipped):**
 
 ```prisma

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { ProgrammeFeeRecurrence } from "@prisma/client";
+import { ProgrammeFeeRecurrence, type InstitutionTier } from "@prisma/client";
 import { findProgrammeByCode, resolveFeeRowsForSelection, sumFeeRows, type ProgrammeFeeSelectionMode } from "@/lib/programmes";
+import { academicPeriodLabels } from "@/lib/academic-period";
 import { recurrenceLabel } from "@/lib/programme-fee-labels";
 import { getCheckoutPlatformFeeUgxForOrganization } from "@/lib/checkout-platform-fee";
 import { getActiveUgxPerTonForOrganization } from "@/lib/fx";
@@ -57,21 +58,25 @@ export async function GET(req: Request, ctx: { params: Promise<{ code: string }>
   const slug = url.searchParams.get("orgSlug")?.trim().toLowerCase() ?? "";
   let organizationId: string;
   let destWallet = platformWallet;
+  let institutionTier: InstitutionTier | undefined;
   if (slug) {
     const org = await getActiveOrganizationBySlug(slug);
     if (!org) {
       return NextResponse.json({ error: "Organization not found or not active" }, { status: 404 });
     }
     organizationId = org.id;
+    institutionTier = org.institutionTier;
     destWallet = org.destinationWallet?.trim() || platformWallet;
   } else {
     organizationId = await getDefaultOrganizationId();
     const row = await prisma.organization.findUnique({
       where: { id: organizationId },
-      select: { destinationWallet: true },
+      select: { destinationWallet: true, institutionTier: true },
     });
+    institutionTier = row?.institutionTier;
     destWallet = row?.destinationWallet?.trim() || platformWallet;
   }
+  const periodLabels = academicPeriodLabels(institutionTier);
 
   const p = await findProgrammeByCode(code, organizationId);
   if (!p) {
@@ -86,7 +91,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ code: string }>
   ) {
     return NextResponse.json(
       {
-        error: `This programme covers ${programmeDuration.durationYears} year(s) and ${programmeDuration.semestersPerYear} semester(s) per year.`,
+        error: `This programme covers ${programmeDuration.durationYears} year(s) and ${programmeDuration.semestersPerYear} ${periodLabels.periodPlural.toLowerCase()} per year.`,
       },
       { status: 400 },
     );
@@ -128,7 +133,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ code: string }>
     id: r.id,
     feeKey: r.feeKey ?? "default",
     recurrence: r.recurrence ?? ProgrammeFeeRecurrence.per_semester,
-    recurrenceLabel: recurrenceLabel(r.recurrence ?? null),
+    recurrenceLabel: recurrenceLabel(r.recurrence ?? null, institutionTier),
     year: r.year,
     semester: r.semester,
     tuitionUgx: r.tuitionUgx,
@@ -140,7 +145,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ code: string }>
     id: r.id,
     feeKey: r.feeKey ?? "default",
     recurrence: r.recurrence ?? ProgrammeFeeRecurrence.per_semester,
-    recurrenceLabel: recurrenceLabel(r.recurrence ?? null),
+    recurrenceLabel: recurrenceLabel(r.recurrence ?? null, institutionTier),
     year: r.year,
     semester: r.semester,
     tuitionUgx: r.tuitionUgx,

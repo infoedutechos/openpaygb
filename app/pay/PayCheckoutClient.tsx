@@ -23,12 +23,16 @@ const PayWizard = dynamic(() => import("./PayWizard").then((m) => ({ default: m.
   loading: () => <CheckoutLoading />,
 });
 
+import type { InstitutionTier } from "@prisma/client";
+
 export function PayCheckoutClient({
   organizationSlug,
   organizationName,
+  institutionTier = "university",
 }: {
   organizationSlug: string;
   organizationName: string;
+  institutionTier?: InstitutionTier;
 }) {
   return (
     <Suspense fallback={<CheckoutLoading />}>
@@ -45,7 +49,11 @@ export function PayCheckoutClient({
         />
         <RequestSchoolWorkspaceCta variant="inline" className="!text-left" />
       </div>
-      <PayWizard organizationSlug={organizationSlug} organizationName={organizationName} />
+      <PayWizard
+        organizationSlug={organizationSlug}
+        organizationName={organizationName}
+        institutionTier={institutionTier}
+      />
     </Suspense>
   );
 }

@@ -4,6 +4,7 @@ export type AuthMeOrganization = {
   id: string;
   name: string;
   slug: string;
+  institutionTier: "university" | "school";
   registrationContactEmail: string | null;
   registrationEmailVerifiedAt: string | null;
   emailVerifyStatus: "none" | "pending" | "verified";

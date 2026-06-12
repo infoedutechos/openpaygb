@@ -65,6 +65,7 @@ export async function GET() {
           id: admin.organization.id,
           name: admin.organization.name,
           slug: admin.organization.slug,
+          institutionTier: admin.organization.institutionTier,
           registrationContactEmail: admin.organization.registrationContactEmail ?? "",
           registrationEmailVerifiedAt: toIsoString(admin.organization.registrationEmailVerifiedAt),
           emailVerifyStatus: workspaceEmailVerifyStatus({

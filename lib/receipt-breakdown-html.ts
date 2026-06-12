@@ -1,3 +1,5 @@
+import type { InstitutionTier } from "@prisma/client";
+import { receiptYearPeriodLabel } from "@/lib/academic-period";
 import type { ReceiptBreakdown } from "@/lib/receipt-lines";
 
 function escapeHtml(s: string): string {
@@ -8,18 +10,24 @@ function escapeHtml(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function periodHint(line: { recurrenceLabel: string; year: number; semester: number }): string {
+function periodHint(
+  line: { recurrenceLabel: string; year: number; semester: number },
+  institutionTier?: InstitutionTier | string | null,
+): string {
   const parts = [line.recurrenceLabel].filter(Boolean);
-  if (line.semester > 0) parts.push(`Yr ${line.year} · Sem ${line.semester}`);
-  else if (line.year > 0) parts.push(`Yr ${line.year}`);
+  const yr = receiptYearPeriodLabel(line.year, line.semester, institutionTier);
+  if (yr) parts.push(yr);
   return parts.join(" · ");
 }
 
 /** HTML fee table for Resend receipt emails. */
-export function receiptBreakdownHtml(breakdown: ReceiptBreakdown): string {
+export function receiptBreakdownHtml(
+  breakdown: ReceiptBreakdown,
+  institutionTier?: InstitutionTier | string | null,
+): string {
   const rows = breakdown.lines
     .map((line) => {
-      const meta = periodHint(line);
+      const meta = periodHint(line, institutionTier);
       return `<tr>
   <td style="padding:6px 8px;border-bottom:1px solid #e2e8f0;">
     <strong>${escapeHtml(line.label)}</strong>${meta ? `<br><span style="color:#64748b;font-size:12px;">${escapeHtml(meta)}</span>` : ""}

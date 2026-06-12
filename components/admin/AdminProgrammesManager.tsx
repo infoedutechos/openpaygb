@@ -7,6 +7,7 @@ import { useAuthMe } from "@/hooks/useAuthMe";
 import { PROGRAMME_TRACK_LABEL, ProgrammeTrack } from "@/lib/programme-track";
 import { parseProgrammeFeeUploadCsv, programmeFeeCsvTemplate } from "@/lib/programme-fee-csv";
 import { TuitionHubCheckoutExplainer } from "@/components/admin/TuitionHubCheckoutExplainer";
+import { academicPeriodLabels, type AcademicPeriodLabels } from "@/lib/academic-period";
 
 type FeeRow = {
   id: string;
@@ -66,6 +67,10 @@ async function readJsonResponse<T extends object>(
 
 export default function AdminProgrammesManager() {
   const { data: authMe, loading: authMeLoading } = useAuthMe();
+  const periodLabels = useMemo(
+    () => academicPeriodLabels(authMe?.admin?.organization?.institutionTier ?? "university"),
+    [authMe?.admin?.organization?.institutionTier],
+  );
   const pathname = usePathname() || "/admin/programmes";
   const editProgrammeDialogTitleId = useId();
   const addFeeItemDialogTitleId = useId();
@@ -535,13 +540,17 @@ export default function AdminProgrammesManager() {
           <strong className="text-slate-300">Regular</strong>. Below, lists are grouped that way. Add or edit programmes and{" "}
           <strong className="text-slate-300">fee items</strong>: each line is an item code, whether it is{" "}
           <strong className="text-slate-300">tuition</strong> or <strong className="text-slate-300">functional</strong>, a single UGX amount, and how often it applies —{" "}
-          <strong className="text-slate-300">each semester</strong> (year + semester 1–3),{" "}
-          <strong className="text-slate-300">each year</strong> (same amount for any semester in that year), or{" "}
-          <strong className="text-slate-300">once</strong> (only when paying that exact year and semester). Checkout builds
-          a quote from the pool that matches the payer&apos;s coverage choice —{" "}
-          <strong className="text-slate-300">this semester only</strong>,{" "}
-          <strong className="text-slate-300">the chosen year with all its semesters</strong>, or{" "}
-          <strong className="text-slate-300">the whole programme</strong> (every year and semester) — then they can
+          <strong className="text-slate-300">{periodLabels.perPeriodRecurrence.toLowerCase()}</strong> (year +{" "}
+          {periodLabels.periodSingular.toLowerCase()} 1–3), <strong className="text-slate-300">each year</strong> (same
+          amount for any {periodLabels.periodSingular.toLowerCase()} in that year), or{" "}
+          <strong className="text-slate-300">once</strong> (only when paying that exact year and{" "}
+          {periodLabels.periodSingular.toLowerCase()}). Checkout builds a quote from the pool that matches the payer&apos;s
+          coverage choice — <strong className="text-slate-300">{periodLabels.payForThisPeriodOnly.toLowerCase()}</strong>,{" "}
+          <strong className="text-slate-300">
+            the chosen year with all its {periodLabels.periodPlural.toLowerCase()}
+          </strong>
+          , or <strong className="text-slate-300">the whole programme</strong> (every year and{" "}
+          {periodLabels.periodSingular.toLowerCase()}) — then they can
           include every applicable line or pick specific lines, before a separate processing UGX line is applied.
         </p>
         <TuitionHubCheckoutExplainer className="mt-4 max-w-4xl" />
@@ -683,7 +692,7 @@ export default function AdminProgrammesManager() {
           </div>
           <div>
             <label className="text-xs text-slate-500" htmlFor="new-programme-semesters-per-year">
-              Semesters / year
+              {periodLabels.periodsPerYear}
             </label>
             <input
               id="new-programme-semesters-per-year"
@@ -692,7 +701,7 @@ export default function AdminProgrammesManager() {
               max={3}
               value={newSemestersPerYear}
               onChange={(e) => setNewSemestersPerYear(Number(e.target.value))}
-              title="Semesters per academic year (1–3). Set 0 to infer from fee rows. Drives the Semester picker and the per-year bundle at checkout."
+              title={`${periodLabels.periodPlural} per academic year (1–3). Set 0 to infer from fee rows. Drives the ${periodLabels.periodSingular} picker and the per-year bundle at checkout.`}
               className="mt-1 w-full rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white sm:w-28"
             />
           </div>
@@ -818,7 +827,7 @@ export default function AdminProgrammesManager() {
                             <span className="font-mono text-lg text-sky-300">{p.code}</span>
                           </p>
                           <p className="text-sm text-slate-300">{p.name}</p>
-                          <p className="mt-1 text-xs text-slate-500">{programmeDurationLabel(p)}</p>
+                          <p className="mt-1 text-xs text-slate-500">{programmeDurationLabel(p, periodLabels)}</p>
                         </div>
                         <div className="flex flex-wrap gap-2">
                   <button
@@ -906,6 +915,7 @@ export default function AdminProgrammesManager() {
                           <FeeEditorMobileCard
                             key={f.id}
                             fee={f}
+                            periodLabels={periodLabels}
                             onSave={(patch) => void updateFee(p.id, f, patch)}
                             onDelete={() => void deleteFee(p.id, f.id)}
                           />
@@ -919,7 +929,7 @@ export default function AdminProgrammesManager() {
                               <th className="py-2 pr-3">Type</th>
                               <th className="py-2 pr-3">Fee charge</th>
                               <th className="py-2 pr-3">Year</th>
-                              <th className="py-2 pr-3">Semester (1–3)</th>
+                              <th className="py-2 pr-3">{periodLabels.periodSingular} (1–3)</th>
                               <th className="py-2 pr-3">Amount UGX</th>
                               <th className="py-2" />
                             </tr>
@@ -929,6 +939,7 @@ export default function AdminProgrammesManager() {
                               <FeeEditorRow
                                 key={f.id}
                                 fee={f}
+                                periodLabels={periodLabels}
                                 onSave={(patch) => void updateFee(p.id, f, patch)}
                                 onDelete={() => void deleteFee(p.id, f.id)}
                               />
@@ -1217,10 +1228,10 @@ export default function AdminProgrammesManager() {
   );
 }
 
-function chargeLabel(recurrence: FeeRow["recurrence"]): string {
+function chargeLabel(recurrence: FeeRow["recurrence"], periodLabels: AcademicPeriodLabels): string {
   switch (recurrence) {
     case "per_semester":
-      return "Paid per semester";
+      return `Paid ${periodLabels.perPeriodRecurrence.toLowerCase()}`;
     case "per_year":
       return "Paid per year";
     case "once":
@@ -1230,18 +1241,17 @@ function chargeLabel(recurrence: FeeRow["recurrence"]): string {
   }
 }
 
-function semesterLabel(f: FeeRow): string {
+function periodIndexLabel(f: FeeRow, periodLabels: AcademicPeriodLabels): string {
   if (f.recurrence === "per_year") return "1–3";
-  return String(f.semester);
+  return periodLabels.periodShort(f.semester);
 }
 
-function programmeDurationLabel(p: ProgrammeRow): string {
+function programmeDurationLabel(p: ProgrammeRow, periodLabels: AcademicPeriodLabels): string {
   const duration = p.duration;
   if (!duration || duration.totalSemesters === 0) return "Duration not set";
   const source = duration.source === "configured" ? "configured" : "inferred from fees";
-  return `${duration.durationYears} year${duration.durationYears === 1 ? "" : "s"} · ${duration.totalSemesters} semester${
-    duration.totalSemesters === 1 ? "" : "s"
-  } (${source})`;
+  const periods = duration.totalSemesters;
+  return `${duration.durationYears} year${duration.durationYears === 1 ? "" : "s"} · ${periods} ${periodLabels.periodPlural.toLowerCase()} (${source})`;
 }
 
 function useFeeEditor(fee: FeeRow, onSave: (patch: Partial<FeeRow>) => void) {
@@ -1283,10 +1293,12 @@ const feeInputCls = "w-full rounded border border-white/10 bg-black/30 px-2 py-1
 
 function FeeEditorMobileCard({
   fee,
+  periodLabels,
   onSave,
   onDelete,
 }: {
   fee: FeeRow;
+  periodLabels: AcademicPeriodLabels;
   onSave: (patch: Partial<FeeRow>) => void;
   onDelete: () => void;
 }) {
@@ -1296,7 +1308,7 @@ function FeeEditorMobileCard({
     <article className="rounded-lg border border-white/10 bg-black/20 p-4 text-sm text-slate-200">
       <p className="font-mono text-xs text-cyan-200/90">{fee.feeKey}</p>
       <p className="mt-1 text-xs text-slate-400">
-        {chargeLabel(fee.recurrence)} · Year {fee.year} · Sem {semesterLabel(fee)}
+        {chargeLabel(fee.recurrence, periodLabels)} · Year {fee.year} · {periodIndexLabel(fee, periodLabels)}
       </p>
       {!mixed ? (
         <label className="mt-3 block">
@@ -1354,10 +1366,12 @@ function FeeEditorMobileCard({
 
 function FeeEditorRow({
   fee,
+  periodLabels,
   onSave,
   onDelete,
 }: {
   fee: FeeRow;
+  periodLabels: AcademicPeriodLabels;
   onSave: (patch: Partial<FeeRow>) => void;
   onDelete: () => void;
 }) {
@@ -1380,9 +1394,9 @@ function FeeEditorRow({
           </select>
         )}
       </td>
-      <td className="py-2 pr-3 text-xs capitalize text-slate-300">{chargeLabel(fee.recurrence)}</td>
+      <td className="py-2 pr-3 text-xs capitalize text-slate-300">{chargeLabel(fee.recurrence, periodLabels)}</td>
       <td className="py-2 pr-3">{fee.year}</td>
-      <td className="py-2 pr-3 text-slate-300">{semesterLabel(fee)}</td>
+      <td className="py-2 pr-3 text-slate-300">{periodIndexLabel(fee, periodLabels)}</td>
       <td className="py-2 pr-3 align-top">
         {mixed ? (
           <div className="flex flex-col gap-1 text-xs">

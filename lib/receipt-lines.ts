@@ -1,4 +1,4 @@
-import type { ProgrammeFeeRecurrence } from "@prisma/client";
+import type { InstitutionTier, ProgrammeFeeRecurrence } from "@prisma/client";
 import { feeTotal } from "@/lib/money";
 import { formatFeeKeyLabel, recurrenceLabel } from "@/lib/programme-fee-labels";
 import {
@@ -57,6 +57,7 @@ function scaleLineAmounts(
   rows: Array<{ id: string; feeKey: string; recurrence: ProgrammeFeeRecurrence | null | undefined; year: number; semester: number; tuitionUgx: number; functionalFeesUgx: number }>,
   targetTuition: number,
   targetFunctional: number,
+  institutionTier?: InstitutionTier | string | null,
 ): ReceiptFeeLine[] {
   if (rows.length === 0) return [];
 
@@ -87,7 +88,7 @@ function scaleLineAmounts(
       id: row.id,
       label: formatFeeKeyLabel(row.feeKey ?? "default"),
       feeKey: row.feeKey ?? "default",
-      recurrenceLabel: recurrenceLabel(row.recurrence ?? null),
+      recurrenceLabel: recurrenceLabel(row.recurrence ?? null, institutionTier),
       year: row.year,
       semester: row.semester,
       tuitionUgx,
@@ -133,6 +134,7 @@ function legacyAggregateLines(payment: ReceiptPaymentLike): ReceiptFeeLine[] {
 export function buildReceiptBreakdown(
   payment: ReceiptPaymentLike,
   programmeFees: ProgrammeFeeForCheckout[],
+  institutionTier?: InstitutionTier | string | null,
 ): ReceiptBreakdown {
   const platformFeeUgx = payment.platformFeeUgx ?? 0;
   const installmentCount = payment.installmentCount ?? 1;
@@ -179,7 +181,7 @@ export function buildReceiptBreakdown(
     lines = legacyAggregateLines(payment);
     isLegacyAggregate = true;
   } else {
-    lines = scaleLineAmounts(sourceRows, payment.tuitionUgx, payment.functionalFeesUgx);
+    lines = scaleLineAmounts(sourceRows, payment.tuitionUgx, payment.functionalFeesUgx, institutionTier);
     const lineSubtotal = lines.reduce((sum, line) => sum + line.lineTotalUgx, 0);
     const chargeSubtotal = feeTotal(payment.tuitionUgx, payment.functionalFeesUgx);
     if (lineSubtotal === 0 && chargeSubtotal > 0) {

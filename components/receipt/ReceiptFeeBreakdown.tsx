@@ -1,18 +1,25 @@
+import type { InstitutionTier } from "@prisma/client";
+import { receiptYearPeriodLabel } from "@/lib/academic-period";
 import type { ReceiptBreakdown } from "@/lib/receipt-lines";
 
-function periodHint(line: { recurrenceLabel: string; year: number; semester: number }): string {
+function periodHint(
+  line: { recurrenceLabel: string; year: number; semester: number },
+  institutionTier?: InstitutionTier | string | null,
+): string {
   const parts = [line.recurrenceLabel].filter(Boolean);
-  if (line.semester > 0) parts.push(`Yr ${line.year} · Sem ${line.semester}`);
-  else if (line.year > 0) parts.push(`Yr ${line.year}`);
+  const yr = receiptYearPeriodLabel(line.year, line.semester, institutionTier);
+  if (yr) parts.push(yr);
   return parts.join(" · ");
 }
 
 export function ReceiptFeeBreakdown({
   breakdown,
   variant = "dark",
+  institutionTier,
 }: {
   breakdown: ReceiptBreakdown;
   variant?: "dark" | "light";
+  institutionTier?: InstitutionTier | string | null;
 }) {
   const isDark = variant === "dark";
   const labelClass = isDark ? "text-slate-500" : "text-slate-500";
@@ -44,8 +51,8 @@ export function ReceiptFeeBreakdown({
               <tr key={line.id} className={`border-b ${borderClass} last:border-0`}>
                 <td className="px-3 py-2">
                   <span className={`font-medium ${valueClass}`}>{line.label}</span>
-                  {periodHint(line) ? (
-                    <span className={`mt-0.5 block text-xs ${mutedClass}`}>{periodHint(line)}</span>
+                  {periodHint(line, institutionTier) ? (
+                    <span className={`mt-0.5 block text-xs ${mutedClass}`}>{periodHint(line, institutionTier)}</span>
                   ) : null}
                 </td>
                 <td className={`px-3 py-2 text-right font-mono text-xs ${valueClass}`}>

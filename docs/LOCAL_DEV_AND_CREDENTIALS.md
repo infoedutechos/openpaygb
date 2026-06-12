@@ -10,9 +10,21 @@ Use this when running **`npm run dev`** (default **http://localhost:3000**). Val
 # .env.local must include DATABASE_URL (or MONGODB_URI)
 npm run db:push
 npm run seed
+npm run dev
 ```
 
-Seed wipes tuition data and recreates the **default** tenant, programmes, and demo users.
+Open **http://localhost:3000** after the terminal shows **Ready**.
+
+Seed wipes tuition data and recreates the **default** (university) tenant, a **school** demo tenant, programmes, and demo users. Full product-line and term-fee detail: **[PRODUCT_LINES_AND_SCHOOL_TERMS.md](./PRODUCT_LINES_AND_SCHOOL_TERMS.md)**.
+
+### Standalone product lobbies (after seed)
+
+| Lobby | URL |
+|-------|-----|
+| OdelPay — Higher Institutions | http://localhost:3000/OdelPayUniversities |
+| OdelPay — Schools | http://localhost:3000/OdelPaySchools |
+| OpenPayGB | http://localhost:3000/opgb |
+| School term checkout (demo) | http://localhost:3000/pay/riverside-demo |
 
 ---
 
@@ -180,6 +192,7 @@ Corrupted `.next` after a interrupted compile or two dev servers fighting over t
 
 ## Related docs
 
+- [PRODUCT_LINES_AND_SCHOOL_TERMS.md](./PRODUCT_LINES_AND_SCHOOL_TERMS.md) — `/OdelPayUniversities`, `/OdelPaySchools`, `/opgb`, school term fees
 - [TELEGRAM_MINI_APP.md](./TELEGRAM_MINI_APP.md) — bot landing, `/tma` screens, setup commands
 - [APP_STATUS_AUDIT.md](./APP_STATUS_AUDIT.md) — holistic scan, gaps, deployment readiness
 - [SCHOOL_ADMIN_PROGRAMMES.md](./SCHOOL_ADMIN_PROGRAMMES.md) — what school admins can customize

@@ -35,7 +35,7 @@ function SegmentCard({ segment }: { segment: RegistrationSegment }) {
       <p className="mt-3 text-sm leading-relaxed text-slate-400">
         {segment === "higher"
           ? "Programme fees by semester, ledger receipts, TON and MoMo checkout, and institution admin tooling."
-          : "Term-based fees, school workspace registration, and school admin login — tuned per tenant."}
+          : "Term-based fee schedules (Term 1–3 at checkout), school workspace registration, and school admin login."}
       </p>
       <Link
         href={`/admin/register?segment=${segment}`}

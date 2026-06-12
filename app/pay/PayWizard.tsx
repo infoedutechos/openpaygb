@@ -60,7 +60,16 @@ import {
   type CheckoutTopupRail,
 } from "@/lib/checkout-insufficient-funds";
 
-type Programme = { id: string; code: string; name: string; track: ProgrammeTrackValue };
+import type { InstitutionTier } from "@prisma/client";
+import { academicPeriodLabels, periodIndexOptions } from "@/lib/academic-period";
+
+type Programme = {
+  id: string;
+  code: string;
+  name: string;
+  track: ProgrammeTrackValue;
+  semestersPerYear?: number;
+};
 
 type QuoteLine = {
   id: string;
@@ -134,7 +143,6 @@ type FlowStep =
   | "success";
 
 const years = [1, 2, 3, 4, 5, 6];
-const semesters = [1, 2, 3];
 
 function abbrevMiddle(s: string, head = 4, tail = 4): string {
   const t = s.trim();
@@ -182,12 +190,15 @@ function ResumeCheckoutEmailGate({
 export function PayWizard({
   organizationSlug = "default",
   organizationName,
+  institutionTier = "university",
 }: {
   organizationSlug?: string;
   organizationName?: string;
+  institutionTier?: InstitutionTier;
 }) {
   const orgSlug = organizationSlug.trim().toLowerCase() || "default";
   const displayName = organizationName?.trim() || "ODEL HUB";
+  const periodLabels = academicPeriodLabels(institutionTier);
 
   const [step, setStep] = useState<FlowStep>("landing");
   const [programmes, setProgrammes] = useState<Programme[]>([]);
@@ -575,6 +586,10 @@ export function PayWizard({
   }, [error, walletNote, payChannel, step]);
 
   const selectedProgramme = useMemo(() => programmes.find((p) => p.code === code), [programmes, code]);
+  const periodOptions = useMemo(
+    () => periodIndexOptions(selectedProgramme?.semestersPerYear ?? quote?.programmeDuration?.semestersPerYear),
+    [selectedProgramme?.semestersPerYear, quote?.programmeDuration?.semestersPerYear],
+  );
 
   const buildCoverageBucket = useCallback(
     (j: Quote): CoveragePreviewBucket => {
@@ -1646,7 +1661,7 @@ export function PayWizard({
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-slate-500">Semester</label>
+                  <label className="text-xs font-medium text-slate-500">{periodLabels.periodPickerLabel}</label>
                   <select
                     value={semester}
                     onChange={(e) => {
@@ -1656,9 +1671,9 @@ export function PayWizard({
                     }}
                     className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
                   >
-                    {semesters.map((s) => (
+                    {periodOptions.map((s) => (
                       <option key={s} value={s}>
-                        Semester {s}
+                        {periodLabels.periodOption(s)}
                       </option>
                     ))}
                   </select>
@@ -1706,6 +1721,7 @@ export function PayWizard({
               studentName={studentName}
               studentEmail={studentEmail}
               coveragePreview={coveragePreview}
+              periodLabels={periodLabels}
               onStudentName={setStudentName}
               onStudentEmail={setStudentEmail}
               onCoverageMode={(mode) => void setCoverageMode(mode)}

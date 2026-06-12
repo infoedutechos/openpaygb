@@ -7,6 +7,7 @@ import {
   type InstallmentCountOption,
   type InstallmentSchedule,
 } from "@/lib/installments";
+import type { AcademicPeriodLabels } from "@/lib/academic-period";
 
 export type PayFeesSelectionMode = "semester" | "year" | "programme";
 
@@ -74,9 +75,16 @@ type Props = {
   onContinue: () => void;
   /** When true, student is already signed in — hide guest name/email fields. */
   hideGuestIdentity?: boolean;
+  periodLabels: AcademicPeriodLabels;
 };
 
-function CoverageLineList({ lines }: { lines: CoveragePreviewLine[] }) {
+function CoverageLineList({
+  lines,
+  periodLabels,
+}: {
+  lines: CoveragePreviewLine[];
+  periodLabels: AcademicPeriodLabels;
+}) {
   if (lines.length === 0) return null;
   return (
     <ul className="mt-2 max-h-28 space-y-1 overflow-y-auto border-t border-slate-600/50 pt-2 text-[11px]">
@@ -87,7 +95,7 @@ function CoverageLineList({ lines }: { lines: CoveragePreviewLine[] }) {
             <span className="text-slate-500">
               {" "}
               · {line.recurrenceLabel}
-              {line.semester > 0 ? ` · Sem ${line.semester}` : ""}
+              {periodLabels.linePeriodSuffix(line.semester)}
             </span>
           </span>
           <span className="shrink-0 font-mono text-cyan-200/90">UGX {line.lineTotalUgx.toLocaleString()}</span>
@@ -150,6 +158,7 @@ export function PayFeesBreakdown({
   onInstallmentCountChange,
   onContinue,
   hideGuestIdentity = false,
+  periodLabels,
 }: Props) {
   const feePool = feePoolForDisplay(quote);
   const schedule = quote.installmentSchedule;
@@ -206,7 +215,7 @@ export function PayFeesBreakdown({
                   {semesterLines.length} line{semesterLines.length === 1 ? "" : "s"} · UGX{" "}
                   {semesterTotal.toLocaleString()}
                 </span>
-                <CoverageLineList lines={semesterLines} />
+                <CoverageLineList lines={semesterLines} periodLabels={periodLabels} />
               </>
             ) : (
               <span className="mt-2 block text-xs text-slate-400">Loading items…</span>
@@ -231,7 +240,7 @@ export function PayFeesBreakdown({
                 <span className="mt-2 block font-mono text-sm text-cyan-200">
                   {yearLines.length} line{yearLines.length === 1 ? "" : "s"} · UGX {yearTotal.toLocaleString()}
                 </span>
-                <CoverageLineList lines={yearLines} />
+                <CoverageLineList lines={yearLines} periodLabels={periodLabels} />
               </>
             ) : (
               <span className="mt-2 block text-xs text-slate-400">Loading items…</span>
@@ -265,7 +274,7 @@ export function PayFeesBreakdown({
                     {programmeLines.length} line{programmeLines.length === 1 ? "" : "s"} · UGX{" "}
                     {programmeTotal.toLocaleString()}
                   </span>
-                  <CoverageLineList lines={programmeLines} />
+                  <CoverageLineList lines={programmeLines} periodLabels={periodLabels} />
                 </>
               ) : (
                 <span className="mt-2 block text-xs text-slate-400">Loading items…</span>
@@ -290,7 +299,7 @@ export function PayFeesBreakdown({
             ? "whole programme"
             : quote.feeSelectionMode === "year"
             ? "whole academic year"
-            : "this semester only"}
+            : `this ${periodLabels.periodSingular.toLowerCase()} only`}
         </p>
         <p className="mt-1 text-xs text-slate-300">Each line shows its UGX total. Uncheck to exclude from your payment.</p>
         {feePool.length === 0 ? (
@@ -314,7 +323,7 @@ export function PayFeesBreakdown({
                     <span className="block font-medium text-white">{line.feeKey}</span>
                     <span className="mt-0.5 block text-[11px] text-slate-400">
                       {line.recurrenceLabel} · Y{line.year}
-                      {line.semester > 0 ? ` · Sem ${line.semester}` : ""}
+                      {periodLabels.linePeriodSuffix(line.semester)}
                     </span>
                   </span>
                   <span className="shrink-0 font-mono text-sm font-semibold text-cyan-200">

@@ -53,9 +53,10 @@ export async function GET(req: Request, ctx: { params: Promise<{ paymentId: stri
   const programmeDuration = programme ? getProgrammeDurationSummary(programme) : null;
   const organization = await prisma.organization.findUnique({
     where: { id: payment.organizationId },
-    select: { name: true },
+    select: { name: true, institutionTier: true },
   });
-  const breakdown = buildReceiptBreakdown(payment, programme?.fees ?? []);
+  const institutionTier = organization?.institutionTier;
+  const breakdown = buildReceiptBreakdown(payment, programme?.fees ?? [], institutionTier);
   const ledger = buildReceiptLedger({
     organizationName: organization?.name ?? "ODEL HUB",
     studentName: payment.student.name ?? "Student",
@@ -64,6 +65,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ paymentId: stri
     payments: studentPayments,
     programmeFees: programme?.fees ?? [],
     focusPaymentId: payment.id,
+    institutionTier,
   });
 
   return NextResponse.json({

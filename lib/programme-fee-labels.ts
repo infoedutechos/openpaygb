@@ -1,9 +1,14 @@
+import type { InstitutionTier } from "@prisma/client";
+import { academicPeriodLabels } from "@/lib/academic-period";
 import type { ProgrammeFeeRecurrenceKind } from "@/lib/programme-fee-recurrence-shared";
 
-export function recurrenceLabel(r: ProgrammeFeeRecurrenceKind | null | undefined): string {
+export function recurrenceLabel(
+  r: ProgrammeFeeRecurrenceKind | null | undefined,
+  tier?: InstitutionTier | string | null,
+): string {
   if (r === "once") return "Paid once";
   if (r === "per_year") return "Per year";
-  return "Per semester";
+  return academicPeriodLabels(tier).perPeriodRecurrence;
 }
 
 /** Human-readable label for a programme fee key (e.g. `library` → `Library`). */

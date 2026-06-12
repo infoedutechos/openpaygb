@@ -8,5 +8,8 @@ describe("product-lines", () => {
     expect(PRODUCT_LINES.map((p) => p.title)).toContain("OdelPay — Higher Institutions");
     expect(PRODUCT_LINES.map((p) => p.title)).toContain("OdelPay — Schools");
     expect(PRODUCT_LINES.map((p) => p.title)).toContain("OpenPayGB");
+    expect(PRODUCT_LINES.find((p) => p.id === "odelpay_higher")?.primaryHref).toBe("/OdelPayUniversities");
+    expect(PRODUCT_LINES.find((p) => p.id === "odelpay_schools")?.primaryHref).toBe("/OdelPaySchools");
+    expect(PRODUCT_LINES.find((p) => p.id === "openpaygb")?.primaryHref).toBe("/opgb");
   });
 });

@@ -137,7 +137,11 @@ export default async function PayTenantPage({ params }: { params: Promise<{ orgS
 
   return (
     <PayProviders>
-      <PayCheckoutClient organizationSlug={org.slug} organizationName={org.name} />
+      <PayCheckoutClient
+        organizationSlug={org.slug}
+        organizationName={org.name}
+        institutionTier={org.institutionTier}
+      />
     </PayProviders>
   );
 }

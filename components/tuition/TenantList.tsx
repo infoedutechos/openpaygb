@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-export type TenantRow = { id: string; name: string; slug: string };
+export type TenantRow = { id: string; name: string; slug: string; institutionTier?: string };
 
 type Props = {
   className?: string;
   title?: string;
   description?: string;
+  /** Filter active tenants by OdelPay product line */
+  tier?: "university" | "school";
   /** Highlight the active tenant */
   currentSlug?: string;
   /** Card grid (pay hub) or compact link row */
@@ -27,6 +29,7 @@ export function TenantList({
   variant = "grid",
   onPickSlug,
   filterMode = false,
+  tier,
 }: Props) {
   const [orgs, setOrgs] = useState<TenantRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,7 +55,7 @@ export function TenantList({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [tier]);
 
   if (loading) {
     return <p className={`text-sm text-slate-400 ${className}`}>Loading schools…</p>;

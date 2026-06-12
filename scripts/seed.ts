@@ -120,6 +120,39 @@ async function main() {
     });
   }
 
+  const schoolOrg = await prisma.organization.create({
+    data: {
+      name: "Riverside Academy (demo school)",
+      slug: "riverside-demo",
+      destinationWallet: wallet,
+      tenantStatus: OrganizationTenantStatus.active,
+      institutionTier: InstitutionTier.school,
+      checkoutPlatformFeeUgx: platformFeeUgx,
+    },
+  });
+
+  const schoolProg = await prisma.programme.create({
+    data: {
+      organizationId: schoolOrg.id,
+      code: "P7-STREAM",
+      name: "Primary Seven",
+      track: ProgrammeTrack.regular,
+      semestersPerYear: 3,
+    },
+  });
+
+  await prisma.programmeFee.createMany({
+    data: [1, 2, 3].map((term) => ({
+      programmeId: schoolProg.id,
+      year: 1,
+      semester: term,
+      recurrence: ProgrammeFeeRecurrence.per_semester,
+      feeKey: "tuition",
+      tuitionUgx: 350_000,
+      functionalFeesUgx: 45_000,
+    })),
+  });
+
   const hash = await bcrypt.hash(SEED_ADMIN_PASSWORD, 10);
   await prisma.adminUser.create({
     data: {
@@ -231,6 +264,7 @@ async function main() {
   console.log("  Master:", SEED_MASTER_EMAIL, "/", SEED_MASTER_PASSWORD);
   // eslint-disable-next-line no-console
   console.log("  Public pay URL: /pay/default");
+  console.log("  School demo (term fees): /pay/riverside-demo  |  OdelPay Schools: /OdelPaySchools");
   // eslint-disable-next-line no-console
   console.log("  Student portal: /student/login  →  slug: default  email:", SEED_STUDENT_EMAIL, " password:", SEED_STUDENT_PASSWORD);
   // eslint-disable-next-line no-console

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getAdminFromCookies } from "@/lib/auth";
 import { isValidObjectId } from "@/lib/object-id";
 import { buildStudentProgrammeProgress, getProgrammeDurationSummary } from "@/lib/tuition-progress";
+import { academicPeriodLabels, receiptYearPeriodLabel } from "@/lib/academic-period";
 import { buildReceiptBreakdown } from "@/lib/receipt-lines";
 import { buildReceiptLedger, formatLedgerDateDisplay } from "@/lib/receipt-ledger";
 import { receiptAccessFromRequest } from "@/lib/receipt-request-auth";
@@ -55,9 +56,10 @@ export async function GET(req: Request, ctx: { params: Promise<{ paymentId: stri
   const duration = programme ? getProgrammeDurationSummary(programme) : null;
   const organization = await prisma.organization.findUnique({
     where: { id: payment.organizationId },
-    select: { name: true },
+    select: { name: true, institutionTier: true },
   });
-  const breakdown = buildReceiptBreakdown(payment, programme?.fees ?? []);
+  const institutionTier = organization?.institutionTier;
+  const breakdown = buildReceiptBreakdown(payment, programme?.fees ?? [], institutionTier);
   const ledger = buildReceiptLedger({
     organizationName: organization?.name ?? "ODEL HUB",
     studentName: payment.student.name ?? "Student",
@@ -66,6 +68,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ paymentId: stri
     payments: studentPayments,
     programmeFees: programme?.fees ?? [],
     focusPaymentId: paymentId,
+    institutionTier,
   });
 
   const pdf = await PDFDocument.create();
@@ -89,13 +92,14 @@ export async function GET(req: Request, ctx: { params: Promise<{ paymentId: stri
   } else {
     line(`Programme: ${payment.programmeCode}`, 10);
   }
+  const periodLabels = academicPeriodLabels(institutionTier);
   if (duration && duration.durationYears > 0) {
     line(
-      `Period: Year ${payment.year} of ${duration.durationYears} · Semester ${payment.semester} of ${duration.semestersPerYear}`,
+      `Period: Year ${payment.year} of ${duration.durationYears} · ${periodLabels.periodOption(payment.semester)} of ${duration.semestersPerYear}`,
       10
     );
   } else {
-    line(`Period: Year ${payment.year} · Semester ${payment.semester}`, 10);
+    line(`Period: Year ${payment.year} · ${periodLabels.periodOption(payment.semester)}`, 10);
   }
   y -= 4;
   line("Ledger account", 11, true);
@@ -128,10 +132,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ paymentId: stri
     line(breakdown.installmentLabel, 9, false, rgb(0.45, 0.35, 0.1));
   }
   for (const feeLine of breakdown.lines) {
-    const meta =
-      feeLine.semester > 0
-        ? `${feeLine.recurrenceLabel} · Yr ${feeLine.year} Sem ${feeLine.semester}`
-        : feeLine.recurrenceLabel;
+    const yr = receiptYearPeriodLabel(feeLine.year, feeLine.semester, institutionTier);
+    const meta = [feeLine.recurrenceLabel, yr].filter(Boolean).join(" · ");
     line(
       `${feeLine.label} — tuition ${feeLine.tuitionUgx.toLocaleString()} · functional ${feeLine.functionalFeesUgx.toLocaleString()} · line ${feeLine.lineTotalUgx.toLocaleString()}`,
       8,

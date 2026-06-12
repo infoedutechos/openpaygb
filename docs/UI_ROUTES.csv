@@ -59,6 +59,9 @@ ui_route,relative_file
 /my/profile,app/my/profile/page.tsx
 /my/receipts,app/my/receipts/page.tsx
 /my/settings,app/my/settings/page.tsx
+/OdelPaySchools,app/OdelPaySchools/page.tsx
+/OdelPayUniversities,app/OdelPayUniversities/page.tsx
+/opgb,app/opgb/page.tsx
 /,app/page.tsx
 /pay/[orgSlug],app/pay/[orgSlug]/page.tsx
 /pay,app/pay/page.tsx

@@ -1,19 +1,40 @@
+import type { InstitutionTier } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 
 /** Seconds to cache active-organization reads (pay pages, public list, checkout guards). */
 const ORG_CACHE_REVALIDATE_SEC = 60;
 
+const orgPublicSelect = {
+  id: true,
+  name: true,
+  slug: true,
+  institutionTier: true,
+} as const;
+
 const activeOrgListPublic = unstable_cache(
   async () =>
     prisma.organization.findMany({
       where: { tenantStatus: "active" },
       orderBy: { name: "asc" },
-      select: { id: true, name: true, slug: true },
+      select: orgPublicSelect,
     }),
   ["active-organizations-public"],
   { revalidate: ORG_CACHE_REVALIDATE_SEC, tags: ["organizations"] },
 );
+
+function cachedOrgListByTier(tier: InstitutionTier) {
+  return unstable_cache(
+    async () =>
+      prisma.organization.findMany({
+        where: { tenantStatus: "active", institutionTier: tier },
+        orderBy: { name: "asc" },
+        select: orgPublicSelect,
+      }),
+    ["active-organizations-public", tier],
+    { revalidate: ORG_CACHE_REVALIDATE_SEC, tags: ["organizations", `organizations:${tier}`] },
+  )();
+}
 
 function cachedOrgBySlug(slug: string) {
   return unstable_cache(
@@ -28,6 +49,10 @@ function cachedOrgBySlug(slug: string) {
 
 export async function listActiveOrganizations() {
   return activeOrgListPublic();
+}
+
+export async function listActiveOrganizationsByTier(tier: InstitutionTier) {
+  return cachedOrgListByTier(tier);
 }
 
 export async function getActiveOrganizationBySlug(slug: string) {
