@@ -10,6 +10,7 @@ import {
   type SignedAdminSnapshot,
 } from "@/lib/admin-dashboard";
 import { useAuthMe } from "@/hooks/useAuthMe";
+import { DEX_HUB_HREF } from "@/lib/dex-nav";
 
 /** Who is viewing the shell — from `/api/auth/me`. */
 type ShellRole = "loading" | "anon" | "master" | "org_admin";
@@ -101,6 +102,28 @@ const NAV_PIECES: NavPiece[] = [
   },
   {
     kind: "link",
+    href: DEX_HUB_HREF,
+    label: "Dex",
+    icon: (a) => (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        className={
+          a
+            ? "h-6 w-6 text-violet-300 drop-shadow-[0_0_10px_rgba(167,139,250,0.55)]"
+            : "h-6 w-6"
+        }
+        aria-hidden
+      >
+        <path d="M7 10h10M7 14h6M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" />
+        <path d="M9 8V6M15 8V6" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    kind: "link",
     href: "/admin/register",
     label: "Workspace",
     icon: (a) => (
@@ -159,6 +182,7 @@ function navPieceActive(pathname: string, piece: NavPiece, shell: ShellRole): bo
       !pathname.startsWith("/student/register")
     );
   if (href === "/admin/register") return pathname.startsWith("/admin/register");
+  if (href === DEX_HUB_HREF) return pathname.startsWith(DEX_HUB_HREF);
   return pathname === href || pathname.startsWith(href + "/");
 }
 

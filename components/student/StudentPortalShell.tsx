@@ -6,6 +6,7 @@ import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton"
 import { WelcomeBackStrip } from "@/components/profile/WelcomeBackStrip";
 import { useStudentMe } from "@/hooks/useStudentMe";
 import { profileFromStudentMe } from "@/lib/profile-mappers";
+import { DEX_SIDEBAR_NAV, pathnameIsDexHub } from "@/lib/dex-nav";
 
 export type StudentPortalShellMode = "my" | "student";
 
@@ -24,6 +25,7 @@ function navActive(pathname: string, href: string): boolean {
   if (href === "/student/card") return pathname === "/student/card";
   if (href === "/student/balance") return pathname === "/student/balance";
   if (href === "/my/profile") return pathname === "/my/profile";
+  if (href === DEX_SIDEBAR_NAV.href) return pathnameIsDexHub(pathname);
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -34,6 +36,7 @@ const NAV: { href: string; label: string }[] = [
   { href: "/my/receipts", label: "Receipts & history" },
   { href: "/student/pay", label: "Pay tuition" },
   { href: "/student/card", label: "Virtual card" },
+  DEX_SIDEBAR_NAV,
   { href: "/student", label: "Student home" },
   { href: "/", label: "Lobby" },
 ];

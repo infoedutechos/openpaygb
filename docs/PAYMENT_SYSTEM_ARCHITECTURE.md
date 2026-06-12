@@ -57,10 +57,10 @@ These four capabilities apply to **both** OdelPay tiers. OpenPayGB provides the 
 
 | Feature | User story | Building blocks in repo | Gap |
 |---------|------------|-------------------------|-----|
-| **Send money** | Parent sends UGX to student wallet / school fee pot | `Payment`, `OpenPayCard` balance, MoMo start APIs | **P2P transfer** API + ledger entries (not built) |
+| **Send money** | Parent sends UGX to student wallet / school fee pot | `WalletTransfer`, OPGB ledger sync, `/dex/p2p` escrow | Limits / KYC flags; Telegram notify on send |
 | **Receive money** | School receives tuition; student receives refund / stipend | `/pay/{orgSlug}`, webhooks (`livepay`, `relworx`, `mbiyo`, `momo_bridge`) | Refund rail UI polish |
-| **Convert** | UGX ↔ TON at checkout; future fiat pairs | `lib/fx-live.ts`, `lib/fx-override.ts`, Dex hub (`/dex`) | Dedicated convert screen + quote API |
-| **Request money** | “Pay this link” / invoice for a fee line | `POST /api/public/checkout/session`, programme quote | **Payment request** object (amount, memo, expiry, share URL) |
+| **Convert** | UGX ↔ TON at checkout; fiat ↔ crypto | `lib/fx-live.ts`, `/dex/convert`, `/dex/amm`, OPGB wallet | On-chain settlement (Phase 5) |
+| **Request money** | “Pay this link” / invoice for a fee line | `PaymentRequest` model, `/admin/payment-requests` | Share URL polish for guests |
 
 ### Suggested implementation order
 
@@ -80,7 +80,8 @@ OpenPayGB is **not** only tuition. It is the **brand + ledger + PSP orchestratio
 | Closed-loop UGX card (`OpenPayCard`) | **Shipped** — student opt-in, MoMo/TON fund, pay tuition |
 | Master PSP toggles | **Shipped** — `#payment-providers` |
 | Real Visa/Mastercard issuing | **Investigation** — see [VIRTUAL_CARD_INVESTIGATION.md](./VIRTUAL_CARD_INVESTIGATION.md) |
-| Global send/receive/convert | **Planned** — Dex hub + partner APIs |
+| OPGB settlement + Dex (buy/amm/p2p/offramp) | **Phase 4 shipped** — see [OPGB_TOKEN_ECOSYSTEM.md](./OPGB_TOKEN_ECOSYSTEM.md) |
+| Global send/receive/convert | **Partial** — Dex hub + custodial ledger; on-chain delivery Phase 5 |
 
 School and university tenants **consume** OpenPayGB rails; they do not run separate card programs unless Master enables overrides per org.
 
@@ -118,6 +119,38 @@ See [OPENPAYGB_PLATFORM_CARD.md](./OPENPAYGB_PLATFORM_CARD.md) § Guest payers.
 
 ---
 
-## 5. Deployment note
+## 5. Telegram bot (Master Admin → Vercel)
+
+1. BotFather token → Master Admin **`/admin/master#deployment-environment`** → paste **`TELEGRAM_BOT_TOKEN`** (or **`BOT_TOKEN`**).
+2. **Save** → **Sync to Vercel** (requires `VERCEL_ACCESS_TOKEN` + `VERCEL_PROJECT_ID` in same panel).
+3. Local check: `npm run telegram:alignment-check` (expects `TELEGRAM_BOT_TOKEN` in `.env` / `.env.local`).
+4. Production webhook: `npm run telegram:set-webhook` after deploy.
+
+See [TELEGRAM_BOT_DEPLOYMENT.md](./TELEGRAM_BOT_DEPLOYMENT.md).
+
+---
+
+## 6. OPGB / Dex — local test loop
+
+```bash
+npm run db:push && npm run seed
+```
+
+| Step | URL / credentials |
+|------|-------------------|
+| Student login | `/student/login` — slug `default`, `student@odelhub.local` / `ChangeMe_Student123!` |
+| Fund OPGB | `/student/card` (MoMo top-up) |
+| Buy crypto | `/dex/buy` (signed in → instant OPGB settle) |
+| Swap | `/dex/amm` |
+| P2P | `/dex/p2p` → accept → release / cancel / dispute |
+| Withdraw | `/dex/offramp` |
+
+**Dex Hub** is linked from every signed-in dashboard sidebar (student, school admin, master).
+
+**Phase 5 pending:** on-chain crypto delivery, live MoMo/bank disbursement APIs, master P2P dispute ops UI.
+
+---
+
+## 7. Deployment note
 
 Code on `main` passes CI. Production at `https://odelpay.vercel.app` requires a **Vercel production deployment** — see [VERCEL_ODELPAY_DEPLOY.md](./VERCEL_ODELPAY_DEPLOY.md).

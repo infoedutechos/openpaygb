@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton";
 import { WelcomeBackStrip } from "@/components/profile/WelcomeBackStrip";
 import { useAuthMe } from "@/hooks/useAuthMe";
+import { DEX_SIDEBAR_NAV, pathnameIsDexHub } from "@/lib/dex-nav";
 
 const nav: { href: string; label: string; desc?: string }[] = [
   { href: "/admin/master", label: "Overview", desc: "Platform totals" },
@@ -32,6 +33,11 @@ const nav: { href: string; label: string; desc?: string }[] = [
     href: "/admin/master#openpay-cards-overview",
     label: "Virtual cards",
     desc: "OpenPayGB registry",
+  },
+  {
+    href: DEX_SIDEBAR_NAV.href,
+    label: DEX_SIDEBAR_NAV.label,
+    desc: "Buy · swap · P2P · offramp",
   },
   {
     href: "/admin/master#platform-communications",
@@ -81,6 +87,7 @@ const nav: { href: string; label: string; desc?: string }[] = [
 ];
 
 function navActive(pathname: string, href: string): boolean {
+  if (href === DEX_SIDEBAR_NAV.href) return pathnameIsDexHub(pathname);
   if (href === "/admin/master") return pathname === "/admin/master";
   return pathname === href || pathname.startsWith(`${href}/`);
 }

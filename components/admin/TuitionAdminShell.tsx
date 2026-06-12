@@ -14,6 +14,7 @@ import { WorkspaceEmailUnverifiedBanner } from "@/components/admin/WorkspaceEmai
 import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton";
 import { WelcomeBackStrip } from "@/components/profile/WelcomeBackStrip";
 import { adminRoleToProfileRole } from "@/lib/profile-mappers";
+import { DEX_SIDEBAR_NAV, pathnameIsDexHub } from "@/lib/dex-nav";
 
 const SEGMENTS: { suffix: string; label: string }[] = [
   { suffix: "", label: "Dashboard" },
@@ -31,6 +32,7 @@ const SEGMENTS: { suffix: string; label: string }[] = [
 ];
 
 function navActive(pathname: string, href: string): boolean {
+  if (href === DEX_SIDEBAR_NAV.href) return pathnameIsDexHub(pathname);
   if (href.endsWith("/admin") || href.endsWith("/school-admin")) {
     return pathname === href;
   }
@@ -43,7 +45,10 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
   const { hrefWithOrgSlug } = useMasterOrgSlug();
   const base = pathname.startsWith("/school-admin") ? "/school-admin" : "/admin";
   const navItems = useMemo(
-    () => SEGMENTS.map((s) => ({ href: hrefWithOrgSlug(`${base}${s.suffix}`), label: s.label })),
+    () => [
+      ...SEGMENTS.map((s) => ({ href: hrefWithOrgSlug(`${base}${s.suffix}`), label: s.label })),
+      DEX_SIDEBAR_NAV,
+    ],
     [base, hrefWithOrgSlug]
   );
   const { data: authMe } = useAuthMe();

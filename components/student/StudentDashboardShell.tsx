@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { StudentLogoutButton } from "@/components/StudentLogoutButton";
 import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton";
+import { DEX_SIDEBAR_NAV, pathnameIsDexHub } from "@/lib/dex-nav";
 
 type MeJson = {
   student?: { organizationName: string; organizationSlug: string; name: string };
@@ -12,6 +13,7 @@ type MeJson = {
 
 function navActive(pathname: string, href: string): boolean {
   if (href === "/student") return pathname === "/student";
+  if (href === DEX_SIDEBAR_NAV.href) return pathnameIsDexHub(pathname);
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -44,6 +46,7 @@ export function StudentDashboardShell({ children }: { children: React.ReactNode 
       { href: "/student", label: "Student home" },
     ];
     if (payWizardHref) items.push({ href: payWizardHref, label: "School checkout" });
+    items.push(DEX_SIDEBAR_NAV);
     items.push({ href: "/", label: "Lobby" });
     return items;
   }, [payWizardHref]);
