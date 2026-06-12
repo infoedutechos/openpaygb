@@ -32,7 +32,7 @@ Seed wipes tuition data and recreates the **default** tenant, programmes, and de
 
 ## 2. ODEL HUB (default tenant) — admin logins
 
-Tenant name: **ODEL HUB (default tenant)** · slug: **`default`**
+Tenant name: **TEAM UNIVERSITY 2023/2025 (demo)** · slug: **`default`**
 
 | Role | Sign-in URL | Email (default) | Password (default) |
 |------|-------------|-----------------|---------------------|
@@ -59,7 +59,19 @@ Tenant name: **ODEL HUB (default tenant)** · slug: **`default`**
 
 **After sign-in:** http://localhost:3000/student or http://localhost:3000/my/dashboard
 
-Demo student is on programme **BEP-ENG/RE**, year **1**, semester **1**.
+Demo student **Nabiddo Rehema Mbuga** is on programme **BEP-ENG/RE**, year **1**, semester **1**.
+
+### Ledger receipt demo (TEAM UNIVERSITY format)
+
+After seed, the console prints a path like **`/receipt/<paymentId>`**. The demo tenant is named **TEAM UNIVERSITY 2023/2025 (demo)** and includes two confirmed payments so the receipt shows **Opening Balance → Invoice (Dr) → Receipt (Cr) → Closing Balance** columns.
+
+| Step | URL |
+|------|-----|
+| Sign in as demo student | http://localhost:3000/student/login |
+| Ledger receipt (from seed output) | http://localhost:3000/receipt/`<paymentId>` |
+| PDF download | http://localhost:3000/api/receipts/`<paymentId>`/pdf |
+
+See **[LEDGER_RECEIPTS_AND_SCHOOL_UNITS.md](./LEDGER_RECEIPTS_AND_SCHOOL_UNITS.md)** for column definitions and code paths.
 
 ---
 
@@ -67,7 +79,9 @@ Demo student is on programme **BEP-ENG/RE**, year **1**, semester **1**.
 
 | Step | URL / action |
 |------|----------------|
-| Request workspace | http://localhost:3000/admin/register |
+| Choose product line | http://localhost:3000/admin/register |
+| Higher institutions | http://localhost:3000/admin/register?segment=higher |
+| Primary / secondary schools | http://localhost:3000/admin/register?segment=schools |
 | Verify email (from inbox) | Link in ODEL HUB email → **`GET /api/public/organization-register/verify`** → **`http://localhost:3000/school/workspace-status?slug=…&verified=1`** |
 | Resend verification | Same page → **Resend verification email** or `POST /api/public/organization-register/resend` |
 | Master approve | http://localhost:3000/admin/master/organizations |

@@ -2,6 +2,8 @@
 
 import type { MasterOrgRow } from "@/components/admin/master-org/types";
 import { organizationUnitKindLabel } from "@/lib/organization-unit-kinds";
+import { institutionTierLabel } from "@/lib/institution-tier";
+import type { InstitutionTier } from "@prisma/client";
 
 type Props = {
   org: MasterOrgRow;
@@ -11,6 +13,10 @@ type Props = {
 export function MasterOrgUnitSummary({ org, compact }: Props) {
   const kind = org.unitKind ?? "main_campus";
   const label = organizationUnitKindLabel(kind);
+  const tier =
+    org.institutionTier === "school" || org.institutionTier === "university"
+      ? institutionTierLabel(org.institutionTier as InstitutionTier)
+      : null;
   const parent =
     org.parentOrganization?.name ??
     (org.externalParentName?.trim() ? org.externalParentName.trim() : null);
@@ -25,6 +31,12 @@ export function MasterOrgUnitSummary({ org, compact }: Props) {
   if (compact) {
     return (
       <div className="mt-2 space-y-1 text-xs text-slate-500">
+        {tier ? (
+          <p>
+            <span className="text-slate-600">Product line:</span>{" "}
+            <span className="text-slate-300">{tier}</span>
+          </p>
+        ) : null}
         <p>
           <span className="text-slate-600">Unit:</span>{" "}
           <span className="text-slate-300">{label}</span>
@@ -50,6 +62,7 @@ export function MasterOrgUnitSummary({ org, compact }: Props) {
 
   return (
     <div className="text-xs text-slate-400">
+      {tier ? <p className="font-medium text-cyan-200/90">{tier}</p> : null}
       <p className="font-medium text-slate-300">{label}</p>
       {parent ? (
         <p className="mt-0.5 truncate" title={parent}>

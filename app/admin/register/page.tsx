@@ -2,13 +2,21 @@
 
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { OdelShieldIcon } from "@/components/icons/OdelShieldIcon";
-import { workspacePortalPath } from "@/lib/workspace-portal-url";
+import { WorkspaceRegistrationSegmentPicker } from "@/components/admin/WorkspaceRegistrationSegmentPicker";
 import { OrganizationUnitKindPicker } from "@/components/admin/OrganizationUnitKindPicker";
+import { workspacePortalPath } from "@/lib/workspace-portal-url";
 import type { OrganizationUnitKind } from "@/lib/organization-unit-kinds";
+import {
+  isRegistrationSegment,
+  registrationSegmentCta,
+  registrationSegmentSubtitle,
+  registrationSegmentTitle,
+  type RegistrationSegment,
+} from "@/lib/institution-tier";
 
-function RegisterForm() {
+function RegisterForm({ segment }: { segment: RegistrationSegment }) {
   const router = useRouter();
   const [requireMasterApproval, setRequireMasterApproval] = useState(true);
   const [autoGenerateAdminLogin, setAutoGenerateAdminLogin] = useState(false);
@@ -99,6 +107,7 @@ function RegisterForm() {
           operatesUnitKinds,
           parentOrganizationSlug: parentSlug.trim(),
           externalParentName: externalParentName.trim(),
+          registrationSegment: segment,
         }),
       });
       const j = (await r.json()) as {
@@ -155,6 +164,11 @@ function RegisterForm() {
     }
   }
 
+  const accent =
+    segment === "higher"
+      ? "text-cyan-300/90"
+      : "text-sky-300/90";
+
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#050810] text-slate-200">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%-10%,rgba(34,211,238,0.12),transparent)]" />
@@ -165,8 +179,11 @@ function RegisterForm() {
             <div className="mx-auto mb-5 mt-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-cyan-500/35 bg-gradient-to-br from-cyan-500/20 to-transparent text-cyan-100">
               <OdelShieldIcon className="h-9 w-9" />
             </div>
-            <h1 className="text-2xl font-semibold text-white">Request school workspace</h1>
-            <p className="mt-1 text-sm font-medium text-cyan-200/90">Self-register on our platform</p>
+            <p className={`text-xs font-bold uppercase tracking-[0.2em] ${accent}`}>
+              {registrationSegmentTitle(segment)}
+            </p>
+            <h1 className="mt-2 text-2xl font-semibold text-white">{registrationSegmentCta(segment)}</h1>
+            <p className="mt-1 text-sm font-medium text-slate-400">{registrationSegmentSubtitle(segment)}</p>
             <p className="mt-2 text-sm text-slate-500">
               {deferEmailVerification ? (
                 <>
@@ -192,73 +209,20 @@ function RegisterForm() {
                 </>
               ) : (
                 <>
-                  After you confirm your email, your workspace is <strong className="text-slate-400">activated automatically</strong>{" "}
-                  (programmes and fees copied from the platform template).
+                  After you confirm your email, your workspace is{" "}
+                  <strong className="text-slate-400">activated automatically</strong> (programmes and fees copied from
+                  the platform template).
                   {autoGenerateAdminLogin
                     ? " You will receive an email to set your school admin password."
                     : " Sign in at /school/login when your admin account is ready."}
                 </>
               )}
             </p>
-            <ul className="mt-3 space-y-1.5 text-left text-xs text-slate-500">
-              <li>1. Submit this form</li>
-              {deferEmailVerification ? (
-                <>
-                  <li>
-                    2. Open your{" "}
-                    <Link href="/school/workspace-status" className="font-mono text-cyan-300/90 hover:underline">
-                      workspace portal
-                    </Link>{" "}
-                    (automatic redirect after submit)
-                  </li>
-                  <li>3. Confirm your registration email when ready</li>
-                  {requireMasterApproval ? (
-                    <li>4. Master approves the workspace</li>
-                  ) : (
-                    <li>4. Guest pay goes live at <span className="font-mono">/pay/your-slug</span></li>
-                  )}
-                  <li>
-                    {requireMasterApproval ? "5" : "5"}. Sign in at{" "}
-                    <Link href="/school/login" className="font-mono text-cyan-300/90 hover:underline">
-                      /school/login
-                    </Link>
-                    {autoGenerateAdminLogin
-                      ? " using the password-set link sent to your contact email"
-                      : " when your school admin account is ready"}
-                  </li>
-                </>
-              ) : (
-                <>
-                  <li>2. Open the <strong className="text-slate-400">ODEL HUB verification email</strong> (registration details included)</li>
-                  <li>3. Click the link — you are taken to your workspace portal</li>
-                  {requireMasterApproval ? (
-                    <>
-                      <li>4. Master approves the workspace and creates your admin login</li>
-                      <li>
-                        5. Sign in at{" "}
-                        <Link href="/school/login" className="font-mono text-cyan-300/90 hover:underline">
-                          /school/login
-                        </Link>{" "}
-                        with credentials from ODEL HUB
-                      </li>
-                    </>
-                  ) : (
-                    <>
-                      <li>4. Your workspace goes live automatically — guest pay at <span className="font-mono">/pay/your-slug</span></li>
-                      <li>
-                        5. Sign in at{" "}
-                        <Link href="/school/login" className="font-mono text-cyan-300/90 hover:underline">
-                          /school/login
-                        </Link>{" "}
-                        {autoGenerateAdminLogin
-                          ? "using the password-set link sent to your contact email"
-                          : "when your school admin account is ready"}
-                      </li>
-                    </>
-                  )}
-                </>
-              )}
-            </ul>
+            <p className="mt-3">
+              <Link href="/admin/register" className="text-xs text-slate-500 hover:text-cyan-300 hover:underline">
+                ← Choose a different product line
+              </Link>
+            </p>
           </div>
 
           <form onSubmit={onSubmit} className="space-y-4 rounded-2xl border border-white/[0.08] bg-[#0c1424]/95 p-8">
@@ -379,10 +343,29 @@ function RegisterForm() {
   );
 }
 
+function RegisterPageRouter() {
+  const searchParams = useSearchParams();
+  const segmentRaw = searchParams.get("segment");
+  if (!isRegistrationSegment(segmentRaw)) {
+    return (
+      <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#050810] px-4 py-12 text-slate-200">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%-10%,rgba(34,211,238,0.12),transparent)]" />
+        <div className="relative mx-auto w-full max-w-3xl">
+          <div className="mb-8 text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300/80">ODEL HUB</p>
+          </div>
+          <WorkspaceRegistrationSegmentPicker />
+        </div>
+      </div>
+    );
+  }
+  return <RegisterForm segment={segmentRaw} />;
+}
+
 export default function AdminRegisterPage() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-[#050810] p-8 text-slate-500">Loading…</div>}>
-      <RegisterForm />
+      <RegisterPageRouter />
     </Suspense>
   );
 }

@@ -35,9 +35,9 @@ flowchart TB
   Rails --> P2P
 ```
 
-**Current reality:** One Next.js app serves all tenants via `Organization` rows. Schools and universities differ by **tenant configuration** (programme structure, fee CSV, branding), not separate deployments.
+**Current reality:** One Next.js app serves all tenants via `Organization` rows. Schools and universities differ by **`institutionTier`** (`university` | `school`), programme structure, fee CSV, and branding — not separate deployments.
 
-**Recommended next schema step (when splitting UX):**
+**Schema (shipped):**
 
 ```prisma
 enum InstitutionTier {
@@ -47,7 +47,7 @@ enum InstitutionTier {
 // Organization.institutionTier InstitutionTier @default(university)
 ```
 
-Master Admin can filter orgs and show tier-specific nav (e.g. “semester” vs “term”).
+Self-register at `/admin/register` picks the product line (`?segment=higher` or `?segment=schools`). Master Admin can filter orgs by tier (API: `institutionTier` on `GET /api/master/organizations`).
 
 ---
 

@@ -63,12 +63,15 @@ async function main() {
     return Number.isFinite(n) && n >= 0 ? Math.round(n) : 5000;
   })();
 
+  const { InstitutionTier, PaymentRail, PaymentStatus } = await import("@prisma/client");
+
   const defaultOrg = await prisma.organization.create({
     data: {
-      name: "ODEL HUB (default tenant)",
+      name: "TEAM UNIVERSITY 2023/2025 (demo)",
       slug: "default",
       destinationWallet: wallet,
       tenantStatus: OrganizationTenantStatus.active,
+      institutionTier: InstitutionTier.university,
       checkoutPlatformFeeUgx: platformFeeUgx,
     },
   });
@@ -141,10 +144,10 @@ async function main() {
 
   const demoProgrammeCode = PROGRAMMES[0]?.code ?? "BEP-ENG/RE";
   const studentPortalHash = await bcrypt.hash(SEED_STUDENT_PASSWORD, 10);
-  await prisma.student.create({
+  const demoStudent = await prisma.student.create({
     data: {
       organizationId: defaultOrg.id,
-      name: "Demo Student",
+      name: "Nabiddo Rehema Mbuga",
       email: SEED_STUDENT_EMAIL.toLowerCase(),
       programmeCode: demoProgrammeCode,
       year: 1,
@@ -152,6 +155,71 @@ async function main() {
       portalPasswordHash: studentPortalHash,
     },
   });
+
+  const demoProgramme = await prisma.programme.findFirst({
+    where: { organizationId: defaultOrg.id, code: demoProgrammeCode },
+    include: { fees: true },
+  });
+  const ugxPerTon = 257_000;
+  let demoReceiptPath = "";
+
+  if (demoProgramme) {
+    const sem1Fees = demoProgramme.fees.filter((f) => f.year === 1 && f.semester === 1);
+    const feeIds = sem1Fees.map((f) => f.id);
+    const tuition = sem1Fees.reduce((s, f) => s + f.tuitionUgx, 0);
+    const functional = sem1Fees.reduce((s, f) => s + f.functionalFeesUgx, 0);
+    const scheduleSubtotal = tuition + functional;
+
+    const payment1 = await prisma.payment.create({
+      data: {
+        organizationId: defaultOrg.id,
+        studentId: demoStudent.id,
+        programmeCode: demoProgrammeCode,
+        year: 1,
+        semester: 1,
+        tuitionUgx: tuition,
+        functionalFeesUgx: functional,
+        totalUgx: 472_000,
+        ugxPerTonSnapshot: ugxPerTon,
+        tonAmount: 472_000 / ugxPerTon,
+        destinationWallet: wallet,
+        rail: PaymentRail.livepay,
+        status: PaymentStatus.confirmed,
+        momoReference: "KCB-4297",
+        includedFeeIds: feeIds,
+        installmentCount: 2,
+        installmentIndex: 1,
+        installmentScheduleSubtotalUgx: scheduleSubtotal,
+        confirmedAt: new Date("2023-08-01T10:00:00Z"),
+      },
+    });
+
+    const payment2 = await prisma.payment.create({
+      data: {
+        organizationId: defaultOrg.id,
+        studentId: demoStudent.id,
+        programmeCode: demoProgrammeCode,
+        year: 1,
+        semester: 1,
+        tuitionUgx: tuition,
+        functionalFeesUgx: functional,
+        totalUgx: scheduleSubtotal - 472_000,
+        ugxPerTonSnapshot: ugxPerTon,
+        tonAmount: (scheduleSubtotal - 472_000) / ugxPerTon,
+        destinationWallet: wallet,
+        rail: PaymentRail.livepay,
+        status: PaymentStatus.confirmed,
+        momoReference: "KCB-7787",
+        includedFeeIds: feeIds,
+        installmentCount: 2,
+        installmentIndex: 2,
+        installmentScheduleSubtotalUgx: scheduleSubtotal,
+        confirmedAt: new Date("2024-01-15T10:00:00Z"),
+      },
+    });
+
+    demoReceiptPath = `/receipt/${payment2.id}`;
+  }
 
   // eslint-disable-next-line no-console
   console.log("Seed complete.");
@@ -167,6 +235,12 @@ async function main() {
   console.log("  Student portal: /student/login  →  slug: default  email:", SEED_STUDENT_EMAIL, " password:", SEED_STUDENT_PASSWORD);
   // eslint-disable-next-line no-console
   console.log("  Student dashboard after sign-in: /student  or  /my/dashboard");
+  if (demoReceiptPath) {
+    // eslint-disable-next-line no-console
+    console.log("  Demo ledger receipt (TEAM UNIVERSITY format):", demoReceiptPath);
+    // eslint-disable-next-line no-console
+    console.log("  Open as student or admin after sign-in, or use receipt token from payment email flow.");
+  }
 
   await prisma.$disconnect();
 }

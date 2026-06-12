@@ -14,8 +14,10 @@ An `Organization` row must exist; it starts as **`tenantStatus: pending`**.
 
 ### Self-service
 
-1. Open **`/admin/register`** (“Request a school workspace”).
-2. Submit **school name**, URL **slug** (unique), **contact email** (required), and optional note.
+1. Open **`/admin/register`** and choose a product line:
+   - **OdelPay — Higher Institutions** → `/admin/register?segment=higher` (universities, polytechnics, tertiary)
+   - **OdelPay — Schools** → `/admin/register?segment=schools` (primary / secondary)
+2. Submit **school name**, URL **slug** (unique), **contact email** (required), and optional note. The selected segment is stored as **`Organization.institutionTier`** (`university` or `school`).
 3. The form calls **`POST /api/public/organization-register`**, which creates the org with **`tenantStatus: pending`** and emails an ODEL HUB **verification link** (registration details + timestamp). **`GET /api/public/organization-register/verify?token=…`** marks the email confirmed and redirects to **`/school/workspace-status?slug=…&verified=1`**.
 4. Resend: **`POST /api/public/organization-register/resend`** with `{ "email": "…" }` (rate-limited), or the button on `/admin/register`.
 

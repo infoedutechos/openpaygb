@@ -8,7 +8,7 @@ Schools and training centres can request a workspace on the platform without con
 
 ## Applicant experience
 
-1. **Register** — school name, URL slug, contact email, optional website, and notes.
+1. **Choose product line** at `/admin/register` — **OdelPay — Higher Institutions** or **OdelPay — Schools** — then submit school name, URL slug, contact email, optional website, and notes.
 2. **Confirm email** — ODEL HUB sends a verification link (Brevo or Resend when configured).
 3. **Workspace activation**
    - When **auto-registration** is on (Master approval off): after email confirmation, the workspace becomes **active** automatically. Programmes and FX are cloned from the platform template (`default`).

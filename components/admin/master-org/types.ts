@@ -2,6 +2,7 @@ export type MasterOrgRow = {
   id: string;
   name: string;
   slug: string;
+  institutionTier?: string | null;
   unitKind?: string | null;
   operatesUnitKinds?: string[];
   parentOrganizationId?: string | null;

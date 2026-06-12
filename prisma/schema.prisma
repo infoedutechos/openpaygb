@@ -50,6 +50,12 @@ enum OrganizationUnitKind {
   affiliate
 }
 
+/** OdelPay product line: higher education vs primary/secondary schools. */
+enum InstitutionTier {
+  university
+  school
+}
+
 /** Every programme belongs to one of two school tracks (admin + checkout grouping). */
 enum ProgrammeTrack {
   inservice
@@ -86,6 +92,8 @@ model Organization {
   registrationWebsiteUrl     String                     @default("")
   /** Set when the applicant confirms their registration email (workspace request). */
   registrationEmailVerifiedAt DateTime?
+  /** Higher institutions (university) vs primary/secondary schools — OdelPay product line. */
+  institutionTier            InstitutionTier            @default(university)
   /** What this workspace is (main campus, branch, affiliate, etc.). */
   unitKind                   OrganizationUnitKind       @default(main_campus)
   /** Campus/unit types this institution operates (main campus only; multi-select). */

@@ -21,6 +21,7 @@ export async function GET() {
           id: true,
           name: true,
           slug: true,
+          institutionTier: true,
           unitKind: true,
           operatesUnitKinds: true,
           parentOrganizationId: true,

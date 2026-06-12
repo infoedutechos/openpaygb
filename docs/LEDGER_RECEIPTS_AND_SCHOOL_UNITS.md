@@ -1,14 +1,16 @@
 # Ledger receipts, school unit registration & responsive master UI
 
-**Last updated:** 2026-06-03 · **Production:** `https://odelpay.vercel.app`
+**Last updated:** 2026-06-12 · **Production:** `https://odelpay.vercel.app`
 
-This document captures the ledger-style receipt format, multi-campus school registration, webhook alignment checklist, responsive master-console tables, and TMA admin deep-link guidance delivered in the holistic pass.
+This document captures the ledger-style receipt format (TEAM UNIVERSITY reference), multi-campus school registration, OdelPay product-line workspace registration, webhook alignment, and responsive master-console tables.
 
 ---
 
 ## Ledger receipts (TEAM UNIVERSITY format)
 
-Tuition receipts now include a **ledger account** section alongside the existing fee breakdown.
+**Reference:** Printed university ledger statement — institution header, student name, programme, date range, then rows with **Date · Dr/Cr · Particulars · Vch Type · Vch No · Debit · Credit**, plus **Opening Balance** and **Dr Closing Balance** so debit and credit columns balance.
+
+Tuition receipts include a **ledger account** tab/section alongside the fee breakdown (same data as email PDF).
 
 | Column | Meaning |
 |--------|---------|
@@ -34,6 +36,38 @@ Tuition receipts now include a **ledger account** section alongside the existing
 | Tests | `lib/__tests__/receipt-ledger.test.ts` |
 
 Receipt page: `/receipt/[paymentId]` · API: `GET /api/receipts/[paymentId]`
+
+### Demo student (local dev)
+
+After `npm run seed`:
+
+| Field | Value |
+|-------|--------|
+| Tenant | `default` — **TEAM UNIVERSITY 2023/2025 (demo)** |
+| Student | `student@odelhub.local` / `ChangeMe_Student123!` |
+| Name on ledger | Nabiddo Rehema Mbuga |
+| Sign in | http://localhost:3000/student/login |
+
+Seed creates **two confirmed installment payments** (Aug 2023 + Jan 2024) so the ledger shows invoice (Dr) and receipt (Cr) rows with a **closing balance**. The seed script prints:
+
+```text
+Demo ledger receipt (TEAM UNIVERSITY format): /receipt/<paymentId>
+```
+
+Open that URL while signed in as the demo student or school admin, or from **My receipts** / admin receipts after payment history exists.
+
+---
+
+## OdelPay workspace registration (two product lines)
+
+`/admin/register` shows **two cards** before the form:
+
+| Card | URL | Stored as |
+|------|-----|-----------|
+| **OdelPay — Higher Institutions** | `/admin/register?segment=higher` | `Organization.institutionTier = university` |
+| **OdelPay — Schools** | `/admin/register?segment=schools` | `Organization.institutionTier = school` |
+
+Implementation: `components/admin/WorkspaceRegistrationSegmentPicker.tsx`, `lib/institution-tier.ts`, `POST /api/public/organization-register` body field `registrationSegment`.
 
 ---
 

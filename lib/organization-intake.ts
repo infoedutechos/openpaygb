@@ -2,6 +2,7 @@ import { z } from "zod";
 import { OrganizationTenantStatus, OrganizationUnitKind } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { ORGANIZATION_UNIT_KINDS, isChildUnitKind } from "@/lib/organization-unit-kinds";
+import { segmentToInstitutionTier, type RegistrationSegment } from "@/lib/institution-tier";
 
 export const orgSlugSchema = z
   .string()
@@ -21,6 +22,8 @@ const pendingOrgBaseSchema = z.object({
   operatesUnitKinds: z.array(unitKindSchema).optional().default([]),
   parentOrganizationSlug: z.string().max(48).optional().default(""),
   externalParentName: z.string().max(200).optional().default(""),
+  /** OdelPay product line: higher institutions vs schools (`higher` | `schools`). */
+  registrationSegment: z.enum(["higher", "schools"]).optional(),
 });
 
 function refineOrgIntake<T extends z.ZodTypeAny>(schema: T) {
@@ -123,6 +126,10 @@ export async function createPendingOrganization(input: PendingOrgInput) {
       ? (input.operatesUnitKinds ?? []).filter((k: OrganizationUnitKind) => k !== "main_campus")
       : [];
 
+  const institutionTier = input.registrationSegment
+    ? segmentToInstitutionTier(input.registrationSegment as RegistrationSegment)
+    : undefined;
+
   try {
     return await prisma.organization.create({
       data: {
@@ -133,6 +140,7 @@ export async function createPendingOrganization(input: PendingOrgInput) {
         registrationWebsiteUrl: (input.registrationWebsiteUrl ?? "").trim(),
         registrationNote: (input.registrationNote ?? "").trim(),
         destinationWallet: "",
+        ...(institutionTier ? { institutionTier } : {}),
         unitKind,
         operatesUnitKinds: unitKind === "main_campus" ? ["main_campus", ...operatesUnitKinds] : [],
         parentOrganizationId,
