@@ -25,6 +25,8 @@ Seed wipes tuition data and recreates the **default** (university) tenant, a **s
 | OdelPay — Schools | http://localhost:3000/OdelPaySchools |
 | OpenPayGB | http://localhost:3000/opgb |
 | School term checkout (demo) | http://localhost:3000/pay/riverside-demo |
+| School admin (Riverside seed) | `school.admin@odelhub.local` / `SEED_ADMIN_PASSWORD` → `/admin/login?school=1` |
+| School student (Riverside seed) | `school.student@odelhub.local` / `SEED_STUDENT_PASSWORD` → `/student/login` (org `riverside-demo`) |
 
 ---
 

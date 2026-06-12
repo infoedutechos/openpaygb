@@ -303,6 +303,37 @@ function AdminLoginForm() {
             </p>
           ) : null}
 
+          {loginMode === "school" || loginMode === "default" ? (
+            <div className="rounded-lg border border-white/10 bg-[#0c1424]/80 px-4 py-3 text-xs text-slate-400">
+              <p className="font-semibold text-slate-300">School workspace</p>
+              <ul className="mt-2 list-inside list-disc space-y-1">
+                <li>
+                  <Link href="/admin/register?segment=schools" className="text-cyan-300 hover:underline">
+                    Request a school workspace
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/school/workspace-status" className="text-cyan-300 hover:underline">
+                    Track registration status
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/pay/riverside-demo" className="text-cyan-300 hover:underline">
+                    Try Riverside demo checkout
+                  </Link>{" "}
+                  (term fees)
+                </li>
+                <li>
+                  Students use{" "}
+                  <Link href="/student/login" className="text-cyan-300 hover:underline">
+                    student sign-in
+                  </Link>
+                  , not this page.
+                </li>
+              </ul>
+            </div>
+          ) : null}
+
           <form
             onSubmit={onSubmit}
             className="space-y-5 rounded-2xl border border-white/[0.08] bg-[#0c1424]/95 p-8 shadow-xl shadow-black/50 backdrop-blur-sm"

@@ -3,7 +3,7 @@
  * from ordered lists (home switcher, headers, cross-links).
  */
 
-export type HubKey = "tuition" | "play" | "dex";
+export type HubKey = "tuition" | "play" | "dex" | "developers";
 
 export type HubDefinition = {
   id: HubKey;
@@ -70,14 +70,29 @@ export const HUBS: Record<HubKey, HubDefinition> = {
       p2p: "/dex/p2p",
     },
   },
+  developers: {
+    id: "developers",
+    label: "Developers Hub",
+    shortLabel: "Devs",
+    description: "Self-serve Partner API, OAuth apps, Dex write API, and OPGB integrator docs.",
+    homeQueryValue: "developers",
+    basePath: "/developers",
+    routes: {
+      dashboard: "/developers/dashboard",
+      register: "/developers/register",
+      help: "/help?hub=dex",
+      docs: "/help/integrate-odel-hub",
+    },
+  },
 };
 
 /** Stable order for tabs and marketing sections */
-export const HUB_ORDER: HubKey[] = ["tuition", "play", "dex"];
+export const HUB_ORDER: HubKey[] = ["tuition", "play", "dex", "developers"];
 
 export function homeHubFromSearchParam(value: string | null): HubKey {
   if (value === HUBS.play.homeQueryValue) return "play";
   if (value === HUBS.dex.homeQueryValue) return "dex";
+  if (value === HUBS.developers.homeQueryValue) return "developers";
   return "tuition";
 }
 

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { withPrismaRetry } from "@/lib/prisma-retry";
 import { excerptFromBody, tokenizeQuery } from "@/lib/knowledge-base/tokenize";
 import type { KnowledgeSearchHit, PlatformHub } from "@/lib/knowledge-base/types";
-import { hubToAudiences } from "@/lib/knowledge-base/types";
+import { prismaAudiencesForHub } from "@/lib/knowledge-base/audiences";
 
 function scoreArticle(
   tokens: string[],
@@ -37,7 +37,7 @@ export async function searchKnowledgeBaseRelaxed(opts: {
   limit?: number;
 }): Promise<KnowledgeSearchHit[]> {
   const tokens = tokenizeQuery(opts.query);
-  const audiences = hubToAudiences(opts.hub ?? "all");
+  const audiences = prismaAudiencesForHub(opts.hub ?? "all");
   const rows = await withPrismaRetry(() =>
     prisma.knowledgeArticle.findMany({
       where: { published: true, audience: { in: audiences } },
@@ -76,7 +76,7 @@ export async function searchKnowledgeBase(opts: {
   limit?: number;
 }): Promise<KnowledgeSearchHit[]> {
   const tokens = tokenizeQuery(opts.query);
-  const audiences = hubToAudiences(opts.hub ?? "all");
+  const audiences = prismaAudiencesForHub(opts.hub ?? "all");
   const rows = await withPrismaRetry(() =>
     prisma.knowledgeArticle.findMany({
       where: { published: true, audience: { in: audiences } },

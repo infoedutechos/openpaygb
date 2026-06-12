@@ -19,6 +19,7 @@ describe("knowledge-base tokenize", () => {
 describe("hubToAudiences", () => {
   it("includes all plus hub-specific audience", () => {
     expect(hubToAudiences("tuition")).toEqual(["all", "tuition"]);
+    expect(hubToAudiences("dex")).toContain("dex");
     expect(hubToAudiences("all")).toContain("play");
   });
 });

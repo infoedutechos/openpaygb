@@ -7,6 +7,10 @@ export const PARTNER_SCOPES = [
   "payments:create",
   "students:read",
   "organizations:read",
+  "dex:quote:read",
+  "dex:intent:create",
+  "dex:intent:write",
+  "opgb:balance:read",
 ] as const;
 
 export type PartnerScope = (typeof PARTNER_SCOPES)[number];

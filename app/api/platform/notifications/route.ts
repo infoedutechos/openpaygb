@@ -17,7 +17,7 @@ const MarkBody = z.object({
 
 function resolveHub(url: URL): PlatformHub {
   const q = url.searchParams.get("hub");
-  if (q === "tuition" || q === "play" || q === "admin" || q === "all") return q;
+  if (q === "tuition" || q === "play" || q === "admin" || q === "dex" || q === "all") return q;
   return "all";
 }
 

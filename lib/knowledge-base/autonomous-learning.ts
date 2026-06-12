@@ -21,7 +21,7 @@ export function slugFromLearningQuery(queryNorm: string): string {
 }
 
 function hubAudience(hub: PlatformHub): PlatformAudience {
-  if (hub === "tuition" || hub === "play" || hub === "admin") return hub;
+  if (hub === "tuition" || hub === "play" || hub === "admin" || hub === "dex") return hub;
   return "all";
 }
 
@@ -29,6 +29,7 @@ function hubCategory(hub: PlatformHub): string {
   if (hub === "admin") return "admin";
   if (hub === "play") return "play";
   if (hub === "tuition") return "tuition";
+  if (hub === "dex") return "dex";
   return "general";
 }
 

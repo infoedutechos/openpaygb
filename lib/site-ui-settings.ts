@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { isPrismaEngineEmptyError, isTransientMongoError, withPrismaRetry } from "@/lib/prisma-retry";
 import { copilotBubbleImageUrl } from "@/lib/copilot-bubble-image";
 import { platformLogoUrl } from "@/lib/platform-logo";
+import { resolveSocialLinkIconUrl } from "@/lib/social-link-brand-icon";
 import { parseSocialLinkIcons, socialLinkIconUrl } from "@/lib/social-link-icons";
 import {
   mergeSocialLinks,
@@ -54,7 +55,7 @@ function rowToSettings(row: SiteUiDbRow): SiteUiSettingsRow {
     return {
       ...link,
       hasCustomIcon: Boolean(icon),
-      iconUrl: socialLinkIconUrl(link.key, icon),
+      iconUrl: resolveSocialLinkIconUrl(link.key, socialLinkIconUrl(link.key, icon)),
     };
   });
   const logoAt = row.platformLogoUploadedAt ?? null;

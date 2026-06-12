@@ -6,6 +6,7 @@ export function platformHubFromPathname(pathname: string): PlatformHub {
   if (p.startsWith("/admin/master")) return "admin";
   if (p.startsWith("/admin") || p.startsWith("/school")) return "admin";
   if (p.startsWith("/clicker") || p.startsWith("/play")) return "play";
+  if (p.startsWith("/dex") || p.startsWith("/opgb") || p.startsWith("/developers")) return "dex";
   if (p.startsWith("/pay") || p.startsWith("/student") || p.startsWith("/receipt")) return "tuition";
   return "all";
 }

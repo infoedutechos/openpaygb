@@ -6,11 +6,12 @@ describe("ecosystem hubs", () => {
     expect(homeHubFromSearchParam("play")).toBe("play");
     expect(homeHubFromSearchParam("dex")).toBe("dex");
     expect(homeHubFromSearchParam("tuition")).toBe("tuition");
+    expect(homeHubFromSearchParam("developers")).toBe("developers");
     expect(homeHubFromSearchParam(null)).toBe("tuition");
   });
 
   it("keeps stable hub order for UI", () => {
-    expect(HUB_ORDER).toEqual(["tuition", "play", "dex"]);
+    expect(HUB_ORDER).toEqual(["tuition", "play", "dex", "developers"]);
   });
 
   it("builds home URLs", () => {

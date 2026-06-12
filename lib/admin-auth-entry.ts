@@ -27,9 +27,10 @@ export function adminLoginPathForMode(mode: AdminLoginMode): string {
 export const ADMIN_LOGIN_COPY = {
   school: {
     title: "School Admin Dashboard",
-    subtitle: "Sign in with the email and password your institution received from ODEL HUB.",
+    subtitle:
+      "Sign in with the admin email and password for your school workspace on OdelPay — Schools.",
     hint:
-      "After your school workspace is approved, the platform operator creates your account. Use those credentials here — not your student login.",
+      "Register a new school at /admin/register?segment=schools, confirm your email, then track approval at /school/workspace-status. When your workspace is active, admin credentials are emailed automatically (when that policy is on) or shared by the platform master. This sign-in is for school staff — not the student portal (/student/login).",
     submit: "Sign in to school dashboard",
   },
   master: {

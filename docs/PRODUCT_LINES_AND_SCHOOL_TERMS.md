@@ -102,6 +102,7 @@ University demo student **Nabiddo Rehema Mbuga** and ledger receipt payments rem
 
 ## Related docs
 
+- [FOOTER_AND_HEADER_NAV.md](./FOOTER_AND_HEADER_NAV.md) — header dropdowns and multi-column footer (Atlantis Pro reference)
 - [PAYMENT_SYSTEM_ARCHITECTURE.md](./PAYMENT_SYSTEM_ARCHITECTURE.md) — product-line architecture
 - [LOCAL_DEV_AND_CREDENTIALS.md](./LOCAL_DEV_AND_CREDENTIALS.md) — seed credentials and dev commands
 - [ORGANIZATION_REGISTRATION.md](./ORGANIZATION_REGISTRATION.md) — workspace lifecycle

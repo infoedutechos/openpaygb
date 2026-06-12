@@ -7,6 +7,9 @@ import PlayHubBottomNav from "@/components/hub/PlayHubBottomNav";
 import DexHubBottomNav from "@/components/hub/DexHubBottomNav";
 import { HUB_ORDER, homeHubFromSearchParam, homeUrlForHub, type HubKey } from "@/lib/ecosystem/hubs";
 
+/** Home bottom switcher — developers hub has its own lobby at /developers */
+const HOME_SHELL_HUBS = HUB_ORDER.filter((k) => k !== "developers");
+
 const HUB_TAB_CLASS = {
   tuition:
     "flex-1 rounded-lg py-2 text-[10px] font-bold uppercase tracking-wide transition-colors sm:text-xs " +
@@ -41,7 +44,7 @@ function HomeHubShellInner({ children }: { children: ReactNode }) {
         style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
       >
         <div className="flex gap-0.5 border-b border-white/10 bg-black/25 px-1.5 py-1.5 sm:gap-1 sm:px-2">
-          {HUB_ORDER.map((key) => (
+          {HOME_SHELL_HUBS.map((key) => (
             <button
               key={key}
               type="button"

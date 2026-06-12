@@ -28,6 +28,13 @@ const ACCENT: Record<
     btn: "bg-gradient-to-r from-violet-500 to-fuchsia-600 text-white hover:brightness-110",
     btnGhost: "border-violet-400/45 bg-violet-500/10 text-violet-50 hover:border-violet-300/55 hover:bg-violet-500/20",
   },
+  developers: {
+    border: "border-emerald-500/30",
+    bg: "bg-emerald-950/20",
+    title: "text-emerald-300/95",
+    btn: "bg-gradient-to-r from-emerald-500 to-teal-600 text-slate-950 hover:brightness-110",
+    btnGhost: "border-emerald-400/45 bg-emerald-500/10 text-emerald-50 hover:border-emerald-300/55 hover:bg-emerald-500/20",
+  },
 };
 
 export async function ProductLineLanding({

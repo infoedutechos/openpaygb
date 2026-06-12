@@ -2,13 +2,26 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { SiteHeaderNavDropdown } from "@/components/pay/SiteHeaderNavDropdown";
+import { SITE_HEADER_MENUS } from "@/lib/ecosystem/site-nav-menus";
 import { payProgrammesHref } from "@/lib/tuition-nav";
 
 export function SiteHeader() {
   const pathname = usePathname();
   const programmesHref = payProgrammesHref(pathname);
   const [studentSignedIn, setStudentSignedIn] = useState<boolean | null>(null);
+
+  const headerMenus = useMemo(
+    () =>
+      SITE_HEADER_MENUS.map((menu) => ({
+        ...menu,
+        items: menu.items.map((item) =>
+          item.label === "Programmes & fees" ? { ...item, href: programmesHref } : item,
+        ),
+      })),
+    [programmesHref],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -45,28 +58,13 @@ export function SiteHeader() {
             </span>
           </span>
         </Link>
-        <nav className="flex w-full flex-wrap items-center justify-end gap-1 sm:w-auto sm:justify-normal sm:gap-2">
-          <Link
-            href="/OdelPayUniversities"
-            className="rounded-lg px-2.5 py-2 text-xs font-semibold text-cyan-200/95 transition-colors hover:bg-cyan-500/10 sm:px-3 sm:text-sm"
-            title="Universities, polytechnics, tertiary"
-          >
-            OdelPay — Higher Institutions
-          </Link>
-          <Link
-            href="/OdelPaySchools"
-            className="rounded-lg px-2.5 py-2 text-xs font-semibold text-sky-200/95 transition-colors hover:bg-sky-500/10 sm:px-3 sm:text-sm"
-            title="Primary and secondary schools"
-          >
-            OdelPay — Schools
-          </Link>
-          <Link
-            href="/opgb"
-            className="rounded-lg px-2.5 py-2 text-xs font-semibold text-violet-200/95 transition-colors hover:bg-violet-500/10 sm:px-3 sm:text-sm"
-            title="OpenPayGB global payments"
-          >
-            OPGB
-          </Link>
+        <nav
+          className="flex w-full flex-wrap items-center justify-end gap-1 sm:w-auto sm:justify-normal sm:gap-2"
+          aria-label="Main"
+        >
+          {headerMenus.map((menu) => (
+            <SiteHeaderNavDropdown key={menu.id} menu={menu} />
+          ))}
           <Link
             href="/pay"
             className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white"
@@ -80,12 +78,6 @@ export function SiteHeader() {
             title="Self-register your school on our platform"
           >
             Register school
-          </Link>
-          <Link
-            href={programmesHref}
-            className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white"
-          >
-            Programmes
           </Link>
           {studentSignedIn ? (
             <Link

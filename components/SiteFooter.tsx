@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { choiceCompactNav, choiceCompactNavAmber } from "@/components/choice-cards";
-import { SocialLinksRow } from "@/components/SocialLinksRow";
+import { CommunityLiveFeed } from "@/components/footer/CommunityLiveFeed";
 import { ShareButton } from "@/components/ShareButton";
+import { SocialLinksRow } from "@/components/SocialLinksRow";
+import { SITE_FOOTER_COLUMNS } from "@/lib/ecosystem/site-nav-menus";
 import { linksForFooter, type PublicSiteUiSettings } from "@/lib/site-ui-shared";
 
 const DEFAULT_BLURB =
-  "TON Pay connects fee schedules in UGX with on-chain settlement, receipts, and admin tools for schools on the tuition waiver programme.";
+  "ODEL HUB connects programme fees in UGX with TON and mobile-money settlement — OdelPay for institutions and schools, OpenPayGB for global wallet and Dex flows.";
 
 type Props = {
   settings: PublicSiteUiSettings;
@@ -15,9 +16,30 @@ type Props = {
   bottomNavClearance?: boolean;
 };
 
+function FooterColumn({ heading, links }: { heading: string; links: { label: string; href: string }[] }) {
+  return (
+    <div className="min-w-0">
+      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">{heading}</h3>
+      <ul className="mt-3 space-y-2">
+        {links.map((link) => (
+          <li key={`${heading}-${link.href}-${link.label}`}>
+            <Link
+              href={link.href}
+              className="text-sm text-slate-400 transition-colors hover:text-cyan-200/90"
+            >
+              {link.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function SiteFooter({ settings, bottomNavClearance }: Props) {
   const blurb = settings.footerIntro.trim() || DEFAULT_BLURB;
   const footerLinks = linksForFooter(settings.socialLinks);
+  const showCommunity = footerLinks.length > 0 || settings.shareEnabled;
 
   return (
     <footer
@@ -26,56 +48,48 @@ export function SiteFooter({ settings, bottomNavClearance }: Props) {
       }`}
     >
       <div className="mx-auto max-w-6xl px-4 py-10">
-        <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
-          <div className="max-w-md space-y-4">
-            <p className="text-base font-semibold tracking-tight text-white">ODEL HUB</p>
+        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-7 lg:gap-8">
+          <div className="space-y-4 lg:col-span-2">
+            <p className="text-lg font-semibold tracking-tight text-white">ODEL HUB</p>
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-400">{blurb}</p>
-            {footerLinks.length > 0 ? (
-              <div className="space-y-2">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Community</p>
-                <SocialLinksRow links={footerLinks} size="sm" />
+
+            {showCommunity ? (
+              <div className="rounded-xl border border-cyan-400/30 bg-gradient-to-br from-cyan-500/10 to-violet-500/5 p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-300">
+                  Be part of our community
+                </p>
+                {footerLinks.length > 0 ? (
+                  <SocialLinksRow
+                    links={footerLinks}
+                    variant="community"
+                    className="mt-4"
+                  />
+                ) : (
+                  <p className="mt-3 text-xs text-slate-400">
+                    Community links are configured in Master Admin → Site UI.
+                  </p>
+                )}
+                <CommunityLiveFeed className="mt-4" />
+                {settings.shareEnabled ? (
+                  <div className="mt-4">
+                    <ShareButton variant="primary" label="Share ODEL HUB" />
+                  </div>
+                ) : null}
               </div>
             ) : null}
-            {settings.shareEnabled ? (
-              <ShareButton variant="compact" label="Share ODEL HUB" />
-            ) : null}
           </div>
-          {settings.footerShowQuickLinks ? (
-            <nav className="flex flex-wrap items-center gap-2 sm:gap-3" aria-label="Footer">
-              <Link href="/" className={choiceCompactNav}>
-                Home
-              </Link>
-              <Link href="/pay" className={choiceCompactNav}>
-                Pay tuition
-              </Link>
-              <Link href="/help" className={choiceCompactNav}>
-                Help center
-              </Link>
-              <Link href="/student/login" className={choiceCompactNav}>
-                Student sign in
-              </Link>
-              <Link href="/admin/register" className={choiceCompactNav} title="Self-register on our platform">
-                Request school workspace
-              </Link>
-              <Link href="/school/workspace-status" className={choiceCompactNav} title="Track school workspace registration">
-                Workspace status
-              </Link>
-              <Link href="/school/login" className={choiceCompactNav}>
-                School admin
-              </Link>
-              <Link href="/admin/login?master=1" className={choiceCompactNavAmber}>
-                Master console
-              </Link>
-            </nav>
-          ) : null}
+
+          {settings.footerShowQuickLinks
+            ? SITE_FOOTER_COLUMNS.map((col) => <FooterColumn key={col.heading} heading={col.heading} links={col.links} />)
+            : null}
         </div>
+
         {settings.footerCopyrightVisible ? (
-          <div className="mt-8 border-t border-[var(--border)] pt-6 text-xs text-slate-500">
+          <div className="mt-10 border-t border-[var(--border)] pt-6 text-xs text-slate-500">
             <p>
               © {new Date().getFullYear()} ODEL HUB · Tuition waiver programme ·{" "}
-              <span className="text-slate-600">Health: </span>
-              <Link href="/api/health" className={`${choiceCompactNav} text-xs text-slate-400`}>
-                API health
+              <Link href="/" className="text-slate-400 hover:text-cyan-300 hover:underline">
+                Home
               </Link>
             </p>
           </div>

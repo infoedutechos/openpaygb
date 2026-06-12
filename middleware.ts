@@ -8,6 +8,7 @@ import { PUBLIC_SCHOOL_LOGIN_PATH, PLATFORM_MASTER_LOGIN_PATH } from "@/lib/admi
 import { verifyPayAdminJwt } from "@/lib/admin-jwt-verify";
 import { verifyStudentJwt } from "@/lib/student-jwt-verify";
 import { verifyAdminSessionTokenEdge } from "@/lib/admin-session-edge";
+import { DEVELOPER_SESSION_COOKIE, verifyDeveloperSession } from "@/lib/developer-session";
 
 const PAY_ADMIN_COOKIE = "odelhub_admin";
 const URA_ADMIN_SESSION = "admin_session";
@@ -121,6 +122,18 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
+  if (pathname === "/developers/dashboard" || pathname.startsWith("/developers/dashboard/")) {
+    const devTok = req.cookies.get(DEVELOPER_SESSION_COOKIE)?.value;
+    if (!devTok || !(await verifyDeveloperSession(devTok))) {
+      const login = new URL("/developers/register", req.url);
+      login.searchParams.set("next", pathname + req.nextUrl.search);
+      const res = NextResponse.redirect(login);
+      res.cookies.delete(DEVELOPER_SESSION_COOKIE);
+      return res;
+    }
+    return NextResponse.next({ request: { headers: requestHeaders } });
+  }
+
   if (!pathname.startsWith("/admin")) {
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
@@ -159,5 +172,7 @@ export const config = {
     "/student/:path*",
     "/my",
     "/my/:path*",
+    "/developers/dashboard",
+    "/developers/dashboard/:path*",
   ],
 };

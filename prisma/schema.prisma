@@ -78,6 +78,7 @@ enum PlatformAudience {
   tuition
   play
   admin
+  dex
 }
 
 model Organization {
@@ -136,6 +137,7 @@ model Organization {
   adminUsers                 AdminUser[]
   partnerApiKeys             PartnerApiKey[]
   partnerWebhookEndpoints    PartnerWebhookEndpoint[]
+  developerApps              DeveloperApp[]
   mobileMoneyProviders       MobileMoneyProvider[]
   workspaceVerifyToken     OrganizationWorkspaceVerifyToken?
   paymentRequests            PaymentRequest[]
@@ -203,6 +205,8 @@ model PartnerApiKey {
   keyHash        String        @unique
   organizationId String?       @db.ObjectId
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  developerAppId String?       @db.ObjectId
+  developerApp   DeveloperApp? @relation(fields: [developerAppId], references: [id], onDelete: SetNull)
   scopes         String[]      @default(["payments:read"])
   enabled        Boolean       @default(true)
   lastUsedAt     DateTime?
@@ -210,6 +214,7 @@ model PartnerApiKey {
   updatedAt      DateTime      @updatedAt
 
   @@index([organizationId])
+  @@index([developerAppId])
   @@index([keyPrefix])
   @@map("partner_api_keys")
 }
@@ -222,12 +227,15 @@ model PartnerWebhookEndpoint {
   secret         String
   organizationId String?       @db.ObjectId
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  developerAppId String?       @db.ObjectId
+  developerApp   DeveloperApp? @relation(fields: [developerAppId], references: [id], onDelete: SetNull)
   events         String[]      @default(["payment.confirmed"])
   enabled        Boolean       @default(true)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
   @@index([organizationId, enabled])
+  @@index([developerAppId, enabled])
   @@map("partner_webhook_endpoints")
 }
 
@@ -243,6 +251,75 @@ model PartnerWebhookDelivery {
 
   @@index([endpointId, createdAt])
   @@map("partner_webhook_deliveries")
+}
+
+/** Self-serve OAuth app registry for third-party OPGB / Dex integrators. */
+model DeveloperApp {
+  id               String                   @id @default(auto()) @map("_id") @db.ObjectId
+  name             String
+  slug             String                   @unique
+  contactEmail     String
+  clientId         String                   @unique
+  clientSecretHash String
+  redirectUris     String[]                 @default([])
+  brandingName     String                   @default("")
+  brandingLogoUrl  String                   @default("")
+  scopes           String[]                 @default(["dex:quote:read", "opgb:balance:read", "payments:read"])
+  enabled          Boolean                  @default(true)
+  organizationId   String?                  @db.ObjectId
+  organization     Organization?            @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  apiKeys          PartnerApiKey[]
+  webhooks         PartnerWebhookEndpoint[]
+  oauthCodes       OAuthAuthorizationCode[]
+  dexIntents       DexPaymentIntent[]
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+
+  @@index([contactEmail])
+  @@index([organizationId])
+  @@map("developer_apps")
+}
+
+/** OAuth 2.0 authorization codes (authorization_code grant). */
+model OAuthAuthorizationCode {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  developerAppId String       @db.ObjectId
+  developerApp   DeveloperApp @relation(fields: [developerAppId], references: [id], onDelete: Cascade)
+  code           String       @unique
+  redirectUri    String
+  scopes         String[]     @default([])
+  state          String       @default("")
+  expiresAt      DateTime
+  usedAt         DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@index([developerAppId, expiresAt])
+  @@map("oauth_authorization_codes")
+}
+
+/** Partner Dex payment intent (buy / sell / convert) created via write API. */
+model DexPaymentIntent {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  developerAppId String       @db.ObjectId
+  developerApp   DeveloperApp @relation(fields: [developerAppId], references: [id], onDelete: Cascade)
+  apiKeyId       String?      @db.ObjectId
+  /** buy | sell | convert */
+  type           String
+  /** pending | completed | cancelled | expired */
+  status         String       @default("pending")
+  crypto         String
+  fiatAmountUgx  Int?
+  cryptoAmount   Float?
+  quoteJson      String       @default("{}")
+  studentId      String?      @db.ObjectId
+  redirectUrl    String       @default("")
+  expiresAt      DateTime
+  completedAt    DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@index([developerAppId, status, createdAt])
+  @@index([status, expiresAt])
+  @@map("dex_payment_intents")
 }
 
 model AdminUser {

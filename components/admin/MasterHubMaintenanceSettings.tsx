@@ -13,6 +13,7 @@ const BUTTON_LABEL: Record<HubKey, string> = {
   tuition: "Tuition is Under Maintenance",
   play: "Play is Under Maintenance",
   dex: "Dex is Under Maintenance",
+  developers: "Developers is Under Maintenance",
 };
 
 export function MasterHubMaintenanceSettings() {

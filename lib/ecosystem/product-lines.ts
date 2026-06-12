@@ -3,7 +3,7 @@
  * Shown independently on the home lobby — not merged into a single "Tuition Hub" card.
  */
 
-export type ProductLineId = "odelpay_higher" | "odelpay_schools" | "openpaygb";
+export type ProductLineId = "odelpay_higher" | "odelpay_schools" | "openpaygb" | "developers";
 
 export type ProductLine = {
   id: ProductLineId;
@@ -15,7 +15,7 @@ export type ProductLine = {
   primaryLabel: string;
   secondaryHref?: string;
   secondaryLabel?: string;
-  accent: "cyan" | "sky" | "violet";
+    accent: "cyan" | "sky" | "violet" | "emerald";
 };
 
 export const PRODUCT_LINES: ProductLine[] = [
@@ -58,9 +58,27 @@ export const PRODUCT_LINES: ProductLine[] = [
     secondaryLabel: "Student wallet",
     accent: "violet",
   },
+  {
+    id: "developers",
+    title: "ODEL HUB Developers",
+    subtitle: "Partner & OPGB integrators",
+    description:
+      "Self-serve app registry, Partner API keys, Dex payment intents, OPGB balance reads, OAuth client credentials, and webhook endpoints for third-party branded apps.",
+    audience: "SIS vendors, fintech partners, OPGB app builders",
+    primaryHref: "/developers",
+    primaryLabel: "Developer dashboard",
+    secondaryHref: "/help?hub=dex",
+    secondaryLabel: "Integration FAQ",
+    accent: "emerald",
+  },
 ];
 
-export const PRODUCT_LINE_ORDER: ProductLineId[] = ["odelpay_higher", "odelpay_schools", "openpaygb"];
+export const PRODUCT_LINE_ORDER: ProductLineId[] = [
+  "odelpay_higher",
+  "odelpay_schools",
+  "openpaygb",
+  "developers",
+];
 
 export function productLineById(id: ProductLineId): ProductLine | undefined {
   return PRODUCT_LINES.find((p) => p.id === id);

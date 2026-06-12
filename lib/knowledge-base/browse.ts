@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { withPrismaRetry } from "@/lib/prisma-retry";
 import { excerptFromBody } from "@/lib/knowledge-base/tokenize";
 import type { PlatformHub } from "@/lib/knowledge-base/types";
-import { hubToAudiences } from "@/lib/knowledge-base/types";
+import { prismaAudiencesForHub } from "@/lib/knowledge-base/audiences";
 
 export type KnowledgeBrowseCard = {
   slug: string;
@@ -26,7 +26,7 @@ export async function listPublishedKnowledgeArticles(opts?: {
   category?: string;
   limit?: number;
 }): Promise<KnowledgeBrowseCard[]> {
-  const audiences = hubToAudiences(opts?.hub ?? "all");
+  const audiences = prismaAudiencesForHub(opts?.hub ?? "all");
   const rows = await withPrismaRetry(() =>
     prisma.knowledgeArticle.findMany({
       where: {

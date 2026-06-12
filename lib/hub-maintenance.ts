@@ -11,6 +11,7 @@ const DEFAULT_STATE: HubMaintenanceState = {
   tuition: false,
   play: false,
   dex: false,
+  developers: false,
 };
 
 function rowToState(row: {
@@ -23,6 +24,7 @@ function rowToState(row: {
     tuition: row.tuitionHubMaintenance === true,
     play: row.playHubMaintenance === true,
     dex: row.dexHubMaintenance === true,
+    developers: false,
   };
 }
 

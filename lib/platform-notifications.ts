@@ -2,7 +2,7 @@ import type { PlatformAudience } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { withPrismaDeadline, withPrismaRetry } from "@/lib/prisma-retry";
 import type { PlatformHub } from "@/lib/knowledge-base/types";
-import { hubToAudiences } from "@/lib/knowledge-base/types";
+import { prismaAudiencesForHub } from "@/lib/knowledge-base/audiences";
 
 export type PlatformNotificationRow = {
   id: string;
@@ -22,7 +22,7 @@ export async function listPlatformNotifications(opts: {
   readerKey: string;
   limit?: number;
 }): Promise<PlatformNotificationRow[]> {
-  const audiences = hubToAudiences(opts.hub ?? "all");
+  const audiences = prismaAudiencesForHub(opts.hub ?? "all");
   const pollRetry = { attempts: 1, baseDelayMs: 100 };
   const pollDeadlineMs = 6_000;
   const rows = await withPrismaDeadline(

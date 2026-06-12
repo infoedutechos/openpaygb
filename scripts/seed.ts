@@ -131,6 +131,30 @@ async function main() {
     },
   });
 
+  const schoolAdminHash = await bcrypt.hash(SEED_ADMIN_PASSWORD, 10);
+  await prisma.adminUser.create({
+    data: {
+      email: "school.admin@odelhub.local",
+      passwordHash: schoolAdminHash,
+      name: "Riverside School Admin",
+      role: "org_admin",
+      organizationId: schoolOrg.id,
+    },
+  });
+
+  const schoolStudentHash = await bcrypt.hash(SEED_STUDENT_PASSWORD, 10);
+  await prisma.student.create({
+    data: {
+      organizationId: schoolOrg.id,
+      name: "Amina Okello (demo)",
+      email: "school.student@odelhub.local",
+      programmeCode: "P7-STREAM",
+      year: 1,
+      semester: 1,
+      portalPasswordHash: schoolStudentHash,
+    },
+  });
+
   const schoolProg = await prisma.programme.create({
     data: {
       organizationId: schoolOrg.id,
@@ -265,6 +289,8 @@ async function main() {
   // eslint-disable-next-line no-console
   console.log("  Public pay URL: /pay/default");
   console.log("  School demo (term fees): /pay/riverside-demo  |  OdelPay Schools: /OdelPaySchools");
+  console.log("  School admin: school.admin@odelhub.local /", SEED_ADMIN_PASSWORD, "(riverside-demo)");
+  console.log("  School student: school.student@odelhub.local /", SEED_STUDENT_PASSWORD, "(riverside-demo)");
   // eslint-disable-next-line no-console
   console.log("  Student portal: /student/login  →  slug: default  email:", SEED_STUDENT_EMAIL, " password:", SEED_STUDENT_PASSWORD);
   // eslint-disable-next-line no-console

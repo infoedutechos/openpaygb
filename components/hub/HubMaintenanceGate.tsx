@@ -7,6 +7,7 @@ const HUB_ACCENT: Record<HubKey, string> = {
   tuition: "cyan",
   play: "sky",
   dex: "violet",
+  developers: "emerald",
 };
 
 export async function HubMaintenanceGate({

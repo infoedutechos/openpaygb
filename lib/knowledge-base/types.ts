@@ -19,9 +19,10 @@ export type KnowledgeSearchHit = KnowledgeArticleRecord & {
   excerpt: string;
 };
 
-export type PlatformHub = "all" | "tuition" | "play" | "admin";
+export type PlatformHub = "all" | "tuition" | "play" | "admin" | "dex";
 
 export function hubToAudiences(hub: PlatformHub): PlatformAudience[] {
-  if (hub === "all") return ["all", "tuition", "play", "admin"];
+  if (hub === "all") return ["all", "tuition", "play", "admin", "dex"];
+  if (hub === "dex") return ["all", "dex", "tuition"];
   return ["all", hub];
 }
