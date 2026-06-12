@@ -12,7 +12,6 @@ const HIDE_HEADER_PREFIXES = [
   "/student",
   "/my",
   "/clicker",
-  "/dex",
 ] as const;
 
 function hidesGlobalHeader(pathname: string): boolean {

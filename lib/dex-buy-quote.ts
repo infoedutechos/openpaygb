@@ -28,19 +28,20 @@ export async function quoteDexBuy(crypto: DexBuyCrypto, fiatAmountUgx: number): 
   if (!Number.isFinite(fiatAmountUgx) || fiatAmountUgx <= 0) return null;
 
   const fx = await getOpgbFxSnapshot();
-  const feeUgx = Math.ceil((fiatAmountUgx * DEX_BUY_FEE_BPS) / 10_000);
-  const netUgx = Math.max(0, fiatAmountUgx - feeUgx);
+  const fiatAmount = Math.round(fiatAmountUgx);
+  const feeUgx = Math.ceil((fiatAmount * DEX_BUY_FEE_BPS) / 10_000);
+  const totalFiatUgx = fiatAmount + feeUgx;
   const cryptoKey = crypto.toLowerCase() as "ton" | "usdt" | "btc" | "eth";
-  const cryptoAmount = ugxToCryptoAmount(cryptoKey, netUgx, fx);
+  const cryptoAmount = ugxToCryptoAmount(cryptoKey, fiatAmount, fx);
 
   return {
     crypto,
     fiatCurrency: "UGX",
-    fiatAmount: Math.round(fiatAmountUgx),
+    fiatAmount,
     feeUgx,
-    totalFiatUgx: Math.round(fiatAmountUgx),
+    totalFiatUgx,
     cryptoAmount,
-    opgbSettlementMinor: ugxToOpgbMinor(netUgx),
+    opgbSettlementMinor: ugxToOpgbMinor(totalFiatUgx),
     ugxPerTon: fx.ugxPerTon,
     source: fx.source,
     fetchedAt: fx.fetchedAt,
