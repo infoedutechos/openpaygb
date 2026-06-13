@@ -64,17 +64,17 @@ export function SiteHeaderNavDropdown({ menu }: { menu: SiteNavMenu }) {
         <div
           id={listId}
           role="menu"
-          className={`absolute right-0 z-50 mt-1.5 w-[min(18rem,calc(100vw-2rem))] rounded-xl border bg-[#0d1526]/98 p-1.5 shadow-xl shadow-black/40 backdrop-blur-md ${ACCENT_PANEL[menu.accent]}`}
+          className={`absolute right-0 z-50 mt-1.5 flex w-[min(18rem,calc(100vw-2rem))] max-h-[min(70vh,24rem)] flex-col overflow-hidden rounded-xl border bg-[#0d1526]/98 p-1.5 shadow-xl shadow-black/40 backdrop-blur-md ${ACCENT_PANEL[menu.accent]}`}
         >
           <Link
             href={menu.href}
             role="menuitem"
             onClick={() => setOpen(false)}
-            className="block rounded-lg px-3 py-2 text-sm font-semibold text-white hover:bg-white/5"
+            className="shrink-0 rounded-lg px-3 py-2 text-sm font-semibold text-white hover:bg-white/5"
           >
             Open {menu.label}
           </Link>
-          <ul className="mt-1 border-t border-white/10 pt-1">
+          <ul className="mt-1 min-h-0 flex-1 overflow-y-auto overscroll-contain border-t border-white/10 pt-1 [-webkit-overflow-scrolling:touch]">
             {menu.items.map((item) => (
               <li key={`${menu.id}-${item.href}-${item.label}`}>
                 <Link
