@@ -764,7 +764,7 @@ model StudentSignupToken {
 model SiteUiSettings {
   id               String   @id @default(auto()) @map("_id") @db.ObjectId
   key              String   @unique @default("platform")
-  /** everywhere | hidden_on_list | only_on_list */
+  /** everywhere | off | hidden_on_list | only_on_list */
   footerMode       String   @default("everywhere")
   /** Path prefixes (e.g. /pay/ , /admin/login) matched against the request path. */
   footerPathList   String[] @default([])

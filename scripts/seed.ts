@@ -288,11 +288,13 @@ async function main() {
   console.log("  Master:", SEED_MASTER_EMAIL, "/", SEED_MASTER_PASSWORD);
   // eslint-disable-next-line no-console
   console.log("  Public pay URL: /pay/default");
-  console.log("  School demo (term fees): /pay/riverside-demo  |  OdelPay Schools: /OdelPaySchools");
-  console.log("  School admin: school.admin@odelhub.local /", SEED_ADMIN_PASSWORD, "(riverside-demo)");
-  console.log("  School student: school.student@odelhub.local /", SEED_STUDENT_PASSWORD, "(riverside-demo)");
-  // eslint-disable-next-line no-console
-  console.log("  Student portal: /student/login  →  slug: default  email:", SEED_STUDENT_EMAIL, " password:", SEED_STUDENT_PASSWORD);
+  console.log("");
+  console.log("  Local seed quick reference:");
+  console.log("    School checkout: /pay/riverside-demo");
+  console.log("    School admin: school.admin@odelhub.local /", SEED_ADMIN_PASSWORD, "→ /admin/login?school=1");
+  console.log("    School student: school.student@odelhub.local /", SEED_STUDENT_PASSWORD, "→ /student/login (slug riverside-demo)");
+  console.log("    University student:", SEED_STUDENT_EMAIL, "/", SEED_STUDENT_PASSWORD, "→ /student/login (slug default)");
+  console.log("  OdelPay Schools lobby: /OdelPaySchools");
   // eslint-disable-next-line no-console
   console.log("  Student dashboard after sign-in: /student  or  /my/dashboard");
   if (demoReceiptPath) {

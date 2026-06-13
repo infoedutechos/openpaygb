@@ -10,7 +10,7 @@ export function defaultSocialLinkIconUrl(key: string): string | null {
   if (key === "facebook") return notificationSocialIconUrl("facebook");
   if (key === "instagram") return notificationSocialIconUrl("instagram");
   if (key === "linkedin") return notificationSocialIconUrl("linkedin");
-  if (key === "website") return notificationSocialIconUrl("google");
+  if (key === "website") return notificationSocialIconUrl("website");
   if (key === "discord") return notificationSocialIconUrl("github");
   return null;
 }

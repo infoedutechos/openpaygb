@@ -17,6 +17,19 @@ Open **http://localhost:3000** after the terminal shows **Ready**.
 
 Seed wipes tuition data and recreates the **default** (university) tenant, a **school** demo tenant, programmes, and demo users. Full product-line and term-fee detail: **[PRODUCT_LINES_AND_SCHOOL_TERMS.md](./PRODUCT_LINES_AND_SCHOOL_TERMS.md)**.
 
+### Local seed quick reference
+
+After **`npm run seed`**:
+
+| What | Where |
+|------|--------|
+| School checkout | `/pay/riverside-demo` |
+| School admin | `school.admin@odelhub.local` → `/admin/login?school=1` |
+| School student | `school.student@odelhub.local` → `/student/login` (slug `riverside-demo`) |
+| University student | `student@odelhub.local` → `/student/login` (slug `default`) |
+
+Default passwords: `SEED_ADMIN_PASSWORD` (`ChangeMe_Admin123!`) for school admin; `SEED_STUDENT_PASSWORD` (`ChangeMe_Student123!`) for both students. Override via `.env.local`.
+
 ### Standalone product lobbies (after seed)
 
 | Lobby | URL |

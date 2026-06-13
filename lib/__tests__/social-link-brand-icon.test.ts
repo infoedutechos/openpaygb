@@ -6,6 +6,8 @@ describe("social-link-brand-icon", () => {
     expect(defaultSocialLinkIconUrl("telegram_group")).toContain("telegram");
     expect(defaultSocialLinkIconUrl("twitter")).toContain("id=x");
     expect(defaultSocialLinkIconUrl("facebook")).toContain("facebook");
+    expect(defaultSocialLinkIconUrl("website")).toContain("id=website");
+    expect(defaultSocialLinkIconUrl("website")).not.toContain("google");
   });
 
   it("prefers custom icon URL when provided", () => {

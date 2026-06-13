@@ -14,6 +14,7 @@ function iconFallbackText(key: string): string {
   if (key === "instagram") return "IG";
   if (key === "linkedin") return "in";
   if (key === "discord") return "DC";
+  if (key === "website") return "Web";
   return "↗";
 }
 

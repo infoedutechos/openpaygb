@@ -478,7 +478,10 @@ export function MasterPlatformSocialSettings() {
         <div className="space-y-4 rounded-lg border border-sky-500/20 bg-sky-950/20 p-4">
           <h3 className="text-sm font-semibold text-sky-100">Site footer</h3>
           <p className="text-xs text-slate-500">
-            Controls the marketing footer blurb, quick links, copyright line, and which routes show the footer.
+            Controls the marketing footer blurb, quick links, copyright line, and which routes show the footer. Set{" "}
+            <strong className="text-slate-400">Visibility mode</strong> to <em>Hide footer site-wide (off)</em> for a
+            global off switch. Per-platform <strong className="text-slate-400">Footer</strong> checkboxes control
+            community icons only.
           </p>
           <div>
             <label className="text-[11px] font-medium text-slate-500">Intro blurb</label>
@@ -504,6 +507,7 @@ export function MasterPlatformSocialSettings() {
               className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white sm:max-w-md"
             >
               <option value="everywhere">Show on all pages</option>
+              <option value="off">Hide footer site-wide (off)</option>
               <option value="hidden_on_list">Hide on listed paths only</option>
               <option value="only_on_list">Show only on listed paths</option>
             </select>

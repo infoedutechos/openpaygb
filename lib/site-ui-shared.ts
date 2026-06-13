@@ -187,6 +187,7 @@ export function mergeSocialLinks(stored: SocialLink[]): SocialLink[] {
 
 export function footerVisibleForPath(settings: PublicSiteUiSettings, pathname: string): boolean {
   const mode = settings.footerMode?.trim() || "everywhere";
+  if (mode === "off") return false;
   const list = settings.footerPathList ?? [];
   const matches = list.some((prefix) => {
     const p = prefix.trim();
@@ -206,7 +207,7 @@ export function linksForSupport(links: SocialLink[]): SocialLink[] {
   return links.filter((l) => l.enabled && l.url.trim() && l.showInSupport);
 }
 
-const FOOTER_MODES = ["everywhere", "hidden_on_list", "only_on_list"] as const;
+const FOOTER_MODES = ["everywhere", "off", "hidden_on_list", "only_on_list"] as const;
 
 export const MasterSiteUiPatchSchema = z.object({
   socialLinks: z.array(SocialLinkSchema).max(40),
