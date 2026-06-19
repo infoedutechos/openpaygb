@@ -128,7 +128,52 @@ async function main() {
       tenantStatus: OrganizationTenantStatus.active,
       institutionTier: InstitutionTier.school,
       checkoutPlatformFeeUgx: platformFeeUgx,
+      currentAcademicYearLabel: "2025/2026",
     },
+  });
+
+  const schoolClassP7 = await prisma.schoolClass.create({
+    data: {
+      organizationId: schoolOrg.id,
+      code: "P7",
+      name: "Primary Seven",
+      levelKind: "primary",
+      sortOrder: 70,
+    },
+  });
+
+  const schoolStreamMain = await prisma.schoolStream.create({
+    data: {
+      organizationId: schoolOrg.id,
+      schoolClassId: schoolClassP7.id,
+      code: "STREAM",
+      name: "Main stream",
+      sortOrder: 10,
+    },
+  });
+
+  const schoolProg = await prisma.programme.create({
+    data: {
+      organizationId: schoolOrg.id,
+      code: "P7-STREAM",
+      name: "Primary Seven · Main stream",
+      track: ProgrammeTrack.regular,
+      semestersPerYear: 3,
+      schoolClassId: schoolClassP7.id,
+      schoolStreamId: schoolStreamMain.id,
+    },
+  });
+
+  await prisma.programmeFee.createMany({
+    data: [1, 2, 3].map((term) => ({
+      programmeId: schoolProg.id,
+      year: 1,
+      semester: term,
+      recurrence: ProgrammeFeeRecurrence.per_semester,
+      feeKey: "tuition",
+      tuitionUgx: 350_000,
+      functionalFeesUgx: 45_000,
+    })),
   });
 
   const schoolAdminHash = await bcrypt.hash(SEED_ADMIN_PASSWORD, 10);
@@ -149,32 +194,12 @@ async function main() {
       name: "Amina Okello (demo)",
       email: "school.student@odelhub.local",
       programmeCode: "P7-STREAM",
+      schoolClassId: schoolClassP7.id,
+      schoolStreamId: schoolStreamMain.id,
       year: 1,
       semester: 1,
       portalPasswordHash: schoolStudentHash,
     },
-  });
-
-  const schoolProg = await prisma.programme.create({
-    data: {
-      organizationId: schoolOrg.id,
-      code: "P7-STREAM",
-      name: "Primary Seven",
-      track: ProgrammeTrack.regular,
-      semestersPerYear: 3,
-    },
-  });
-
-  await prisma.programmeFee.createMany({
-    data: [1, 2, 3].map((term) => ({
-      programmeId: schoolProg.id,
-      year: 1,
-      semester: term,
-      recurrence: ProgrammeFeeRecurrence.per_semester,
-      feeKey: "tuition",
-      tuitionUgx: 350_000,
-      functionalFeesUgx: 45_000,
-    })),
   });
 
   const hash = await bcrypt.hash(SEED_ADMIN_PASSWORD, 10);

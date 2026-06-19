@@ -16,11 +16,12 @@ import { WelcomeBackStrip } from "@/components/profile/WelcomeBackStrip";
 import { adminRoleToProfileRole } from "@/lib/profile-mappers";
 import { DEX_SIDEBAR_NAV, pathnameIsDexHub } from "@/lib/dex-nav";
 
-const SEGMENTS: { suffix: string; label: string }[] = [
+const SEGMENTS: { suffix: string; label: string; schoolOnly?: boolean }[] = [
   { suffix: "", label: "Dashboard" },
   { suffix: "/profile", label: "Profile" },
   { suffix: "/tuition-balance", label: "Tuition balance" },
   { suffix: "/students", label: "Students" },
+  { suffix: "/school-structure", label: "Classes & streams", schoolOnly: true },
   { suffix: "/payments", label: "Payments" },
   { suffix: "/payment-requests", label: "Payment requests" },
   { suffix: "/virtual-cards", label: "Virtual cards" },
@@ -43,18 +44,22 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { hrefWithOrgSlug } = useMasterOrgSlug();
-  const base = pathname.startsWith("/school-admin") ? "/school-admin" : "/admin";
-  const navItems = useMemo(
-    () => [
-      ...SEGMENTS.map((s) => ({ href: hrefWithOrgSlug(`${base}${s.suffix}`), label: s.label })),
-      DEX_SIDEBAR_NAV,
-    ],
-    [base, hrefWithOrgSlug]
-  );
   const { data: authMe } = useAuthMe();
+  const base = pathname.startsWith("/school-admin") ? "/school-admin" : "/admin";
   const isMaster = authMe?.admin?.role === "master";
   const schoolName = authMe?.admin?.organization?.name?.trim() || null;
   const isSchoolAdmin = authMe?.admin?.role === "org_admin" && Boolean(schoolName);
+  const isSchoolTenant = authMe?.admin?.organization?.institutionTier === "school";
+  const navItems = useMemo(
+    () => [
+      ...SEGMENTS.filter((s) => !s.schoolOnly || isSchoolTenant).map((s) => ({
+        href: hrefWithOrgSlug(`${base}${s.suffix}`),
+        label: s.label,
+      })),
+      DEX_SIDEBAR_NAV,
+    ],
+    [base, hrefWithOrgSlug, isSchoolTenant],
+  );
   const tenantLabel = !authMe?.admin
     ? authMe?.adminShellAccess
       ? "Tuition sign-in pending"

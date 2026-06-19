@@ -7,6 +7,8 @@ import { getDefaultOrganizationId } from "@/lib/default-organization";
 import { organizationWhereForSession } from "@/lib/admin-org-scope";
 import { prisma } from "@/lib/prisma";
 import { buildStudentProgrammeProgress } from "@/lib/tuition-progress";
+import { resolveStudentEnrollmentFromClassStream } from "@/lib/school-structure-server";
+import { isValidObjectId } from "@/lib/object-id";
 
 const CreateBody = z
   .object({
@@ -14,7 +16,9 @@ const CreateBody = z
     email: z.string().email().optional(),
     phone: z.string().optional().default(""),
     telegramId: z.string().optional().default(""),
-    programmeCode: z.string().min(2),
+    programmeCode: z.string().min(2).optional(),
+    schoolClassId: z.string().optional(),
+    schoolStreamId: z.string().optional(),
     year: z.number().int().min(1).max(6),
     semester: z.number().int().min(1).max(3),
     portalPassword: z.string().min(10).max(128).optional(),
@@ -26,6 +30,21 @@ const CreateBody = z
         message: "Portal password (min 10 characters) is required when email is set",
         path: ["portalPassword"],
       });
+    }
+    const hasProgramme = Boolean(val.programmeCode?.trim());
+    const hasClassStream = Boolean(val.schoolClassId?.trim() && val.schoolStreamId?.trim());
+    if (!hasProgramme && !hasClassStream) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Provide programmeCode or both schoolClassId and schoolStreamId",
+        path: ["programmeCode"],
+      });
+    }
+    if (val.schoolClassId && !isValidObjectId(val.schoolClassId)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Invalid schoolClassId", path: ["schoolClassId"] });
+    }
+    if (val.schoolStreamId && !isValidObjectId(val.schoolStreamId)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Invalid schoolStreamId", path: ["schoolStreamId"] });
     }
   });
 
@@ -52,6 +71,26 @@ export async function POST(req: Request) {
   const portalPasswordHash = data.portalPassword?.trim()
     ? await bcrypt.hash(data.portalPassword.trim(), 10)
     : undefined;
+
+  let programmeCode = data.programmeCode?.trim().toUpperCase() ?? "";
+  let schoolClassId: string | undefined;
+  let schoolStreamId: string | undefined;
+
+  if (data.schoolClassId?.trim() && data.schoolStreamId?.trim()) {
+    const enrollment = await resolveStudentEnrollmentFromClassStream({
+      organizationId,
+      schoolClassId: data.schoolClassId.trim(),
+      schoolStreamId: data.schoolStreamId.trim(),
+    });
+    programmeCode = enrollment.programmeCode;
+    schoolClassId = enrollment.schoolClassId;
+    schoolStreamId = enrollment.schoolStreamId;
+  }
+
+  if (!programmeCode) {
+    return NextResponse.json({ error: "programmeCode is required" }, { status: 400 });
+  }
+
   const doc = await prisma.student.create({
     data: {
       organizationId,
@@ -59,7 +98,9 @@ export async function POST(req: Request) {
       email: data.email ?? "",
       phone: data.phone,
       telegramId: data.telegramId,
-      programmeCode: data.programmeCode.toUpperCase(),
+      programmeCode,
+      schoolClassId: schoolClassId ?? null,
+      schoolStreamId: schoolStreamId ?? null,
       year: data.year,
       semester: data.semester,
       ...(portalPasswordHash ? { portalPasswordHash } : {}),
@@ -125,7 +166,11 @@ export async function GET(req: Request) {
     },
     orderBy: { createdAt: "desc" },
     take: limit,
-    include: { organization: { select: { slug: true, name: true } } },
+    include: {
+      organization: { select: { slug: true, name: true, institutionTier: true } },
+      schoolClass: { select: { code: true, name: true } },
+      schoolStream: { select: { code: true, name: true } },
+    },
   });
 
   if (students.length === 0) {
@@ -169,6 +214,12 @@ export async function GET(req: Request) {
         telegramId: s.telegramId,
         programmeCode: s.programmeCode,
         programmeName: programme?.name ?? null,
+        schoolClassId: s.schoolClassId,
+        schoolStreamId: s.schoolStreamId,
+        schoolClassCode: s.schoolClass?.code ?? null,
+        schoolClassName: s.schoolClass?.name ?? null,
+        schoolStreamCode: s.schoolStream?.code ?? null,
+        schoolStreamName: s.schoolStream?.name ?? null,
         year: s.year,
         semester: s.semester,
         createdAt: s.createdAt,

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { normalizeOrgSlug } from "@/lib/organization-intake";
 import { orgFaviconContentType } from "@/lib/validate-org-favicon";
 
-/** Public tenant favicon (set from Master Admin). Works for any org with bytes (table preview before approve). */
+/** Public tenant favicon (school admin or master upload). Works for any org with bytes. */
 export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }> }) {
   const { slug: raw } = await ctx.params;
   const slug = normalizeOrgSlug(raw ?? "");

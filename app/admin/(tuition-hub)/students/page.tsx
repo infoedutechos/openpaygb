@@ -8,6 +8,15 @@ import { TenantList } from "@/components/tuition/TenantList";
 import { useTuitionAdminGate } from "@/hooks/useTuitionAdminGate";
 import { useMasterOrgSlug } from "@/hooks/useMasterOrgSlug";
 
+import { useAuthMe } from "@/hooks/useAuthMe";
+
+type ClassOption = {
+  id: string;
+  code: string;
+  name: string;
+  streams: { id: string; code: string; name: string }[];
+};
+
 type StudentRow = {
   id: string;
   name: string;
@@ -15,6 +24,8 @@ type StudentRow = {
   phone: string;
   telegramId: string;
   programmeCode: string;
+  schoolClassCode?: string | null;
+  schoolStreamCode?: string | null;
   year: number;
   semester: number;
   createdAt: string;
@@ -24,6 +35,9 @@ type StudentRow = {
 
 export default function AdminStudentsPage() {
   const { orgSlug, setOrgSlug } = useMasterOrgSlug();
+  const { data: authMe } = useAuthMe();
+  const isSchoolTenant = authMe?.admin?.organization?.institutionTier === "school";
+  const periodLabel = isSchoolTenant ? "Term" : "Semester";
   const { loading: authLoading, ensureTuitionSession } = useTuitionAdminGate();
   const [q, setQ] = useState("");
   const organizationSlugFilter = orgSlug;
@@ -39,10 +53,24 @@ export default function AdminStudentsPage() {
     email: "",
     phone: "",
     programmeCode: "",
+    schoolClassId: "",
+    schoolStreamId: "",
     year: 1,
     semester: 1,
     password: "",
   });
+  const [schoolClasses, setSchoolClasses] = useState<ClassOption[]>([]);
+
+  useEffect(() => {
+    if (!isSchoolTenant) return;
+    void fetch("/api/admin/school/classes", { credentials: "include" })
+      .then(async (r) => {
+        if (!r.ok) return;
+        const j = (await r.json()) as { classes?: ClassOption[] };
+        setSchoolClasses(j.classes ?? []);
+      })
+      .catch(() => undefined);
+  }, [isSchoolTenant]);
 
   const load = useCallback(
     async (search: string) => {
@@ -123,7 +151,12 @@ export default function AdminStudentsPage() {
                       name: createForm.name.trim(),
                       email: createForm.email.trim() || undefined,
                       phone: createForm.phone.trim(),
-                      programmeCode: createForm.programmeCode.trim(),
+                      ...(isSchoolTenant && createForm.schoolClassId && createForm.schoolStreamId
+                        ? {
+                            schoolClassId: createForm.schoolClassId,
+                            schoolStreamId: createForm.schoolStreamId,
+                          }
+                        : { programmeCode: createForm.programmeCode.trim() }),
                       year: createForm.year,
                       semester: createForm.semester,
                       ...(createForm.email.trim() && createForm.password.trim().length >= 10
@@ -144,6 +177,8 @@ export default function AdminStudentsPage() {
                     email: "",
                     phone: "",
                     programmeCode: "",
+                    schoolClassId: "",
+                    schoolStreamId: "",
                     year: 1,
                     semester: 1,
                     password: "",
@@ -173,13 +208,6 @@ export default function AdminStudentsPage() {
               className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
             />
             <input
-              placeholder="Programme code"
-              required
-              value={createForm.programmeCode}
-              onChange={(e) => setCreateForm((f) => ({ ...f, programmeCode: e.target.value }))}
-              className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
-            />
-            <input
               placeholder="Portal password (min 10 chars, required if email set)"
               value={createForm.password}
               required={Boolean(createForm.email.trim())}
@@ -187,6 +215,47 @@ export default function AdminStudentsPage() {
               onChange={(e) => setCreateForm((f) => ({ ...f, password: e.target.value }))}
               className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
             />
+            {isSchoolTenant ? (
+              <>
+                <select
+                  required
+                  value={createForm.schoolClassId}
+                  onChange={(e) =>
+                    setCreateForm((f) => ({ ...f, schoolClassId: e.target.value, schoolStreamId: "" }))
+                  }
+                  className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
+                >
+                  <option value="">Select class</option>
+                  {schoolClasses.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.code} — {c.name}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  required
+                  value={createForm.schoolStreamId}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, schoolStreamId: e.target.value }))}
+                  className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
+                  disabled={!createForm.schoolClassId}
+                >
+                  <option value="">Select stream</option>
+                  {(schoolClasses.find((c) => c.id === createForm.schoolClassId)?.streams ?? []).map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.code} — {s.name}
+                    </option>
+                  ))}
+                </select>
+              </>
+            ) : (
+              <input
+                placeholder="Programme code"
+                required
+                value={createForm.programmeCode}
+                onChange={(e) => setCreateForm((f) => ({ ...f, programmeCode: e.target.value }))}
+                className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
+              />
+            )}
             <select
               value={createForm.year}
               onChange={(e) => setCreateForm((f) => ({ ...f, year: Number(e.target.value) }))}
@@ -205,7 +274,7 @@ export default function AdminStudentsPage() {
             >
               {[1, 2, 3].map((s) => (
                 <option key={s} value={s}>
-                  Semester {s}
+                  {periodLabel} {s}
                 </option>
               ))}
             </select>
@@ -257,7 +326,11 @@ export default function AdminStudentsPage() {
           >
             <p className="font-medium text-sky-400">{s.name}</p>
             <p className="mt-1 text-xs text-slate-400">
-              {s.programmeCode} · Yr{s.year} Sem{s.semester}
+              {s.schoolClassCode && s.schoolStreamCode
+                ? `${s.schoolClassCode}/${s.schoolStreamCode}`
+                : s.programmeCode}{" "}
+              · Yr{s.year} {periodLabel.slice(0, 1)}
+              {s.semester}
             </p>
             {isMaster && s.organizationSlug ? (
               <p className="mt-1 text-xs text-slate-500">
@@ -305,7 +378,16 @@ export default function AdminStudentsPage() {
                   )}
                 </td>
                 <td className="px-3 py-2">
-                  {s.programmeCode} Yr{s.year} Sem{s.semester}
+                  {s.schoolClassCode && s.schoolStreamCode ? (
+                    <>
+                      {s.schoolClassCode}/{s.schoolStreamCode}{" "}
+                      <span className="text-slate-500">({s.programmeCode})</span>
+                    </>
+                  ) : (
+                    s.programmeCode
+                  )}{" "}
+                  Yr{s.year} {periodLabel.slice(0, 1)}
+                  {s.semester}
                 </td>
                 <td className="px-3 py-2 text-slate-400">{s.email || "—"}</td>
                 <td className="px-3 py-2 text-slate-400">{s.phone || "—"}</td>

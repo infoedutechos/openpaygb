@@ -56,6 +56,14 @@ enum InstitutionTier {
   school
 }
 
+/** Nursery / primary / secondary / A-level band for K–12 class rows. */
+enum SchoolLevelKind {
+  nursery
+  primary
+  secondary
+  a_level
+}
+
 /** Every programme belongs to one of two school tracks (admin + checkout grouping). */
 enum ProgrammeTrack {
   inservice
@@ -105,9 +113,11 @@ model Organization {
   childOrganizations         Organization[]             @relation("OrgHierarchy")
   /** Parent institution name when the parent is not registered on ODEL HUB. */
   externalParentName         String                     @default("")
-  /** Raw favicon.ico (or PNG) bytes; paired with faviconUploadedAt when set via Master Admin. */
+  /** Raw favicon.ico (or PNG) bytes; paired with faviconUploadedAt when set via Master or school admin. */
   faviconIco                 Bytes?
   faviconUploadedAt          DateTime?
+  /** Display label for the active academic year (e.g. 2025/2026) — school tenants. */
+  currentAcademicYearLabel   String                     @default("")
   /**
    * Fixed UGX added at checkout (processing / platform). **-1** = use deployment env `CHECKOUT_PLATFORM_FEE_UGX`;
    * **≥ 0** = override for this tenant (UGX, capped server-side).
@@ -141,6 +151,8 @@ model Organization {
   mobileMoneyProviders       MobileMoneyProvider[]
   workspaceVerifyToken     OrganizationWorkspaceVerifyToken?
   paymentRequests            PaymentRequest[]
+  schoolClasses              SchoolClass[]
+  schoolStreams              SchoolStream[]
 
   @@index([tenantStatus])
   @@index([registrationContactEmail])
@@ -371,10 +383,54 @@ model FxRate {
   @@map("fxrates")
 }
 
+model SchoolClass {
+  id             String          @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId String          @db.ObjectId
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  code           String
+  name           String
+  levelKind      SchoolLevelKind @default(primary)
+  sortOrder      Int             @default(0)
+  enabled        Boolean         @default(true)
+  streams        SchoolStream[]
+  programmes     Programme[]
+  students       Student[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@unique([organizationId, code])
+  @@index([organizationId, enabled])
+  @@map("school_classes")
+}
+
+model SchoolStream {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId String       @db.ObjectId
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  schoolClassId  String       @db.ObjectId
+  schoolClass    SchoolClass  @relation(fields: [schoolClassId], references: [id], onDelete: Cascade)
+  code           String
+  name           String
+  sortOrder      Int          @default(0)
+  enabled        Boolean      @default(true)
+  programmes     Programme[]
+  students       Student[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([organizationId, schoolClassId, code])
+  @@index([organizationId])
+  @@map("school_streams")
+}
+
 model Programme {
   id               String         @id @default(auto()) @map("_id") @db.ObjectId
   organizationId String         @db.ObjectId
   organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  schoolClassId    String?        @db.ObjectId
+  schoolClass      SchoolClass?   @relation(fields: [schoolClassId], references: [id], onDelete: SetNull)
+  schoolStreamId   String?        @db.ObjectId
+  schoolStream     SchoolStream?  @relation(fields: [schoolStreamId], references: [id], onDelete: SetNull)
   code             String
   name             String
   track            ProgrammeTrack @default(regular)
@@ -422,6 +478,12 @@ model Student {
   /** bcrypt — set by institution admin (or master); required for `/student` portal sign-in. */
   portalPasswordHash   String?
   programmeCode        String
+  /** K–12 class enrollment (school tenants). */
+  schoolClassId        String?      @db.ObjectId
+  schoolClass          SchoolClass? @relation(fields: [schoolClassId], references: [id], onDelete: SetNull)
+  /** K–12 stream enrollment (school tenants). */
+  schoolStreamId       String?      @db.ObjectId
+  schoolStream         SchoolStream? @relation(fields: [schoolStreamId], references: [id], onDelete: SetNull)
   year                 Int
   semester             Int
   payments             Payment[]

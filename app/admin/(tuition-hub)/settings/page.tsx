@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { TuitionHubCheckoutExplainer } from "@/components/admin/TuitionHubCheckoutExplainer";
+import { OrgFaviconSettings } from "@/components/admin/OrgFaviconSettings";
 import { TenantList } from "@/components/tuition/TenantList";
 import { useAuthMe } from "@/hooks/useAuthMe";
 
 export default function AdminSettingsPage() {
   const { data: authMe } = useAuthMe();
   const isMaster = authMe?.admin?.role === "master";
+  const isSchool = authMe?.admin?.organization?.institutionTier === "school";
 
   return (
     <div className="space-y-8">
@@ -26,11 +28,19 @@ export default function AdminSettingsPage() {
         ) : (
           <p className="mt-2 max-w-lg text-sm text-slate-400">
             Your school&apos;s TON wallet, FX rates, and checkout processing fee are configured by the ODEL HUB platform
-            operator after workspace approval. Contact your platform master if you need changes. You can fully customize{" "}
+            operator after workspace approval. Contact your platform master if you need changes. You can customize{" "}
             <a href="/admin/programmes" className="text-cyan-300 underline hover:text-cyan-200">
               programmes and fees
-            </a>{" "}
-            for your institution.
+            </a>
+            {isSchool ? (
+              <>
+                ,{" "}
+                <Link href="/admin/school-structure" className="text-cyan-300 underline hover:text-cyan-200">
+                  classes & streams
+                </Link>
+              </>
+            ) : null}{" "}
+            and your school favicon below.
           </p>
         )}
         <TuitionHubCheckoutExplainer className="mt-6 max-w-2xl" />
@@ -42,6 +52,8 @@ export default function AdminSettingsPage() {
           />
         ) : null}
       </div>
+
+      {!isMaster ? <OrgFaviconSettings /> : null}
 
       <p className="text-sm text-slate-400">
         Account details and password are on{" "}
