@@ -55,6 +55,19 @@ function WorkspaceStatusInner() {
   const [loading, setLoading] = useState(true);
   const [resendBusy, setResendBusy] = useState(false);
   const [resendMsg, setResendMsg] = useState<string | null>(null);
+  const [devConfirmUrl, setDevConfirmUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem("odelhub_workspace_dev_confirm");
+      if (stored) {
+        setDevConfirmUrl(stored);
+        sessionStorage.removeItem("odelhub_workspace_dev_confirm");
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const load = useCallback(async () => {
     if (!slug && !email) {
@@ -119,7 +132,7 @@ function WorkspaceStatusInner() {
   return (
     <main className="mx-auto max-w-lg px-4 py-12 text-slate-200">
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-400/90">ODEL HUB</p>
-      <h1 className="mt-2 text-2xl font-semibold text-white">Your school workspace</h1>
+      <h1 className="mt-2 text-2xl font-semibold text-white">Your workspace</h1>
       <p className="mt-2 text-sm text-slate-400">
         Verification status and next steps for your registration. Bookmark this page to check progress.
       </p>
@@ -129,6 +142,15 @@ function WorkspaceStatusInner() {
           {justActivated
             ? "Registration received — your workspace is active. Confirm your email when ready, then sign in below."
             : "Registration received — track your workspace progress here and confirm your email when ready."}
+        </p>
+      ) : null}
+
+      {devConfirmUrl ? (
+        <p className="mt-6 break-all rounded-lg border border-amber-500/25 bg-amber-950/30 p-3 text-xs text-amber-100/90">
+          Dev verification link:{" "}
+          <a href={devConfirmUrl} className="font-mono text-cyan-300 underline">
+            {devConfirmUrl}
+          </a>
         </p>
       ) : null}
 

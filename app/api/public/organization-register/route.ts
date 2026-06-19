@@ -15,6 +15,11 @@ import {
 import { prisma } from "@/lib/prisma";
 import { apiErrorResponse } from "@/lib/api-error";
 import { warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
+import { workspacePortalPath } from "@/lib/workspace-portal-url";
+
+function registrationPortalRedirect(slug: string, email: string, extra?: Record<string, string>) {
+  return workspacePortalPath({ slug, email, extra: { submitted: "1", ...extra } });
+}
 
 export async function POST(req: Request) {
   try {
@@ -89,10 +94,13 @@ export async function POST(req: Request) {
       ? "After you confirm, you will see your workspace status portal while a platform administrator reviews your request."
       : "After you confirm your email, your workspace will be activated automatically (programmes and fees copied from the platform template). The status portal will update when your workspace is live.";
 
+    const redirectUrl = registrationPortalRedirect(org.slug, contactEmail);
+
     const payload: {
       organization: { id: string; name: string; slug: string; tenantStatus: string };
       message: string;
       emailSent: boolean;
+      redirectUrl: string;
       requireMasterApproval: boolean;
       autoRegistrationEnabled: boolean;
       deferEmailVerification: boolean;
@@ -109,6 +117,7 @@ export async function POST(req: Request) {
         ? `Request received. Check your email for an ODEL HUB verification link with your registration details. ${afterVerifyMessage}`
         : "Request received. Configure RESEND_API_KEY and RESEND_FROM to send the verification email, or use the development link below.",
       emailSent,
+      redirectUrl,
       requireMasterApproval: policy.requireMasterApproval,
       autoRegistrationEnabled: policy.autoRegistrationEnabled,
       deferEmailVerification: false,
@@ -124,7 +133,7 @@ export async function POST(req: Request) {
         {
           ...payload,
           message:
-            "Your workspace request was saved, but the verification email could not be sent. Use Resend verification on the registration page or contact platform support.",
+            "Your workspace request was saved, but the verification email could not be sent. Open your workspace portal to resend verification or contact platform support.",
           resendAvailable: true,
         },
         { status: 503 },

@@ -32,11 +32,7 @@ function RegisterForm({ segment }: { segment: RegistrationSegment }) {
   const [externalParentName, setExternalParentName] = useState("");
   const [parentOptions, setParentOptions] = useState<Array<{ slug: string; name: string }>>([]);
   const [error, setError] = useState<string | null>(null);
-  const [msg, setMsg] = useState<string | null>(null);
-  const [devConfirmUrl, setDevConfirmUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [resendBusy, setResendBusy] = useState(false);
-  const [submission, setSubmission] = useState<{ slug: string; email: string } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -87,11 +83,20 @@ function RegisterForm({ segment }: { segment: RegistrationSegment }) {
     );
   }
 
+  function goToWorkspacePortal(submittedSlug: string, submittedEmail: string, redirectUrl?: string) {
+    const portalUrl =
+      redirectUrl ??
+      workspacePortalPath({
+        slug: submittedSlug,
+        email: submittedEmail,
+        extra: { submitted: "1" },
+      });
+    router.replace(portalUrl);
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setMsg(null);
-    setDevConfirmUrl(null);
     setBusy(true);
     try {
       const r = await fetch("/api/public/organization-register", {
@@ -119,48 +124,33 @@ function RegisterForm({ segment }: { segment: RegistrationSegment }) {
         deferEmailVerification?: boolean;
       };
       const email = contact.trim().toLowerCase();
-      const submitted = { slug: slug.trim().toLowerCase(), email };
+      const submittedSlug = slug.trim().toLowerCase();
       if (!r.ok) {
         if (r.status === 503 && j.message) {
-          setSubmission(submitted);
-          setMsg(j.message);
+          if (j.devConfirmUrl) {
+            try {
+              sessionStorage.setItem("odelhub_workspace_dev_confirm", j.devConfirmUrl);
+            } catch {
+              /* ignore */
+            }
+          }
+          goToWorkspacePortal(submittedSlug, email, j.redirectUrl);
           return;
         }
         throw new Error(j.error ?? "Registration failed");
       }
-      if (j.redirectUrl && j.deferEmailVerification) {
-        router.push(j.redirectUrl);
-        return;
+      if (j.devConfirmUrl) {
+        try {
+          sessionStorage.setItem("odelhub_workspace_dev_confirm", j.devConfirmUrl);
+        } catch {
+          /* ignore */
+        }
       }
-      setSubmission(submitted);
-      setMsg(j.message ?? "Request submitted. Check your email for the ODEL HUB verification link.");
-      if (j.devConfirmUrl) setDevConfirmUrl(j.devConfirmUrl);
+      goToWorkspacePortal(submittedSlug, email, j.redirectUrl);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
       setBusy(false);
-    }
-  }
-
-  async function onResend() {
-    const email = submission?.email ?? contact.trim().toLowerCase();
-    if (!email) return;
-    setResendBusy(true);
-    setError(null);
-    try {
-      const r = await fetch("/api/public/organization-register/resend", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      const j = (await r.json()) as { error?: string; message?: string; devConfirmUrl?: string };
-      if (!r.ok) throw new Error(j.error ?? "Could not resend");
-      setMsg(j.message ?? "If a pending workspace exists, a new link was sent.");
-      if (j.devConfirmUrl) setDevConfirmUrl(j.devConfirmUrl);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not resend");
-    } finally {
-      setResendBusy(false);
     }
   }
 
@@ -293,26 +283,6 @@ function RegisterForm({ segment }: { segment: RegistrationSegment }) {
               />
             </div>
             {error ? <p className="text-sm text-rose-400">{error}</p> : null}
-            {msg ? <p className="text-sm text-emerald-400">{msg}</p> : null}
-            {submission ? (
-              <p className="text-sm text-slate-300">
-                Track progress anytime:{" "}
-                <Link
-                  href={workspacePortalPath({ slug: submission.slug, email: submission.email })}
-                  className="font-medium text-violet-300 underline hover:text-violet-200"
-                >
-                  Open your workspace portal
-                </Link>
-              </p>
-            ) : null}
-            {devConfirmUrl ? (
-              <p className="break-all rounded-lg border border-amber-500/25 bg-amber-950/30 p-3 text-xs text-amber-100/90">
-                Dev verification link:{" "}
-                <a href={devConfirmUrl} className="font-mono text-cyan-300 underline">
-                  {devConfirmUrl}
-                </a>
-              </p>
-            ) : null}
             <button
               type="submit"
               disabled={busy}
@@ -320,16 +290,6 @@ function RegisterForm({ segment }: { segment: RegistrationSegment }) {
             >
               {busy ? "Submitting…" : "Submit request"}
             </button>
-            {submission ? (
-              <button
-                type="button"
-                disabled={resendBusy}
-                onClick={() => void onResend()}
-                className="w-full rounded-xl border border-white/15 py-2.5 text-sm text-slate-300 hover:bg-white/5 disabled:opacity-50"
-              >
-                {resendBusy ? "Sending…" : "Resend verification email"}
-              </button>
-            ) : null}
             <p className="text-center text-sm text-slate-500">
               Already have access?{" "}
               <Link href="/school/login" className="text-sky-400 hover:underline">
