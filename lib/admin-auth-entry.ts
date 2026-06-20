@@ -6,43 +6,61 @@ export const SCHOOL_ADMIN_LOGIN_PATH = "/admin/login?school=1";
 export const PLATFORM_MASTER_LOGIN_PATH = "/admin/login?master=1";
 export const ADMIN_LOGIN_PATH = "/admin/login";
 
-export type AdminLoginMode = "school" | "master" | "default";
+export type AdminLoginMode = "higher" | "schools" | "master" | "default";
 
 export function adminLoginModeFromSearch(
   params: URLSearchParams | { get: (key: string) => string | null },
 ): AdminLoginMode {
-  const school = params.get("school");
   const master = params.get("master");
-  if (school === "1" || school === "true" || school === "school") return "school";
   if (master === "1" || master === "true" || master === "master") return "master";
+
+  const segment = params.get("segment")?.trim().toLowerCase();
+  if (segment === "higher") return "higher";
+  if (segment === "schools") return "schools";
+
+  const school = params.get("school");
+  if (school === "1" || school === "true" || school === "school") return "schools";
+
   return "default";
 }
 
 export function adminLoginPathForMode(mode: AdminLoginMode): string {
-  if (mode === "school") return SCHOOL_ADMIN_LOGIN_PATH;
   if (mode === "master") return PLATFORM_MASTER_LOGIN_PATH;
+  if (mode === "higher") return `${ADMIN_LOGIN_PATH}?segment=higher`;
+  if (mode === "schools") return SCHOOL_ADMIN_LOGIN_PATH;
   return ADMIN_LOGIN_PATH;
 }
 
 export const ADMIN_LOGIN_COPY = {
-  school: {
-    title: "School Admin Dashboard",
-    subtitle:
-      "Sign in with the admin email and password for your school workspace on OdelPay — Schools.",
+  higher: {
+    title: "OdelPay — Higher Institutions",
+    subtitle: "Universities, polytechnics, tertiary — sign in to your institution admin dashboard.",
     hint:
-      "Register a new school at /admin/register?segment=schools, confirm your email, then track approval at /school/workspace-status. When your workspace is active, admin credentials are emailed automatically (when that policy is on) or shared by the platform master. This sign-in is for school staff — not the student portal (/student/login).",
+      "Register at /admin/register?segment=higher, confirm your email, then track your workspace at /school/workspace-status. When active, use the admin credentials sent to your contact email or shared by the platform master.",
+    submit: "Sign in to institution dashboard",
+  },
+  schools: {
+    title: "OdelPay — Schools",
+    subtitle: "Primary / secondary schools — sign in to your school admin dashboard.",
+    hint:
+      "Register at /admin/register?segment=schools, confirm your email, then track approval at /school/workspace-status. When your workspace is active, admin credentials are emailed automatically (when that policy is on) or shared by the platform master. Students use /student/login — not this page.",
     submit: "Sign in to school dashboard",
   },
   master: {
-    title: "Platform Master Console",
+    title: "Platform Master",
     subtitle: "Sign in with your ODEL HUB platform operator credentials.",
-    hint: "Master accounts manage all schools, approvals, FX, and integrations.",
+    hint: "Master accounts manage all schools and higher institutions, approvals, FX, and integrations.",
     submit: "Sign in to master console",
   },
   default: {
     title: "Admin sign in",
-    subtitle: "School staff and platform operators use the same sign-in page.",
+    subtitle: "Choose your OdelPay product line or platform master access below.",
     hint: null as string | null,
     submit: "Sign in",
   },
 } as const;
+
+/** @deprecated Use `schools` mode — kept for callers expecting legacy key. */
+export const ADMIN_LOGIN_COPY_LEGACY = {
+  school: ADMIN_LOGIN_COPY.schools,
+};

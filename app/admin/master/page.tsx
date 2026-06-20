@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { MasterInstitutionProductCards } from "@/components/admin/MasterInstitutionProductCards";
 import { MasterPendingSchoolsBanner } from "@/components/admin/MasterPendingSchoolsBanner";
 import { MasterFxSettings } from "@/components/admin/MasterFxSettings";
 import { MasterBackupPanel } from "@/components/admin/MasterBackupPanel";
@@ -24,6 +25,10 @@ import { AdminUserProfileSection } from "@/components/profile/AdminUserProfileSe
 
 type MasterSummary = {
   organizations: { active: number; pending: number; rejected: number; total: number };
+  organizationsByTier?: {
+    schools: { active: number; pending: number; total: number };
+    higher: { active: number; pending: number; total: number };
+  };
   tuition: { totalStudents: number; totalPayments: number; totalCollectionsTon: number };
   platformAdmins: { orgAdmins: number };
   openPayCards?: { active: number; totalBalanceUgx: number };
@@ -90,6 +95,13 @@ export default function MasterManagerOverviewPage() {
           internet.
         </p>
       </div>
+
+      {data.organizationsByTier ? (
+        <MasterInstitutionProductCards
+          higher={data.organizationsByTier.higher}
+          schools={data.organizationsByTier.schools}
+        />
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard label="Organizations (active)" value={String(data.organizations.active)} hint="Approved tenants" />

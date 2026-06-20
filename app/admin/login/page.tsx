@@ -6,6 +6,7 @@ import { OdelShieldIcon } from "@/components/icons/OdelShieldIcon";
 import { PasswordRevealInput } from "@/components/PasswordRevealInput";
 import Link from "next/link";
 import { RequestSchoolWorkspaceCta } from "@/components/tuition/RequestSchoolWorkspaceCta";
+import { AdminInstitutionLoginCards } from "@/components/admin/AdminInstitutionLoginCards";
 import {
   ADMIN_LOGIN_COPY,
   adminLoginModeFromSearch,
@@ -46,39 +47,7 @@ function LoginModeTabs({
   mode: AdminLoginMode;
   onSelect: (mode: AdminLoginMode) => void;
 }) {
-  const tabs: { id: AdminLoginMode; label: string }[] = [
-    { id: "school", label: "School admin" },
-    { id: "master", label: "Platform master" },
-  ];
-  return (
-    <div
-      role="tablist"
-      aria-label="Sign-in type"
-      className="flex rounded-xl border border-white/10 bg-black/30 p-1"
-    >
-      {tabs.map((tab) => {
-        const active = mode === tab.id || (mode === "default" && tab.id === "school");
-        return (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            aria-selected={active}
-            onClick={() => onSelect(tab.id)}
-            className={`min-h-[44px] flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition-colors sm:text-sm ${
-              active
-                ? tab.id === "master"
-                  ? "bg-amber-600/90 text-slate-950 shadow-sm"
-                  : "bg-cyan-600/90 text-slate-950 shadow-sm"
-                : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
-            }`}
-          >
-            {tab.label}
-          </button>
-        );
-      })}
-    </div>
-  );
+  return <AdminInstitutionLoginCards activeMode={mode} onSelect={onSelect} />;
 }
 
 function AdminLoginForm() {
@@ -87,8 +56,9 @@ function AdminLoginForm() {
   const loginMode = adminLoginModeFromSearch(searchParams);
   const copy =
     loginMode === "default"
-      ? ADMIN_LOGIN_COPY.school
+      ? ADMIN_LOGIN_COPY.default
       : ADMIN_LOGIN_COPY[loginMode];
+  const showForm = loginMode !== "default";
   const [email, setEmail] = useState("admin@odelhub.local");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
@@ -245,7 +215,7 @@ function AdminLoginForm() {
       />
 
       <div className="relative flex flex-1 flex-col items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md space-y-8">
+        <div className="w-full max-w-lg space-y-8">
           <div className="text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300/80">ODEL HUB</p>
             <div className="mx-auto mb-5 mt-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-cyan-500/35 bg-gradient-to-br from-cyan-500/20 to-sky-600/10 text-cyan-100 shadow-[0_0_40px_-8px_rgba(34,211,238,0.35)]">
@@ -303,13 +273,16 @@ function AdminLoginForm() {
             </p>
           ) : null}
 
-          {loginMode === "school" || loginMode === "default" ? (
+          {loginMode === "schools" || loginMode === "higher" ? (
             <div className="rounded-lg border border-white/10 bg-[#0c1424]/80 px-4 py-3 text-xs text-slate-400">
-              <p className="font-semibold text-slate-300">School workspace</p>
+              <p className="font-semibold text-slate-300">Workspace</p>
               <ul className="mt-2 list-inside list-disc space-y-1">
                 <li>
-                  <Link href="/admin/register?segment=schools" className="text-cyan-300 hover:underline">
-                    Request a school workspace
+                  <Link
+                    href={`/admin/register?segment=${loginMode === "higher" ? "higher" : "schools"}`}
+                    className="text-cyan-300 hover:underline"
+                  >
+                    Request a workspace
                   </Link>
                 </li>
                 <li>
@@ -317,12 +290,14 @@ function AdminLoginForm() {
                     Track registration status
                   </Link>
                 </li>
-                <li>
-                  <Link href="/pay/riverside-demo" className="text-cyan-300 hover:underline">
-                    Try Riverside demo checkout
-                  </Link>{" "}
-                  (term fees)
-                </li>
+                {loginMode === "schools" ? (
+                  <li>
+                    <Link href="/pay/riverside-demo" className="text-cyan-300 hover:underline">
+                      Try Riverside demo checkout
+                    </Link>{" "}
+                    (term fees)
+                  </li>
+                ) : null}
                 <li>
                   Students use{" "}
                   <Link href="/student/login" className="text-cyan-300 hover:underline">
@@ -334,6 +309,7 @@ function AdminLoginForm() {
             </div>
           ) : null}
 
+          {showForm ? (
           <form
             onSubmit={onSubmit}
             className="space-y-5 rounded-2xl border border-white/[0.08] bg-[#0c1424]/95 p-8 shadow-xl shadow-black/50 backdrop-blur-sm"
@@ -399,18 +375,22 @@ function AdminLoginForm() {
             >
               {busy ? "Signing in…" : copy.submit}
             </button>
-            {loginMode !== "master" ? (
+            {loginMode === "master" ? (
               <p className="text-center text-xs text-slate-500">
-                Platform operator?{" "}
-                <Link href={adminLoginPathForMode("master")} className="text-amber-300/90 hover:underline">
-                  Master console sign in
+                Institution admin?{" "}
+                <Link href={adminLoginPathForMode("schools")} className="text-cyan-300/90 hover:underline">
+                  Schools sign in
+                </Link>
+                {" · "}
+                <Link href={adminLoginPathForMode("higher")} className="text-cyan-300/90 hover:underline">
+                  Higher institutions sign in
                 </Link>
               </p>
             ) : (
               <p className="text-center text-xs text-slate-500">
-                School staff?{" "}
-                <Link href={adminLoginPathForMode("school")} className="text-cyan-300/90 hover:underline">
-                  School admin sign in
+                Platform operator?{" "}
+                <Link href={adminLoginPathForMode("master")} className="text-amber-300/90 hover:underline">
+                  Master console sign in
                 </Link>
               </p>
             )}
@@ -424,6 +404,13 @@ function AdminLoginForm() {
               </p>
             ) : null}
           </form>
+          ) : (
+            <p className="rounded-2xl border border-white/[0.08] bg-[#0c1424]/60 px-6 py-8 text-center text-sm text-slate-400">
+              Select <strong className="text-slate-300">Higher Institutions</strong>,{" "}
+              <strong className="text-slate-300">Schools</strong>, or{" "}
+              <strong className="text-slate-300">Platform Master</strong> above to continue.
+            </p>
+          )}
           <RequestSchoolWorkspaceCta variant="inline" className="mt-2" />
         </div>
       </div>

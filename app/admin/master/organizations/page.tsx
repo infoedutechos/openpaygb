@@ -1,16 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { PasswordRevealInput } from "@/components/PasswordRevealInput";
 import { MasterOrgMobileCard } from "@/components/admin/MasterOrgMobileCard";
 import { MasterOrgTableRow } from "@/components/admin/master-org/MasterOrgTableRow";
 import type { MasterOrgRow } from "@/components/admin/master-org/types";
+import {
+  registrationSegmentSubtitle,
+  registrationSegmentTitle,
+  type RegistrationSegment,
+} from "@/lib/institution-tier";
 
 type OrgRow = {
   id: string;
   name: string;
   slug: string;
+  institutionTier?: string;
   tenantStatus: string;
   registrationContactEmail: string;
   registrationNote: string;
@@ -27,6 +34,11 @@ type OrgRow = {
 };
 
 export default function MasterOrganizationsPage() {
+  const searchParams = useSearchParams();
+  const tierFilter = searchParams.get("tier")?.trim().toLowerCase() ?? "";
+  const tierSegment: RegistrationSegment | null =
+    tierFilter === "school" ? "schools" : tierFilter === "university" ? "higher" : null;
+
   const [orgs, setOrgs] = useState<OrgRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +68,13 @@ export default function MasterOrganizationsPage() {
   const [fxKindDrafts, setFxKindDrafts] = useState<Record<string, string>>({});
   const [fxUgxDrafts, setFxUgxDrafts] = useState<Record<string, string>>({});
   const [fxBufferDrafts, setFxBufferDrafts] = useState<Record<string, string>>({});
+
+  const visibleOrgs = useMemo(() => {
+    if (!tierFilter) return orgs;
+    if (tierFilter === "school") return orgs.filter((o) => o.institutionTier === "school");
+    if (tierFilter === "university") return orgs.filter((o) => o.institutionTier === "university");
+    return orgs;
+  }, [orgs, tierFilter]);
 
   const load = useCallback(async () => {
     setError(null);
@@ -366,6 +385,17 @@ export default function MasterOrganizationsPage() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-400/90">Organizations</p>
+          {tierSegment ? (
+            <div className="mt-2 rounded-xl border border-white/10 bg-[#0a101f]/80 px-4 py-3">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-300/90">
+                {registrationSegmentTitle(tierSegment)}
+              </p>
+              <p className="mt-1 text-sm text-slate-400">{registrationSegmentSubtitle(tierSegment)}</p>
+              <Link href="/admin/master/organizations" className="mt-2 inline-block text-xs text-cyan-300 hover:underline">
+                Show all tenants
+              </Link>
+            </div>
+          ) : null}
           <h1 className="mt-1 text-2xl font-semibold text-white">Tenants &amp; provisioning</h1>
           <p className="mt-2 max-w-2xl text-sm text-slate-400">
             Create pending workspaces, approve them to clone programmes and FX from the{" "}
@@ -457,7 +487,7 @@ export default function MasterOrganizationsPage() {
               className="mt-1 w-full rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
             >
               <option value="">Select…</option>
-              {orgs
+              {visibleOrgs
                 .filter((o) => o.tenantStatus === "active")
                 .map((o) => (
                   <option key={o.id} value={o.id}>
@@ -570,12 +600,14 @@ export default function MasterOrganizationsPage() {
         </p>
         {loading ? (
           <p className="mt-4 text-sm text-slate-500">Loading…</p>
-        ) : orgs.length === 0 ? (
-          <p className="mt-4 text-sm text-slate-500">No organizations yet.</p>
+        ) : visibleOrgs.length === 0 ? (
+          <p className="mt-4 text-sm text-slate-500">
+            {tierSegment ? "No organizations in this product line yet." : "No organizations yet."}
+          </p>
         ) : (
           <>
             <div className="mt-4 space-y-4 lg:hidden">
-              {orgs.map((o) => (
+              {visibleOrgs.map((o) => (
                 <MasterOrgMobileCard
                   key={o.id}
                   org={o as MasterOrgRow}
@@ -625,7 +657,7 @@ export default function MasterOrganizationsPage() {
                 </tr>
               </thead>
               <tbody>
-                {orgs.map((o) => (
+                {visibleOrgs.map((o) => (
                   <MasterOrgTableRow
                     key={o.id}
                     org={o as MasterOrgRow}
