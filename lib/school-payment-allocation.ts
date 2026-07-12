@@ -1,6 +1,9 @@
-import { PaymentStatus } from "@prisma/client";
+import { PaymentRail, PaymentStatus, type Payment } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { normalizeSchoolTerm } from "@/lib/school-term";
+import { loadSchoolOrgContext } from "@/lib/school-org-context";
+import { billChargeSessionWhere } from "@/lib/school-session-scope";
+import { nextSchoolReceiptNo } from "@/lib/school-receipt-no";
 
 /** Apply payment amount FIFO across unpaid bill charge lines for a student/term. */
 export async function allocatePaymentToBillCharges(input: {
@@ -71,4 +74,71 @@ export async function getAllocatedPaidUgx(input: {
     _sum: { amountUgx: true },
   });
   return agg._sum.amountUgx ?? 0;
+}
+
+/** Fee recovery KPIs for dashboard — allocation-based received against session-scoped bill charges. */
+export async function getOrganizationTermFeeRecovery(input: {
+  organizationId: string;
+  term: number;
+  sessionId?: string | null;
+}): Promise<{ expectedUgx: number; receivedUgx: number; outstandingUgx: number }> {
+  const term = normalizeSchoolTerm(input.term);
+  const charges = await prisma.studentBillCharge.findMany({
+    where: {
+      organizationId: input.organizationId,
+      term,
+      ...billChargeSessionWhere(input.sessionId),
+    },
+    select: { id: true, amountUgx: true },
+  });
+  const expectedUgx = charges.reduce((s, c) => s + c.amountUgx, 0);
+  if (charges.length === 0) {
+    return { expectedUgx: 0, receivedUgx: 0, outstandingUgx: 0 };
+  }
+  const agg = await prisma.paymentAllocation.aggregate({
+    where: {
+      organizationId: input.organizationId,
+      billChargeId: { in: charges.map((c) => c.id) },
+      payment: { status: PaymentStatus.confirmed },
+    },
+    _sum: { amountUgx: true },
+  });
+  const receivedUgx = agg._sum.amountUgx ?? 0;
+  return {
+    expectedUgx,
+    receivedUgx,
+    outstandingUgx: Math.max(0, expectedUgx - receivedUgx),
+  };
+}
+
+/** FIFO-allocate confirmed online/MoMo payments for school tenants (manual desk payments allocate at create). */
+export async function maybeAllocateSchoolPaymentOnConfirm(payment: Payment): Promise<void> {
+  if (payment.rail === PaymentRail.manual_cash) return;
+
+  const existing = await prisma.paymentAllocation.count({ where: { paymentId: payment.id } });
+  if (existing > 0) return;
+
+  const org = await prisma.organization.findUnique({
+    where: { id: payment.organizationId },
+    select: { institutionTier: true },
+  });
+  if (org?.institutionTier !== "school") return;
+
+  const ctx = await loadSchoolOrgContext(payment.organizationId);
+  if (!payment.schoolReceiptNo) {
+    const receiptNo = await nextSchoolReceiptNo(payment.organizationId);
+    await prisma.payment.update({
+      where: { id: payment.id },
+      data: { schoolReceiptNo: receiptNo },
+    });
+  }
+
+  await allocatePaymentToBillCharges({
+    organizationId: payment.organizationId,
+    paymentId: payment.id,
+    studentId: payment.studentId,
+    term: payment.semester,
+    amountUgx: payment.totalUgx,
+    sessionId: ctx?.sessionId,
+  });
 }

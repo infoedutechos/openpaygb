@@ -16,12 +16,16 @@ vi.mock("@/lib/school-payment-allocation", () => ({
   getAllocatedPaidUgx: vi.fn(),
 }));
 
-import { getAllocatedPaidUgx } from "@/lib/school-payment-allocation";
+vi.mock("@/lib/school-account-balance", () => ({
+  getStudentTermPaidUgx: vi.fn(),
+}));
+
+import { getStudentTermPaidUgx } from "@/lib/school-account-balance";
 
 describe("school-defaulters", () => {
   beforeEach(() => {
     vi.mocked(prisma.student.findMany).mockReset();
-    vi.mocked(getAllocatedPaidUgx).mockReset();
+    vi.mocked(getStudentTermPaidUgx).mockReset();
   });
 
   it("classifies overdue defaulters with bill charges", async () => {
@@ -37,7 +41,7 @@ describe("school-defaulters", () => {
         billCharges: [{ amountUgx: 100_000 }],
       },
     ] as never);
-    vi.mocked(getAllocatedPaidUgx).mockResolvedValue(0);
+    vi.mocked(getStudentTermPaidUgx).mockResolvedValue(0);
 
     const { rows } = await listSchoolDefaulters({
       organizationId: "org1",
@@ -64,7 +68,7 @@ describe("school-defaulters", () => {
         billCharges: [{ amountUgx: 80_000 }],
       },
     ] as never);
-    vi.mocked(getAllocatedPaidUgx).mockResolvedValue(80_000);
+    vi.mocked(getStudentTermPaidUgx).mockResolvedValue(80_000);
 
     const { rows } = await listSchoolDefaulters({
       organizationId: "org1",
@@ -100,7 +104,9 @@ describe("school-defaulters", () => {
         billCharges: [{ amountUgx: 10_000 }],
       },
     ] as never);
-    vi.mocked(getAllocatedPaidUgx).mockImplementation(async ({ studentId }) => (studentId === "s2" ? 10_000 : 0));
+    vi.mocked(getStudentTermPaidUgx).mockImplementation(async ({ studentId }) =>
+      studentId === "s2" ? 10_000 : 0,
+    );
 
     const { rows } = await listSchoolDefaulters({
       organizationId: "org1",

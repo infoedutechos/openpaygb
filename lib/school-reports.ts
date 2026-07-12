@@ -2,6 +2,8 @@ import { PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { normalizeSchoolTerm } from "@/lib/school-term";
 import { findSalaryExpenditureAccount } from "@/lib/school-salary-account";
+import { getStudentTermPaidUgx, getStudentTermOutstanding } from "@/lib/school-account-balance";
+import { schoolSessionWhere } from "@/lib/school-session-scope";
 
 export type CashFlowLine = {
   date: string;
@@ -111,26 +113,36 @@ export async function buildClassBillsSummary(input: {
   organizationId: string;
   classId: string;
   term: number;
+  sessionId?: string | null;
 }): Promise<{ rows: { studentName: string; expectedUgx: number; paidUgx: number; balanceUgx: number }[] }> {
   const term = normalizeSchoolTerm(input.term);
   const students = await prisma.student.findMany({
-    where: { organizationId: input.organizationId, schoolClassId: input.classId },
+    where: {
+      organizationId: input.organizationId,
+      schoolClassId: input.classId,
+      ...schoolSessionWhere(input.sessionId),
+    },
     include: {
       billCharges: { where: { term } },
-      payments: { where: { status: PaymentStatus.confirmed, semester: term } },
     },
   });
 
-  const rows = students.map((s) => {
-    const expectedUgx = s.billCharges.reduce((sum, b) => sum + b.amountUgx, 0);
-    const paidUgx = s.payments.reduce((sum, p) => sum + p.totalUgx, 0);
-    return {
-      studentName: s.name,
-      expectedUgx,
-      paidUgx,
-      balanceUgx: Math.max(0, expectedUgx - paidUgx),
-    };
-  });
+  const rows = await Promise.all(
+    students.map(async (s) => {
+      const expectedUgx = s.billCharges.reduce((sum, b) => sum + b.amountUgx, 0);
+      const paidUgx = await getStudentTermPaidUgx({
+        organizationId: input.organizationId,
+        studentId: s.id,
+        term,
+      });
+      return {
+        studentName: s.name,
+        expectedUgx,
+        paidUgx,
+        balanceUgx: Math.max(0, expectedUgx - paidUgx),
+      };
+    }),
+  );
 
   return { rows };
 }
@@ -170,14 +182,17 @@ export async function buildStudentAccountStatement(input: {
     amountUgx: p.totalUgx,
     receiptNo: p.schoolReceiptNo || p.id.slice(-8).toUpperCase(),
   }));
-  const expected = charges.reduce((s, c) => s + c.amountUgx, 0);
-  const paid = payments.reduce((s, p) => s + p.amountUgx, 0);
+  const balanceUgx = await getStudentTermOutstanding({
+    organizationId: input.organizationId,
+    studentId: student.id,
+    term,
+  });
 
   return {
     studentName: student.name,
     charges,
     payments,
-    balanceUgx: Math.max(0, expected - paid),
+    balanceUgx,
   };
 }
 

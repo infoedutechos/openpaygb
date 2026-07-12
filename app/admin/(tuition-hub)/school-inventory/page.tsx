@@ -1,20 +1,22 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useSchoolAdminApi } from "@/hooks/useSchoolAdminApi";
 
 type Item = { id: string; name: string; availableQty: number; unavailableQty: number; notes: string };
 
 export default function SchoolInventoryPage() {
+  const { schoolFetch, organizationSlug } = useSchoolAdminApi();
   const [items, setItems] = useState<Item[]>([]);
   const [form, setForm] = useState({ name: "", availableQty: 0, unavailableQty: 0, notes: "" });
   const [editId, setEditId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const r = await fetch("/api/admin/school/inventory", { credentials: "include" });
+    const r = await schoolFetch("/api/admin/school/inventory");
     if (!r.ok) return;
     const j = (await r.json()) as { items?: Item[] };
     setItems(j.items ?? []);
-  }, []);
+  }, [schoolFetch]);
 
   useEffect(() => {
     void load();
@@ -34,11 +36,10 @@ export default function SchoolInventoryPage() {
           void (async () => {
             const url = editId ? `/api/admin/school/inventory/${editId}` : "/api/admin/school/inventory";
             const method = editId ? "PATCH" : "POST";
-            await fetch(url, {
+            await schoolFetch(url, {
               method,
-              credentials: "include",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(form),
+              body: JSON.stringify({ ...form, organizationSlug }),
             });
             setForm({ name: "", availableQty: 0, unavailableQty: 0, notes: "" });
             setEditId(null);
@@ -63,7 +64,7 @@ export default function SchoolInventoryPage() {
             <p className="mt-1 text-xs text-slate-500">{i.notes || "—"}</p>
             <div className="mt-3 flex gap-3">
               <button type="button" className="text-xs text-amber-300" onClick={() => { setEditId(i.id); setForm({ name: i.name, availableQty: i.availableQty, unavailableQty: i.unavailableQty, notes: i.notes }); }}>Edit</button>
-              <button type="button" className="text-xs text-rose-300" onClick={() => void fetch(`/api/admin/school/inventory/${i.id}`, { method: "DELETE", credentials: "include" }).then(() => load())}>Delete</button>
+              <button type="button" className="text-xs text-rose-300" onClick={() => void schoolFetch(`/api/admin/school/inventory/${i.id}`, { method: "DELETE" }).then(() => load())}>Delete</button>
             </div>
           </article>
         ))}
@@ -89,7 +90,7 @@ export default function SchoolInventoryPage() {
                 <td className="px-4 py-2 text-slate-400">{i.notes || "—"}</td>
                 <td className="px-4 py-2 text-right space-x-2">
                   <button type="button" className="text-xs text-amber-300" onClick={() => { setEditId(i.id); setForm({ name: i.name, availableQty: i.availableQty, unavailableQty: i.unavailableQty, notes: i.notes }); }}>Edit</button>
-                  <button type="button" className="text-xs text-rose-300" onClick={() => void fetch(`/api/admin/school/inventory/${i.id}`, { method: "DELETE", credentials: "include" }).then(() => load())}>Delete</button>
+                  <button type="button" className="text-xs text-rose-300" onClick={() => void schoolFetch(`/api/admin/school/inventory/${i.id}`, { method: "DELETE" }).then(() => load())}>Delete</button>
                 </td>
               </tr>
             ))}

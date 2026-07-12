@@ -2,8 +2,8 @@ import { PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { normalizeSchoolTerm } from "@/lib/school-term";
 import { getStudentBalanceSummary } from "@/lib/tuition-balance";
-import { getAllocatedPaidUgx } from "@/lib/school-payment-allocation";
-import { schoolSessionWhere } from "@/lib/school-session-scope";
+import { getStudentTermPaidUgx } from "@/lib/school-account-balance";
+import { billChargeSessionWhere, schoolSessionWhere } from "@/lib/school-session-scope";
 
 export type DefaulterTab = "all_due" | "overdue" | "responding" | "non_defaulters";
 
@@ -50,7 +50,7 @@ export async function listSchoolDefaulters(input: {
         select: { id: true, confirmedAt: true, semester: true, totalUgx: true, schoolReceiptNo: true },
       },
       billCharges: {
-        where: { term },
+        where: { term, ...billChargeSessionWhere(input.sessionId) },
         select: { amountUgx: true },
       },
     },
@@ -80,15 +80,11 @@ export async function listSchoolDefaulters(input: {
         // student may lack programme — skip tuition inference
       }
     } else {
-      const allocatedPaid = await getAllocatedPaidUgx({
+      paidUgx = await getStudentTermPaidUgx({
         organizationId: input.organizationId,
         studentId: s.id,
         term,
       });
-      paidUgx =
-        allocatedPaid > 0
-          ? allocatedPaid
-          : s.payments.reduce((sum, p) => sum + (p.totalUgx ?? 0), 0);
     }
     const debt = Math.max(0, expectedUgx - paidUgx);
     const lastPay = s.payments[0]?.confirmedAt ?? null;

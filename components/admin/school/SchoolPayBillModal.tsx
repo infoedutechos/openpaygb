@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { formatUgx } from "@/components/admin/school/SchoolContextBar";
+import { useSchoolAdminApi } from "@/hooks/useSchoolAdminApi";
 
 type Charge = {
   id: string;
@@ -19,6 +20,7 @@ type Props = {
 };
 
 export function SchoolPayBillModal({ studentId, studentName, open, onClose, onPaid }: Props) {
+  const { schoolFetch, organizationSlug } = useSchoolAdminApi();
   const [term, setTerm] = useState(1);
   const [charges, setCharges] = useState<Charge[]>([]);
   const [loading, setLoading] = useState(false);
@@ -34,10 +36,8 @@ export function SchoolPayBillModal({ studentId, studentName, open, onClose, onPa
     setLoading(true);
     try {
       const [billR, sessR] = await Promise.all([
-        fetch(`/api/admin/school/bills?studentId=${encodeURIComponent(studentId)}&term=${term}`, {
-          credentials: "include",
-        }),
-        fetch("/api/admin/school/sessions", { credentials: "include" }),
+        schoolFetch("/api/admin/school/bills", undefined, { studentId, term }),
+        schoolFetch("/api/admin/school/sessions"),
       ]);
       if (billR.ok) {
         const j = (await billR.json()) as { charges?: Charge[] };
@@ -53,7 +53,7 @@ export function SchoolPayBillModal({ studentId, studentName, open, onClose, onPa
     } finally {
       setLoading(false);
     }
-  }, [open, studentId, term]);
+  }, [open, studentId, term, schoolFetch]);
 
   useEffect(() => {
     if (open) {
@@ -71,11 +71,10 @@ export function SchoolPayBillModal({ studentId, studentName, open, onClose, onPa
     setBusy(true);
     setError(null);
     try {
-      const r = await fetch("/api/admin/school/payments", {
+      const r = await schoolFetch("/api/admin/school/payments", {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ studentId, term, amountUgx, paymentMode, notes }),
+        body: JSON.stringify({ studentId, term, amountUgx, paymentMode, notes, organizationSlug }),
       });
       const j = (await r.json()) as { receiptNo?: string; error?: string };
       if (!r.ok) throw new Error(j.error ?? "Payment failed");

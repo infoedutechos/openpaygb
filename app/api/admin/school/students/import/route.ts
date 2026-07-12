@@ -3,8 +3,8 @@ import { SchoolStaffSex } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { apiErrorResponse } from "@/lib/api-error";
 import { requireSchoolAdminScope } from "@/lib/school-admin-api";
-import { schoolSessionWhere } from "@/lib/school-session-scope";
-import { csvCell, csvResponse, mapCsvHeaders, parseCsv } from "@/lib/school-csv";
+import { csvCell, mapCsvHeaders, parseCsv } from "@/lib/school-csv";
+import { exportSchoolStudentsCsv } from "@/lib/school-students-export";
 import { resolveStudentEnrollmentFromClassStream } from "@/lib/school-structure-server";
 import { isValidObjectId } from "@/lib/object-id";
 
@@ -132,35 +132,12 @@ export async function GET(req: Request) {
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const classId = url.searchParams.get("classId");
-    const students = await prisma.student.findMany({
-      where: {
-        organizationId: auth.scope.organizationId,
-        ...schoolSessionWhere(auth.context.sessionId),
-        ...(classId ? { schoolClassId: classId } : {}),
-      },
-      include: {
-        schoolClass: { select: { code: true } },
-        schoolStream: { select: { code: true } },
-      },
-      orderBy: { name: "asc" },
-      take: 5000,
+    return exportSchoolStudentsCsv({
+      organizationId: auth.scope.organizationId,
+      sessionId: auth.context.sessionId,
+      classId,
     });
-
-    const header = ["Name", "AdmissionNo", "Sex", "Phone", "Email", "Address", "Class", "Stream", "ProgrammeCode"];
-    const dataRows = students.map((s) => [
-      s.name,
-      s.admissionNo,
-      s.sex,
-      s.phone,
-      s.email,
-      s.address,
-      s.schoolClass?.code ?? "",
-      s.schoolStream?.code ?? "",
-      s.programmeCode,
-    ]);
-
-    return csvResponse(`school-students-${new Date().toISOString().slice(0, 10)}.csv`, header, dataRows);
   } catch (e) {
-    return apiErrorResponse(e, { route: "GET /api/admin/school/students/export" });
+    return apiErrorResponse(e, { route: "GET /api/admin/school/students/import" });
   }
 }

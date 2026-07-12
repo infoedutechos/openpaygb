@@ -9,6 +9,8 @@ import { prisma } from "@/lib/prisma";
 import { buildStudentProgrammeProgress } from "@/lib/tuition-progress";
 import { resolveStudentEnrollmentFromClassStream } from "@/lib/school-structure-server";
 import { isValidObjectId } from "@/lib/object-id";
+import { loadSchoolOrgContext } from "@/lib/school-org-context";
+import { schoolSessionWhere } from "@/lib/school-session-scope";
 
 const CreateBody = z
   .object({
@@ -65,6 +67,13 @@ export async function POST(req: Request) {
   }
   const organizationId = adminUser.organizationId ?? (await getDefaultOrganizationId());
 
+  const orgMeta = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    select: { institutionTier: true, activeSchoolSessionId: true },
+  });
+  const schoolSessionId =
+    orgMeta?.institutionTier === "school" ? orgMeta.activeSchoolSessionId : null;
+
   const json = await req.json();
   const parsed = CreateBody.safeParse(json);
   if (!parsed.success) {
@@ -107,6 +116,7 @@ export async function POST(req: Request) {
       programmeCode,
       schoolClassId: schoolClassId ?? null,
       schoolStreamId: schoolStreamId ?? null,
+      schoolSessionId,
       year: data.year,
       semester: data.semester,
       ...(portalPasswordHash ? { portalPasswordHash } : {}),
@@ -157,10 +167,25 @@ export async function GET(req: Request) {
     tenantFilter = { organizationId: org.id };
   }
 
+  let sessionFilter: Record<string, unknown> = {};
+  const scopedOrgId =
+    "organizationId" in tenantFilter && tenantFilter.organizationId
+      ? (tenantFilter.organizationId as string)
+      : "organizationId" in orgWhere && orgWhere.organizationId
+        ? (orgWhere.organizationId as string)
+        : null;
+  if (scopedOrgId) {
+    const ctx = await loadSchoolOrgContext(scopedOrgId);
+    if (ctx) {
+      sessionFilter = schoolSessionWhere(ctx.sessionId);
+    }
+  }
+
   const students = await prisma.student.findMany({
     where: {
       ...orgWhere,
       ...tenantFilter,
+      ...sessionFilter,
       ...(q
         ? {
             OR: [

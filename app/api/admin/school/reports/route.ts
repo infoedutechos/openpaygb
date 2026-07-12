@@ -47,6 +47,7 @@ export async function GET(req: Request) {
         organizationId: auth.scope.organizationId,
         classId,
         term,
+        sessionId: auth.context.sessionId,
       });
       return NextResponse.json(data);
     }

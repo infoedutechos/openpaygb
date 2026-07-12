@@ -11,6 +11,11 @@ export function schoolClassSessionWhere(sessionId: string | null | undefined): P
   return { OR: [{ schoolSessionId: sessionId }, { schoolSessionId: null }] };
 }
 
+export function billChargeSessionWhere(sessionId: string | null | undefined): Prisma.StudentBillChargeWhereInput {
+  if (!sessionId) return {};
+  return { OR: [{ sessionId }, { sessionId: null }] };
+}
+
 export function currentAcademicYearLabel(): string {
   const y = new Date().getFullYear();
   const m = new Date().getMonth();

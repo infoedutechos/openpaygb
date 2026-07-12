@@ -4,9 +4,13 @@ import { notifyTelegramPaymentConfirmed } from "@/lib/telegram/notify";
 import { enqueueUgXtoTonBridge } from "@/lib/bridge/settlement";
 import { sendReceiptEmailIfConfigured } from "@/lib/receipt-email";
 import { enqueuePartnerWebhooks } from "@/lib/partner-webhooks";
+import { maybeAllocateSchoolPaymentOnConfirm } from "@/lib/school-payment-allocation";
 
 /** Side effects when a payment first reaches `confirmed` (admin, MoMo webhook, etc.). */
 export function handleFirstTimeConfirmation(payment: Payment): void {
+  void maybeAllocateSchoolPaymentOnConfirm(payment).catch((e) =>
+    console.error("[school-payment-allocation]", e),
+  );
   notifyTelegramPaymentConfirmed(payment.id);
   if (payment.rail === PaymentRail.momo_bridge) {
     enqueueUgXtoTonBridge(payment);

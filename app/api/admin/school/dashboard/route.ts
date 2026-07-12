@@ -11,7 +11,7 @@ export async function GET(req: Request) {
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const term = normalizeSchoolTerm(url.searchParams.get("term") ?? auth.context.activeTerm);
-    const dashboard = await buildSchoolDashboard(auth.scope.organizationId, term);
+    const dashboard = await buildSchoolDashboard(auth.scope.organizationId, term, auth.context.sessionId);
     return NextResponse.json({ dashboard, context: auth.context });
   } catch (e) {
     return apiErrorResponse(e, { route: "GET /api/admin/school/dashboard" });

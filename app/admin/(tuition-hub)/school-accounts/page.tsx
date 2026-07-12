@@ -2,11 +2,13 @@
 
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { formatUgx } from "@/components/admin/school/SchoolContextBar";
+import { useSchoolAdminApi } from "@/hooks/useSchoolAdminApi";
 
 type Account = { id: string; name: string; kind: "income" | "expenditure" };
 type LedgerLine = { date: string; trackId: string; name: string; particulars: string; amountUgx: number; direction: string };
 
 export default function SchoolAccountsPage() {
+  const { schoolFetch, organizationSlug } = useSchoolAdminApi();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [name, setName] = useState("");
   const [kind, setKind] = useState<"income" | "expenditure">("income");
@@ -19,8 +21,8 @@ export default function SchoolAccountsPage() {
 
   const load = useCallback(async () => {
     const [accR, sessR] = await Promise.all([
-      fetch("/api/admin/school/accounts", { credentials: "include" }),
-      fetch("/api/admin/school/sessions", { credentials: "include" }),
+      schoolFetch("/api/admin/school/accounts"),
+      schoolFetch("/api/admin/school/sessions"),
     ]);
     if (accR.ok) {
       const j = (await accR.json()) as { accounts?: Account[] };
@@ -30,7 +32,7 @@ export default function SchoolAccountsPage() {
       const j = (await sessR.json()) as { context?: { activeTerm?: number } };
       if (j.context?.activeTerm) setTerm(j.context.activeTerm);
     }
-  }, []);
+  }, [schoolFetch]);
 
   useEffect(() => {
     void load();
@@ -38,10 +40,10 @@ export default function SchoolAccountsPage() {
 
   useEffect(() => {
     if (!ledgerId) return;
-    void fetch(`/api/admin/school/accounts/${ledgerId}/transactions?term=${term}`, { credentials: "include" })
+    void schoolFetch(`/api/admin/school/accounts/${ledgerId}/transactions`, undefined, { term })
       .then((r) => r.json())
       .then((j) => setLedger(j));
-  }, [ledgerId, term]);
+  }, [ledgerId, term, schoolFetch]);
 
   const filtered = accounts.filter((a) => a.name.toLowerCase().includes(q.toLowerCase()));
 
@@ -65,11 +67,10 @@ export default function SchoolAccountsPage() {
         onSubmit={(e) => {
           e.preventDefault();
           void (async () => {
-            await fetch("/api/admin/school/accounts", {
+            await schoolFetch("/api/admin/school/accounts", {
               method: "POST",
-              credentials: "include",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ name, kind }),
+              body: JSON.stringify({ name, kind, organizationSlug }),
             });
             setName("");
             await load();
@@ -100,7 +101,7 @@ export default function SchoolAccountsPage() {
                   <div className="mt-3 flex flex-wrap gap-3">
                     <button type="button" className="text-xs text-cyan-300" onClick={() => setLedgerId(a.id)}>Ledger</button>
                     <button type="button" className="text-xs text-amber-300" onClick={() => { setEditId(a.id); setEditName(a.name); }}>Edit</button>
-                    <button type="button" className="text-xs text-rose-300" onClick={() => void fetch(`/api/admin/school/accounts/${a.id}`, { method: "DELETE", credentials: "include" }).then(() => load())}>Delete</button>
+                    <button type="button" className="text-xs text-rose-300" onClick={() => void schoolFetch(`/api/admin/school/accounts/${a.id}`, { method: "DELETE" }).then(() => load())}>Delete</button>
                   </div>
                 </article>
               ))}
@@ -139,11 +140,11 @@ export default function SchoolAccountsPage() {
                     <td className="px-4 py-2 text-right space-x-2">
                       <button type="button" className="text-xs text-cyan-300" onClick={() => setLedgerId(a.id)}>Ledger</button>
                       {editId === a.id ? (
-                        <button type="button" className="text-xs text-emerald-300" onClick={() => void fetch(`/api/admin/school/accounts/${a.id}`, { method: "PATCH", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: editName }) }).then(() => { setEditId(null); void load(); })}>Save</button>
+                        <button type="button" className="text-xs text-emerald-300" onClick={() => void schoolFetch(`/api/admin/school/accounts/${a.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: editName, organizationSlug }) }).then(() => { setEditId(null); void load(); })}>Save</button>
                       ) : (
                         <button type="button" className="text-xs text-amber-300" onClick={() => { setEditId(a.id); setEditName(a.name); }}>Edit</button>
                       )}
-                      <button type="button" className="text-xs text-rose-300" onClick={() => void fetch(`/api/admin/school/accounts/${a.id}`, { method: "DELETE", credentials: "include" }).then(() => load())}>Delete</button>
+                      <button type="button" className="text-xs text-rose-300" onClick={() => void schoolFetch(`/api/admin/school/accounts/${a.id}`, { method: "DELETE" }).then(() => load())}>Delete</button>
                     </td>
                   </tr>
                 ))}

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { apiErrorResponse } from "@/lib/api-error";
 import { requireSchoolAdminScope } from "@/lib/school-admin-api";
 import { fetchResultsAppClasses, isResultsAppConfigured } from "@/lib/school-results-app-import";
+import { importResultsAppStudents } from "@/lib/school-external-student-import";
 
 const Body = z.object({
   organizationSlug: z.string().optional(),
@@ -87,7 +88,28 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ classesCreated, imported: selected.length });
+    let studentsCreated = 0;
+    let studentsSkipped = 0;
+    if (body.includeStudents) {
+      const studentImport = await importResultsAppStudents({
+        organizationId: auth.scope.organizationId,
+        organizationSlug: auth.scope.slug,
+        sessionLabel: body.sessionLabel ?? auth.context.sessionLabel,
+        sessionId,
+        activeTerm: auth.context.activeTerm,
+        classCodes: selected.map((c) => c.code),
+        newOnly: body.newOnly,
+      });
+      studentsCreated = studentImport.created;
+      studentsSkipped = studentImport.skipped;
+    }
+
+    return NextResponse.json({
+      classesCreated,
+      imported: selected.length,
+      studentsCreated,
+      studentsSkipped,
+    });
   } catch (e) {
     return apiErrorResponse(e, { route: "POST /api/admin/school/classes/import/external" });
   }

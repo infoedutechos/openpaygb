@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getStudentTermOutstanding } from "@/lib/school-account-balance";
+import { getStudentTermOutstanding, getStudentTermPaidUgx } from "@/lib/school-account-balance";
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
@@ -57,5 +57,13 @@ describe("school-account-balance", () => {
         where: expect.objectContaining({ status: PaymentStatus.confirmed, semester: 1 }),
       }),
     );
+  });
+
+  it("caps paid at expected when using payment fallback", async () => {
+    vi.mocked(prisma.studentBillCharge.aggregate).mockResolvedValue({ _sum: { amountUgx: 100_000 } } as never);
+    vi.mocked(getAllocatedPaidUgx).mockResolvedValue(0);
+    vi.mocked(prisma.payment.aggregate).mockResolvedValue({ _sum: { totalUgx: 200_000 } } as never);
+    const paid = await getStudentTermPaidUgx({ organizationId: "org1", studentId: "s1", term: 1 });
+    expect(paid).toBe(100_000);
   });
 });

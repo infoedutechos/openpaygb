@@ -4,18 +4,10 @@ import { normalizeSchoolTerm } from "@/lib/school-term";
 import { handleFirstTimeConfirmation } from "@/lib/on-payment-confirmed";
 import { getStudentTermOutstanding } from "@/lib/school-account-balance";
 import { allocatePaymentToBillCharges } from "@/lib/school-payment-allocation";
+import { nextSchoolReceiptNo } from "@/lib/school-receipt-no";
 import { loadSchoolOrgContext } from "@/lib/school-org-context";
 
 export type SchoolPaymentMode = "CASH" | "MOBILE TRANSFER";
-
-export async function nextSchoolReceiptNo(organizationId: string): Promise<string> {
-  const org = await prisma.organization.update({
-    where: { id: organizationId },
-    data: { schoolReceiptCounter: { increment: 1 } },
-    select: { schoolReceiptCounter: true },
-  });
-  return `RP-${org.schoolReceiptCounter}`;
-}
 
 export async function recordSchoolManualPayment(input: {
   organizationId: string;

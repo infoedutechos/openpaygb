@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useSchoolAdminApi } from "@/hooks/useSchoolAdminApi";
 
 type Session = { id: string; label: string; isActive: boolean };
 
 type Mode = "hub" | "new" | "edit" | "activate" | "delete";
 
 export default function SchoolSessionPage() {
+  const { schoolFetch, organizationSlug } = useSchoolAdminApi();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [mode, setMode] = useState<Mode>("hub");
   const [label, setLabel] = useState("");
@@ -16,11 +18,11 @@ export default function SchoolSessionPage() {
   const [deleteId, setDeleteId] = useState("");
 
   const load = useCallback(async () => {
-    const r = await fetch("/api/admin/school/sessions", { credentials: "include" });
+    const r = await schoolFetch("/api/admin/school/sessions");
     if (!r.ok) return;
     const j = (await r.json()) as { sessions?: Session[] };
     setSessions(j.sessions ?? []);
-  }, []);
+  }, [schoolFetch]);
 
   useEffect(() => {
     void load();
@@ -57,11 +59,10 @@ export default function SchoolSessionPage() {
           onSubmit={(e) => {
             e.preventDefault();
             void (async () => {
-              await fetch("/api/admin/school/sessions", {
+              await schoolFetch("/api/admin/school/sessions", {
                 method: "POST",
-                credentials: "include",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ label, activate: true }),
+                body: JSON.stringify({ label, activate: true, organizationSlug }),
               });
               setLabel("");
               setMode("hub");
@@ -87,7 +88,7 @@ export default function SchoolSessionPage() {
           {editId ? (
             <form onSubmit={(e) => {
               e.preventDefault();
-              void fetch(`/api/admin/school/sessions/${editId}`, { method: "PATCH", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ label: editLabel }) }).then(() => { setMode("hub"); void load(); });
+              void schoolFetch(`/api/admin/school/sessions/${editId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ label: editLabel, organizationSlug }) }).then(() => { setMode("hub"); void load(); });
             }} className="flex gap-2">
               <input value={editLabel} onChange={(e) => setEditLabel(e.target.value)} className="flex-1 rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white" />
               <button type="submit" className="rounded-lg bg-orange-700 px-3 py-2 text-sm text-white">Save</button>
@@ -105,7 +106,7 @@ export default function SchoolSessionPage() {
               <option key={s.id} value={s.id}>{s.label}</option>
             ))}
           </select>
-          <button type="button" disabled={!activateId} onClick={() => void fetch(`/api/admin/school/sessions/${activateId}/activate`, { method: "POST", credentials: "include" }).then(() => { setMode("hub"); void load(); })} className="rounded-lg bg-emerald-700 px-4 py-2 text-sm text-white disabled:opacity-50">Activate</button>
+          <button type="button" disabled={!activateId} onClick={() => void schoolFetch(`/api/admin/school/sessions/${activateId}/activate`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ organizationSlug }) }).then(() => { setMode("hub"); void load(); })} className="rounded-lg bg-emerald-700 px-4 py-2 text-sm text-white disabled:opacity-50">Activate</button>
         </div>
       ) : null}
 
@@ -118,7 +119,7 @@ export default function SchoolSessionPage() {
               <option key={s.id} value={s.id}>{s.label}</option>
             ))}
           </select>
-          <button type="button" disabled={!deleteId} onClick={() => { if (confirm("Delete this session?")) void fetch(`/api/admin/school/sessions/${deleteId}`, { method: "DELETE", credentials: "include" }).then(() => { setMode("hub"); void load(); }); }} className="rounded-lg bg-rose-700 px-4 py-2 text-sm text-white disabled:opacity-50">Delete</button>
+          <button type="button" disabled={!deleteId} onClick={() => { if (confirm("Delete this session?")) void schoolFetch(`/api/admin/school/sessions/${deleteId}`, { method: "DELETE" }).then(() => { setMode("hub"); void load(); }); }} className="rounded-lg bg-rose-700 px-4 py-2 text-sm text-white disabled:opacity-50">Delete</button>
         </div>
       ) : null}
 
