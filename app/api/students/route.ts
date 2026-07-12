@@ -16,6 +16,9 @@ const CreateBody = z
     email: z.string().email().optional(),
     phone: z.string().optional().default(""),
     telegramId: z.string().optional().default(""),
+    admissionNo: z.string().optional(),
+    address: z.string().optional(),
+    sex: z.enum(["male", "female", "other"]).optional(),
     programmeCode: z.string().min(2).optional(),
     schoolClassId: z.string().optional(),
     schoolStreamId: z.string().optional(),
@@ -95,8 +98,11 @@ export async function POST(req: Request) {
     data: {
       organizationId,
       name: data.name,
+      admissionNo: data.admissionNo?.trim() ?? "",
       email: data.email ?? "",
       phone: data.phone,
+      address: data.address?.trim() ?? "",
+      sex: data.sex ?? "other",
       telegramId: data.telegramId,
       programmeCode,
       schoolClassId: schoolClassId ?? null,
@@ -129,6 +135,7 @@ export async function GET(req: Request) {
   const q = url.searchParams.get("q")?.trim() ?? "";
   const limit = Math.min(Number(url.searchParams.get("limit") ?? "50") || 50, 200);
   const organizationSlug = url.searchParams.get("organizationSlug")?.trim().toLowerCase() ?? "";
+  const schoolClassId = url.searchParams.get("schoolClassId")?.trim() ?? "";
 
   const orgWhere = await organizationWhereForSession(admin.sub, admin.role);
 
@@ -160,9 +167,11 @@ export async function GET(req: Request) {
               { name: { contains: q } },
               { email: { contains: q } },
               { phone: { contains: q } },
+              { admissionNo: { contains: q } },
             ],
           }
         : {}),
+      ...(schoolClassId && isValidObjectId(schoolClassId) ? { schoolClassId } : {}),
     },
     orderBy: { createdAt: "desc" },
     take: limit,
@@ -209,6 +218,9 @@ export async function GET(req: Request) {
       return {
         id: s.id,
         name: s.name,
+        admissionNo: s.admissionNo,
+        sex: s.sex,
+        address: s.address,
         email: s.email,
         phone: s.phone,
         telegramId: s.telegramId,

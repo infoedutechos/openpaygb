@@ -3,12 +3,16 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { SchoolDetailModal } from "@/components/admin/SchoolDetailModal";
+import { SchoolBulkBillsPanel } from "@/components/admin/school/SchoolBulkBillsPanel";
+import { SchoolPayBillModal } from "@/components/admin/school/SchoolPayBillModal";
+import { SchoolStudentActionSheet } from "@/components/admin/school/SchoolStudentActionSheet";
+import { SchoolStudentEditModal } from "@/components/admin/school/SchoolStudentEditModal";
+import { SchoolStudentImportModal } from "@/components/admin/school/SchoolStudentImportModal";
 import { TuitionHubCheckoutExplainerCompact } from "@/components/admin/TuitionHubCheckoutExplainer";
 import { TenantList } from "@/components/tuition/TenantList";
 import { useTuitionAdminGate } from "@/hooks/useTuitionAdminGate";
 import { useMasterOrgSlug } from "@/hooks/useMasterOrgSlug";
-
-import { useAuthMe } from "@/hooks/useAuthMe";
+import { useSchoolAdminApi } from "@/hooks/useSchoolAdminApi";
 
 type ClassOption = {
   id: string;
@@ -20,6 +24,9 @@ type ClassOption = {
 type StudentRow = {
   id: string;
   name: string;
+  admissionNo?: string;
+  sex?: string;
+  address?: string;
   email: string;
   phone: string;
   telegramId: string;
@@ -35,8 +42,8 @@ type StudentRow = {
 
 export default function AdminStudentsPage() {
   const { orgSlug, setOrgSlug } = useMasterOrgSlug();
-  const { data: authMe } = useAuthMe();
-  const isSchoolTenant = authMe?.admin?.organization?.institutionTier === "school";
+  const { schoolScope } = useSchoolAdminApi();
+  const isSchoolTenant = schoolScope;
   const periodLabel = isSchoolTenant ? "Term" : "Semester";
   const { loading: authLoading, ensureTuitionSession } = useTuitionAdminGate();
   const [q, setQ] = useState("");
@@ -46,10 +53,14 @@ export default function AdminStudentsPage() {
   const [error, setError] = useState<string | null>(null);
   const [isMaster, setIsMaster] = useState(false);
   const [schoolSlug, setSchoolSlug] = useState<string | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [createBusy, setCreateBusy] = useState(false);
   const [createForm, setCreateForm] = useState({
     name: "",
+    admissionNo: "",
+    sex: "other" as "male" | "female" | "other",
+    address: "",
     email: "",
     phone: "",
     programmeCode: "",
@@ -60,6 +71,10 @@ export default function AdminStudentsPage() {
     password: "",
   });
   const [schoolClasses, setSchoolClasses] = useState<ClassOption[]>([]);
+  const [classFilter, setClassFilter] = useState("");
+  const [payBillStudent, setPayBillStudent] = useState<{ id: string; name: string } | null>(null);
+  const [actionStudent, setActionStudent] = useState<{ id: string; name: string } | null>(null);
+  const [editStudentId, setEditStudentId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isSchoolTenant) return;
@@ -91,6 +106,7 @@ export default function AdminStudentsPage() {
       const qp = new URLSearchParams();
       qp.set("limit", String(limit));
       qp.set("q", search.trim());
+      if (isSchoolTenant && classFilter) qp.set("schoolClassId", classFilter);
       const slugTrim = organizationSlugFilter.trim().toLowerCase();
       if (slugTrim && master) qp.set("organizationSlug", slugTrim);
 
@@ -103,7 +119,7 @@ export default function AdminStudentsPage() {
       setError(null);
       setRows(j.students ?? []);
     },
-    [authLoading, ensureTuitionSession, organizationSlugFilter]
+    [authLoading, ensureTuitionSession, organizationSlugFilter, isSchoolTenant, classFilter]
   );
 
   useEffect(() => {
@@ -116,15 +132,59 @@ export default function AdminStudentsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-white">Students</h1>
+        <h1 className="text-2xl font-semibold text-white">{isSchoolTenant ? "Students / bills" : "Students"}</h1>
         <p className="text-sm text-slate-400">
           Search by name, email, or phone.
           {isMaster ? " As platform master you see records for every tenant; optionally filter by school slug." : null}{" "}
-          Programme / year / semester are the student&apos;s current enrollment context; actual fee lines and totals for
-          each payment are built at checkout from your programme schedules.
+          {isSchoolTenant
+            ? "Assign bulk bills by class, then record payments under Receipt of payments."
+            : "Programme / year / semester are the student's current enrollment context; actual fee lines and totals for each payment are built at checkout from your programme schedules."}
         </p>
         <TuitionHubCheckoutExplainerCompact className="mt-2 max-w-3xl" />
       </div>
+      {isSchoolTenant ? <SchoolBulkBillsPanel onAssigned={() => void load(q)} /> : null}
+      {isSchoolTenant ? (
+        <div className="flex flex-wrap gap-2 text-sm">
+          <button
+            type="button"
+            onClick={() => { window.location.href = "/api/admin/school/students/export"; }}
+            className="rounded-lg border border-white/15 px-3 py-2 text-cyan-300 hover:bg-white/5"
+          >
+            Export students (CSV)
+          </button>
+          <button
+            type="button"
+            onClick={() => setImportOpen(true)}
+            className="rounded-lg border border-white/15 px-3 py-2 text-violet-300 hover:bg-white/5"
+          >
+            Import students
+          </button>
+          <button
+            type="button"
+            onClick={() => { window.location.href = "/api/admin/school/bills/export"; }}
+            className="rounded-lg border border-white/15 px-3 py-2 text-cyan-300 hover:bg-white/5"
+          >
+            Export bills (CSV)
+          </button>
+          <label className="cursor-pointer rounded-lg border border-white/15 px-3 py-2 text-violet-300 hover:bg-white/5">
+            Import bills (CSV)
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                void (async () => {
+                  const fd = new FormData();
+                  fd.set("file", file);
+                  await fetch("/api/admin/school/bills/import", { method: "POST", credentials: "include", body: fd });
+                })();
+              }}
+            />
+          </label>
+        </div>
+      ) : null}
       {error && <p className="text-sm text-rose-400">{error}</p>}
       <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
         <button
@@ -149,6 +209,9 @@ export default function AdminStudentsPage() {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                       name: createForm.name.trim(),
+                      admissionNo: createForm.admissionNo.trim() || undefined,
+                      sex: createForm.sex,
+                      address: createForm.address.trim() || undefined,
                       email: createForm.email.trim() || undefined,
                       phone: createForm.phone.trim(),
                       ...(isSchoolTenant && createForm.schoolClassId && createForm.schoolStreamId
@@ -174,6 +237,9 @@ export default function AdminStudentsPage() {
                   }
                   setCreateForm({
                     name: "",
+                    admissionNo: "",
+                    sex: "other",
+                    address: "",
                     email: "",
                     phone: "",
                     programmeCode: "",
@@ -200,6 +266,31 @@ export default function AdminStudentsPage() {
               onChange={(e) => setCreateForm((f) => ({ ...f, name: e.target.value }))}
               className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
             />
+            {isSchoolTenant ? (
+              <>
+                <input
+                  placeholder="Admission no."
+                  value={createForm.admissionNo}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, admissionNo: e.target.value }))}
+                  className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
+                />
+                <select
+                  value={createForm.sex}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, sex: e.target.value as "male" | "female" | "other" }))}
+                  className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
+                >
+                  <option value="female">Female</option>
+                  <option value="male">Male</option>
+                  <option value="other">Other</option>
+                </select>
+                <input
+                  placeholder="Contact address"
+                  value={createForm.address}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, address: e.target.value }))}
+                  className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white sm:col-span-2"
+                />
+              </>
+            ) : null}
             <input
               type="email"
               placeholder="Email (required for portal login)"
@@ -316,6 +407,18 @@ export default function AdminStudentsPage() {
             />
           </label>
         ) : null}
+        {isSchoolTenant ? (
+          <select
+            value={classFilter}
+            onChange={(e) => setClassFilter(e.target.value)}
+            className="w-full max-w-xs rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
+          >
+            <option value="">All classes</option>
+            {schoolClasses.map((c) => (
+              <option key={c.id} value={c.id}>{c.code}</option>
+            ))}
+          </select>
+        ) : null}
       </div>
       <div className="space-y-3 md:hidden">
         {rows.map((s) => (
@@ -339,6 +442,18 @@ export default function AdminStudentsPage() {
               </p>
             ) : null}
             <p className="mt-2 truncate text-xs text-slate-500">{s.email || s.phone || "—"}</p>
+            {isSchoolTenant ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setActionStudent({ id: s.id, name: s.name });
+                }}
+                className="mt-2 text-xs font-semibold text-violet-300"
+              >
+                Actions
+              </button>
+            ) : null}
           </Link>
         ))}
       </div>
@@ -347,20 +462,29 @@ export default function AdminStudentsPage() {
           <thead className="border-b border-[var(--border)] text-xs uppercase text-slate-500">
             <tr>
               <th className="px-3 py-2">Name</th>
+              {isSchoolTenant ? <th className="px-3 py-2">Admission</th> : null}
+              {isSchoolTenant ? <th className="px-3 py-2">Sex</th> : null}
               <th className="px-3 py-2">School</th>
               <th className="px-3 py-2">Programme</th>
               <th className="px-3 py-2">Email</th>
               <th className="px-3 py-2">Phone</th>
+              {isSchoolTenant ? <th className="px-3 py-2">Actions</th> : null}
             </tr>
           </thead>
           <tbody>
             {rows.map((s) => (
               <tr key={s.id} className="border-b border-[var(--border)]/60">
                 <td className="px-3 py-2">
-                  <Link href={`/admin/students/${s.id}`} className="text-sky-400 hover:underline">
+                  <button
+                    type="button"
+                    onClick={() => setActionStudent({ id: s.id, name: s.name })}
+                    className="text-sky-400 hover:underline text-left"
+                  >
                     {s.name}
-                  </Link>
+                  </button>
                 </td>
+                {isSchoolTenant ? <td className="px-3 py-2 text-xs text-slate-400">{s.admissionNo || "—"}</td> : null}
+                {isSchoolTenant ? <td className="px-3 py-2 text-xs capitalize text-slate-400">{s.sex || "—"}</td> : null}
                 <td className="px-3 py-2 text-xs">
                   {s.organizationSlug ? (
                     <button
@@ -391,17 +515,72 @@ export default function AdminStudentsPage() {
                 </td>
                 <td className="px-3 py-2 text-slate-400">{s.email || "—"}</td>
                 <td className="px-3 py-2 text-slate-400">{s.phone || "—"}</td>
+                {isSchoolTenant ? (
+                  <td className="px-3 py-2">
+                    <button
+                      type="button"
+                      onClick={() => setActionStudent({ id: s.id, name: s.name })}
+                      className="text-xs font-semibold text-violet-300 hover:underline"
+                    >
+                      Actions
+                    </button>
+                  </td>
+                ) : null}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      {isSchoolTenant ? (
+        <p className="text-sm text-slate-400">No. of students: {rows.length}</p>
+      ) : null}
       <SchoolDetailModal
         organizationSlug={schoolSlug}
         open={Boolean(schoolSlug)}
         isMaster={isMaster}
         onClose={() => setSchoolSlug(null)}
       />
+      {payBillStudent ? (
+        <SchoolPayBillModal
+          studentId={payBillStudent.id}
+          studentName={payBillStudent.name}
+          open
+          onClose={() => setPayBillStudent(null)}
+          onPaid={() => void load(q)}
+        />
+      ) : null}
+      {actionStudent ? (
+        <SchoolStudentActionSheet
+          studentId={actionStudent.id}
+          studentName={actionStudent.name}
+          open
+          onClose={() => setActionStudent(null)}
+          onPayBill={() => {
+            setPayBillStudent(actionStudent);
+            setActionStudent(null);
+          }}
+          onEdit={() => {
+            setEditStudentId(actionStudent.id);
+            setActionStudent(null);
+          }}
+          onDelete={() => {
+            if (!confirm(`Delete ${actionStudent.name}?`)) return;
+            void fetch(`/api/students/${actionStudent.id}`, { method: "DELETE", credentials: "include" }).then(() => {
+              setActionStudent(null);
+              void load(q);
+            });
+          }}
+        />
+      ) : null}
+      {editStudentId ? (
+        <SchoolStudentEditModal
+          studentId={editStudentId}
+          open
+          onClose={() => setEditStudentId(null)}
+          onSaved={() => void load(q)}
+        />
+      ) : null}
+      <SchoolStudentImportModal open={importOpen} onClose={() => setImportOpen(false)} onDone={() => void load(q)} />
     </div>
   );
 }

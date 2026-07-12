@@ -79,3 +79,11 @@ ui_route,relative_file
 /student/pay,app/student/pay/page.tsx
 /student/register,app/student/register/page.tsx
 /tma,app/tma/page.tsx
+/admin/school-dashboard,app/admin/(tuition-hub)/school-dashboard/page.tsx
+/admin/school-session,app/admin/(tuition-hub)/school-session/page.tsx
+/admin/school-accounts,app/admin/(tuition-hub)/school-accounts/page.tsx
+/admin/defaulters,app/admin/(tuition-hub)/defaulters/page.tsx
+/admin/school-staff,app/admin/(tuition-hub)/school-staff/page.tsx
+/admin/school-outflow,app/admin/(tuition-hub)/school-outflow/page.tsx
+/admin/school-inventory,app/admin/(tuition-hub)/school-inventory/page.tsx
+/admin/school-reports,app/admin/(tuition-hub)/school-reports/page.tsx

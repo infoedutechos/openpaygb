@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthMe } from "@/hooks/useAuthMe";
 import { clientFetchErrorMessage } from "@/lib/client-fetch-error";
 import { TenantList } from "@/components/tuition/TenantList";
@@ -112,13 +112,23 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub: st
 }
 
 function AdminDashboardPageInner() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const orgSlugFilter = searchParams.get("orgSlug")?.trim().toLowerCase() ?? "";
   const { data: authMe, loading: authLoading } = useAuthMe();
+  const isSchoolTenant = authMe?.admin?.organization?.institutionTier === "school";
   const [summary, setSummary] = useState<Summary | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (authLoading || !authMe?.tuitionSession) return;
+    if (isSchoolTenant && !orgSlugFilter) {
+      router.replace("/admin/school-dashboard");
+    }
+  }, [authLoading, authMe?.tuitionSession, isSchoolTenant, orgSlugFilter, router]);
+
+  useEffect(() => {
+    if (isSchoolTenant && !orgSlugFilter) return;
     if (authLoading) return;
     if (!authMe) {
       setError("Sign in to view the tuition hub dashboard.");
@@ -150,7 +160,11 @@ function AdminDashboardPageInner() {
     return () => {
       cancelled = true;
     };
-  }, [authLoading, authMe, orgSlugFilter]);
+  }, [authLoading, authMe, orgSlugFilter, isSchoolTenant]);
+
+  if (isSchoolTenant && !orgSlugFilter) {
+    return <p className="text-sm text-slate-500">Opening school dashboard…</p>;
+  }
 
   if (error) {
     return <p className="text-sm text-rose-600">{error}</p>;

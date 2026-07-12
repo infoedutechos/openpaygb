@@ -44,7 +44,13 @@ export async function GET(req: Request) {
     orderBy: { createdAt: "desc" },
     take: 5000,
     include: {
-      student: { select: { name: true, email: true } },
+      student: {
+        select: {
+          name: true,
+          email: true,
+          schoolClass: { select: { code: true } },
+        },
+      },
       organization: { select: { slug: true, name: true } },
     },
   });
@@ -85,6 +91,9 @@ export async function GET(req: Request) {
     "programmeName",
     "year",
     "semester",
+    "schoolReceiptNo",
+    "paymentMode",
+    "schoolClassCode",
     "totalUgx",
     "tonAmount",
     "status",
@@ -124,6 +133,9 @@ export async function GET(req: Request) {
       programme?.name ?? "",
       String(p.year),
       String(p.semester),
+      p.schoolReceiptNo ?? "",
+      p.paymentMode ?? "",
+      p.student.schoolClass?.code ?? "",
       String(p.totalUgx),
       String(p.tonAmount),
       p.status,

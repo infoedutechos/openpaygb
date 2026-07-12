@@ -7,6 +7,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { IconDex } from "@/components/hub/tuition-nav-icons";
 import { navHome, navLearn, navServices, earnRewardsIcon, navGuild } from "@/images";
 import type { StaticImageData } from "next/image";
+import { useStandaloneApp } from "@/components/standalone/StandaloneAppProvider";
 
 type NavEntry =
   | {
@@ -31,18 +32,23 @@ const NAV_ITEMS: NavEntry[] = [
 function NavInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { app } = useStandaloneApp();
   const hub = searchParams.get("hub");
   const view = searchParams.get("view");
   const onPlayLanding = pathname === "/" && hub === "play";
   const onClicker = pathname.startsWith("/clicker");
   const onDex = pathname.startsWith("/dex");
+  const navItems = app?.hideEcosystemLinks
+    ? NAV_ITEMS.filter((item) => item.kind !== "dex")
+    : NAV_ITEMS;
+  const homeClickerHref = app?.lobbyPath ?? "/clicker";
 
   return (
     <nav
       className="flex w-full justify-around overflow-x-auto px-0.5 pb-[max(0.35rem,env(safe-area-inset-bottom))] pt-1 text-xs text-white"
       aria-label="Play Hub"
     >
-      {NAV_ITEMS.map((item) => {
+      {navItems.map((item) => {
         if (item.kind === "dex") {
           const active = onDex;
           return (
@@ -67,8 +73,8 @@ function NavInner() {
         }
         const href =
           item.kind === "home"
-            ? onClicker
-              ? item.hrefClicker
+            ? app?.hideEcosystemLinks || onClicker
+              ? homeClickerHref
               : item.hrefPlayLanding
             : item.href;
         let active = false;

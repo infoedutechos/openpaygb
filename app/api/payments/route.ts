@@ -147,7 +147,7 @@ export async function GET(req: Request) {
     orderBy: { createdAt: "desc" },
     take: limit,
     include: {
-      student: { select: { id: true, name: true } },
+      student: { select: { id: true, name: true, schoolClass: { select: { code: true } } } },
       organization: { select: { slug: true, name: true } },
     },
   });
@@ -201,6 +201,9 @@ export async function GET(req: Request) {
         txHash: row.txHash,
         status: row.status,
         rail: row.rail,
+        paymentMode: row.paymentMode,
+        schoolReceiptNo: row.schoolReceiptNo,
+        schoolClassCode: row.student.schoolClass?.code ?? null,
         momoReference: row.momoReference,
         createdAt: row.createdAt,
         confirmedAt: row.confirmedAt,

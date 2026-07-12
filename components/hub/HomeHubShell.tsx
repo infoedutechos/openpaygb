@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import TuitionHubBottomNav from "@/components/hub/TuitionHubBottomNav";
 import PlayHubBottomNav from "@/components/hub/PlayHubBottomNav";
 import DexHubBottomNav from "@/components/hub/DexHubBottomNav";
+import { useStandaloneApp } from "@/components/standalone/StandaloneAppProvider";
 import { HUB_ORDER, homeHubFromSearchParam, homeUrlForHub, type HubKey } from "@/lib/ecosystem/hubs";
 
 /** Home bottom switcher — developers hub has its own lobby at /developers */
@@ -26,6 +27,7 @@ const HUB_TAB_CLASS = {
 } as const;
 
 function HomeHubShellInner({ children }: { children: ReactNode }) {
+  const { app } = useStandaloneApp();
   const router = useRouter();
   const searchParams = useSearchParams();
   const hub = homeHubFromSearchParam(searchParams.get("hub"));
@@ -35,6 +37,20 @@ function HomeHubShellInner({ children }: { children: ReactNode }) {
     },
     [router],
   );
+
+  if (app?.hideEcosystemLinks) {
+    return (
+      <div className="pb-40">
+        {children}
+        <div
+          className="fixed bottom-0 left-1/2 z-50 w-full max-w-xl -translate-x-1/2 overflow-hidden rounded-t-2xl border border-slate-600/40 bg-[rgb(6_14_26_/_0.98)] shadow-[0_-12px_40px_rgba(0,0,0,0.45)] backdrop-blur-md"
+          style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+        >
+          <TuitionHubBottomNav mode="slot" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pb-40">

@@ -21,6 +21,8 @@ enum PaymentRail {
   vixonpay
   /** Closed-loop OpenPayGB platform virtual card balance (UGX ledger). */
   openpay_card
+  /** School admin manual receipt (cash / mobile transfer at desk). */
+  manual_cash
 }
 
 enum PaymentStatus {
@@ -62,6 +64,23 @@ enum SchoolLevelKind {
   primary
   secondary
   a_level
+}
+
+/** School chart of accounts — income (fee heads) vs expenditure. */
+enum SchoolAccountKind {
+  income
+  expenditure
+}
+
+enum SchoolStaffStatus {
+  active
+  inactive
+}
+
+enum SchoolStaffSex {
+  male
+  female
+  other
 }
 
 /** Every programme belongs to one of two school tracks (admin + checkout grouping). */
@@ -118,6 +137,13 @@ model Organization {
   faviconUploadedAt          DateTime?
   /** Display label for the active academic year (e.g. 2025/2026) — school tenants. */
   currentAcademicYearLabel   String                     @default("")
+  /** Active term 1–3 for school fee/billing context (global header). */
+  activeSchoolTerm           Int                        @default(1)
+  /** Sequential receipt counter for school manual payments (RP-N). */
+  schoolReceiptCounter       Int                        @default(0)
+  /** Active academic session row (optional; falls back to currentAcademicYearLabel). */
+  activeSchoolSessionId      String?                    @db.ObjectId
+  activeSchoolSession        SchoolSession?             @relation("ActiveSchoolSession", fields: [activeSchoolSessionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   /**
    * Fixed UGX added at checkout (processing / platform). **-1** = use deployment env `CHECKOUT_PLATFORM_FEE_UGX`;
    * **≥ 0** = override for this tenant (UGX, capped server-side).
@@ -153,6 +179,15 @@ model Organization {
   paymentRequests            PaymentRequest[]
   schoolClasses              SchoolClass[]
   schoolStreams              SchoolStream[]
+  schoolSessions             SchoolSession[]            @relation("OrgSchoolSessions")
+  schoolAccounts             SchoolAccount[]
+  schoolFundsAppropriations  SchoolFundsAppropriation[]
+  schoolStaff                SchoolStaff[]
+  schoolOutflowVouchers      SchoolOutflowVoucher[]
+  schoolSalaryPayments       SchoolSalaryPayment[]
+  schoolInventoryItems       SchoolInventoryItem[]
+  studentBillCharges         StudentBillCharge[]
+  paymentAllocations         PaymentAllocation[]
 
   @@index([tenantStatus])
   @@index([registrationContactEmail])
@@ -392,6 +427,9 @@ model SchoolClass {
   levelKind      SchoolLevelKind @default(primary)
   sortOrder      Int             @default(0)
   enabled        Boolean         @default(true)
+  /** Academic session this class belongs to (e.g. 2024/2025). */
+  schoolSessionId String?        @db.ObjectId
+  schoolSession   SchoolSession? @relation(fields: [schoolSessionId], references: [id], onDelete: SetNull)
   streams        SchoolStream[]
   programmes     Programme[]
   students       Student[]
@@ -400,6 +438,7 @@ model SchoolClass {
 
   @@unique([organizationId, code])
   @@index([organizationId, enabled])
+  @@index([organizationId, schoolSessionId])
   @@map("school_classes")
 }
 
@@ -421,6 +460,179 @@ model SchoolStream {
   @@unique([organizationId, schoolClassId, code])
   @@index([organizationId])
   @@map("school_streams")
+}
+
+model SchoolSession {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId String       @db.ObjectId
+  organization   Organization @relation("OrgSchoolSessions", fields: [organizationId], references: [id], onDelete: Cascade)
+  label          String
+  isActive       Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  activeForOrgs  Organization[] @relation("ActiveSchoolSession")
+  billCharges    StudentBillCharge[]
+  classes        SchoolClass[]
+  students       Student[]
+
+  @@unique([organizationId, label])
+  @@index([organizationId, isActive])
+  @@map("school_sessions")
+}
+
+model SchoolAccount {
+  id             String            @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId String            @db.ObjectId
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  kind           SchoolAccountKind @default(income)
+  sortOrder      Int               @default(0)
+  enabled        Boolean           @default(true)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  appropriations SchoolFundsAppropriation[]
+  billCharges    StudentBillCharge[]
+  outflowVouchers SchoolOutflowVoucher[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId, kind])
+  @@map("school_accounts")
+}
+
+model SchoolFundsAppropriation {
+  id                    String        @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId        String        @db.ObjectId
+  organization          Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  term                  Int
+  expenditureAccountId  String        @db.ObjectId
+  expenditureAccount    SchoolAccount @relation(fields: [expenditureAccountId], references: [id], onDelete: Cascade)
+  percentOfIncome       Float
+  minBalanceUgx         Int           @default(0)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  @@unique([organizationId, term, expenditureAccountId])
+  @@index([organizationId, term])
+  @@map("school_funds_appropriations")
+}
+
+/** Expected bill line per student / fee head / term (school ERP layer). */
+model StudentBillCharge {
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId String        @db.ObjectId
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  studentId      String        @db.ObjectId
+  student        Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  schoolAccountId String       @db.ObjectId
+  schoolAccount  SchoolAccount @relation(fields: [schoolAccountId], references: [id], onDelete: Cascade)
+  sessionId      String?       @db.ObjectId
+  session        SchoolSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  term           Int
+  amountUgx      Int
+  notes          String        @default("")
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  allocations    PaymentAllocation[]
+
+  @@index([organizationId, term])
+  @@index([studentId, term])
+  @@map("student_bill_charges")
+}
+
+/** Links a confirmed payment to specific bill charge lines (partial pay per fee head). */
+model PaymentAllocation {
+  id             String            @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId String            @db.ObjectId
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  paymentId      String            @db.ObjectId
+  payment        Payment           @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  billChargeId   String            @db.ObjectId
+  billCharge     StudentBillCharge @relation(fields: [billChargeId], references: [id], onDelete: Cascade)
+  amountUgx      Int
+  createdAt      DateTime          @default(now())
+
+  @@unique([paymentId, billChargeId])
+  @@index([organizationId])
+  @@index([billChargeId])
+  @@map("payment_allocations")
+}
+
+model SchoolStaff {
+  id              String            @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId  String            @db.ObjectId
+  organization    Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  staffCode       String
+  name            String
+  phone           String            @default("")
+  email           String            @default("")
+  address         String            @default("")
+  sex             SchoolStaffSex    @default(other)
+  employmentDate  DateTime?
+  duty            String            @default("")
+  salaryUgx       Int               @default(0)
+  status          SchoolStaffStatus @default(active)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  salaryPayments  SchoolSalaryPayment[]
+
+  @@unique([organizationId, staffCode])
+  @@index([organizationId, status])
+  @@map("school_staff")
+}
+
+model SchoolOutflowVoucher {
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId String        @db.ObjectId
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  term           Int
+  accountId      String        @db.ObjectId
+  account        SchoolAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  payee          String
+  payer          String        @default("")
+  notes          String        @default("")
+  /** [{ particular: string, amountUgx: number }] */
+  lineItems      Json
+  totalUgx       Int
+  disbursedAt    DateTime      @default(now())
+  createdAt      DateTime      @default(now())
+
+  @@index([organizationId, term])
+  @@map("school_outflow_vouchers")
+}
+
+model SchoolSalaryPayment {
+  id             String      @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId String      @db.ObjectId
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  staffId        String      @db.ObjectId
+  staff          SchoolStaff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  monthKey       String
+  grossUgx       Int
+  deductionUgx   Int         @default(0)
+  netUgx         Int
+  paidAt         DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@unique([staffId, monthKey])
+  @@index([organizationId, monthKey])
+  @@map("school_salary_payments")
+}
+
+model SchoolInventoryItem {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId String       @db.ObjectId
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  availableQty   Int          @default(0)
+  unavailableQty Int          @default(0)
+  notes          String       @default("")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@map("school_inventory_items")
 }
 
 model Programme {
@@ -470,8 +682,12 @@ model Student {
   organizationId       String       @db.ObjectId
   organization         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   name                 String
+  /** School admission / registration number (reference AdmissionNo). */
+  admissionNo          String       @default("")
   email                String       @default("")
   phone                String       @default("")
+  address              String       @default("")
+  sex                  SchoolStaffSex @default(other)
   telegramId           String       @default("")
   /** Google account `sub` when the student uses “Continue with Google”; empty otherwise. */
   googleSub            String       @default("")
@@ -484,9 +700,13 @@ model Student {
   /** K–12 stream enrollment (school tenants). */
   schoolStreamId       String?      @db.ObjectId
   schoolStream         SchoolStream? @relation(fields: [schoolStreamId], references: [id], onDelete: SetNull)
+  /** Active academic session enrollment. */
+  schoolSessionId      String?       @db.ObjectId
+  schoolSession        SchoolSession? @relation(fields: [schoolSessionId], references: [id], onDelete: SetNull)
   year                 Int
   semester             Int
   payments             Payment[]
+  billCharges          StudentBillCharge[]
   openPayCard          OpenPayCard?
   opgbWallet           OpgbWallet?
   lastLoginAt          DateTime?
@@ -498,6 +718,7 @@ model Student {
 
   @@index([organizationId])
   @@index([organizationId, telegramId])
+  @@index([organizationId, schoolSessionId])
   @@index([googleSub])
   @@map("students")
 }
@@ -971,6 +1192,10 @@ model Payment {
   tonAmount         Float
   destinationWallet String
   rail              PaymentRail
+  /** School desk payment mode label: CASH | MOBILE TRANSFER (manual_cash rail). */
+  paymentMode       String         @default("")
+  /** School receipt number e.g. RP-87 (manual_cash rail). */
+  schoolReceiptNo   String         @default("")
   status            PaymentStatus  @default(pending)
   txHash            String         @default("")
   momoReference     String         @default("")
@@ -991,6 +1216,7 @@ model Payment {
   installmentScheduleSubtotalUgx Int?
   confirmedAt       DateTime?
   cancelledAt       DateTime?
+  allocations       PaymentAllocation[]
   /** user | admin | expired | system */
   cancelReason      String         @default("")
   refundedAt        DateTime?

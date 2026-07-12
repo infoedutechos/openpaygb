@@ -14,6 +14,7 @@ import {
   IconWorkspace,
 } from "@/components/hub/tuition-nav-icons";
 import { payProgrammesHref, payTenantBasePath } from "@/lib/tuition-nav";
+import { useStandaloneApp } from "@/components/standalone/StandaloneAppProvider";
 
 type ActiveMatch = "lobby" | "programmes" | "pay" | "receipt" | "workspace" | "admin" | "play" | "dex";
 
@@ -41,20 +42,24 @@ function rowClass(active: boolean) {
 function NavInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { app } = useStandaloneApp();
   const hub = searchParams.get("hub");
   const payBase = payTenantBasePath(pathname);
   const programmesHref = payProgrammesHref(pathname);
   const key = activeKey(pathname ?? "", searchParams);
-  const lobbyActive = pathname === "/" && hub !== "play" && hub !== "dex" && key === "lobby";
+  const lobbyHref = app?.lobbyPath ?? "/?hub=tuition";
+  const lobbyActive =
+    (app ? pathname === app.lobbyPath : pathname === "/" && hub !== "play" && hub !== "dex") &&
+    key === "lobby";
 
   const ITEMS = [
-    { name: "Lobby", href: "/?hub=tuition", icon: IconHome, activeMatch: "lobby" as const },
+    { name: "Lobby", href: lobbyHref, icon: IconHome, activeMatch: "lobby" as const },
     { name: "Programmes", href: programmesHref, icon: IconProgrammes, activeMatch: "programmes" as const },
     { name: "Pay", href: payBase, icon: IconPay, activeMatch: "pay" as const },
     { name: "Receipt", href: "/receipt", icon: IconReceipt, activeMatch: "receipt" as const },
     {
       name: "Register",
-      href: "/admin/register",
+      href: app?.registerHref ?? "/admin/register",
       icon: IconWorkspace,
       activeMatch: "workspace" as const,
       ariaLabel: "Request school workspace — self-register on our platform",
@@ -62,7 +67,10 @@ function NavInner() {
     { name: "Dex", href: "/dex", icon: IconDex, activeMatch: "dex" as const },
     { name: "School admin", href: "/school/login", icon: IconAdmin, activeMatch: "admin" as const },
     { name: "Play", href: "/clicker", icon: IconPlayHub, activeMatch: "play" as const },
-  ];
+  ].filter((item) => {
+    if (!app?.hideEcosystemLinks) return true;
+    return item.activeMatch !== "dex" && item.activeMatch !== "play";
+  });
 
   return (
     <nav

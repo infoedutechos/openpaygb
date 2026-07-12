@@ -10,6 +10,7 @@ import {
   IconRampOut,
 } from "@/components/hub/tuition-nav-icons";
 import { HUBS } from "@/lib/ecosystem/hubs";
+import { useStandaloneApp } from "@/components/standalone/StandaloneAppProvider";
 
 type DexTab = "home" | "onramp" | "offramp" | "convert" | "buy";
 
@@ -50,14 +51,18 @@ type Props = { mode?: "fixed" | "slot" };
 
 function NavInner() {
   const pathname = usePathname();
+  const { app } = useStandaloneApp();
   const tab = tabFromPath(pathname);
+  const items = app?.hideEcosystemLinks
+    ? ITEMS.filter((item) => item.id !== "pay" && item.id !== "play")
+    : ITEMS;
 
   return (
     <nav
       className="flex w-full justify-around overflow-x-auto px-0.5 pb-[max(0.35rem,env(safe-area-inset-bottom))] pt-1 text-xs text-white"
       aria-label="Dex Hub"
     >
-      {ITEMS.map((item) => {
+      {items.map((item) => {
         const Icon = item.icon;
         const active = item.tab !== undefined ? tab === item.tab : false;
         return (

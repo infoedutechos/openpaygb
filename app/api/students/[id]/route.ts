@@ -15,6 +15,9 @@ const PatchBody = z
     year: z.number().int().min(1).max(6).optional(),
     semester: z.number().int().min(1).max(3).optional(),
     name: z.string().min(2).optional(),
+    admissionNo: z.string().optional(),
+    address: z.string().optional(),
+    sex: z.enum(["male", "female", "other"]).optional(),
     email: z.string().email().optional(),
     phone: z.string().optional(),
   })
@@ -69,6 +72,9 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     student: {
       id: student.id,
       name: student.name,
+      admissionNo: student.admissionNo,
+      address: student.address,
+      sex: student.sex,
       email: student.email,
       phone: student.phone,
       telegramId: student.telegramId,
@@ -132,6 +138,9 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   const data = parsed.data;
   const update: {
     name?: string;
+    admissionNo?: string;
+    address?: string;
+    sex?: "male" | "female" | "other";
     email?: string;
     phone?: string;
     programmeCode?: string;
@@ -142,6 +151,9 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   } = {};
 
   if (data.name !== undefined) update.name = data.name;
+  if (data.admissionNo !== undefined) update.admissionNo = data.admissionNo.trim();
+  if (data.address !== undefined) update.address = data.address;
+  if (data.sex !== undefined) update.sex = data.sex;
   if (data.email !== undefined) update.email = data.email;
   if (data.phone !== undefined) update.phone = data.phone;
   if (data.year !== undefined) update.year = data.year;
@@ -175,4 +187,25 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   });
 
   return NextResponse.json({ student: updated });
+}
+
+export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string }> }) {
+  const admin = await getAdminFromCookies();
+  if (!admin) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const { id } = await ctx.params;
+  if (!isValidObjectId(id)) {
+    return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+  }
+  const orgWhere = await organizationWhereForSession(admin.sub, admin.role);
+  const student = await prisma.student.findFirst({
+    where: { id, ...orgWhere },
+    select: { id: true },
+  });
+  if (!student) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+  await prisma.student.delete({ where: { id: student.id } });
+  return NextResponse.json({ ok: true });
 }

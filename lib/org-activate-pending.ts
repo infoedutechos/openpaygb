@@ -4,6 +4,7 @@ import { cloneProgrammesAndFxFromTemplate } from "@/lib/org-provision";
 import { revalidateOrganizationCaches } from "@/lib/revalidate-organizations";
 import { fetchFaviconFromWebsite } from "@/lib/fetch-remote-favicon";
 import { maybeProvisionSchoolOrgAdmin } from "@/lib/provision-school-org-admin";
+import { provisionSchoolErpDefaults } from "@/lib/school-org-provision";
 
 /**
  * Approve a pending school workspace: clone programmes/FX from template and set active.
@@ -50,6 +51,12 @@ export async function activatePendingOrganizationWorkspace(organizationId: strin
     data,
   });
   revalidateOrganizationCaches(updated.slug, updated.id);
+
+  try {
+    await provisionSchoolErpDefaults(organizationId);
+  } catch (e) {
+    console.warn("[org-activate] school ERP provision failed", e);
+  }
 
   try {
     await maybeProvisionSchoolOrgAdmin(organizationId);

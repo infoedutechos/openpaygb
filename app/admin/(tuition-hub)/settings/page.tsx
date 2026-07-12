@@ -3,11 +3,14 @@
 import Link from "next/link";
 import { TuitionHubCheckoutExplainer } from "@/components/admin/TuitionHubCheckoutExplainer";
 import { OrgFaviconSettings } from "@/components/admin/OrgFaviconSettings";
+import { SchoolAppropriationSettings } from "@/components/admin/school/SchoolAppropriationSettings";
 import { TenantList } from "@/components/tuition/TenantList";
 import { useAuthMe } from "@/hooks/useAuthMe";
+import { useSchoolAdminApi } from "@/hooks/useSchoolAdminApi";
 
 export default function AdminSettingsPage() {
   const { data: authMe } = useAuthMe();
+  const { schoolScope } = useSchoolAdminApi();
   const isMaster = authMe?.admin?.role === "master";
   const isSchool = authMe?.admin?.organization?.institutionTier === "school";
 
@@ -54,6 +57,8 @@ export default function AdminSettingsPage() {
       </div>
 
       {!isMaster ? <OrgFaviconSettings /> : null}
+
+      {schoolScope ? <SchoolAppropriationSettings /> : null}
 
       <p className="text-sm text-slate-400">
         Account details and password are on{" "}

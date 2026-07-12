@@ -8,11 +8,16 @@ export const HIDE_SITE_CHROME_NAV_PREFIXES = [
   "/my",
   "/clicker",
   "/dex",
+  "/opgb",
+  "/OdelPayUniversities",
+  "/OdelPaySchools",
+  "/developers",
   "/receipt",
   "/api",
 ] as const;
 
-export function hidesSiteChromeNav(pathname: string): boolean {
+export function hidesSiteChromeNav(pathname: string, standaloneAppId?: string | null): boolean {
+  if (standaloneAppId) return true;
   if (pathname === "/") return true;
   return HIDE_SITE_CHROME_NAV_PREFIXES.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`),

@@ -15,8 +15,9 @@ import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton"
 import { WelcomeBackStrip } from "@/components/profile/WelcomeBackStrip";
 import { adminRoleToProfileRole } from "@/lib/profile-mappers";
 import { DEX_SIDEBAR_NAV, pathnameIsDexHub } from "@/lib/dex-nav";
+import { SchoolContextBar } from "@/components/admin/school/SchoolContextBar";
 
-const SEGMENTS: { suffix: string; label: string; schoolOnly?: boolean }[] = [
+const UNIVERSITY_SEGMENTS: { suffix: string; label: string; schoolOnly?: boolean; universityOnly?: boolean }[] = [
   { suffix: "", label: "Dashboard" },
   { suffix: "/profile", label: "Profile" },
   { suffix: "/tuition-balance", label: "Tuition balance" },
@@ -24,11 +25,28 @@ const SEGMENTS: { suffix: string; label: string; schoolOnly?: boolean }[] = [
   { suffix: "/school-structure", label: "Classes & streams", schoolOnly: true },
   { suffix: "/payments", label: "Payments" },
   { suffix: "/payment-requests", label: "Payment requests" },
-  { suffix: "/virtual-cards", label: "Virtual cards" },
+  { suffix: "/virtual-cards", label: "Virtual cards", universityOnly: true },
   { suffix: "/programmes", label: "Programs" },
   { suffix: "/receipts", label: "Receipts" },
-  { suffix: "/reports", label: "Reports" },
+  { suffix: "/reports", label: "Reports", universityOnly: true },
   { suffix: "/users", label: "Users" },
+  { suffix: "/settings", label: "Settings" },
+];
+
+/** Reference app sidebar — school fees & payments ERP (HisGrace Gestio). */
+const SCHOOL_ERP_SEGMENTS: { suffix: string; label: string }[] = [
+  { suffix: "/school-dashboard", label: "Dashboard" },
+  { suffix: "/school-session", label: "Session" },
+  { suffix: "/school-accounts", label: "Accounts" },
+  { suffix: "/school-structure", label: "Class registration" },
+  { suffix: "/students", label: "Students / bills" },
+  { suffix: "/defaulters", label: "Defaulters" },
+  { suffix: "/receipts", label: "Receipt of payments" },
+  { suffix: "/school-staff", label: "Staff" },
+  { suffix: "/school-outflow", label: "Outflow" },
+  { suffix: "/school-inventory", label: "Inventory" },
+  { suffix: "/school-reports", label: "Reports" },
+  { suffix: "/payments", label: "Online payments" },
   { suffix: "/settings", label: "Settings" },
 ];
 
@@ -43,23 +61,26 @@ function navActive(pathname: string, href: string): boolean {
 function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { hrefWithOrgSlug } = useMasterOrgSlug();
+  const { hrefWithOrgSlug, orgSlug } = useMasterOrgSlug();
   const { data: authMe } = useAuthMe();
   const base = pathname.startsWith("/school-admin") ? "/school-admin" : "/admin";
   const isMaster = authMe?.admin?.role === "master";
   const schoolName = authMe?.admin?.organization?.name?.trim() || null;
   const isSchoolAdmin = authMe?.admin?.role === "org_admin" && Boolean(schoolName);
   const isSchoolTenant = authMe?.admin?.organization?.institutionTier === "school";
-  const navItems = useMemo(
-    () => [
-      ...SEGMENTS.filter((s) => !s.schoolOnly || isSchoolTenant).map((s) => ({
+  const showSchoolErp = isSchoolTenant || (isMaster && Boolean(orgSlug));
+  const navItems = useMemo(() => {
+    const segments = showSchoolErp
+      ? SCHOOL_ERP_SEGMENTS
+      : UNIVERSITY_SEGMENTS.filter((s) => !s.schoolOnly);
+    return [
+      ...segments.map((s) => ({
         href: hrefWithOrgSlug(`${base}${s.suffix}`),
         label: s.label,
       })),
-      DEX_SIDEBAR_NAV,
-    ],
-    [base, hrefWithOrgSlug, isSchoolTenant],
-  );
+      ...(showSchoolErp ? [] : [DEX_SIDEBAR_NAV]),
+    ];
+  }, [base, hrefWithOrgSlug, showSchoolErp]);
   const tenantLabel = !authMe?.admin
     ? authMe?.adminShellAccess
       ? "Tuition sign-in pending"
@@ -179,6 +200,12 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
           <AdminWorkspaceBar />
           {authMe?.dbDegraded ? <DbDegradedBanner /> : null}
           <WorkspaceEmailUnverifiedBanner />
+          {showSchoolErp ? <SchoolContextBar /> : null}
+          {isMaster && !orgSlug && pathname.includes("/school-") ? (
+            <p className="mb-4 rounded-lg border border-amber-500/30 bg-amber-950/30 px-4 py-2 text-sm text-amber-100">
+              Select a school workspace using <strong>?orgSlug=</strong> in the URL or the workspace filter to load school ERP data.
+            </p>
+          ) : null}
           {children}
         </div>
       </div>

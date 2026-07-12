@@ -6,6 +6,7 @@ import { useAuthMe } from "@/hooks/useAuthMe";
 import { useMasterOrgSlug } from "@/hooks/useMasterOrgSlug";
 import { SCHOOL_LEVEL_LABELS } from "@/lib/school-structure";
 import { fetchJson } from "@/utils/fetch-json";
+import { SchoolClassImportModal } from "@/components/admin/school/SchoolClassImportModal";
 
 type SchoolLevelKey = keyof typeof SCHOOL_LEVEL_LABELS;
 
@@ -62,6 +63,9 @@ export function SchoolStructureManager() {
 
   const [newClass, setNewClass] = useState({ code: "", name: "", levelKind: "primary" as SchoolLevelKey });
   const [streamDraft, setStreamDraft] = useState<Record<string, { code: string; name: string }>>({});
+  const [importOpen, setImportOpen] = useState(false);
+  const [editClassId, setEditClassId] = useState<string | null>(null);
+  const [editClassForm, setEditClassForm] = useState({ code: "", name: "", levelKind: "primary" as SchoolLevelKey });
 
   const query = isMaster && orgSlug ? `?organizationSlug=${encodeURIComponent(orgSlug)}` : "";
 
@@ -250,6 +254,14 @@ export function SchoolStructureManager() {
           <button
             type="button"
             disabled={busy !== null}
+            onClick={() => setImportOpen(true)}
+            className="rounded-lg border border-violet-400/30 px-3 py-2 text-xs font-semibold text-violet-100 hover:bg-violet-500/10 disabled:opacity-50"
+          >
+            Import class
+          </button>
+          <button
+            type="button"
+            disabled={busy !== null}
             onClick={() => void loadK12Template()}
             className="rounded-lg border border-emerald-400/30 px-3 py-2 text-xs font-semibold text-emerald-100 hover:bg-emerald-500/10 disabled:opacity-50"
           >
@@ -307,7 +319,21 @@ export function SchoolStructureManager() {
                       {SCHOOL_LEVEL_LABELS[c.levelKind]} · {c.streams.length} stream(s) · {c.studentCount} student(s)
                     </p>
                   </div>
+                  <div className="flex gap-2 text-xs">
+                    <button type="button" className="text-amber-300" onClick={() => { setEditClassId(c.id); setEditClassForm({ code: c.code, name: c.name, levelKind: c.levelKind }); }}>Edit</button>
+                    <button type="button" className="text-rose-300" onClick={() => { if (confirm(`Delete class ${c.code}?`)) void fetchJson(`/api/admin/school/classes/${c.id}`, { method: "DELETE", credentials: "include" }).then(() => load()); }}>Delete</button>
+                  </div>
                 </div>
+                {editClassId === c.id ? (
+                  <form className="mt-3 flex flex-wrap gap-2 border-t border-white/10 pt-3" onSubmit={(e) => {
+                    e.preventDefault();
+                    void fetchJson(`/api/admin/school/classes/${c.id}`, { method: "PATCH", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editClassForm) }).then(() => { setEditClassId(null); void load(); });
+                  }}>
+                    <input value={editClassForm.code} onChange={(e) => setEditClassForm({ ...editClassForm, code: e.target.value })} className="rounded border border-white/15 bg-black/30 px-2 py-1 text-sm text-white" />
+                    <input value={editClassForm.name} onChange={(e) => setEditClassForm({ ...editClassForm, name: e.target.value })} className="rounded border border-white/15 bg-black/30 px-2 py-1 text-sm text-white" />
+                    <button type="submit" className="text-xs text-emerald-300">Save class</button>
+                  </form>
+                ) : null}
                 <ul className="mt-3 space-y-2 border-t border-white/10 pt-3">
                   {c.streams.map((s) => (
                     <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 text-sm text-slate-300">
@@ -316,6 +342,7 @@ export function SchoolStructureManager() {
                         <span className="ml-2 text-[11px] text-slate-500">({s.studentCount} students)</span>
                       </span>
                       <span className="text-[11px] text-slate-600">Programme: {c.code}-{s.code}</span>
+                      <button type="button" className="text-[10px] text-rose-400" onClick={() => { if (confirm(`Delete stream ${s.code}?`)) void fetchJson(`/api/admin/school/streams/${s.id}`, { method: "DELETE", credentials: "include" }).then(() => load()); }}>Delete</button>
                     </li>
                   ))}
                 </ul>
@@ -356,6 +383,7 @@ export function SchoolStructureManager() {
           )}
         </div>
       </section>
+      <SchoolClassImportModal open={importOpen} onClose={() => setImportOpen(false)} onDone={() => void load()} />
     </div>
   );
 }

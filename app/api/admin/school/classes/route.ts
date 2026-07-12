@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { SchoolLevelKind } from "@prisma/client";
-import { getAdminFromCookies } from "@/lib/auth";
-import { resolveSchoolAdminOrganization } from "@/lib/admin-school-org";
 import { normalizeSchoolCode } from "@/lib/school-structure";
 import { prisma } from "@/lib/prisma";
 import { apiErrorResponse } from "@/lib/api-error";
+import { requireSchoolAdminScope } from "@/lib/school-admin-api";
+import { schoolClassSessionWhere } from "@/lib/school-session-scope";
 
 const CreateClassBody = z.object({
   organizationSlug: z.string().min(1).optional(),
@@ -18,20 +18,15 @@ const CreateClassBody = z.object({
 
 export async function GET(req: Request) {
   try {
-    const admin = await getAdminFromCookies();
-    if (!admin) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const url = new URL(req.url);
-    const organizationSlug = url.searchParams.get("organizationSlug")?.trim() ?? undefined;
-    const scope = await resolveSchoolAdminOrganization(admin, organizationSlug);
-    if (!scope.ok) {
-      return NextResponse.json({ error: scope.error }, { status: scope.status });
-    }
+    const auth = await requireSchoolAdminScope(url.searchParams.get("organizationSlug"));
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const classes = await prisma.schoolClass.findMany({
-      where: { organizationId: scope.organizationId },
+      where: {
+        organizationId: auth.scope.organizationId,
+        ...schoolClassSessionWhere(auth.context.sessionId),
+      },
       orderBy: [{ sortOrder: "asc" }, { code: "asc" }],
       include: {
         streams: {
@@ -50,7 +45,7 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json({
-      currentAcademicYearLabel: scope.currentAcademicYearLabel,
+      currentAcademicYearLabel: auth.context.sessionLabel,
       classes: classes.map((c) => ({
         id: c.id,
         code: c.code,
@@ -77,36 +72,25 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const admin = await getAdminFromCookies();
-    if (!admin) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const json = await req.json().catch(() => null);
     const parsed = CreateClassBody.safeParse(json);
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid body", details: parsed.error.flatten() }, { status: 400 });
     }
 
-    const slug = admin.role === "master" ? parsed.data.organizationSlug?.trim() : undefined;
-    if (admin.role === "master" && !slug) {
-      return NextResponse.json({ error: "organizationSlug is required for platform masters" }, { status: 400 });
-    }
-
-    const scope = await resolveSchoolAdminOrganization(admin, slug ?? null);
-    if (!scope.ok) {
-      return NextResponse.json({ error: scope.error }, { status: scope.status });
-    }
+    const auth = await requireSchoolAdminScope(parsed.data.organizationSlug);
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const code = normalizeSchoolCode(parsed.data.code);
     const created = await prisma.schoolClass.create({
       data: {
-        organizationId: scope.organizationId,
+        organizationId: auth.scope.organizationId,
         code,
         name: parsed.data.name.trim(),
         levelKind: parsed.data.levelKind ?? SchoolLevelKind.primary,
         sortOrder: parsed.data.sortOrder ?? 0,
         enabled: parsed.data.enabled ?? true,
+        schoolSessionId: auth.context.sessionId,
       },
     });
 

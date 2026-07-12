@@ -8,5 +8,6 @@ describe("middleware edge imports", () => {
     expect(src).toMatch(/admin-session-edge/);
     expect(src).not.toMatch(/utils\/admin-session/);
     expect(src).not.toMatch(/@\/utils\/admin-session/);
+    expect(src).toMatch(/standalone-apps/);
   });
 });

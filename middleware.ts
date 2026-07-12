@@ -1,5 +1,6 @@
 /**
- * Admin auth gate, student portal gate, x-pathname for admin layout.
+ * Admin auth gate, student portal gate, x-pathname for admin layout,
+ * standalone app host/env routing.
  */
 
 import { NextResponse } from "next/server";
@@ -9,6 +10,11 @@ import { verifyPayAdminJwt } from "@/lib/admin-jwt-verify";
 import { verifyStudentJwt } from "@/lib/student-jwt-verify";
 import { verifyAdminSessionTokenEdge } from "@/lib/admin-session-edge";
 import { DEVELOPER_SESSION_COOKIE, verifyDeveloperSession } from "@/lib/developer-session";
+import {
+  isPathAllowedForStandalone,
+  isPassthroughStandalonePath,
+  resolveStandaloneApp,
+} from "@/lib/standalone-apps";
 
 const PAY_ADMIN_COOKIE = "odelhub_admin";
 const URA_ADMIN_SESSION = "admin_session";
@@ -58,6 +64,25 @@ export async function middleware(req: NextRequest) {
 
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-pathname", pathname);
+
+  const standaloneApp = resolveStandaloneApp({ host: req.headers.get("host") });
+  if (standaloneApp) {
+    requestHeaders.set("x-standalone-app", standaloneApp.id);
+
+    if (pathname === "/" || pathname === "") {
+      const url = req.nextUrl.clone();
+      url.pathname = standaloneApp.lobbyPath;
+      return NextResponse.rewrite(url, { request: { headers: requestHeaders } });
+    }
+
+    if (
+      !isPassthroughStandalonePath(pathname) &&
+      !isPathAllowedForStandalone(pathname, standaloneApp)
+    ) {
+      const redirect = new URL(standaloneApp.lobbyPath, req.url);
+      return NextResponse.redirect(redirect);
+    }
+  }
 
   if (pathname === "/student" || pathname.startsWith("/student/")) {
     if (
@@ -164,6 +189,7 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
+    "/((?!_next/static|_next/image|favicon.ico).*)",
     "/admin",
     "/admin/:path*",
     "/school-admin",
