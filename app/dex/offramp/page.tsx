@@ -47,8 +47,9 @@ export default function DexOfframpPage() {
       <div>
         <h1 className="text-2xl font-semibold text-white">Offramp / Withdraw</h1>
         <p className="mt-2 text-sm leading-relaxed text-slate-400">
-          Move OPGB or custodial crypto to mobile money, TON wallet, or bank. Requires student sign-in and sufficient
-          balance.
+          Queue a custodial withdrawal to mobile money, TON wallet, or bank. Funds are held until platform ops
+          marks the payout complete (or rejects and restores your balance). Live PSP send-money requires provider
+          payout credentials.
         </p>
       </div>
 

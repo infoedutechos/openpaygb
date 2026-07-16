@@ -66,6 +66,17 @@ export async function POST(req: Request) {
       );
     }
 
+    const { isLivePayCountryImplemented } = await import("@/lib/livepay/supported-countries");
+    if (!isLivePayCountryImplemented("UG")) {
+      return NextResponse.json(
+        {
+          error: "LivePay checkout is only available for Uganda (UGX) on this platform.",
+          code: "livepay_country_unsupported",
+        },
+        { status: 400 },
+      );
+    }
+
     if (rateLimitHit(`checkout-livepay:${clientIp(req)}`, 25, 60 * 60 * 1000)) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }

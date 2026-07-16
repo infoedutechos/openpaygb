@@ -190,6 +190,8 @@ model Organization {
   paymentAllocations         PaymentAllocation[]
 
   @@index([tenantStatus])
+  @@index([institutionTier])
+  @@index([tenantStatus, institutionTier])
   @@index([registrationContactEmail])
   @@index([parentOrganizationId])
   @@index([unitKind])
@@ -725,7 +727,11 @@ model Student {
 
   @@index([organizationId])
   @@index([organizationId, telegramId])
+  @@index([telegramId])
+  @@index([telegramDueReminderAt])
   @@index([organizationId, schoolSessionId])
+  @@index([organizationId, schoolClassId])
+  @@index([organizationId, admissionNo])
   @@index([googleSub])
   @@map("students")
 }
@@ -1240,6 +1246,8 @@ model Payment {
   @@index([status, createdAt])
   @@index([organizationId, status, confirmedAt])
   @@index([organizationId, status, createdAt])
+  @@index([momoReference])
+  @@index([memo])
   @@map("payments")
 }
 

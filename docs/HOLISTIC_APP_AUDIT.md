@@ -1,6 +1,6 @@
 # Holistic app audit (deep scan)
 
-**Date:** 2026-06-03 · **App:** ODEL HUB Pay (Next.js 15 + Prisma/MongoDB + merged URA game surface) · **Backlog:** [BACKLOG.md](./BACKLOG.md)
+**Date:** 2026-07-16 · **App:** ODEL HUB Pay (Next.js 15 + Prisma/MongoDB + merged URA game surface) · **Backlog:** [BACKLOG.md](./BACKLOG.md) · **Deep scan detail:** [DEEP_SCAN_2026-07-16.md](./DEEP_SCAN_2026-07-16.md)
 
 ---
 
@@ -8,22 +8,24 @@
 
 | Area | Grade | Notes |
 |------|-------|-------|
-| Tuition product (pay + admin) | **Production-capable** | Needs `RESEND_*`, `JWT_SECRET`, `DATABASE_URL`, Mbiyo keys for live UGX alternative |
-| School workspace onboarding | **Complete** | Register → email verify → **`/school/workspace-status`** → master approve → org admin → `/school/login` |
-| Programme customization (org admin) | **Complete** | CRUD + fees + CSV import at `/admin/programmes` |
-| UI vs codebase | **Aligned** | **96** UI routes, **367** API handlers — `npm run docs:inventory` (2026-07-15) |
-| OPGB / Dex Hub | **Phase 1–3 shipped (custodial)** | Ledger, FX basket, `/dex/buy`, AMM swap, P2P escrow — [OPGB_TOKEN_ECOSYSTEM.md](./OPGB_TOKEN_ECOSYSTEM.md) |
-| LivePay | **Integrated** (env opt-in) | Checkout + webhook + status poll — [LIVEPAY_INTEGRATION_ASSESSMENT.md](./LIVEPAY_INTEGRATION_ASSESSMENT.md) |
-| Deployment | **Ready with checklist** | `npm run verify`, `PRODUCTION_GO_LIVE.md` |
+| Tuition product (pay + admin) | **Production-capable** | Needs `RESEND_*`/`BREVO_*`, `JWT_SECRET`, `DATABASE_URL`, PSP keys for live rails |
+| School workspace onboarding | **Complete** | Register → email verify → `/school/workspace-status` → master approve → `/school/login` |
+| School ERP (12 modules) | **Production** | Session, accounts, bills, allocation, reports, inventory valuation |
+| Programme customization (org admin) | **Complete** | CRUD + fees + CSV at `/admin/programmes` (also in school ERP nav) |
+| UI vs codebase | **Aligned** | Regenerated inventories after OPGB ops + this scan |
+| OPGB / Dex Hub | **Phase 4 + ops desk** | Custodial ledger/AMM/P2P; master `/admin/master/opgb-ops`; Phase 5 live send/on-chain open |
+| LivePay | **UG integrated** | Non-UG stubbed; Mbiyo covers multi-country collect when configured |
+| Telegram / TMA | **Production** | Multi-org student link + schools browse; bot + cron reminders |
+| Mongo sync | **Production** | Single Prisma singleton; hot indexes added 2026-07-16 |
+| Deployment | **Live** | https://odelpay.vercel.app — crons match docs |
 
 ---
 
 ## 1. App architecture
 
-- **Tenants:** `Organization` with `tenantStatus` pending | active | rejected
-- **Auth:** Tuition JWT (`odelhub_admin`) + legacy URA `admin_session` + student JWT
-- **APIs:** **367** routes — inventory in `docs/API_INVENTORY.csv`
-- **UI:** **96** `page.tsx` files — inventory in `docs/UI_ROUTES.csv`
+- **Tenants:** `Organization` with `tenantStatus` pending | active | rejected; `institutionTier` university | school
+- **Auth:** Tuition JWT (`odelhub_admin`) + legacy URA `admin_session` + student JWT + TMA session cookies
+- **APIs / UI:** See `docs/API_INVENTORY.csv` and `docs/UI_ROUTES.csv` (regenerate: `npm run docs:inventory`)
 - **Game/URA:** Legacy `/admin/*` game pages coexist; tuition hub is `(tuition-hub)` group
 
 ---
@@ -32,8 +34,8 @@
 
 | Mode | Master setting | Flow |
 |------|----------------|------|
-| **Email verify + master approval** (default) | `schoolWorkspaceRequireMasterApproval: true` | Register → ODEL HUB email (details + timestamp) → click link → **`/school/workspace-status?verified=1`** → master approves → master creates org admin → **`/school/login`** |
-| **Email verify + auto-activate** | `requireMasterApproval: false` | Same email → verify may activate tenant immediately → **`/school/workspace-status?activated=1`** → master still creates org admin credentials |
+| **Email verify + master approval** (default) | `schoolWorkspaceRequireMasterApproval: true` | Register → email → `/school/workspace-status?verified=1` → master approves → org admin → `/school/login` |
+| **Email verify + auto-activate** | `requireMasterApproval: false` | Verify may activate immediately → `/school/workspace-status?activated=1` |
 
 Master toggle: `components/admin/MasterSchoolWorkspaceRegistrationSettings.tsx`  
 Policy API: `GET/PATCH /api/master/school-workspace-registration`
@@ -42,13 +44,11 @@ Policy API: `GET/PATCH /api/master/school-workspace-registration`
 
 ## 3. School admin login (after master approval)
 
-1. Master sets org **active** and creates **org admin** (`POST /api/master/admins`) on `/admin/master/organizations`
-2. School opens **`/school/login`** (→ `/admin/login?school=1`)
-3. **`POST /api/auth/login`** → cookie `odelhub_admin` → **`/admin`** dashboard
-4. Programmes: **`/admin/programmes`** — full CRUD for own tenant
+1. Master activates org and creates **org admin** (`POST /api/master/admins`) — or auto-provision when enabled
+2. School opens **`/school/login`**
+3. **`POST /api/auth/login`** → cookie → school ERP sidebar (dashboard, session, programmes, students/bills, …)
 
-**Provisioning policy:** self-register does not immediately create `AdminUser`. On activation, the platform either creates the organization admin automatically and emails a password-set link when `schoolWorkspaceAutoGenerateAdminLogin` is enabled, or leaves provisioning to the master admin.
-**Docs:** [SCHOOL_ADMIN_LOGIN.md](./SCHOOL_ADMIN_LOGIN.md), [ORGANIZATION_REGISTRATION.md](./ORGANIZATION_REGISTRATION.md)
+**Docs:** [SCHOOL_ADMIN_LOGIN.md](./SCHOOL_ADMIN_LOGIN.md), [ORGANIZATION_REGISTRATION.md](./ORGANIZATION_REGISTRATION.md), [LOCAL_DEV_AND_CREDENTIALS.md](./LOCAL_DEV_AND_CREDENTIALS.md)
 
 ---
 
@@ -60,11 +60,8 @@ Policy API: `GET/PATCH /api/master/school-workspace-registration`
 | Fee lines (tuition + functional, recurrence) | Yes |
 | Duration years / semesters per year | Yes |
 | CSV import | Yes |
-| Track (regular / in-service) | Yes |
+| Visible in school ERP nav | Yes (2026-07-16) |
 | TON wallet, FX, platform fee | Master only |
-| Pending/rejected tenant edit | Blocked (403) |
-
-See [SCHOOL_ADMIN_PROGRAMMES.md](./SCHOOL_ADMIN_PROGRAMMES.md).
 
 ---
 
@@ -73,104 +70,47 @@ See [SCHOOL_ADMIN_PROGRAMMES.md](./SCHOOL_ADMIN_PROGRAMMES.md).
 ### Aligned
 
 - Pay flow → public checkout APIs
-- Register → verify → school login banners
-- Tuition admin shell nav matches hub pages
+- School ERP pages ↔ `/api/admin/school/*`
+- Master OPGB ops ↔ dispute + withdraw APIs
+- Site header / mobile drawer / Hubs menu ↔ Dex routes
 
-### Fixed this pass
+### Fixed this scan (2026-07-16)
 
-- Payments page honors `?status=pending` and `?highlight=<id>` from dashboard
-- Logout / gate redirects use `/school/login`
-- Org admin settings no longer link to inaccessible master org screen
-- Verification email expanded with ODEL HUB platform details
+- School ERP sidebar: Profile, Fee programmes, Payment requests, Users
+- Dex honesty: onramp / convert / sell / offramp copy
+- Play Hub: removed dead Action Center tiles without routes
+- Deleted unused `StudentDashboardShell`
+- Inventories regenerated
 
-### OPGB / Dex Hub (2026-06-03)
+### Remaining UX debt
 
-| Module | UI | APIs | Status |
-|--------|-----|------|--------|
-| OPGB ledger (1 OPGB = 1 UGX) | `/student` wallet panel | `GET /api/student/opgb-wallet` | Shipped |
-| Fiat buy wizard | `/dex/buy` | `buy-quote`, `buy` | Shipped |
-| AMM swap (custodial) | `/dex/amm` | `amm-quote`, `amm-swap` | Shipped |
-| P2P escrow (custodial) | `/dex/p2p` | `p2p`, `p2p/escrow`, `p2p/offers` | Shipped |
-| Checkout card rail | PayWizard, `/student/card` | `openpay-card-pay`, `openpay-card-eligibility` | Shipped |
-
-Hub home (`/dex`) links AMM/P2P; bottom nav keeps onramp/offramp/convert/buy (AMM/P2P via hub cards). **Open:** on-chain auto-release, dispute UI.
-
-### Remaining backlog
-
-See **[BACKLOG.md](./BACKLOG.md)**. Prior 2026-06-04 items (admin search, orgSlug scoping, LivePay student flow, invite reset links) are **implemented**.
-
-| Item | Priority |
-|------|----------|
-| Production env + TON wallet ops | High — [DEPLOYMENT_ENV_PRODUCTION.md](./DEPLOYMENT_ENV_PRODUCTION.md) |
-| OpenPayGB virtual card program | Medium — investigation doc |
-| Consolidate master org mobile/desktop cards | Low |
-| URA game routes `apiErrorResponse` | Low (out of tuition scope) |
-
-### Implemented (2026-06-04)
-
-| Item | Detail |
-|------|--------|
-| Org admin invite email | `POST /api/master/admins` → Resend with `/school/login` credentials |
-| Master `?orgSlug=` dashboard | `GET /api/admin/summary?organizationSlug=` + UI banner |
-| Re-open rejected tenants | `PATCH` `{ action: "reopen" }` on master organizations |
-| LivePay Uganda | `livepay-start`, webhook, PayWizard when `LIVEPAY_*` set |
+- ~23 Play/URA admin pages reachable by URL, not tuition sidebar (dual-auth surface)
+- Master may still show stacked org pickers on some university pages (workspace bar is canonical)
 
 ---
 
 ## 6. Gaps, bugs, robustness
 
-| Category | Status |
-|----------|--------|
-| API error handling (tuition) | `lib/api-error.ts` on major routes |
-| Receipt access | HMAC `?t=` + rate limits |
-| Middleware Edge | `lib/admin-session-edge.ts` (no Node crypto) |
-| Webhook amount verify | MoMo/Mbiyo |
-| Rate limits | Register, verify, auth, receipts |
-| Legacy `/api/collect/*` | Deprecated; checkout preferred |
+See **[DEEP_SCAN_2026-07-16.md](./DEEP_SCAN_2026-07-16.md)** §4 and **[BACKLOG.md](./BACKLOG.md)**.
 
-**CI:** `npm run verify` — lint, vitest, tsc, prisma validate.
+**Shipped ops:** master dispute resolve, withdraw queue (no fake auto-complete), production P2P demo-offer gate, LivePay UG-only API gate, Mongo hot indexes, cron schedule truth.
+
+**External:** card acquiring, LivePay multi-country product, on-chain delivery, live PSP send-money.
 
 ---
 
 ## 7. Deployment readiness
 
-| Check | Command / doc |
-|-------|----------------|
-| Env completeness | `PRODUCTION_GO_LIVE.md`, `.env.example` |
-| Schema | `npm run db:push` |
-| Template org `default` | Required for approve clone |
-| Email | `RESEND_API_KEY`, `RESEND_FROM`, `NEXT_PUBLIC_APP_URL` |
-| Build | `npm run build` |
-| Smoke | Health, `/school/login`, test payin |
+| Item | Status |
+|------|--------|
+| Production | **READY** — https://odelpay.vercel.app |
+| Crons | confirm-ton */5 · expire hourly · dex-settle */15 · telegram Mon 09:00 |
+| Checklist | [PRODUCTION_GO_LIVE.md](./PRODUCTION_GO_LIVE.md), [VERCEL_ODELPAY_DEPLOY.md](./VERCEL_ODELPAY_DEPLOY.md) |
+| Ops paste | `B-OPS-03` PSP webhook secrets into provider dashboards |
 
 ---
 
-## 8. LivePay & virtual cards
+## 8. MongoDB + Telegram (pointers)
 
-- **MoMo collect:** implemented — [LIVEPAY_INTEGRATION_ASSESSMENT.md](./LIVEPAY_INTEGRATION_ASSESSMENT.md)
-- **OpenPayGB closed-loop card (UGX):** implemented — `/admin/virtual-cards`, `/student/card`, checkout openpay routes
-- **Visa/MC issuing or external acquiring:** not implemented — options in [VIRTUAL_CARD_INVESTIGATION.md](./VIRTUAL_CARD_INVESTIGATION.md)
-
----
-
-## 9. App synchronization
-
-| Artifact | Regenerate |
-|----------|------------|
-| API inventory | `npm run docs:inventory` |
-| UI routes / UI_VS_CODEBASE | Same script |
-| Prisma client | `npm run db:generate` after schema change |
-
-**Docs updated:** `APP_STATUS_AUDIT.md`, this file, LivePay assessment, school login flow.
-
----
-
-## Key commands
-
-```bash
-npm run dev:clean      # clean .next + dev (Turbopack)
-npm run verify         # full CI gate
-npm run docs:inventory # sync route/API CSVs
-npm run seed           # demo tenant + admins
-npm run admin:ensure   # sync admin password from env
-```
+- Mongo deep notes: [DEEP_SCAN_2026-07-16.md](./DEEP_SCAN_2026-07-16.md) §6
+- Telegram / TMA: [TELEGRAM_MINI_APP.md](./TELEGRAM_MINI_APP.md) + scan §8

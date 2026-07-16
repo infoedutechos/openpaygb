@@ -292,6 +292,29 @@ function ProfileScreen({ data }: { data: TmaMePayload }) {
   );
 }
 
+function SchoolsBrowseScreen() {
+  return (
+    <div className="space-y-3 p-4">
+      <h2 className="text-lg font-semibold">Browse schools</h2>
+      <p className="text-sm opacity-70">
+        Pay tuition as a guest, or open the product lobbies for higher institutions and K–12 schools.
+      </p>
+      <Link href="/pay" className="tma-btn">
+        Choose school / checkout
+      </Link>
+      <Link href="/OdelPaySchools" className="tma-btn-secondary tma-btn">
+        OdelPay Schools
+      </Link>
+      <Link href="/OdelPayUniversities" className="tma-btn-secondary tma-btn">
+        OdelPay Universities
+      </Link>
+      <Link href="/student/login" className="tma-btn-secondary tma-btn">
+        Student sign-in
+      </Link>
+    </div>
+  );
+}
+
 function GuestPanel({ data }: { data: TmaMePayload }) {
   return (
     <div className="tma-card text-center">
@@ -299,11 +322,11 @@ function GuestPanel({ data }: { data: TmaMePayload }) {
       <p className="mt-2 text-sm opacity-70">
         No linked student record yet. Pay as a guest or register for the student portal.
       </p>
-      <Link href="/student/register" className="tma-btn mt-4">
-        Register
-      </Link>
-      <Link href="/" className="tma-btn-secondary tma-btn mt-2">
+      <Link href="/pay" className="tma-btn mt-4">
         Browse schools
+      </Link>
+      <Link href="/student/register" className="tma-btn-secondary tma-btn mt-2">
+        Register
       </Link>
     </div>
   );
@@ -436,6 +459,7 @@ function StudentApp({
 }) {
   let body: React.ReactNode;
   if (tab === "home") body = <StudentHome data={data} onPay={() => setTab("pay")} />;
+  else if (tab === "schools") body = <SchoolsBrowseScreen />;
   else if (tab === "card") body = <CardScreen data={data} onRefresh={onRefresh} />;
   else if (tab === "pay") body = <PayScreen data={data} />;
   else if (tab === "history") body = <HistoryScreen data={data} />;

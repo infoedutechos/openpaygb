@@ -28,7 +28,9 @@ After **`npm run seed`**:
 | School student | `school.student@odelhub.local` → `/student/login` (slug `riverside-demo`) |
 | University student | `student@odelhub.local` → `/student/login` (slug `default`) |
 
-Default passwords: `SEED_ADMIN_PASSWORD` (`ChangeMe_Admin123!`) for school admin; `SEED_STUDENT_PASSWORD` (`ChangeMe_Student123!`) for both students. Override via `.env` / `.env.local` — **`npm run seed` prints the actual emails and passwords** used for that run.
+Default passwords: `SEED_ADMIN_PASSWORD` (default `ChangeMe_Admin123!`) for school + university org admins; `SEED_STUDENT_PASSWORD` (default `ChangeMe_Student123!`) for both students; `SEED_MASTER_PASSWORD` for seed master. Override via `.env` / `.env.local` — **`npm run seed` prints the actual emails and passwords** used for that run.
+
+**Example with local overrides** (`SEED_ADMIN_EMAIL=oiptechcore@gmail.com`, `SEED_ADMIN_PASSWORD=…`): university org admin uses that email/password; Riverside school admin remains `school.admin@odelhub.local` with the same `SEED_ADMIN_PASSWORD`.
 
 ### Standalone product lobbies (after seed)
 

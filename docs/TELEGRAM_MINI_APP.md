@@ -22,6 +22,8 @@
 
 ~90% of UX lives in the Mini App; the bot handles notifications, alerts, receipts, reminders, and quick actions.
 
+**Student linking (2026-07-16):** `findStudentByTelegramId` prefers `TELEGRAM_ORG_SLUG` / default org, then falls back to any student with that `telegramId` (multi-school bots). Keyboard `start=schools` opens the Mini App schools browse (pay + lobbies).
+
 ---
 
 ## Setup commands

@@ -11,7 +11,7 @@ OPGB is a **universal internal settlement token** for ODEL HUB / OpenPay Global.
 
 **Comparable products:** Binance Pay + Revolut + Mobile Money + hybrid DEX + internal settlement token.
 
-**Today in code (Phase 4):** OpenPayGB card, **OPGB wallet ledger**, deposit→OPGB on card top-ups + wallet P2P sync, **custodial crypto balances** (`OpgbAssetBalance`), **withdraw** (`POST /api/student/opgb-wallet/withdraw`, `/dex/offramp`), **real AMM pools** (`DexAmmPool`), instant student buy (`POST /api/student/dex/buy`), P2P release/cancel/dispute + 24h auto-release cron (`/api/cron/dex-settle`). **Pending:** on-chain settlement, live MoMo disbursement API, master dispute ops UI.
+**Pending:** on-chain settlement, live MoMo disbursement API. **Shipped:** P2P release/cancel/dispute + 24h auto-release cron + master dispute/withdraw ops (`/admin/master/opgb-ops`).
 
 ---
 

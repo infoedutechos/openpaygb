@@ -49,14 +49,34 @@ export async function findStudentByTelegramId(
   telegramId: string,
   organizationId?: string,
 ): Promise<{ studentId: string; organizationId: string } | null> {
-  const orgId = organizationId ?? (await getTelegramOrganizationId());
-  const student = await prisma.student.findFirst({
-    where: { telegramId, organizationId: orgId },
+  const tid = telegramId.trim();
+  if (!tid) return null;
+
+  // Prefer explicit org, then bot default tenant, then any linked student (multi-school bots).
+  if (organizationId) {
+    const scoped = await prisma.student.findFirst({
+      where: { telegramId: tid, organizationId },
+      orderBy: { updatedAt: "desc" },
+      select: { id: true, organizationId: true },
+    });
+    if (scoped) return { studentId: scoped.id, organizationId: scoped.organizationId };
+  }
+
+  const defaultOrgId = await getTelegramOrganizationId();
+  const inDefault = await prisma.student.findFirst({
+    where: { telegramId: tid, organizationId: defaultOrgId },
     orderBy: { updatedAt: "desc" },
     select: { id: true, organizationId: true },
   });
-  if (!student) return null;
-  return { studentId: student.id, organizationId: student.organizationId };
+  if (inDefault) return { studentId: inDefault.id, organizationId: inDefault.organizationId };
+
+  const any = await prisma.student.findFirst({
+    where: { telegramId: tid, NOT: { telegramId: "" } },
+    orderBy: { updatedAt: "desc" },
+    select: { id: true, organizationId: true },
+  });
+  if (!any) return null;
+  return { studentId: any.id, organizationId: any.organizationId };
 }
 
 export type TmaLinkHint = {

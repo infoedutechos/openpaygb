@@ -7,6 +7,10 @@ describe("site-nav-menus", () => {
     expect(SITE_HEADER_MENUS.find((m) => m.id === "developers")?.href).toBe("/developers");
     expect(SITE_HEADER_MENUS.find((m) => m.id === "hubs")?.items.map((i) => i.label)).toEqual([
       "Dex Hub",
+      "Get funds",
+      "AMM swap",
+      "Offramp",
+      "P2P market",
       "Play Hub",
     ]);
     expect(SITE_HEADER_MENUS.find((m) => m.id === "odelpay_higher")?.href).toBe("/OdelPayUniversities");

@@ -62,8 +62,14 @@ export default function DexConvertPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-8">
-      <h1 className="text-2xl font-semibold text-white">Convert</h1>
-      <p className="mt-2 text-sm text-slate-400">Live UGX ↔ TON quotes from OpenPayGB FX. Updates as you type.</p>
+      <h1 className="text-2xl font-semibold text-white">Convert (quote preview)</h1>
+      <p className="mt-2 text-sm text-slate-400">
+        Live UGX ↔ TON quote preview only. To execute a swap, use{" "}
+        <a href="/dex/amm" className="text-cyan-300 underline-offset-2 hover:underline">
+          AMM swap
+        </a>
+        .
+      </p>
 
       <div className="mt-6 space-y-3">
         <select

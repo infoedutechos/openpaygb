@@ -128,9 +128,10 @@ npx vercel env pull .env.local
 
 ## Cron (`vercel.json`)
 
-- `/api/cron/confirm-ton` — every 5 min
-- `/api/cron/expire-pending-payments` — hourly
-- `/api/cron/telegram-tuition-reminders` — Mondays 09:00 UTC
+- `/api/cron/confirm-ton` — every 5 min (`*/5 * * * *`)
+- `/api/cron/expire-pending-payments` — hourly (`0 * * * *`)
+- `/api/cron/dex-settle` — every 15 min (`*/15 * * * *`) — P2P auto-release + queued buys
+- `/api/cron/telegram-tuition-reminders` — Mondays 09:00 UTC (`0 9 * * 1`)
 
 ---
 

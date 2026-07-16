@@ -111,7 +111,11 @@ export const SITE_HEADER_MENUS: SiteNavMenu[] = [
     href: "/dex",
     accent: "amber",
     items: [
-      { label: "Dex Hub", href: "/dex", description: "Onramp, offramp, convert, P2P" },
+      { label: "Dex Hub", href: "/dex", description: "Buy, swap, P2P, offramp" },
+      { label: "Get funds", href: "/dex/onramp", description: "Route to tuition / TON Connect" },
+      { label: "AMM swap", href: "/dex/amm", description: "Execute custodial swap" },
+      { label: "Offramp", href: "/dex/offramp", description: "Withdraw queue" },
+      { label: "P2P market", href: "/dex/p2p", description: "Escrow offers" },
       { label: "Play Hub", href: "/clicker", description: "Games and clicker mini-app" },
     ],
   },

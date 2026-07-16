@@ -63,9 +63,13 @@ export default function DexSellPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-8">
-      <h1 className="text-2xl font-semibold text-white">Sell crypto</h1>
+      <h1 className="text-2xl font-semibold text-white">Sell crypto (quote → offramp)</h1>
       <p className="mt-2 text-sm text-slate-400">
-        Crypto → UGX via OPGB FX. Quote updates as you type; settle via offramp when signed in.
+        Quote preview only — this page does not settle a sale. After quoting, continue to{" "}
+        <a href="/dex/offramp" className="text-cyan-300 underline-offset-2 hover:underline">
+          offramp
+        </a>{" "}
+        to queue a withdrawal for ops payout.
       </p>
 
       <div className="mt-6 space-y-3">

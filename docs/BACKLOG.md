@@ -16,6 +16,7 @@
 | B-SCH-06 | Seed school defaults | `provisionSchoolErpDefaults()` on org activation |
 | B-SCH-07 | Accurate financial periods and inventory valuation | Inclusive date ranges for cash flow, P&L and expense reports; session/term salary scope; inventory unit cost and available-value reporting |
 | B-OPS-06 | Master OPGB ops | `/admin/master/opgb-ops` — resolve P2P disputes (release/refund); withdraw queue (mark paid / reject+restore); withdraw no longer auto-completes |
+| B-SCAN-01 | Deep scan 2026-07-16 | Cron truth, Mongo hot indexes, school ERP nav restore, Dex honesty, TMA multi-org + schools, demo P2P prod gate — [DEEP_SCAN_2026-07-16.md](./DEEP_SCAN_2026-07-16.md) |
 
 ---
 

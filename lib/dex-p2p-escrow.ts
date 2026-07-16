@@ -11,6 +11,10 @@ export type P2pAsset = "TON" | "USDT";
 const OFFER_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 export async function seedDemoP2pOffersIfEmpty() {
+  // Never seed fake offers in production / Vercel production.
+  if (process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production") {
+    return;
+  }
   const count = await prisma.dexP2pOffer.count({ where: { status: "open" } });
   if (count > 0) return;
 

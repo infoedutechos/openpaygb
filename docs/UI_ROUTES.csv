@@ -33,6 +33,7 @@ ui_route,relative_file
 /admin/league-management,app/admin/league-management/page.tsx
 /admin/learn,app/admin/learn/page.tsx
 /admin/login,app/admin/login/page.tsx
+/admin/master/opgb-ops,app/admin/master/opgb-ops/page.tsx
 /admin/master/organizations,app/admin/master/organizations/page.tsx
 /admin/master,app/admin/master/page.tsx
 /admin/master/programmes,app/admin/master/programmes/page.tsx

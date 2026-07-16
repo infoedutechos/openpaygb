@@ -149,7 +149,7 @@ npm run db:push && npm run seed
 
 **Dex Hub** is linked from every signed-in dashboard sidebar (student, school admin, master).
 
-**Phase 5 pending:** on-chain crypto delivery, live MoMo/bank disbursement APIs, master P2P dispute ops UI.
+**Phase 5 pending:** on-chain crypto delivery and live MoMo/bank/TON disbursement APIs (provider payout credentials + custody). **Shipped:** master P2P dispute resolve + withdraw queue at `/admin/master/opgb-ops`.
 
 ---
 

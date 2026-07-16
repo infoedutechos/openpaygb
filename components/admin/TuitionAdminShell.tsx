@@ -36,17 +36,21 @@ const UNIVERSITY_SEGMENTS: { suffix: string; label: string; schoolOnly?: boolean
 /** Reference app sidebar — school fees & payments ERP (HisGrace Gestio). */
 const SCHOOL_ERP_SEGMENTS: { suffix: string; label: string }[] = [
   { suffix: "/school-dashboard", label: "Dashboard" },
+  { suffix: "/profile", label: "Profile" },
   { suffix: "/school-session", label: "Session" },
   { suffix: "/school-accounts", label: "Accounts" },
   { suffix: "/school-structure", label: "Class registration" },
+  { suffix: "/programmes", label: "Fee programmes" },
   { suffix: "/students", label: "Students / bills" },
   { suffix: "/defaulters", label: "Defaulters" },
   { suffix: "/receipts", label: "Receipt of payments" },
+  { suffix: "/payment-requests", label: "Payment requests" },
   { suffix: "/school-staff", label: "Staff" },
   { suffix: "/school-outflow", label: "Outflow" },
   { suffix: "/school-inventory", label: "Inventory" },
   { suffix: "/school-reports", label: "Reports" },
   { suffix: "/payments", label: "Online payments" },
+  { suffix: "/users", label: "Users" },
   { suffix: "/settings", label: "Settings" },
 ];
 

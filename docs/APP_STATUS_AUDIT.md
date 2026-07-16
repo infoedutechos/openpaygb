@@ -120,17 +120,17 @@ See **[SECURITY_HARDENING.md](./SECURITY_HARDENING.md)** — IDOR fixes, receipt
 | Consolidate master org desktop + mobile card UI | Low |
 | Legacy URA `POST /api/admin/login` vs tuition JWT — document Play-only scope | Low |
 
-## 9. Open backlog (scan 2026-06-09)
+## 9. Open backlog (scan 2026-07-16)
 
-Prioritized inventory: **[BACKLOG.md](./BACKLOG.md)**. Items from the 2026-06-04 scan are **done** (admin search, `AdminWorkspaceBar`, master `?orgSlug=` on dashboard/students/payments/reports, invite reset links, distributed rate limits, JWT split).
+Prioritized inventory: **[BACKLOG.md](./BACKLOG.md)** · full write-up: **[DEEP_SCAN_2026-07-16.md](./DEEP_SCAN_2026-07-16.md)**.
 
 | Area | Open work |
 |------|-----------|
-| Ops | Production TON wallet + webhook dashboard alignment — [DEPLOYMENT_ENV_PRODUCTION.md](./DEPLOYMENT_ENV_PRODUCTION.md) |
-| Product | OpenPayGB virtual card program — [VIRTUAL_CARD_INVESTIGATION.md](./VIRTUAL_CARD_INVESTIGATION.md) |
-| Product | **OPGB on-chain settlement** (custodial Phase 1–3 shipped; auto-release + dispute UI open) — [OPGB_TOKEN_ECOSYSTEM.md](./OPGB_TOKEN_ECOSYSTEM.md) |
-| Low | Master org UI consolidation (single `MasterOrgRow`); URA game `apiErrorResponse` |
-| Docs | Inventories at **96 UI / 367 API** (2026-07-15) — regenerate with `npm run docs:inventory` after new routes |
+| Ops | PSP dashboard webhook paste (`B-OPS-03`), email keys, TON wallet truth |
+| Product | OpenPayGB card acquiring / LivePay issuing — [VIRTUAL_CARD_INVESTIGATION.md](./VIRTUAL_CARD_INVESTIGATION.md) |
+| Product | OPGB Phase 5 on-chain + live send-money (ops desk shipped at `/admin/master/opgb-ops`) |
+| UX debt | Play/URA admin pages remain outside tuition sidebar (dual auth) |
+| Docs | Regenerated inventories after this scan — `npm run docs:inventory` |
 
 ---
 
@@ -138,6 +138,8 @@ Prioritized inventory: **[BACKLOG.md](./BACKLOG.md)**. Items from the 2026-06-04
 
 | Topic | Document |
 |-------|----------|
+| Deep scan 2026-07-16 | [DEEP_SCAN_2026-07-16.md](./DEEP_SCAN_2026-07-16.md) |
+| Holistic audit | [HOLISTIC_APP_AUDIT.md](./HOLISTIC_APP_AUDIT.md) |
 | OPGB / DEX / wallet architecture | [OPGB_TOKEN_ECOSYSTEM.md](./OPGB_TOKEN_ECOSYSTEM.md) |
 | Workspace self-register + verify portal | [SCHOOL_WORKSPACE_SELF_REGISTER.md](./SCHOOL_WORKSPACE_SELF_REGISTER.md), [ORGANIZATION_REGISTRATION.md](./ORGANIZATION_REGISTRATION.md) |
 | `.env` ↔ Master Admin | [LOCAL_DEV_AND_CREDENTIALS.md](./LOCAL_DEV_AND_CREDENTIALS.md) — `npm run deployment:env-audit` |

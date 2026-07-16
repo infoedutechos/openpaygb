@@ -166,6 +166,7 @@ url_path,relative_file,http_methods,method_count
 /api/master/deployment-env/registry,app/api/master/deployment-env/registry/route.ts,DELETE;GET;POST,3
 /api/master/deployment-env,app/api/master/deployment-env/route.ts,GET;PATCH,2
 /api/master/deployment-env/vercel-sync,app/api/master/deployment-env/vercel-sync/route.ts,POST,1
+/api/master/dex-p2p-disputes,app/api/master/dex-p2p-disputes/route.ts,GET;POST,2
 /api/master/fx,app/api/master/fx/route.ts,GET;PATCH,2
 /api/master/hub-maintenance,app/api/master/hub-maintenance/route.ts,GET;PATCH,2
 /api/master/knowledge/gaps,app/api/master/knowledge/gaps/route.ts,GET;PATCH,2
@@ -177,6 +178,7 @@ url_path,relative_file,http_methods,method_count
 /api/master/notifications,app/api/master/notifications/route.ts,GET;POST,2
 /api/master/openpay-card-settings,app/api/master/openpay-card-settings/route.ts,GET;PATCH,2
 /api/master/openpay-cards,app/api/master/openpay-cards/route.ts,GET,1
+/api/master/opgb-withdraws,app/api/master/opgb-withdraws/route.ts,GET;POST,2
 /api/master/organizations/[id]/checkout-platform-fee,app/api/master/organizations/[id]/checkout-platform-fee/route.ts,PATCH,1
 /api/master/organizations/[id]/destination-wallet,app/api/master/organizations/[id]/destination-wallet/route.ts,PATCH,1
 /api/master/organizations/[id]/favicon,app/api/master/organizations/[id]/favicon/route.ts,DELETE;POST,2
