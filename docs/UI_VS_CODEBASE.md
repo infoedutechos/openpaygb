@@ -37,6 +37,7 @@ npm run docs:inventory   # writes API_INVENTORY.csv, UI_ROUTES.csv, and this fil
 | /admin/daily-cipher | /api/admin/daily-cipher | yes |
 | /admin/daily-combo | /api/admin/daily-combo | yes |
 | /admin/daily-pattern | /api/admin/daily-pattern | yes |
+| /admin/defaulters | (none under /api/admin/defaulters/ — see UI_API_MAP in export-api-inventory.cjs) | no |
 | /admin/export | /api/admin/export | yes |
 | /admin/fees-collection | /api/admin/fees-collection | yes |
 | /admin/global-tasks | /api/admin/global-tasks | yes |
@@ -61,6 +62,14 @@ npm run docs:inventory   # writes API_INVENTORY.csv, UI_ROUTES.csv, and this fil
 | /admin/register | (none under /api/admin/register/ — see UI_API_MAP in export-api-inventory.cjs) | no |
 | /admin/reports | /api/admin/summary<br>/api/payments/export | yes |
 | /admin/reset-password | (none under /api/admin/reset-password/ — see UI_API_MAP in export-api-inventory.cjs) | no |
+| /admin/school-accounts | (none under /api/admin/school-accounts/ — see UI_API_MAP in export-api-inventory.cjs) | no |
+| /admin/school-dashboard | (none under /api/admin/school-dashboard/ — see UI_API_MAP in export-api-inventory.cjs) | no |
+| /admin/school-inventory | (none under /api/admin/school-inventory/ — see UI_API_MAP in export-api-inventory.cjs) | no |
+| /admin/school-outflow | (none under /api/admin/school-outflow/ — see UI_API_MAP in export-api-inventory.cjs) | no |
+| /admin/school-reports | (none under /api/admin/school-reports/ — see UI_API_MAP in export-api-inventory.cjs) | no |
+| /admin/school-session | (none under /api/admin/school-session/ — see UI_API_MAP in export-api-inventory.cjs) | no |
+| /admin/school-staff | (none under /api/admin/school-staff/ — see UI_API_MAP in export-api-inventory.cjs) | no |
+| /admin/school-structure | (none under /api/admin/school-structure/ — see UI_API_MAP in export-api-inventory.cjs) | no |
 | /admin/settings | /api/auth/me<br>/api/fx/rate | yes |
 | /admin/shop | /api/admin/shop/products<br>/api/admin/shop/settings | yes |
 | /admin/staking-audit | /api/admin/staking-audit | yes |
@@ -113,11 +122,19 @@ These handlers are not namespaced under `/api/admin/`. Several are still used fr
 - `/api/collect/mbiyo` — `app/api/collect/mbiyo/route.ts`
 - `/api/collect/momo` — `app/api/collect/momo/route.ts`
 - `/api/cron/confirm-ton` — `app/api/cron/confirm-ton/route.ts`
+- `/api/cron/dex-settle` — `app/api/cron/dex-settle/route.ts`
 - `/api/cron/expire-pending-payments` — `app/api/cron/expire-pending-payments/route.ts`
 - `/api/cron/telegram-tuition-reminders` — `app/api/cron/telegram-tuition-reminders/route.ts`
 - `/api/daily-cipher` — `app/api/daily-cipher/route.ts`
 - `/api/daily-combo` — `app/api/daily-combo/route.ts`
 - `/api/daily-reward` — `app/api/daily-reward/route.ts`
+- `/api/developers/auth/login` — `app/api/developers/auth/login/route.ts`
+- `/api/developers/auth/logout` — `app/api/developers/auth/logout/route.ts`
+- `/api/developers/keys/[id]` — `app/api/developers/keys/[id]/route.ts`
+- `/api/developers/keys` — `app/api/developers/keys/route.ts`
+- `/api/developers/me` — `app/api/developers/me/route.ts`
+- `/api/developers/webhooks/[id]` — `app/api/developers/webhooks/[id]/route.ts`
+- `/api/developers/webhooks` — `app/api/developers/webhooks/route.ts`
 - `/api/docs/[[...path]]` — `app/api/docs/[[...path]]/route.ts`
 - `/api/donate` — `app/api/donate/route.ts`
 - `/api/donations/leaderboard` — `app/api/donations/leaderboard/route.ts`
@@ -202,9 +219,15 @@ These handlers are not namespaced under `/api/admin/`. Several are still used fr
 - `/api/mini-games` — `app/api/mini-games/route.ts`
 - `/api/notification-social-icon` — `app/api/notification-social-icon/route.ts`
 - `/api/notifications` — `app/api/notifications/route.ts`
+- `/api/oauth/authorize` — `app/api/oauth/authorize/route.ts`
+- `/api/oauth/token` — `app/api/oauth/token/route.ts`
 - `/api/onchain-tasks/check` — `app/api/onchain-tasks/check/route.ts`
 - `/api/onchain-tasks` — `app/api/onchain-tasks/route.ts`
 - `/api/org/[slug]/favicon` — `app/api/org/[slug]/favicon/route.ts`
+- `/api/partner/v1/dex/payment-intents/[id]` — `app/api/partner/v1/dex/payment-intents/[id]/route.ts`
+- `/api/partner/v1/dex/payment-intents` — `app/api/partner/v1/dex/payment-intents/route.ts`
+- `/api/partner/v1/dex/quote` — `app/api/partner/v1/dex/quote/route.ts`
+- `/api/partner/v1/opgb/balances` — `app/api/partner/v1/opgb/balances/route.ts`
 - `/api/partner/v1/organizations` — `app/api/partner/v1/organizations/route.ts`
 - `/api/partner/v1/payments/[id]` — `app/api/partner/v1/payments/[id]/route.ts`
 - `/api/partner/v1/payments` — `app/api/partner/v1/payments/route.ts`
@@ -241,11 +264,14 @@ These handlers are not namespaced under `/api/admin/`. Several are still used fr
 - `/api/public/checkout/student` — `app/api/public/checkout/student/route.ts`
 - `/api/public/checkout/ton-pay-transfer` — `app/api/public/checkout/ton-pay-transfer/route.ts`
 - `/api/public/checkout/vixonpay-start` — `app/api/public/checkout/vixonpay-start/route.ts`
+- `/api/public/community-feed` — `app/api/public/community-feed/route.ts`
 - `/api/public/convert/quote` — `app/api/public/convert/quote/route.ts`
 - `/api/public/dex/amm-quote` — `app/api/public/dex/amm-quote/route.ts`
 - `/api/public/dex/buy-quote` — `app/api/public/dex/buy-quote/route.ts`
 - `/api/public/dex/buy` — `app/api/public/dex/buy/route.ts`
 - `/api/public/dex/p2p` — `app/api/public/dex/p2p/route.ts`
+- `/api/public/dex/sell-quote` — `app/api/public/dex/sell-quote/route.ts`
+- `/api/public/ecosystem/register-app` — `app/api/public/ecosystem/register-app/route.ts`
 - `/api/public/guest-card/register` — `app/api/public/guest-card/register/route.ts`
 - `/api/public/guest-card/send-otp` — `app/api/public/guest-card/send-otp/route.ts`
 - `/api/public/livepay-config` — `app/api/public/livepay-config/route.ts`
@@ -285,7 +311,12 @@ These handlers are not namespaced under `/api/admin/`. Several are still used fr
 - `/api/staking` — `app/api/staking/route.ts`
 - `/api/student/balance` — `app/api/student/balance/route.ts`
 - `/api/student/dex/amm-swap` — `app/api/student/dex/amm-swap/route.ts`
+- `/api/student/dex/buy` — `app/api/student/dex/buy/route.ts`
+- `/api/student/dex/p2p/dispute` — `app/api/student/dex/p2p/dispute/route.ts`
+- `/api/student/dex/p2p/escrow/cancel` — `app/api/student/dex/p2p/escrow/cancel/route.ts`
+- `/api/student/dex/p2p/escrow/release` — `app/api/student/dex/p2p/escrow/release/route.ts`
 - `/api/student/dex/p2p/escrow` — `app/api/student/dex/p2p/escrow/route.ts`
+- `/api/student/dex/p2p/escrows` — `app/api/student/dex/p2p/escrows/route.ts`
 - `/api/student/dex/p2p/offers` — `app/api/student/dex/p2p/offers/route.ts`
 - `/api/student/me` — `app/api/student/me/route.ts`
 - `/api/student/openpay-card/fund/momo-start` — `app/api/student/openpay-card/fund/momo-start/route.ts`
@@ -295,6 +326,7 @@ These handlers are not namespaced under `/api/admin/`. Several are still used fr
 - `/api/student/openpay-card/opt-in` — `app/api/student/openpay-card/opt-in/route.ts`
 - `/api/student/openpay-card` — `app/api/student/openpay-card/route.ts`
 - `/api/student/opgb-wallet` — `app/api/student/opgb-wallet/route.ts`
+- `/api/student/opgb-wallet/withdraw` — `app/api/student/opgb-wallet/withdraw/route.ts`
 - `/api/student/payments/[id]/cancel` — `app/api/student/payments/[id]/cancel/route.ts`
 - `/api/student/session` — `app/api/student/session/route.ts`
 - `/api/student/wallet/send` — `app/api/student/wallet/send/route.ts`

@@ -9,6 +9,7 @@ const CreateBody = z.object({
   name: z.string().min(1).max(120),
   availableQty: z.number().int().min(0).optional(),
   unavailableQty: z.number().int().min(0).optional(),
+  unitCostUgx: z.number().int().min(0).optional(),
   notes: z.string().optional(),
 });
 
@@ -29,6 +30,8 @@ export async function GET(req: Request) {
         name: i.name,
         availableQty: i.availableQty,
         unavailableQty: i.unavailableQty,
+        unitCostUgx: i.unitCostUgx,
+        availableValueUgx: i.availableQty * i.unitCostUgx,
         notes: i.notes,
       })),
     });
@@ -49,6 +52,7 @@ export async function POST(req: Request) {
         name: body.name.trim(),
         availableQty: body.availableQty ?? 0,
         unavailableQty: body.unavailableQty ?? 0,
+        unitCostUgx: body.unitCostUgx ?? 0,
         notes: body.notes?.trim() ?? "",
       },
     });

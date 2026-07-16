@@ -5,7 +5,7 @@ Use this after pushing code to `main` and connecting [Vercel](https://vercel.com
 ## 1. Vercel project
 
 1. Import or reconnect the GitHub repo.
-2. Production domain: `odelpay.vercel.app` ([odeldevelopers-projects/odelhub-pay](https://vercel.com/odeldevelopers-projects/odelhub-pay/settings/domains)) — see [VERCEL_ODELPAY_DEPLOY.md](./VERCEL_ODELPAY_DEPLOY.md).
+2. Production domain: `odelpay.vercel.app` ([odeldevelopers-projects/odelpay](https://vercel.com/odeldevelopers-projects/odelpay/settings/domains)) — see [VERCEL_ODELPAY_DEPLOY.md](./VERCEL_ODELPAY_DEPLOY.md).
 3. **Redeploy** after every env change.
 
 If you see `DEPLOYMENT_NOT_FOUND`, the project was deleted or the domain points at a removed deployment — create a new deployment from the repo.

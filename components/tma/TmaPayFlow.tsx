@@ -5,7 +5,7 @@ import type { TmaMePayload } from "@/lib/tma-types";
 import { OPEN_PAY_BRAND } from "@/lib/open-pay-brand";
 import { readJsonResponse } from "@/utils/read-json-response";
 
-type PayMethod = "openpay_card" | "mobile_money" | "ton_wallet" | "bank_card";
+type PayMethod = "openpay_card" | "mobile_money" | "ton_wallet";
 
 type Props = {
   data: TmaMePayload;
@@ -99,8 +99,6 @@ export function TmaPayFlow({ data, onSuccess }: Props) {
         if (tg?.openLink) tg.openLink(full);
         else window.open(payUrl, "_blank");
         setSuccess({ paymentId: "", message: "Opened TON checkout in your browser." });
-      } else {
-        setError("Bank card checkout is coming soon. Use OpenPay Card or Mobile Money.");
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Payment failed");
@@ -152,7 +150,6 @@ export function TmaPayFlow({ data, onSuccess }: Props) {
             { id: "openpay_card" as const, label: `${OPEN_PAY_BRAND} Card`, disabled: !data.card },
             { id: "mobile_money" as const, label: "Mobile Money", disabled: false },
             { id: "ton_wallet" as const, label: "TON Wallet", disabled: false },
-            { id: "bank_card" as const, label: "Bank Card", disabled: false },
           ] as const
         ).map((m) => (
           <label key={m.id} className="flex items-center gap-2 rounded-lg px-2 py-1.5">

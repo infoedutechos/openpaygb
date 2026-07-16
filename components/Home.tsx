@@ -373,7 +373,7 @@ export default function Home({ setCurrentView }: HomeProps) {
       setCurrentView(item.route);
       return;
     }
-    showToast(`${item.title} — coming soon`, 'success');
+    showToast(`${item.title} has no destination configured. Edit this shortcut and choose a destination.`, 'error');
   };
 
   const renderActionCenterItem = (item: ActionItem, rowKey: string) => (

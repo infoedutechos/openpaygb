@@ -37,7 +37,8 @@ export function SchoolReportPreview({ reportId, data }: { reportId: string; data
         <li>Income: {formatUgx(Number(d.incomeUgx ?? 0))}</li>
         <li>Expenditure: {formatUgx(Number(d.expenditureUgx ?? 0))}</li>
         <li>Net: {formatUgx(Number(d.netUgx ?? 0))}</li>
-        <li>Inventory units: {String(d.inventoryValueUgx ?? 0)}</li>
+        <li>Inventory units: {String(d.inventoryUnits ?? 0)}</li>
+        <li>Inventory value: {formatUgx(Number(d.inventoryValueUgx ?? 0))}</li>
       </ul>
     );
   }
@@ -49,7 +50,7 @@ export function SchoolReportPreview({ reportId, data }: { reportId: string; data
     return (
       <ReportTable
         headers={headers}
-        rows={rows.map((r) => headers.map((h) => formatCell(r[h])))}
+        rows={rows.map((r) => headers.map((h) => formatCell(r[h], h)))}
       />
     );
   }
@@ -80,9 +81,11 @@ export function SchoolReportPreview({ reportId, data }: { reportId: string; data
   );
 }
 
-function formatCell(v: string | number | null | undefined): string {
+function formatCell(v: string | number | null | undefined, key = ""): string {
   if (v == null) return "—";
-  if (typeof v === "number" && v > 999) return formatUgx(v);
+  if (typeof v === "number" && /(?:ugx|value|gross|net|deduction|amount|total)/i.test(key)) {
+    return formatUgx(v);
+  }
   return String(v);
 }
 

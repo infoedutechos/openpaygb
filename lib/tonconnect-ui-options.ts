@@ -65,6 +65,45 @@ export function isTonConnectAnalyticsNoise(reason: unknown): boolean {
   );
 }
 
+/**
+ * Benign aborts from Firefox (`NS_ERROR_ABORT`) / AbortController when TonConnect
+ * cancels in-flight bridge, wallets-list, or restoreConnection requests on remount/HMR.
+ */
+export function isTonConnectAbortNoise(reason: unknown): boolean {
+  if (reason == null) return false;
+
+  const name =
+    typeof reason === "object" && reason !== null && "name" in reason
+      ? String((reason as { name?: unknown }).name ?? "")
+      : "";
+  const msg = String(
+    (reason instanceof Error ? reason.message : reason) ?? "",
+  );
+  const stack = stackText(reason);
+  const haystack = `${name} ${msg} ${stack}`.toLowerCase();
+
+  const looksAbort =
+    name === "AbortError" ||
+    haystack.includes("ns_error_abort") ||
+    haystack.includes("aborterror") ||
+    haystack.includes("operation aborted") ||
+    haystack.includes("the operation was aborted") ||
+    haystack.includes("signal is aborted") ||
+    haystack.includes("request was aborted");
+
+  if (!looksAbort) return false;
+
+  // Prefer suppressing when stack is TonConnect-related; also suppress bare
+  // Firefox NS_ERROR_ABORT / AbortError during app shell boot (common on layout remount).
+  return (
+    haystack.includes("tonconnect") ||
+    haystack.includes("ton-connect") ||
+    haystack.includes("@tonconnect") ||
+    haystack.includes("ns_error_abort") ||
+    name === "AbortError"
+  );
+}
+
 export function isTonConnectBridgeConsoleNoise(message: string): boolean {
   const s = message.toLowerCase();
   if (s.includes("[ton_connect_sdk]")) {
@@ -105,8 +144,9 @@ export function isNextDevConsoleNoise(message: string): boolean {
     s.includes("[fast refresh]") ||
     s.includes("webpack-hmr") ||
     s.includes("_next/webpack-hmr") ||
-    s.includes("connection to ws://") && s.includes("was interrupted") ||
+    (s.includes("connection to ws://") && s.includes("was interrupted")) ||
     s.includes("ns_binding_aborted") ||
+    s.includes("ns_error_abort") ||
     s.includes("opaqueresponseblocking")
   );
 }

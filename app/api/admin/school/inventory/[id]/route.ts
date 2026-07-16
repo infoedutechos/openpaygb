@@ -8,6 +8,7 @@ const PatchBody = z.object({
   name: z.string().min(1).max(120).optional(),
   availableQty: z.number().int().min(0).optional(),
   unavailableQty: z.number().int().min(0).optional(),
+  unitCostUgx: z.number().int().min(0).optional(),
   notes: z.string().optional(),
 });
 
@@ -15,7 +16,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   try {
     const { id } = await ctx.params;
     const body = PatchBody.parse(await req.json());
-    const auth = await requireSchoolAdminScope();
+    const auth = await requireSchoolAdminScope(new URL(req.url).searchParams.get("organizationSlug"));
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const result = await prisma.schoolInventoryItem.updateMany({
@@ -24,6 +25,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
         ...(body.name !== undefined ? { name: body.name.trim() } : {}),
         ...(body.availableQty !== undefined ? { availableQty: body.availableQty } : {}),
         ...(body.unavailableQty !== undefined ? { unavailableQty: body.unavailableQty } : {}),
+        ...(body.unitCostUgx !== undefined ? { unitCostUgx: body.unitCostUgx } : {}),
         ...(body.notes !== undefined ? { notes: body.notes } : {}),
       },
     });
@@ -34,10 +36,10 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   }
 }
 
-export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: Request, ctx: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await ctx.params;
-    const auth = await requireSchoolAdminScope();
+    const auth = await requireSchoolAdminScope(new URL(req.url).searchParams.get("organizationSlug"));
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const result = await prisma.schoolInventoryItem.deleteMany({

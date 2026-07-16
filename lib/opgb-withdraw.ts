@@ -1,8 +1,9 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
-import { debitOpgb, ensureOpgbWallet } from "@/lib/opgb-ledger";
+import { creditOpgb, debitOpgb, ensureOpgbWallet } from "@/lib/opgb-ledger";
 import {
+  creditOpgbAsset,
   debitOpgbAsset,
   isOpgbCryptoAsset,
   type OpgbCryptoAsset,
@@ -97,21 +98,114 @@ export async function requestOpgbWithdraw(opts: {
       });
     });
 
-    // Custodial auto-complete (payout rail simulation until live disbursement API).
-    const completed = await prisma.opgbWithdrawRequest.update({
-      where: { id: request.id },
-      data: { status: "completed", completedAt: new Date() },
+    return {
+      ok: true,
+      requestId: request.id,
+      referenceKey: request.referenceKey,
+      status: request.status,
+      message: `Withdrawal of ${amount} ${asset.toUpperCase()} via ${opts.rail} queued for ops payout (funds held).`,
+    };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Withdraw failed";
+    return { ok: false, error: msg, status: 409 };
+  }
+}
+
+export async function listOpgbWithdrawQueue(opts?: { status?: string; limit?: number }) {
+  const status = opts?.status?.trim();
+  return prisma.opgbWithdrawRequest.findMany({
+    where: status ? { status } : { status: { in: ["pending", "processing"] } },
+    orderBy: { createdAt: "asc" },
+    take: Math.min(opts?.limit ?? 100, 200),
+  });
+}
+
+/** Mark payout sent externally (MoMo/bank/TON). Does not move ledger — debit already applied. */
+export async function completeOpgbWithdraw(opts: {
+  requestId: string;
+  note?: string;
+}): Promise<WithdrawResult> {
+  const row = await prisma.opgbWithdrawRequest.findUnique({ where: { id: opts.requestId } });
+  if (!row || !["pending", "processing"].includes(row.status)) {
+    return { ok: false, error: "Withdraw not actionable", status: 404 };
+  }
+
+  const note = opts.note?.trim().slice(0, 500) ?? "";
+  const updated = await prisma.opgbWithdrawRequest.update({
+    where: { id: row.id },
+    data: {
+      status: "completed",
+      completedAt: new Date(),
+      memo: note ? `${row.memo || ""} | completed: ${note}`.trim() : row.memo,
+    },
+  });
+
+  return {
+    ok: true,
+    requestId: updated.id,
+    referenceKey: updated.referenceKey,
+    status: updated.status,
+    message: "Withdrawal marked completed (external payout recorded).",
+  };
+}
+
+/** Reject payout and restore student balance. */
+export async function failOpgbWithdraw(opts: {
+  requestId: string;
+  note?: string;
+}): Promise<WithdrawResult> {
+  const row = await prisma.opgbWithdrawRequest.findUnique({ where: { id: opts.requestId } });
+  if (!row || !["pending", "processing"].includes(row.status)) {
+    return { ok: false, error: "Withdraw not actionable", status: 404 };
+  }
+
+  const note = opts.note?.trim().slice(0, 500) ?? "rejected by ops";
+  const refundKey = `withdraw-refund:${row.referenceKey}`;
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const locked = await tx.opgbWithdrawRequest.updateMany({
+        where: { id: row.id, status: { in: ["pending", "processing"] } },
+        data: {
+          status: "failed",
+          memo: `${row.memo || ""} | failed: ${note}`.trim(),
+        },
+      });
+      if (locked.count !== 1) throw new Error("Withdraw already settled");
+
+      const asset = row.asset.toLowerCase();
+      if (asset === "opgb" || asset === "momo") {
+        await creditOpgb(
+          {
+            studentId: row.studentId,
+            organizationId: row.organizationId,
+            amountUgx: Math.round(row.amount),
+            kind: "adjustment",
+            referenceKey: refundKey,
+            sourceRail: row.rail,
+            memo: `Withdraw rejected: ${note}`,
+          },
+          tx,
+        );
+      } else if (isOpgbCryptoAsset(asset)) {
+        await creditOpgbAsset(
+          { walletId: row.walletId, asset: asset as OpgbCryptoAsset, amount: row.amount },
+          tx,
+        );
+      } else {
+        throw new Error("Unsupported asset for refund");
+      }
     });
 
     return {
       ok: true,
-      requestId: completed.id,
-      referenceKey: completed.referenceKey,
-      status: completed.status,
-      message: `Withdrawal of ${amount} ${asset.toUpperCase()} via ${opts.rail} queued and processed.`,
+      requestId: row.id,
+      referenceKey: row.referenceKey,
+      status: "failed",
+      message: "Withdrawal rejected — balance restored to student.",
     };
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Withdraw failed";
+    const msg = e instanceof Error ? e.message : "Reject failed";
     return { ok: false, error: msg, status: 409 };
   }
 }

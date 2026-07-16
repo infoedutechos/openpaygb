@@ -1,8 +1,8 @@
 'use client';
 
 /**
- * Mini Games Hub – grid of all Afrolumens mini-games (20+).
- * Tapping a game opens its introductory detail view; from there "Play" (if implemented) or "Coming soon".
+ * Mini Games Hub – production-ready Afrolumens mini-games only.
+ * Roadmap game definitions remain in the catalog but are not advertised as playable.
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -39,7 +39,7 @@ function GameDetailModal({
   onClose: () => void;
   onPlay: () => void;
 }) {
-  const { intro, implemented } = game;
+  const { intro } = game;
   return (
     <div
       className="fixed inset-0 z-[70] flex items-end justify-center bg-ura-navy/60 p-0 sm:items-center sm:p-4"
@@ -99,19 +99,13 @@ function GameDetailModal({
           >
             Back
           </button>
-          {implemented ? (
-            <button
-              type="button"
-              onClick={() => { triggerHapticFeedback(window); onPlay(); }}
-              className="flex-1 py-3 rounded-xl bg-ura-gold text-black font-bold"
-            >
-              Play
-            </button>
-          ) : (
-            <span className="flex-1 py-3 rounded-xl bg-ura-panel-2 text-amber-400 text-center font-medium flex items-center justify-center">
-              Coming soon
-            </span>
-          )}
+          <button
+            type="button"
+            onClick={() => { triggerHapticFeedback(window); onPlay(); }}
+            className="flex-1 py-3 rounded-xl bg-ura-gold text-black font-bold"
+          >
+            Play
+          </button>
         </div>
       </div>
     </div>
@@ -194,6 +188,7 @@ export default function MiniGamesHubPopup({ onClose }: MiniGamesHubPopupProps) {
   }
 
   const selectedGame = selectedGameId ? getGameById(selectedGameId) : null;
+  const availableGames = AFROLUMENS_MINI_GAMES.filter((game) => game.implemented);
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-ura-navy/60 p-0 sm:items-center sm:p-4">
@@ -217,18 +212,13 @@ export default function MiniGamesHubPopup({ onClose }: MiniGamesHubPopupProps) {
             <p className="text-center text-gray-400 py-8">Loading…</p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {AFROLUMENS_MINI_GAMES.map((game) => {
-                const isImplemented = game.implemented === true;
+              {availableGames.map((game) => {
                 return (
                   <button
                     key={game.id}
                     type="button"
                     onClick={() => handleGameCardClick(game.id)}
-                    className={`flex flex-col items-center text-center p-4 rounded-xl border transition-all ${
-                      isImplemented
-                        ? 'bg-ura-panel-2 border-ura-border/75 hover:border-[#f3ba2f]/50 hover:bg-[#2d3038]'
-                        : 'bg-[#252836] border-ura-border/85 opacity-90 hover:opacity-100'
-                    }`}
+                    className="flex flex-col items-center text-center p-4 rounded-xl border transition-all bg-ura-panel-2 border-ura-border/75 hover:border-[#f3ba2f]/50 hover:bg-[#2d3038]"
                   >
                     <span className="text-3xl mb-1">{game.emoji}</span>
                     <span className={`text-xs font-medium rounded px-1.5 py-0.5 border mb-1 ${TIER_COLORS[game.tier]}`}>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { readJsonResponse } from "@/utils/read-json-response";
 
 const CRYPTO_OPTIONS = ["TON", "USDT", "BTC", "ETH"] as const;
@@ -42,6 +43,22 @@ export default function DexBuyPage() {
   const [msg, setMsg] = useState<string | null>(null);
   const [quoteBusy, setQuoteBusy] = useState(false);
   const [buyBusy, setBuyBusy] = useState(false);
+  const [studentSignedIn, setStudentSignedIn] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetch("/api/student/session", { credentials: "include" })
+      .then((response) => response.json())
+      .then((data: { signedIn?: boolean }) => {
+        if (!cancelled) setStudentSignedIn(Boolean(data.signedIn));
+      })
+      .catch(() => {
+        if (!cancelled) setStudentSignedIn(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const loadQuote = useCallback(async (amountUgx: number, asset: Crypto) => {
     setQuoteBusy(true);
@@ -82,19 +99,13 @@ export default function DexBuyPage() {
     setError(null);
     setMsg(null);
     try {
-      let r = await fetch("/api/student/dex/buy", {
+      if (!studentSignedIn) throw new Error("Sign in to settle purchases from your OPGB balance.");
+      const r = await fetch("/api/student/dex/buy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ crypto: quote.crypto, fiatAmountUgx: quote.fiatAmount }),
       });
-      if (r.status === 401) {
-        r = await fetch("/api/public/dex/buy", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ crypto: quote.crypto, fiatAmountUgx: quote.fiatAmount }),
-        });
-      }
       const parsed = await readJsonResponse<{ message?: string; nextPath?: string; error?: string }>(r);
       if (!parsed.ok) throw new Error(parsed.error);
       setMsg(parsed.data.message ?? "Buy complete.");
@@ -176,15 +187,22 @@ export default function DexBuyPage() {
             </p>
             <button
               type="button"
-              disabled={buyBusy || !quote.stepsReady}
+              disabled={buyBusy || !quote.stepsReady || studentSignedIn !== true}
               onClick={() => void executeBuy()}
               className="mt-2 w-full rounded-lg bg-gradient-to-r from-cyan-400 to-sky-500 py-2.5 font-semibold text-slate-950 disabled:opacity-50"
             >
-              {buyBusy ? "Processing…" : "Buy crypto"}
+              {buyBusy ? "Processing…" : studentSignedIn === false ? "Sign in to buy" : "Buy crypto"}
             </button>
-            <p className="text-xs text-slate-500">
-              Signed-in students settle instantly from OPGB balance. Guests queue for ops settlement.
-            </p>
+            {studentSignedIn === false ? (
+              <p className="text-xs text-slate-400">
+                <Link href="/student/login" className="font-medium text-cyan-300 hover:text-cyan-200">
+                  Sign in to the student portal
+                </Link>{" "}
+                to settle instantly from your OPGB balance.
+              </p>
+            ) : (
+              <p className="text-xs text-slate-500">Purchases settle instantly from your OPGB balance.</p>
+            )}
           </div>
         ) : amountValid ? (
           <p className="mt-3 text-slate-500">Waiting for quote…</p>

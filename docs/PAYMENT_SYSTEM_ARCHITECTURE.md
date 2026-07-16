@@ -1,6 +1,6 @@
 # Payment system architecture — OdelPay & OpenPayGB
 
-**Date:** 2026-06-09 · **Production URL:** `https://odelpay.vercel.app` · **Repo:** [openpayglobal/openpaygb](https://github.com/openpayglobal/openpaygb)
+**Date:** 2026-07-13 · **Production URL:** `https://odelpay.vercel.app` · **Repo:** [infoedutechos/ODELHUBPay](https://github.com/infoedutechos/ODELHUBPay)
 
 This document organizes the platform into three products and maps planned money-movement features.
 

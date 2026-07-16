@@ -8,5 +8,7 @@ describe("dex-p2p-escrow", () => {
     expect(policy.shipped).toContain("escrow_hold");
     expect(policy.shipped).toContain("auto_release");
     expect(policy.shipped).toContain("dispute_escalation");
+    expect(policy.shipped).toContain("master_dispute_resolve");
+    expect(policy.pending).toContain("on_chain_release");
   });
 });

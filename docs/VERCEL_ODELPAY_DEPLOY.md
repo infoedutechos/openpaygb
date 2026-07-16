@@ -4,7 +4,7 @@
 **Team:** [odeldevelopers-projects](https://vercel.com/odeldevelopers-projects)  
 **Project (dashboard name):** [odelpay](https://vercel.com/odeldevelopers-projects/odelpay/settings/domains)  
 **Production domain:** **`https://odelpay.vercel.app`** (no trailing slash)  
-**GitHub:** [openpayglobal/openpaygb](https://github.com/openpayglobal/openpaygb)
+**GitHub:** [infoedutechos/ODELHUBPay](https://github.com/infoedutechos/ODELHUBPay)
 
 ---
 
@@ -13,6 +13,7 @@
 | Check | Result |
 |-------|--------|
 | `https://odelpay.vercel.app/` | **200** — production deployment live |
+| Latest source deploy | **READY (2026-07-16)** — CLI `vercel deploy --prod` succeeded; aliased to `https://odelpay.vercel.app` (deployment `dpl_7ggRCS7VQuEHSMfKcKdjmw3ZruBw`). Prior fair-use block cleared. |
 | `GET /api/health` | **200** with `Authorization: Bearer <HEALTH_CHECK_SECRET>` |
 | Vercel production env | **29** vars synced (DB, JWT, cron, webhooks, Telegram, TON) |
 | Master Admin overrides | **33** vars in Deployment Environment (`/admin/master#deployment-environment`) |
@@ -34,7 +35,7 @@
 
 1. [Settings → Git](https://vercel.com/odeldevelopers-projects/odelpay/settings/git)
 2. Team: **odeldevelopers-projects**
-3. Repo: **`openpayglobal/openpaygb`**
+3. Repo: **`infoedutechos/ODELHUBPay`**
 4. Production branch: **`main`**
 5. Build: `npm run vercel-build` (`vercel.json`)
 
@@ -57,7 +58,7 @@ Full list: [VERCEL_ENV_SETUP.md](./VERCEL_ENV_SETUP.md)
 
 ## Fix 4 — Deploy & verify
 
-1. Push to **`main`** — CI is green on [Actions](https://github.com/openpayglobal/openpaygb/actions).
+1. Push to **`main`** — CI is green on [Actions](https://github.com/infoedutechos/ODELHUBPay/actions).
 2. Vercel **Deployments** → Production **Ready** (after Fix 1–3). If pushes do not auto-deploy, use **Redeploy** on the latest `main` commit or workflow **Vercel Production Deploy** (requires GitHub secrets).
 3. `GET https://odelpay.vercel.app/api/health` → JSON (not 404).
 4. **Stale deploy check:** `GET https://odelpay.vercel.app/api/public/school-workspace-registration-policy` must include `deferEmailVerification`, `autoGenerateAdminLogin`, and `buildSha` (matching the latest `main` SHA). If only `requireMasterApproval` / `autoRegistrationEnabled` are returned, production is on an old build.
@@ -72,7 +73,7 @@ Full list: [VERCEL_ENV_SETUP.md](./VERCEL_ENV_SETUP.md)
    |--------|--------|
    | `VERCEL_TOKEN` | Token from step 1 |
    | `VERCEL_ORG_ID` | `odeldevelopers-projects` team ID |
-   | `VERCEL_PROJECT_ID` | `odelhub-pay` project ID |
+| `VERCEL_PROJECT_ID` | `odelpay` project ID |
 
 4. Push to `main` or run workflow **Vercel Production Deploy** manually.
 5. Workflow file: `.github/workflows/vercel-deploy.yml` (skips safely if secrets missing).

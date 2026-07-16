@@ -2,6 +2,7 @@ import { apiErrorResponse } from "@/lib/api-error";
 import { requireSchoolAdminScope } from "@/lib/school-admin-api";
 import { csvResponse } from "@/lib/school-csv";
 import { buildSchoolReportPdf } from "@/lib/school-report-pdf";
+import { parseSchoolReportDateRange } from "@/lib/school-report-period";
 import { normalizeSchoolTerm } from "@/lib/school-term";
 import {
   buildBillAccountReport,
@@ -24,8 +25,11 @@ export async function GET(req: Request) {
 
     const termParam = url.searchParams.get("term");
     const term = termParam ? normalizeSchoolTerm(termParam) : undefined;
-    const from = url.searchParams.get("from");
-    const to = url.searchParams.get("to");
+    const period = parseSchoolReportDateRange(
+      url.searchParams.get("from"),
+      url.searchParams.get("to"),
+    );
+    if (period.error) return Response.json({ error: period.error }, { status: 400 });
 
     let rows: (string | number)[][] = [];
     let header: string[] = [];
@@ -35,8 +39,9 @@ export async function GET(req: Request) {
       const data = await buildCashFlowReport({
         organizationId: auth.scope.organizationId,
         term,
-        from: from ? new Date(from) : undefined,
-        to: to ? new Date(to) : undefined,
+        from: period.from,
+        to: period.to,
+        sessionId: auth.context.sessionId,
       });
       header = ["Direction", "Date", "TrackId", "Name", "Particulars", "AmountUgx"];
       rows = [
@@ -44,18 +49,30 @@ export async function GET(req: Request) {
         ...data.outflow.map((l) => ["OUTFLOW", l.date, l.trackId, l.name, l.particulars, l.amountUgx]),
       ];
     } else if (report === "profit-loss") {
-      const data = await buildProfitLossReport({ organizationId: auth.scope.organizationId, term });
+      const data = await buildProfitLossReport({
+        organizationId: auth.scope.organizationId,
+        term,
+        from: period.from,
+        to: period.to,
+        sessionId: auth.context.sessionId,
+      });
       header = ["Metric", "ValueUgx"];
       rows = [
         ["Income", data.incomeUgx],
         ["Expenditure", data.expenditureUgx],
         ["Net", data.netUgx],
-        ["InventoryUnits", data.inventoryValueUgx],
+        ["InventoryUnits", data.inventoryUnits],
+        ["InventoryValue", data.inventoryValueUgx],
       ];
     } else if (report === "class-bills" && term) {
       const classId = url.searchParams.get("classId");
       if (!classId) return Response.json({ error: "classId required" }, { status: 400 });
-      const data = await buildClassBillsSummary({ organizationId: auth.scope.organizationId, classId, term });
+      const data = await buildClassBillsSummary({
+        organizationId: auth.scope.organizationId,
+        classId,
+        term,
+        sessionId: auth.context.sessionId,
+      });
       header = ["StudentName", "ExpectedUgx", "PaidUgx", "BalanceUgx"];
       rows = data.rows.map((r) => [r.studentName, r.expectedUgx, r.paidUgx, r.balanceUgx]);
     } else if (report === "student-account" && term) {
@@ -82,13 +99,27 @@ export async function GET(req: Request) {
       rows = data.rows.map((r) => [r.accountName, r.studentCount, r.totalUgx]);
     } else if (report === "expense-account") {
       const accountId = url.searchParams.get("accountId") ?? undefined;
-      const data = await buildExpenseAccountReport({ organizationId: auth.scope.organizationId, term, accountId });
+      const data = await buildExpenseAccountReport({
+        organizationId: auth.scope.organizationId,
+        term,
+        accountId,
+        from: period.from,
+        to: period.to,
+        sessionId: auth.context.sessionId,
+      });
       header = ["AccountName", "VoucherCount", "TotalUgx"];
       rows = data.rows.map((r) => [r.accountName, r.voucherCount, r.totalUgx]);
     } else if (report === "inventory-account") {
       const data = await buildInventoryAccountReport({ organizationId: auth.scope.organizationId });
-      header = ["Name", "AvailableQty", "UnavailableQty", "Notes"];
-      rows = data.rows.map((r) => [r.name, r.availableQty, r.unavailableQty, r.notes]);
+      header = ["Name", "AvailableQty", "UnavailableQty", "UnitCostUgx", "AvailableValueUgx", "Notes"];
+      rows = data.rows.map((r) => [
+        r.name,
+        r.availableQty,
+        r.unavailableQty,
+        r.unitCostUgx,
+        r.availableValueUgx,
+        r.notes,
+      ]);
     } else {
       return Response.json({ error: "Unknown report" }, { status: 400 });
     }
@@ -100,7 +131,11 @@ export async function GET(req: Request) {
     if (format === "pdf") {
       const pdfBytes = await buildSchoolReportPdf({
         title: `School report — ${report}`,
-        subtitle: term ? `Term ${term}` : auth.context.sessionLabel,
+        subtitle: term
+          ? `Term ${term}`
+          : period.from || period.to
+            ? `${period.from?.toISOString().slice(0, 10) ?? "Start"} to ${period.to?.toISOString().slice(0, 10) ?? "Present"}`
+            : auth.context.sessionLabel,
         headers: header,
         rows,
       });

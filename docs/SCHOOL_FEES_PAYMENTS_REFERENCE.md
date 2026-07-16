@@ -437,8 +437,8 @@ Fee account naming should be **tier-aware** via existing `institutionTier` + pro
 | Receipt of payments | `/admin/receipts` | Receipt no, term, payment mode |
 | Staff | `/admin/school-staff` | 4 tabs + full profile form |
 | Outflow | `/admin/school-outflow` | Vouchers + salary + appropriation guard |
-| Inventory | `/admin/school-inventory` | Full CRUD |
-| Reports | `/admin/school-reports` | 8 tiles, term/date range, CSV + PDF |
+| Inventory | `/admin/school-inventory` | Full CRUD, available/unavailable quantities, unit cost and available stock valuation |
+| Reports | `/admin/school-reports` | 8 tiles, inclusive term/date range, CSV + PDF; P&L and expense reports honor date ranges |
 | Settings | `/admin/settings` | Funds appropriation panel |
 
 School tenants: sidebar via `TuitionAdminShell`, global **Session + Term** bar, `/admin` redirects to school dashboard.

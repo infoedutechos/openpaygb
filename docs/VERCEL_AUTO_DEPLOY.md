@@ -2,7 +2,7 @@
 
 Vercel can **build and deploy automatically** every time you push to GitHub. No extra GitHub Action is required if the project is connected to the repo.
 
-**This repo:** `https://github.com/openpayglobal/openpaygb.git`  
+**This repo:** `https://github.com/infoedutechos/ODELHUBPay.git`
 **Production branch:** `main` (feature work often lands on `programme-duration-management` first)
 
 ---
@@ -13,7 +13,7 @@ Vercel can **build and deploy automatically** every time you push to GitHub. No 
 
 1. Open [vercel.com/dashboard](https://vercel.com/dashboard).
 2. **Add New…** → **Project** (or open your existing ODELHUB Pay project).
-3. **Import** `openpayglobal/openpaygb` (authorize GitHub if asked).
+3. **Import** `infoedutechos/ODELHUBPay` (authorize GitHub if asked).
 4. **Root Directory:** `.` (leave empty / default).
 5. **Framework:** Next.js.
 6. Add environment variables — see [VERCEL_ENV_SETUP.md](./VERCEL_ENV_SETUP.md).
@@ -22,7 +22,7 @@ Vercel can **build and deploy automatically** every time you push to GitHub. No 
 ### 2. Turn on automatic deployments
 
 1. Project → **Settings** → **Git**.
-2. Confirm **Connected Git Repository** is `openpayglobal/openpaygb`.
+2. Confirm **Connected Git Repository** is `infoedutechos/ODELHUBPay`.
 3. Set **Production Branch** to **`main`**.
 4. Ensure these are **enabled** (defaults):
    - **Production Branch** deployments → auto on push to `main`

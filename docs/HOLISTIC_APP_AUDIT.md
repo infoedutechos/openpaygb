@@ -11,7 +11,7 @@
 | Tuition product (pay + admin) | **Production-capable** | Needs `RESEND_*`, `JWT_SECRET`, `DATABASE_URL`, Mbiyo keys for live UGX alternative |
 | School workspace onboarding | **Complete** | Register → email verify → **`/school/workspace-status`** → master approve → org admin → `/school/login` |
 | Programme customization (org admin) | **Complete** | CRUD + fees + CSV import at `/admin/programmes` |
-| UI vs codebase | **Aligned** | **76** UI routes, **308** API handlers — `npm run docs:inventory` |
+| UI vs codebase | **Aligned** | **96** UI routes, **367** API handlers — `npm run docs:inventory` (2026-07-15) |
 | OPGB / Dex Hub | **Phase 1–3 shipped (custodial)** | Ledger, FX basket, `/dex/buy`, AMM swap, P2P escrow — [OPGB_TOKEN_ECOSYSTEM.md](./OPGB_TOKEN_ECOSYSTEM.md) |
 | LivePay | **Integrated** (env opt-in) | Checkout + webhook + status poll — [LIVEPAY_INTEGRATION_ASSESSMENT.md](./LIVEPAY_INTEGRATION_ASSESSMENT.md) |
 | Deployment | **Ready with checklist** | `npm run verify`, `PRODUCTION_GO_LIVE.md` |
@@ -22,8 +22,8 @@
 
 - **Tenants:** `Organization` with `tenantStatus` pending | active | rejected
 - **Auth:** Tuition JWT (`odelhub_admin`) + legacy URA `admin_session` + student JWT
-- **APIs:** **308** routes — inventory in `docs/API_INVENTORY.csv`
-- **UI:** **76** `page.tsx` files — inventory in `docs/UI_ROUTES.csv`
+- **APIs:** **367** routes — inventory in `docs/API_INVENTORY.csv`
+- **UI:** **96** `page.tsx` files — inventory in `docs/UI_ROUTES.csv`
 - **Game/URA:** Legacy `/admin/*` game pages coexist; tuition hub is `(tuition-hub)` group
 
 ---
@@ -47,7 +47,7 @@ Policy API: `GET/PATCH /api/master/school-workspace-registration`
 3. **`POST /api/auth/login`** → cookie `odelhub_admin` → **`/admin`** dashboard
 4. Programmes: **`/admin/programmes`** — full CRUD for own tenant
 
-**Not automatic:** self-register does not create `AdminUser`.  
+**Provisioning policy:** self-register does not immediately create `AdminUser`. On activation, the platform either creates the organization admin automatically and emails a password-set link when `schoolWorkspaceAutoGenerateAdminLogin` is enabled, or leaves provisioning to the master admin.
 **Docs:** [SCHOOL_ADMIN_LOGIN.md](./SCHOOL_ADMIN_LOGIN.md), [ORGANIZATION_REGISTRATION.md](./ORGANIZATION_REGISTRATION.md)
 
 ---

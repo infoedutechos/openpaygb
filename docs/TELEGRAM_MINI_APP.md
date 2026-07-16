@@ -132,7 +132,7 @@ Key files: `app/tma/`, `components/tma/TmaApp.tsx`, `hooks/useTmaBootstrap.ts`
 - **OpenPayGB Card** → `POST /api/public/checkout/openpay-card-pay`  
 - **Mobile Money** → `POST /api/public/checkout/livepay-start`  
 - **TON Wallet** → `Telegram.WebApp.openLink` to checkout  
-- **Bank Card** → coming-soon message  
+- **Bank Card** is not advertised until a hosted acquiring provider is configured; use OpenPayGB Card, Mobile Money, or TON.
 
 ### 2. In-TMA receipts (`TmaReceipts`)
 

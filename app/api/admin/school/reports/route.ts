@@ -11,6 +11,7 @@ import {
 } from "@/lib/school-reports";
 import { apiErrorResponse } from "@/lib/api-error";
 import { requireSchoolAdminScope } from "@/lib/school-admin-api";
+import { parseSchoolReportDateRange } from "@/lib/school-report-period";
 import { normalizeSchoolTerm } from "@/lib/school-term";
 
 export async function GET(req: Request) {
@@ -22,21 +23,31 @@ export async function GET(req: Request) {
 
     const termParam = url.searchParams.get("term");
     const term = termParam ? normalizeSchoolTerm(termParam) : undefined;
-    const from = url.searchParams.get("from");
-    const to = url.searchParams.get("to");
+    const period = parseSchoolReportDateRange(
+      url.searchParams.get("from"),
+      url.searchParams.get("to"),
+    );
+    if (period.error) return NextResponse.json({ error: period.error }, { status: 400 });
 
     if (report === "cash-flow") {
       const data = await buildCashFlowReport({
         organizationId: auth.scope.organizationId,
         term,
-        from: from ? new Date(from) : undefined,
-        to: to ? new Date(to) : undefined,
+        from: period.from,
+        to: period.to,
+        sessionId: auth.context.sessionId,
       });
       return NextResponse.json(data);
     }
 
     if (report === "profit-loss") {
-      const data = await buildProfitLossReport({ organizationId: auth.scope.organizationId, term });
+      const data = await buildProfitLossReport({
+        organizationId: auth.scope.organizationId,
+        term,
+        from: period.from,
+        to: period.to,
+        sessionId: auth.context.sessionId,
+      });
       return NextResponse.json(data);
     }
 
@@ -86,6 +97,9 @@ export async function GET(req: Request) {
         organizationId: auth.scope.organizationId,
         term,
         accountId,
+        from: period.from,
+        to: period.to,
+        sessionId: auth.context.sessionId,
       });
       return NextResponse.json(data);
     }

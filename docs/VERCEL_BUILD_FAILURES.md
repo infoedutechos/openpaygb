@@ -1,8 +1,10 @@
 # Vercel build failures — investigation log
 
-**Last updated:** 2026-06-03
+**Last updated:** 2026-07-16
 
-This document records production/preview deploy failures on `odelhub` / `odelhub-pay` and their fixes.
+This document records production/preview deploy failures on Vercel project **`odelpay`** (domain `odelpay.vercel.app`) and their fixes.
+
+**2026-07-16:** Production CLI deploy succeeded (`READY`, aliased to `https://odelpay.vercel.app`). Fair-use / preview *Blocked* notes below remain for historical triage if they recur.
 
 ---
 
@@ -63,7 +65,7 @@ npm run db:generate
 
 ## Symptom: Preview deployment status **Blocked** (not Failed)
 
-**Seen on:** Vercel dashboard for `odelhub-pay-git-main-…` preview URLs (2026-06-03)
+**Seen on:** Vercel dashboard for `odelpay-git-main-…` preview URLs (2026-06-03)
 
 ### Likely causes
 

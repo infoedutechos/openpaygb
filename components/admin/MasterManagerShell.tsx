@@ -25,6 +25,11 @@ const nav: { href: string; label: string; desc?: string }[] = [
     desc: "Paid & remaining by student",
   },
   {
+    href: "/admin/master/opgb-ops",
+    label: "OPGB ops",
+    desc: "P2P disputes & withdraw queue",
+  },
+  {
     href: "/admin/master#project-download",
     label: "Docs & downloads",
     desc: "Project description & user guides",

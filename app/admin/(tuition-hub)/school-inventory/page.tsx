@@ -3,12 +3,26 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSchoolAdminApi } from "@/hooks/useSchoolAdminApi";
 
-type Item = { id: string; name: string; availableQty: number; unavailableQty: number; notes: string };
+type Item = {
+  id: string;
+  name: string;
+  availableQty: number;
+  unavailableQty: number;
+  unitCostUgx: number;
+  availableValueUgx: number;
+  notes: string;
+};
+
+const EMPTY_FORM = { name: "", availableQty: 0, unavailableQty: 0, unitCostUgx: 0, notes: "" };
+
+function formatUgx(value: number): string {
+  return `UGX ${Math.max(0, value).toLocaleString("en-UG")}`;
+}
 
 export default function SchoolInventoryPage() {
   const { schoolFetch, organizationSlug } = useSchoolAdminApi();
   const [items, setItems] = useState<Item[]>([]);
-  const [form, setForm] = useState({ name: "", availableQty: 0, unavailableQty: 0, notes: "" });
+  const [form, setForm] = useState(EMPTY_FORM);
   const [editId, setEditId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -41,7 +55,7 @@ export default function SchoolInventoryPage() {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ ...form, organizationSlug }),
             });
-            setForm({ name: "", availableQty: 0, unavailableQty: 0, notes: "" });
+            setForm(EMPTY_FORM);
             setEditId(null);
             await load();
           })();
@@ -50,6 +64,7 @@ export default function SchoolInventoryPage() {
         <input placeholder="Item name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white sm:col-span-2" />
         <input type="number" placeholder="Available qty" value={form.availableQty || ""} onChange={(e) => setForm({ ...form, availableQty: Number(e.target.value) })} className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white" />
         <input type="number" placeholder="Unavailable qty" value={form.unavailableQty || ""} onChange={(e) => setForm({ ...form, unavailableQty: Number(e.target.value) })} className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white" />
+        <input type="number" min={0} placeholder="Unit cost (UGX)" value={form.unitCostUgx || ""} onChange={(e) => setForm({ ...form, unitCostUgx: Number(e.target.value) })} className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white sm:col-span-2" />
         <input placeholder="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white sm:col-span-2" />
         <button type="submit" className="sm:col-span-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white">
           {editId ? "Update item" : "Add item"}
@@ -61,9 +76,10 @@ export default function SchoolInventoryPage() {
           <article key={i.id} className="rounded-xl border border-white/10 bg-[#0a101f] p-4 text-sm text-slate-200">
             <p className="font-medium text-white">{i.name}</p>
             <p className="mt-2 text-xs text-slate-400">Available: {i.availableQty} · Unavailable: {i.unavailableQty}</p>
+            <p className="mt-1 text-xs text-slate-400">Unit cost: {formatUgx(i.unitCostUgx)} · Available value: {formatUgx(i.availableValueUgx)}</p>
             <p className="mt-1 text-xs text-slate-500">{i.notes || "—"}</p>
             <div className="mt-3 flex gap-3">
-              <button type="button" className="text-xs text-amber-300" onClick={() => { setEditId(i.id); setForm({ name: i.name, availableQty: i.availableQty, unavailableQty: i.unavailableQty, notes: i.notes }); }}>Edit</button>
+              <button type="button" className="text-xs text-amber-300" onClick={() => { setEditId(i.id); setForm({ name: i.name, availableQty: i.availableQty, unavailableQty: i.unavailableQty, unitCostUgx: i.unitCostUgx, notes: i.notes }); }}>Edit</button>
               <button type="button" className="text-xs text-rose-300" onClick={() => void schoolFetch(`/api/admin/school/inventory/${i.id}`, { method: "DELETE" }).then(() => load())}>Delete</button>
             </div>
           </article>
@@ -77,6 +93,8 @@ export default function SchoolInventoryPage() {
               <th className="px-4 py-2">Name</th>
               <th className="px-4 py-2">Available</th>
               <th className="px-4 py-2">Unavailable</th>
+              <th className="px-4 py-2">Unit cost</th>
+              <th className="px-4 py-2">Available value</th>
               <th className="px-4 py-2">Notes</th>
               <th className="px-4 py-2" />
             </tr>
@@ -87,9 +105,11 @@ export default function SchoolInventoryPage() {
                 <td className="px-4 py-2">{i.name}</td>
                 <td className="px-4 py-2">{i.availableQty}</td>
                 <td className="px-4 py-2">{i.unavailableQty}</td>
+                <td className="px-4 py-2">{formatUgx(i.unitCostUgx)}</td>
+                <td className="px-4 py-2">{formatUgx(i.availableValueUgx)}</td>
                 <td className="px-4 py-2 text-slate-400">{i.notes || "—"}</td>
                 <td className="px-4 py-2 text-right space-x-2">
-                  <button type="button" className="text-xs text-amber-300" onClick={() => { setEditId(i.id); setForm({ name: i.name, availableQty: i.availableQty, unavailableQty: i.unavailableQty, notes: i.notes }); }}>Edit</button>
+                  <button type="button" className="text-xs text-amber-300" onClick={() => { setEditId(i.id); setForm({ name: i.name, availableQty: i.availableQty, unavailableQty: i.unavailableQty, unitCostUgx: i.unitCostUgx, notes: i.notes }); }}>Edit</button>
                   <button type="button" className="text-xs text-rose-300" onClick={() => void schoolFetch(`/api/admin/school/inventory/${i.id}`, { method: "DELETE" }).then(() => load())}>Delete</button>
                 </td>
               </tr>

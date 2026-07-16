@@ -1,6 +1,21 @@
 # Product & engineering backlog
 
-**Last updated:** 2026-06-09 · **Brand:** **OpenPayGB** · **Rails:** Mbiyo, LivePay, MoMo bridge
+**Last updated:** 2026-07-16 · **Brand:** **OpenPayGB** · **Rails:** Mbiyo, LivePay, MoMo bridge · **Repo:** https://github.com/infoedutechos/ODELHUBPay
+
+---
+
+## Completed (school ERP pass 2026-07-12)
+
+| ID | Item | Implementation |
+|----|------|----------------|
+| B-SCH-01 | Session-scoped enrollment | `SchoolSession`, `schoolSessionId` on students/classes |
+| B-SCH-02 | Payment allocation | `PaymentAllocation` model + manual + online confirm hooks |
+| B-SCH-03 | School ERP modules | Dashboard, session, accounts, structure, students/bills, defaulters, receipts, staff, outflow, inventory, reports, settings |
+| B-SCH-04 | Results App import | `lib/school-results-app-import.ts`, external class/student import APIs |
+| B-SCH-05 | School receipts API | `/api/admin/school/receipts` + export |
+| B-SCH-06 | Seed school defaults | `provisionSchoolErpDefaults()` on org activation |
+| B-SCH-07 | Accurate financial periods and inventory valuation | Inclusive date ranges for cash flow, P&L and expense reports; session/term salary scope; inventory unit cost and available-value reporting |
+| B-OPS-06 | Master OPGB ops | `/admin/master/opgb-ops` — resolve P2P disputes (release/refund); withdraw queue (mark paid / reject+restore); withdraw no longer auto-completes |
 
 ---
 
@@ -65,10 +80,12 @@
 | ID | Item | Notes |
 |----|------|-------|
 | B-OPS-01 | Production env | [PRODUCTION_GO_LIVE.md](./PRODUCTION_GO_LIVE.md) |
+| B-OPS-05 | Vercel deployment account gate | **Resolved 2026-07-16** — production CLI deploy READY and aliased to `https://odelpay.vercel.app`; commit/push local holistic fix tree so GitHub CI matches production |
 | B-OPS-03 | PSP dashboard paste | After `deployment:provision-sync`, paste `MBIYO_*` / `MOMO_*` / `LIVEPAY_*` webhook secrets into each provider dashboard ([WEBHOOK_SECRETS_ALIGNMENT.md](./WEBHOOK_SECRETS_ALIGNMENT.md)) |
-| P4 | LivePay KES/GHS/XAF checkout | Stub only until LivePay product expansion |
-| P3 | Card acquiring on checkout | Flutterwave/Paystack hosted pay — new `PaymentRail.card` (post-investigation) |
+| P4 | LivePay KES/GHS/XAF checkout | Stub only until LivePay product expansion — use **Mbiyo** multi-country collect when configured |
+| P3 | Card acquiring on checkout | Flutterwave/Paystack hosted pay — new `PaymentRail.card` (needs merchant account + settlement policy) |
 | P3 | LivePay card issuing API | Request docs/sandbox from LivePay; see investigation §6 Phase 2 |
+| P5 | Live on-chain delivery + PSP payout APIs | Custodial withdraw queue + master dispute resolve **shipped** (`/admin/master/opgb-ops`). Remaining: hot-wallet TON send + LivePay/Relworx `send-money` once payout credentials exist |
 
 ---
 

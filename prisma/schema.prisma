@@ -474,6 +474,7 @@ model SchoolSession {
   billCharges    StudentBillCharge[]
   classes        SchoolClass[]
   students       Student[]
+  salaryPayments SchoolSalaryPayment[]
 
   @@unique([organizationId, label])
   @@index([organizationId, isActive])
@@ -606,6 +607,9 @@ model SchoolSalaryPayment {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   staffId        String      @db.ObjectId
   staff          SchoolStaff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  schoolSessionId String?    @db.ObjectId
+  schoolSession   SchoolSession? @relation(fields: [schoolSessionId], references: [id], onDelete: SetNull)
+  term            Int?
   monthKey       String
   grossUgx       Int
   deductionUgx   Int         @default(0)
@@ -616,6 +620,7 @@ model SchoolSalaryPayment {
 
   @@unique([staffId, monthKey])
   @@index([organizationId, monthKey])
+  @@index([organizationId, schoolSessionId, term])
   @@map("school_salary_payments")
 }
 
@@ -626,6 +631,8 @@ model SchoolInventoryItem {
   name           String
   availableQty   Int          @default(0)
   unavailableQty Int          @default(0)
+  /** Current unit acquisition/replacement cost used for inventory valuation reports. */
+  unitCostUgx    Int          @default(0)
   notes          String       @default("")
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt

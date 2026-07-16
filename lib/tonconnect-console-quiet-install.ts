@@ -1,4 +1,5 @@
 import {
+  isTonConnectAbortNoise,
   isTonConnectAnalyticsNoise,
   isTonConnectBridgeConsoleNoise,
   isTonConnectWalletsListFetchNoise,
@@ -10,7 +11,7 @@ function shouldSuppressConsoleArgs(args: unknown[]): boolean {
   const text = args
     .map((a) => {
       if (typeof a === "string") return a;
-      if (a instanceof Error) return `${a.message} ${a.stack ?? ""}`;
+      if (a instanceof Error) return `${a.name} ${a.message} ${a.stack ?? ""}`;
       try {
         return JSON.stringify(a);
       } catch {
@@ -19,6 +20,7 @@ function shouldSuppressConsoleArgs(args: unknown[]): boolean {
     })
     .join(" ");
   if (isTonConnectBridgeConsoleNoise(text)) return true;
+  if (isTonConnectAbortNoise(text) || args.some((a) => isTonConnectAbortNoise(a))) return true;
   const errArg = args.find((a) => a instanceof Error);
   if (isTonConnectWalletsListFetchNoise(errArg ?? text)) return true;
   if (isTonConnectAnalyticsNoise(errArg ?? text)) return true;

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   getTonConnectUiProviderExtras,
+  isTonConnectAbortNoise,
   isTonConnectAnalyticsNoise,
   isTonConnectBridgeConsoleNoise,
   isTonConnectWalletsListFetchNoise,
@@ -63,6 +64,22 @@ describe("isTonConnectAnalyticsNoise", () => {
   it("detects analytics API failures", () => {
     const err = new Error("[TON_CONNECT_SDK_ERROR] TonConnectError\nAnalytics API error: 400");
     expect(isTonConnectAnalyticsNoise(err)).toBe(true);
+  });
+});
+
+describe("isTonConnectAbortNoise", () => {
+  it("detects Firefox NS_ERROR_ABORT", () => {
+    expect(isTonConnectAbortNoise("NS_ERROR_ABORT")).toBe(true);
+    const err = new Error("NS_ERROR_ABORT");
+    err.name = "NS_ERROR_ABORT";
+    expect(isTonConnectAbortNoise(err)).toBe(true);
+  });
+
+  it("detects AbortError from TonConnect remount", () => {
+    const err = new Error("The operation was aborted.");
+    err.name = "AbortError";
+    err.stack = "AbortError: The operation was aborted.\n    at @tonconnect/ui";
+    expect(isTonConnectAbortNoise(err)).toBe(true);
   });
 });
 

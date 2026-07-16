@@ -1,8 +1,8 @@
 # App status audit (holistic scan)
 
-**Last reviewed:** 2026-06-03 · **Scope:** registration, approval, email verification, auth, pay, programmes, OPGB/Dex, UI/docs sync, deployment.
+**Last reviewed:** 2026-07-16 · **Scope:** registration, approval, email verification, auth, pay, programmes, school ERP, OPGB/Dex, UI/docs sync, deployment.
 
-**Full holistic scan:** [HOLISTIC_APP_AUDIT.md](./HOLISTIC_APP_AUDIT.md) · **Backlog (canonical):** [BACKLOG.md](./BACKLOG.md) · **LivePay:** [LIVEPAY_INTEGRATION_ASSESSMENT.md](./LIVEPAY_INTEGRATION_ASSESSMENT.md)
+**Repo:** https://github.com/infoedutechos/ODELHUBPay · **Full holistic scan:** [HOLISTIC_APP_AUDIT.md](./HOLISTIC_APP_AUDIT.md) · **Backlog (canonical):** [BACKLOG.md](./BACKLOG.md) · **LivePay:** [LIVEPAY_INTEGRATION_ASSESSMENT.md](./LIVEPAY_INTEGRATION_ASSESSMENT.md)
 
 ---
 
@@ -12,10 +12,12 @@
 |------|--------|
 | School workspace self-register + email verify → `/school/workspace-status` | **Implemented** |
 | Master approve / reject + email gate before approve | **Implemented** |
-| School admin login after master creates `org_admin` | **Implemented** (manual provisioning) |
+| School admin login after activation | **Implemented** — configurable automatic invite or manual master provisioning |
 | Guest pay (`PayWizard` + public checkout APIs) | **Implemented** |
 | School admin programme/fee customization | **Implemented** (wallet/FX/fee platform = master) |
-| Production email delivery | **Requires** `RESEND_*` + `NEXT_PUBLIC_APP_URL` |
+| School ERP (12 modules: session, accounts, bills, defaulters, receipts, staff, outflow, inventory, reports) | **Implemented** — see [SCHOOL_FEES_PAYMENTS_REFERENCE.md](./SCHOOL_FEES_PAYMENTS_REFERENCE.md) |
+| Payment-to-bill allocation (`PaymentAllocation`) + online confirm hook | **Implemented** |
+| Production email delivery | **Requires** `RESEND_*` or `BREVO_API_KEY` + `NEXT_PUBLIC_APP_URL` |
 
 ---
 
@@ -28,7 +30,7 @@ flowchart TD
   E --> V["GET .../verify?token"]
   V --> L["/school/workspace-status?verified=1"]
   L --> M["Master approves"]
-  M --> A["Master creates org_admin"]
+  M --> A["Auto-provision invite or master creates org_admin"]
   A --> S["/school/login → /admin"]
 ```
 
@@ -68,6 +70,7 @@ See **[SCHOOL_ADMIN_PROGRAMMES.md](./SCHOOL_ADMIN_PROGRAMMES.md)**.
 | Expired verify told users to re-register only | Fixed — points to resend on `/admin/register` |
 | Middleware sent expired sessions to bare `/admin/login` | Fixed — tuition paths → `/school/login`, master → `?master=1` |
 | Footer “Student” → protected `/student` | Fixed → `/student/login` |
+| Header nav wrapped to multiple rows on mid-width screens | Fixed — single-row nav with horizontal scroll (`SITE_HEADER_UTILITY_LINKS`) |
 | Payer docs listed legacy `/api/students` + `/api/collect/momo` for PayWizard | Updated in [USER_FLOW.md](./USER_FLOW.md) |
 | `docs/UI_VS_CODEBASE.md` stale admin login mapping | Regenerated via `npm run docs:inventory` (2026-06-03) |
 
@@ -127,7 +130,7 @@ Prioritized inventory: **[BACKLOG.md](./BACKLOG.md)**. Items from the 2026-06-04
 | Product | OpenPayGB virtual card program — [VIRTUAL_CARD_INVESTIGATION.md](./VIRTUAL_CARD_INVESTIGATION.md) |
 | Product | **OPGB on-chain settlement** (custodial Phase 1–3 shipped; auto-release + dispute UI open) — [OPGB_TOKEN_ECOSYSTEM.md](./OPGB_TOKEN_ECOSYSTEM.md) |
 | Low | Master org UI consolidation (single `MasterOrgRow`); URA game `apiErrorResponse` |
-| Docs | Inventories at **76 UI / 308 API** — regenerate with `npm run docs:inventory` after new routes |
+| Docs | Inventories at **96 UI / 367 API** (2026-07-15) — regenerate with `npm run docs:inventory` after new routes |
 
 ---
 

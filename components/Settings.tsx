@@ -126,6 +126,7 @@ export default function Settings({ setCurrentView }: SettingsProps) {
 
   const [vibrationEnabled, setVibrationEnabled] = useState(true);
   const [animationEnabled, setAnimationEnabled] = useState(true);
+  const [readingAloud, setReadingAloud] = useState(false);
 
   useEffect(() => {
     const storedVibration = localStorage.getItem('vibrationEnabled');
@@ -133,6 +134,13 @@ export default function Settings({ setCurrentView }: SettingsProps) {
     setVibrationEnabled(storedVibration !== 'false');
     setAnimationEnabled(storedAnimation !== 'false');
   }, []);
+
+  useEffect(
+    () => () => {
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    },
+    [],
+  );
 
   useEffect(() => {
     if (active !== 'profile' || openAccordion !== 'receipts' || !userTelegramInitData) return;
@@ -168,6 +176,30 @@ export default function Settings({ setCurrentView }: SettingsProps) {
   const goHome = () => {
     triggerHapticFeedback(window);
     setCurrentView('home');
+  };
+
+  const toggleReadAloud = () => {
+    if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
+      showToast("Read-aloud is not supported by this browser.", "error");
+      return;
+    }
+    if (readingAloud) {
+      window.speechSynthesis.cancel();
+      setReadingAloud(false);
+      return;
+    }
+    const text = document.querySelector("main")?.textContent?.replace(/\s+/g, " ").trim();
+    if (!text) {
+      showToast("There is no readable page content.", "error");
+      return;
+    }
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = document.documentElement.lang || "en";
+    utterance.onend = () => setReadingAloud(false);
+    utterance.onerror = () => setReadingAloud(false);
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+    setReadingAloud(true);
   };
 
   const toggleAccordion = (id: string) => {
@@ -218,27 +250,18 @@ export default function Settings({ setCurrentView }: SettingsProps) {
               </div>
               <button
                 type="button"
-                onClick={() => showToast('Screen reader mode coming soon', 'success')}
-                className="p-2 rounded-lg border border-ura-border/75 text-[var(--ura-white)] flex-shrink-0"
-                aria-label="Accessibility"
+                onClick={toggleReadAloud}
+                className={`p-2 rounded-lg border text-[var(--ura-white)] flex-shrink-0 ${
+                  readingAloud ? "border-cyan-400 bg-cyan-500/15" : "border-ura-border/75"
+                }`}
+                aria-label={readingAloud ? "Stop reading page aloud" : "Read page aloud"}
+                aria-pressed={readingAloud}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                 </svg>
               </button>
             </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                triggerHapticFeedback(window);
-                showToast('Verification flow will be available soon.', 'success');
-              }}
-              className="w-full flex items-center justify-between px-4 py-3.5 rounded-lg bg-gradient-to-r from-[var(--ura-blue-dark)] to-[var(--ura-blue-medium)] text-white text-sm font-semibold mb-4 border border-[var(--ura-blue-medium)]/50"
-            >
-              <span>Verify URA account</span>
-              <span>›</span>
-            </button>
 
             <div className="rounded-lg bg-[#1a1d26] border border-ura-border/85 p-3 mb-4">
               <h3 className="text-sm font-bold text-white mb-2">PEARL CATEGORIES</h3>

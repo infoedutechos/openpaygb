@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { normalizeSchoolTerm } from "@/lib/school-term";
 import { findSalaryExpenditureAccount } from "@/lib/school-salary-account";
 import { getStudentTermPaidUgx, getStudentTermOutstanding } from "@/lib/school-account-balance";
+import { schoolReportDateFilter } from "@/lib/school-report-period";
 import { schoolSessionWhere } from "@/lib/school-session-scope";
 
 export type CashFlowLine = {
@@ -14,20 +15,28 @@ export type CashFlowLine = {
   direction: "inflow" | "outflow";
 };
 
+export function calculateInventoryTotals(
+  items: { availableQty: number; unavailableQty: number; unitCostUgx: number }[],
+): { availableQty: number; unavailableQty: number; availableValueUgx: number } {
+  return items.reduce(
+    (totals, item) => ({
+      availableQty: totals.availableQty + item.availableQty,
+      unavailableQty: totals.unavailableQty + item.unavailableQty,
+      availableValueUgx: totals.availableValueUgx + item.availableQty * item.unitCostUgx,
+    }),
+    { availableQty: 0, unavailableQty: 0, availableValueUgx: 0 },
+  );
+}
+
 export async function buildCashFlowReport(input: {
   organizationId: string;
   term?: number;
   from?: Date;
   to?: Date;
+  sessionId?: string | null;
 }): Promise<{ inflow: CashFlowLine[]; outflow: CashFlowLine[]; totals: { inflowUgx: number; outflowUgx: number } }> {
   const term = input.term ? normalizeSchoolTerm(input.term) : undefined;
-  const dateFilter =
-    input.from || input.to
-      ? {
-          ...(input.from ? { gte: input.from } : {}),
-          ...(input.to ? { lte: input.to } : {}),
-        }
-      : undefined;
+  const dateFilter = schoolReportDateFilter(input.from, input.to);
 
   const payments = await prisma.payment.findMany({
     where: {
@@ -54,6 +63,10 @@ export async function buildCashFlowReport(input: {
     where: {
       organizationId: input.organizationId,
       paidAt: { not: null },
+      ...(term ? { OR: [{ term }, { term: null }] } : {}),
+      ...(input.sessionId
+        ? { AND: [{ OR: [{ schoolSessionId: input.sessionId }, { schoolSessionId: null }] }] }
+        : {}),
       ...(dateFilter ? { paidAt: dateFilter } : {}),
     },
     include: { staff: { select: { name: true, staffCode: true } } },
@@ -199,18 +212,35 @@ export async function buildStudentAccountStatement(input: {
 export async function buildProfitLossReport(input: {
   organizationId: string;
   term?: number;
-}): Promise<{ incomeUgx: number; expenditureUgx: number; netUgx: number; inventoryValueUgx: number }> {
+  from?: Date;
+  to?: Date;
+  sessionId?: string | null;
+}): Promise<{
+  incomeUgx: number;
+  expenditureUgx: number;
+  netUgx: number;
+  inventoryUnits: number;
+  inventoryValueUgx: number;
+}> {
   const term = input.term ? normalizeSchoolTerm(input.term) : undefined;
-  const cash = await buildCashFlowReport({ organizationId: input.organizationId, term });
-  const inventory = await prisma.schoolInventoryItem.aggregate({
-    where: { organizationId: input.organizationId },
-    _sum: { availableQty: true },
+  const cash = await buildCashFlowReport({
+    organizationId: input.organizationId,
+    term,
+    from: input.from,
+    to: input.to,
+    sessionId: input.sessionId,
   });
+  const inventory = await prisma.schoolInventoryItem.findMany({
+    where: { organizationId: input.organizationId },
+    select: { availableQty: true, unavailableQty: true, unitCostUgx: true },
+  });
+  const inventoryTotals = calculateInventoryTotals(inventory);
   return {
     incomeUgx: cash.totals.inflowUgx,
     expenditureUgx: cash.totals.outflowUgx,
     netUgx: cash.totals.inflowUgx - cash.totals.outflowUgx,
-    inventoryValueUgx: inventory._sum.availableQty ?? 0,
+    inventoryUnits: inventoryTotals.availableQty,
+    inventoryValueUgx: inventoryTotals.availableValueUgx,
   };
 }
 
@@ -294,20 +324,32 @@ export async function buildExpenseAccountReport(input: {
   organizationId: string;
   term?: number;
   accountId?: string;
+  from?: Date;
+  to?: Date;
+  sessionId?: string | null;
 }): Promise<{ rows: { accountName: string; voucherCount: number; totalUgx: number }[] }> {
   const term = input.term ? normalizeSchoolTerm(input.term) : undefined;
+  const dateFilter = schoolReportDateFilter(input.from, input.to);
   const [vouchers, salaryAccount, salaryRows] = await Promise.all([
     prisma.schoolOutflowVoucher.findMany({
       where: {
         organizationId: input.organizationId,
         ...(term ? { term } : {}),
         ...(input.accountId ? { accountId: input.accountId } : {}),
+        ...(dateFilter ? { disbursedAt: dateFilter } : {}),
       },
       include: { account: { select: { name: true } } },
     }),
     findSalaryExpenditureAccount(input.organizationId),
     prisma.schoolSalaryPayment.findMany({
-      where: { organizationId: input.organizationId, paidAt: { not: null } },
+      where: {
+        organizationId: input.organizationId,
+        paidAt: dateFilter ?? { not: null },
+        ...(term ? { OR: [{ term }, { term: null }] } : {}),
+        ...(input.sessionId
+          ? { AND: [{ OR: [{ schoolSessionId: input.sessionId }, { schoolSessionId: null }] }] }
+          : {}),
+      },
     }),
   ]);
 
@@ -339,17 +381,31 @@ export async function buildExpenseAccountReport(input: {
 
 export async function buildInventoryAccountReport(input: {
   organizationId: string;
-}): Promise<{ rows: { name: string; availableQty: number; unavailableQty: number; notes: string }[] }> {
+}): Promise<{
+  rows: {
+    name: string;
+    availableQty: number;
+    unavailableQty: number;
+    unitCostUgx: number;
+    availableValueUgx: number;
+    notes: string;
+  }[];
+  totals: { availableQty: number; unavailableQty: number; availableValueUgx: number };
+}> {
   const items = await prisma.schoolInventoryItem.findMany({
     where: { organizationId: input.organizationId },
     orderBy: { name: "asc" },
   });
+  const totals = calculateInventoryTotals(items);
   return {
     rows: items.map((i) => ({
       name: i.name,
       availableQty: i.availableQty,
       unavailableQty: i.unavailableQty,
+      unitCostUgx: i.unitCostUgx,
+      availableValueUgx: i.availableQty * i.unitCostUgx,
       notes: i.notes,
     })),
+    totals,
   };
 }

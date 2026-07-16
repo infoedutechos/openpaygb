@@ -128,7 +128,7 @@ Requires student (or admin) session from `POST /api/tma/session`. Card top-up us
 | Guest card creation | Must opt-in as student |
 | Separate card per school | One `OpenPayCard` per `studentId` across orgs |
 
-**Bank card** in TMA shows “coming soon” (`TmaPayFlow`).
+The TMA only shows executable payment rails. Hosted **bank-card acquiring is intentionally hidden** until a provider is configured; `TmaPayFlow` currently offers OpenPayGB Card, Mobile Money, and TON.
 
 ---
 

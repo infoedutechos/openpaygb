@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useToast } from '@/contexts/ToastContext';
 import { isClientFetchNetworkError } from '@/lib/client-fetch-error';
 import {
+  isTonConnectAbortNoise,
   isTonConnectAnalyticsNoise,
   isTonConnectBridgeConsoleNoise,
   isTonConnectWalletsListFetchNoise,
@@ -12,9 +13,11 @@ import {
 const MANIFEST_HELP =
   'TON wallet could not load this app. Check your network, enable automatic date/time, or clear Telegram cache. Open the app from the same URL your admin configured.';
 
-function isBenignTonConnectAbort(msg: string): boolean {
+function isBenignTonConnectAbort(reason: unknown, msg: string): boolean {
+  if (isTonConnectAbortNoise(reason) || isTonConnectAbortNoise(msg)) return true;
   return (
     msg.includes('Operation aborted') ||
+    msg.includes('NS_ERROR_ABORT') ||
     (msg.includes('TonConnect') && msg.toLowerCase().includes('abort') && !msg.toLowerCase().includes('manifest'))
   );
 }
@@ -47,21 +50,15 @@ export function TonConnectErrorHandler({ children, onManifestError }: Props) {
   useEffect(() => {
     const handler = (event: PromiseRejectionEvent) => {
       const msg = event.reason?.message ?? String(event.reason ?? '');
-      if (
+      const benign =
         !msg ||
-        isBenignTonConnectAbort(msg) ||
+        isBenignTonConnectAbort(event.reason, msg) ||
         isTonConnectBridgeConsoleNoise(msg) ||
         isTonConnectWalletsListFetchNoise(event.reason) ||
         isTonConnectAnalyticsNoise(event.reason) ||
-        (process.env.NODE_ENV === "development" && isClientFetchNetworkError(event.reason))
-      ) {
-        if (
-          isBenignTonConnectAbort(msg) ||
-          isTonConnectBridgeConsoleNoise(msg) ||
-          isTonConnectWalletsListFetchNoise(event.reason) ||
-          isTonConnectAnalyticsNoise(event.reason) ||
-          (process.env.NODE_ENV === "development" && isClientFetchNetworkError(event.reason))
-        ) {
+        (process.env.NODE_ENV === "development" && isClientFetchNetworkError(event.reason));
+      if (benign) {
+        if (msg) {
           event.preventDefault();
           event.stopPropagation();
         }

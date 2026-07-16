@@ -3,7 +3,7 @@
 **Last updated:** June 2026  
 **Production URL:** [https://odelpay.vercel.app](https://odelpay.vercel.app)  
 **Vercel team:** [odeldevelopers-projects](https://vercel.com/odeldevelopers-projects)  
-**Project:** [odelhub-pay](https://vercel.com/odeldevelopers-projects/odelhub-pay/settings)  
+**Project:** [odelpay](https://vercel.com/odeldevelopers-projects/odelpay/settings)
 **CLI account:** `infoedutechos` (`info.edutechos@gmail.com`)
 
 ---

@@ -9,10 +9,10 @@ export type SiteNavLink = {
 };
 
 export type SiteNavMenu = {
-  id: "odelpay_higher" | "odelpay_schools" | "openpaygb" | "developers";
+  id: "odelpay_higher" | "odelpay_schools" | "openpaygb" | "developers" | "hubs";
   label: string;
   href: string;
-  accent: "cyan" | "sky" | "violet" | "emerald";
+  accent: "cyan" | "sky" | "violet" | "emerald" | "amber";
   items: SiteNavLink[];
 };
 
@@ -20,6 +20,33 @@ export type SiteFooterColumn = {
   heading: string;
   links: SiteNavLink[];
 };
+
+export type SiteHeaderUtilityLink = {
+  label: string;
+  href: string;
+  title?: string;
+  variant?: "default" | "accent" | "admin";
+  signedInHref?: string;
+  signedInLabel?: string;
+};
+
+/** Flat header links after product-line dropdowns (single-row nav). */
+export const SITE_HEADER_UTILITY_LINKS: SiteHeaderUtilityLink[] = [
+  { label: "Pay tuition", href: "/pay", title: "Choose your school, then pay tuition" },
+  {
+    label: "Register school",
+    href: "/admin/register",
+    variant: "accent",
+    title: "Self-register your school on our platform",
+  },
+  {
+    label: "Student portal",
+    href: "/student/login",
+    signedInHref: "/my/dashboard",
+    signedInLabel: "My dashboard",
+  },
+  { label: "Admin", href: "/admin", variant: "admin" },
+];
 
 export const SITE_HEADER_MENUS: SiteNavMenu[] = [
   {
@@ -76,6 +103,16 @@ export const SITE_HEADER_MENUS: SiteNavMenu[] = [
       { label: "Dashboard", href: "/developers/dashboard", description: "API keys & webhooks" },
       { label: "Dex integration FAQ", href: "/help?hub=dex", description: "OPGB / Dex help articles" },
       { label: "Partner API docs", href: "/help/partner-api-overview", description: "Payments & webhooks" },
+    ],
+  },
+  {
+    id: "hubs",
+    label: "Hubs",
+    href: "/dex",
+    accent: "amber",
+    items: [
+      { label: "Dex Hub", href: "/dex", description: "Onramp, offramp, convert, P2P" },
+      { label: "Play Hub", href: "/clicker", description: "Games and clicker mini-app" },
     ],
   },
 ];

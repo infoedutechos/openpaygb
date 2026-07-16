@@ -173,6 +173,12 @@ export default function MasterManagerOverviewPage() {
           Tuition balance
         </Link>
         <Link
+          href="/admin/master/opgb-ops"
+          className="rounded-xl border border-violet-500/35 bg-violet-950/25 px-5 py-2.5 text-sm font-medium text-violet-100 hover:border-violet-400/55"
+        >
+          OPGB ops
+        </Link>
+        <Link
           href="/admin/master/programmes"
           className="rounded-xl border border-amber-500/35 bg-amber-950/25 px-5 py-2.5 text-sm font-medium text-amber-100 hover:border-amber-400/55"
         >

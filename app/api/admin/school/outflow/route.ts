@@ -34,7 +34,12 @@ export async function GET(req: Request) {
 
     if (kind === "salary") {
       const payments = await prisma.schoolSalaryPayment.findMany({
-        where: { organizationId: auth.scope.organizationId },
+        where: {
+          organizationId: auth.scope.organizationId,
+          ...(auth.context.sessionId
+            ? { OR: [{ schoolSessionId: auth.context.sessionId }, { schoolSessionId: null }] }
+            : {}),
+        },
         include: { staff: { select: { staffCode: true, name: true } } },
         orderBy: { monthKey: "desc" },
         take: 100,
@@ -45,6 +50,7 @@ export async function GET(req: Request) {
           staffCode: p.staff.staffCode,
           staffName: p.staff.name,
           monthKey: p.monthKey,
+          term: p.term,
           grossUgx: p.grossUgx,
           deductionUgx: p.deductionUgx,
           netUgx: p.netUgx,
@@ -115,13 +121,22 @@ export async function POST(req: Request) {
         create: {
           organizationId: authSalary.scope.organizationId,
           staffId: body.staffId,
+          schoolSessionId: authSalary.context.sessionId,
+          term,
           monthKey: body.monthKey,
           grossUgx: body.grossUgx,
           deductionUgx,
           netUgx,
           paidAt: new Date(),
         },
-        update: { grossUgx: body.grossUgx, deductionUgx, netUgx, paidAt: new Date() },
+        update: {
+          schoolSessionId: authSalary.context.sessionId,
+          term,
+          grossUgx: body.grossUgx,
+          deductionUgx,
+          netUgx,
+          paidAt: new Date(),
+        },
       });
       return NextResponse.json({ id: payment.id, netUgx });
     }

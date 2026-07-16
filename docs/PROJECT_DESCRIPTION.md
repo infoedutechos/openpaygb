@@ -367,7 +367,7 @@ Primary operational docs:
 - `docs/BACKUP_AND_RECOVERY.md`
 - `docs/VERCEL_ENV_SETUP.md`
 - `docs/DEPLOYMENT_ARCHITECTURE.md`
-- `docs/UI_VS_CODEBASE.md` (regenerate: `npm run docs:inventory` — **76 UI routes**, **308 API handlers**)
+- `docs/UI_VS_CODEBASE.md` (regenerate: `npm run docs:inventory` — **96 UI routes**, **367 API handlers** as of 2026-07-15)
 - `docs/API_INVENTORY.csv`
 - `docs/UI_ROUTES.csv`
 - `docs/HOLISTIC_APP_AUDIT.md`, `docs/APP_STATUS_AUDIT.md`

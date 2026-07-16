@@ -1,14 +1,14 @@
-# Connect ODELHUB Pay to Vercel (openpayglobal/openpaygb)
+# Connect ODELHUB Pay to Vercel (infoedutechos/ODELHUBPay)
 
 Use this checklist after pushing `programme-duration-management` (or `main`).
 
-**Production project:** see **[VERCEL_ODELPAY_DEPLOY.md](./VERCEL_ODELPAY_DEPLOY.md)** — Vercel `info.edutechos@gmail.com`, team **odeldevelopers-projects**, project **odelhub-pay**, URL **`https://odelpay.vercel.app`**.
+**Production project:** see **[VERCEL_ODELPAY_DEPLOY.md](./VERCEL_ODELPAY_DEPLOY.md)** — Vercel `info.edutechos@gmail.com`, team **odeldevelopers-projects**, project **odelpay**, URL **`https://odelpay.vercel.app`**.
 
 ## 1. Import the GitHub repo (one time)
 
 1. Open [vercel.com/new](https://vercel.com/new).
-2. Sign in with the GitHub account that can access **`openpayglobal/openpaygb`**.
-3. **Import** `openpayglobal/openpaygb`.
+2. Sign in with the GitHub account that can access **`infoedutechos/ODELHUBPay`**.
+3. **Import** `infoedutechos/ODELHUBPay`.
 4. **Root Directory:** `.` (repository root — where `package.json` lives).
 5. **Framework Preset:** Next.js (auto-detected).
 6. **Build Command:** `npm run vercel-build` (matches `vercel.json`).
@@ -56,7 +56,7 @@ git push origin programme-duration-management   # preview (if not production bra
 git push origin main                            # production (recommended for live)
 ```
 
-Confirm under **Project → Settings → Git**: repository `openpayglobal/openpaygb`.
+Confirm under **Project → Settings → Git**: repository `infoedutechos/ODELHUBPay`.
 
 ## 6. Optional: Vercel CLI on your machine
 

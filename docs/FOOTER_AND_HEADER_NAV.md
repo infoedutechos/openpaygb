@@ -1,8 +1,8 @@
 # Footer & header navigation layout
 
-**Date:** 2026-06-03 · **Reference:** Atlantis Pro footer (multi-column exchange pattern)
+**Date:** 2026-07-13 · **Reference:** Atlantis Pro footer (multi-column exchange pattern)
 
-This doc captures how we organize global navigation — header dropdowns for product lines and a structured footer grid.
+This doc captures how we organize global navigation — a **single-row header** for product lines and quick links, plus a structured footer grid.
 
 ---
 
@@ -32,20 +32,47 @@ The Atlantis Pro footer uses a **four-column grid** on a light background:
 
 `lib/ecosystem/site-nav-menus.ts`
 
-- `SITE_HEADER_MENUS` — dropdown items for the three header product buttons
-- `SITE_FOOTER_COLUMNS` — four footer columns matching the reference layout
+- `SITE_HEADER_MENUS` — five product-line / hub dropdown buttons
+- `SITE_HEADER_UTILITY_LINKS` — flat links after the dropdowns
+- `SITE_FOOTER_COLUMNS` — footer columns matching the reference layout
 
-### Header dropdowns
+### Header — desktop (`lg+`) single row
 
-`components/pay/SiteHeaderNavDropdown.tsx` + `components/pay/SiteHeader.tsx`
+`components/pay/SiteHeader.tsx` + `components/pay/SiteHeaderNavDropdown.tsx`
 
-| Button | Primary href | Dropdown highlights |
-|--------|--------------|---------------------|
-| **OdelPay — Higher Institutions** | `/OdelPayUniversities` | Pay, programmes, receipts, institution admin, register |
-| **OdelPay — Schools** | `/OdelPaySchools` | Term checkout, workspace request/status, school admin, demo |
-| **OPGB** | `/opgb` | Dex Hub, buy / sell / convert, student wallet, OpenPayGB card |
+| Order | Label | Type | Primary href |
+|------:|-------|------|--------------|
+| 1 | OdelPay — Higher Institutions | Dropdown | `/OdelPayUniversities` |
+| 2 | OdelPay — Schools | Dropdown | `/OdelPaySchools` |
+| 3 | OPGB | Dropdown | `/opgb` |
+| 4 | Developers | Dropdown | `/developers` |
+| 5 | Hubs | Dropdown | `/dex` |
+| 6 | Pay tuition | Link | `/pay` |
+| 7 | Register school | Link | `/admin/register` |
+| 8 | Student portal | Link | `/student/login` (→ **My dashboard** when signed in) |
+| 9 | Admin | Link | `/admin` |
 
-Click the button to open the menu; **Open …** at the top goes to the lobby route. Escape or outside click closes.
+On desktop (fine pointer), **hover** opens the menu and leaving closes it after a short delay so you can move into the panel. **Click** still toggles. Menus render in a **body portal** (fixed position). Escape or outside click closes.
+
+### Header — mobile (Atlantis Pro pattern)
+
+Below `lg`, product nav is **not** in the top bar. Reference: Atlantis Exchange Pro mobile header.
+
+| Left | Right |
+|------|--------|
+| Brand (OH + ODEL HUB) | **Log in** → `/student/login` (or **My dashboard** when signed in) · **Sign up** (pill) → `/admin/register` · **Hamburger** |
+
+`components/pay/SiteHeaderMobileDrawer.tsx` opens a right-side sheet with accordion sections for each `SITE_HEADER_MENUS` entry, then the utility links (Pay tuition, Register school, Student portal / My dashboard, Admin). Escape, backdrop tap, route change, or close icon dismisses the drawer.
+
+### Header dropdown highlights
+
+| Button | Dropdown highlights |
+|--------|---------------------|
+| **OdelPay — Higher Institutions** | Pay, programmes, receipts, institution admin, register |
+| **OdelPay — Schools** | Term checkout, workspace request/status, school admin, demo |
+| **OPGB** | Dex Hub, buy / sell / convert, student wallet, OpenPayGB card |
+| **Developers** | Partner API, app registry, Dex integration FAQ |
+| **Hubs** | Dex Hub, Play Hub |
 
 ### Footer grid
 

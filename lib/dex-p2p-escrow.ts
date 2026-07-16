@@ -64,8 +64,9 @@ export function p2pEscrowPolicy() {
       "escrow_release",
       "escrow_cancel",
       "dispute_escalation",
+      "master_dispute_resolve",
     ],
-    pending: ["on_chain_release", "dispute_ops_dashboard"],
+    pending: ["on_chain_release", "live_payout_disbursement"],
   };
 }
 

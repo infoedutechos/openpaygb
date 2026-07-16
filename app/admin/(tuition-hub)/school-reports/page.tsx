@@ -50,7 +50,7 @@ export default function SchoolReportsPage() {
     if (needsOrgSlug) return;
     void Promise.all([
       schoolFetch("/api/admin/school/classes"),
-      fetch("/api/students?limit=300", { credentials: "include" }).then((r) => r.json()),
+      schoolFetch("/api/students?limit=300").then((r) => r.json()),
       schoolFetch("/api/admin/school/accounts"),
     ]).then(([clsR, stuJ, accR]) => {
       clsR.json().then((clsJ) => setClasses((clsJ.classes ?? []).map((c: { id: string; code: string }) => ({ id: c.id, code: c.code }))));
@@ -80,6 +80,18 @@ export default function SchoolReportsPage() {
   async function generate() {
     if (!active) return;
     setError(null);
+    if (periodMode === "range" && activeTile?.supportsDateRange) {
+      if (!from || !to) {
+        setError("Choose both From and To dates.");
+        setResult(null);
+        return;
+      }
+      if (from > to) {
+        setError("From date must be on or before To date.");
+        setResult(null);
+        return;
+      }
+    }
     const r = await fetch(schoolUrl("/api/admin/school/reports", Object.fromEntries(new URLSearchParams(buildQuery())) as Record<string, string>), { credentials: "include" });
     const j = await r.json();
     if (!r.ok) {
@@ -107,6 +119,7 @@ export default function SchoolReportsPage() {
             type="button"
             onClick={() => {
               setActive(t.id);
+              if (!t.supportsDateRange) setPeriodMode("term");
               setResult(null);
               setError(null);
             }}
