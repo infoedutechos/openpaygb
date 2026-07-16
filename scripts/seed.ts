@@ -20,6 +20,8 @@ async function main() {
   const SEED_MASTER_PASSWORD = process.env.SEED_MASTER_PASSWORD ?? "ChangeMe_Master123!";
   const SEED_STUDENT_EMAIL = process.env.SEED_STUDENT_EMAIL ?? "student@odelhub.local";
   const SEED_STUDENT_PASSWORD = process.env.SEED_STUDENT_PASSWORD ?? "ChangeMe_Student123!";
+  const SEED_SCHOOL_ADMIN_EMAIL = process.env.SEED_SCHOOL_ADMIN_EMAIL ?? "school.admin@odelhub.local";
+  const SEED_SCHOOL_STUDENT_EMAIL = process.env.SEED_SCHOOL_STUDENT_EMAIL ?? "school.student@odelhub.local";
   const wallet = process.env.ODELHUB_TON_WALLET_ADDRESS?.trim() ?? "";
 
   const PROGRAMMES: {
@@ -179,7 +181,7 @@ async function main() {
   const schoolAdminHash = await bcrypt.hash(SEED_ADMIN_PASSWORD, 10);
   await prisma.adminUser.create({
     data: {
-      email: "school.admin@odelhub.local",
+      email: SEED_SCHOOL_ADMIN_EMAIL.toLowerCase(),
       passwordHash: schoolAdminHash,
       name: "Riverside School Admin",
       role: "org_admin",
@@ -192,7 +194,7 @@ async function main() {
     data: {
       organizationId: schoolOrg.id,
       name: "Amina Okello (demo)",
-      email: "school.student@odelhub.local",
+      email: SEED_SCHOOL_STUDENT_EMAIL.toLowerCase(),
       programmeCode: "P7-STREAM",
       schoolClassId: schoolClassP7.id,
       schoolStreamId: schoolStreamMain.id,
@@ -316,9 +318,10 @@ async function main() {
   console.log("");
   console.log("  Local seed quick reference:");
   console.log("    School checkout: /pay/riverside-demo");
-  console.log("    School admin: school.admin@odelhub.local /", SEED_ADMIN_PASSWORD, "→ /admin/login?school=1");
-  console.log("    School student: school.student@odelhub.local /", SEED_STUDENT_PASSWORD, "→ /student/login (slug riverside-demo)");
+  console.log("    School admin:", SEED_SCHOOL_ADMIN_EMAIL, "/", SEED_ADMIN_PASSWORD, "→ /admin/login?school=1");
+  console.log("    School student:", SEED_SCHOOL_STUDENT_EMAIL, "/", SEED_STUDENT_PASSWORD, "→ /student/login (slug riverside-demo)");
   console.log("    University student:", SEED_STUDENT_EMAIL, "/", SEED_STUDENT_PASSWORD, "→ /student/login (slug default)");
+  console.log("  Customise demos anytime: Master Admin → Demo logins (/admin/master#demo-logins)");
   console.log("  OdelPay Schools lobby: /OdelPaySchools");
   // eslint-disable-next-line no-console
   console.log("  Student dashboard after sign-in: /student  or  /my/dashboard");

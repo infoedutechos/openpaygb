@@ -30,7 +30,21 @@ After **`npm run seed`**:
 
 Default passwords: `SEED_ADMIN_PASSWORD` (default `ChangeMe_Admin123!`) for school + university org admins; `SEED_STUDENT_PASSWORD` (default `ChangeMe_Student123!`) for both students; `SEED_MASTER_PASSWORD` for seed master. Override via `.env` / `.env.local` — **`npm run seed` prints the actual emails and passwords** used for that run.
 
-**Example with local overrides** (`SEED_ADMIN_EMAIL=oiptechcore@gmail.com`, `SEED_ADMIN_PASSWORD=…`): university org admin uses that email/password; Riverside school admin remains `school.admin@odelhub.local` with the same `SEED_ADMIN_PASSWORD`.
+**Example with local overrides** (`SEED_ADMIN_EMAIL=oiptechcore@gmail.com`, `SEED_ADMIN_PASSWORD=…`): university org admin uses that email/password; Riverside school admin uses `SEED_SCHOOL_ADMIN_EMAIL` (default `school.admin@odelhub.local`) with the same `SEED_ADMIN_PASSWORD`.
+
+### Master Admin Console — customise demo logins live
+
+After seed, open **`/admin/master#demo-logins`** (Master → **Demo logins**). You can change display name, email, and password for:
+
+| Slot | Default org |
+|------|-------------|
+| Platform master | — |
+| University org admin | `default` |
+| University demo student | `default` |
+| Riverside school admin | `riverside-demo` |
+| Riverside school student | `riverside-demo` |
+
+Changes update live `AdminUser` / `Student` rows immediately and sync `SEED_*` deployment-env overrides for the next seed. Passwords are never displayed in the MAC UI.
 
 ### Standalone product lobbies (after seed)
 

@@ -70,6 +70,11 @@ const nav: { href: string; label: string; desc?: string }[] = [
     desc: "Deployment env audit",
   },
   {
+    href: "/admin/master#demo-logins",
+    label: "Demo logins",
+    desc: "Customise seed demo accounts",
+  },
+  {
     href: "/admin/master#payment-providers",
     label: "Payment providers",
     desc: "PSP APIs & toggles",

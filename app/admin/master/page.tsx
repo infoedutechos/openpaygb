@@ -15,6 +15,7 @@ import { MasterPlatformCheckoutFeeSettings } from "@/components/admin/MasterPlat
 import { MasterOpenPayCardSettings } from "@/components/admin/MasterOpenPayCardSettings";
 import { MasterOpenPayCardsOverview } from "@/components/admin/MasterOpenPayCardsOverview";
 import { MasterDeploymentEnvSettings } from "@/components/admin/MasterDeploymentEnvSettings";
+import { MasterDemoLoginsSettings } from "@/components/admin/MasterDemoLoginsSettings";
 import { MasterKnowledgeBaseSettings } from "@/components/admin/MasterKnowledgeBaseSettings";
 import { MasterPlatformCommunicationsSettings } from "@/components/admin/MasterPlatformCommunicationsSettings";
 import { MasterHubMaintenanceSettings } from "@/components/admin/MasterHubMaintenanceSettings";
@@ -203,6 +204,12 @@ export default function MasterManagerOverviewPage() {
           Environment
         </Link>
         <Link
+          href="/admin/master#demo-logins"
+          className="rounded-xl border border-emerald-500/35 bg-emerald-950/25 px-5 py-2.5 text-sm font-medium text-emerald-100 hover:border-emerald-400/55"
+        >
+          Demo logins
+        </Link>
+        <Link
           href="/admin/master#project-download"
           className="rounded-xl border border-cyan-500/35 bg-cyan-950/25 px-5 py-2.5 text-sm font-medium text-cyan-100 hover:border-cyan-400/55"
         >
@@ -265,6 +272,8 @@ export default function MasterManagerOverviewPage() {
       </div>
 
       <MasterDeploymentEnvSettings />
+
+      <MasterDemoLoginsSettings />
 
       <MasterHubMaintenanceSettings />
 
