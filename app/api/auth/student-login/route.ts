@@ -81,7 +81,14 @@ export async function POST(req: Request) {
 
     await recordStudentLogin(student.id);
 
-    const token = await signStudentToken({ sub: student.id, organizationId: student.organizationId });
+    const { getPlatformAuthPolicy } = await import("@/lib/platform-customisation");
+    const policy = await getPlatformAuthPolicy();
+    const maxAgeSec = policy.studentSessionDays * 24 * 60 * 60;
+
+    const token = await signStudentToken(
+      { sub: student.id, organizationId: student.organizationId },
+      maxAgeSec,
+    );
     const res = NextResponse.json({
       student: {
         id: student.id,
@@ -98,7 +105,7 @@ export async function POST(req: Request) {
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: 60 * 60 * 24 * 7,
+      maxAge: maxAgeSec,
     });
     return res;
   } catch (e) {

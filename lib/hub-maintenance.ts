@@ -18,13 +18,14 @@ function rowToState(row: {
   tuitionHubMaintenance?: boolean;
   playHubMaintenance?: boolean;
   dexHubMaintenance?: boolean;
+  developersHubMaintenance?: boolean;
 } | null): HubMaintenanceState {
   if (!row) return { ...DEFAULT_STATE };
   return {
     tuition: row.tuitionHubMaintenance === true,
     play: row.playHubMaintenance === true,
     dex: row.dexHubMaintenance === true,
-    developers: false,
+    developers: row.developersHubMaintenance === true,
   };
 }
 
@@ -35,7 +36,8 @@ function isUnknownHubMaintenanceFieldError(err: unknown): boolean {
   return (
     msg.includes("tuitionHubMaintenance") ||
     msg.includes("playHubMaintenance") ||
-    msg.includes("dexHubMaintenance")
+    msg.includes("dexHubMaintenance") ||
+    msg.includes("developersHubMaintenance")
   );
 }
 
@@ -44,6 +46,7 @@ export async function getHubMaintenanceState(): Promise<HubMaintenanceState> {
     tuitionHubMaintenance: true,
     playHubMaintenance: true,
     dexHubMaintenance: true,
+    developersHubMaintenance: true,
   } as const;
 
   try {

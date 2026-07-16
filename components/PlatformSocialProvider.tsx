@@ -46,6 +46,10 @@ export function usePlatformSocial(): PublicSiteUiSettings {
       hasCopilotBubbleImage: false,
       copilotBubbleImageUrl: null,
       copilotAssistantName: "ODEL HUB Copilot",
+      platformDisplayName: "ODEL HUB",
+      themeAccentHex: "",
+      homeHeroHeadline: "",
+      homeHeroSubhead: "",
     };
   }
   return ctx;

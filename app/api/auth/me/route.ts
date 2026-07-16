@@ -2,7 +2,7 @@ import { cookies, headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { getAdminFromCookies } from "@/lib/auth";
 import { getCachedAdminProfile } from "@/lib/cached-admin-profile";
-import { isAdminManualPaymentConfirmAllowed } from "@/lib/admin-payment-confirm-policy";
+import { resolveAdminManualPaymentConfirmAllowed } from "@/lib/admin-payment-confirm-policy";
 import type { AuthMeJson, AuthMeOrganization } from "@/lib/auth-me";
 import { workspaceEmailVerifyStatus } from "@/lib/organization-workspace-verify";
 import { apiErrorResponse } from "@/lib/api-error";
@@ -15,7 +15,7 @@ export async function GET() {
     const cookieStore = await cookies();
     const host = (await headers()).get("host") ?? "";
     const adminShellAccess = hasAdminShellAccess(cookieStore.get(ADMIN_SESSION_COOKIE_NAME)?.value, host);
-    const paymentOps = { manualConfirmAllowed: isAdminManualPaymentConfirmAllowed() };
+    const paymentOps = { manualConfirmAllowed: await resolveAdminManualPaymentConfirmAllowed() };
 
     const session = await getAdminFromCookies();
     if (!session) {

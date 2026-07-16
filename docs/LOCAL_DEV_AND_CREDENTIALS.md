@@ -36,6 +36,17 @@ Default passwords: `SEED_ADMIN_PASSWORD` (default `ChangeMe_Admin123!`) for scho
 
 After seed, open **`/admin/master#demo-logins`** (Master → **Demo logins**). You can change display name, email, and password for:
 
+### Master Admin Console — full platform customisation
+
+Master → **Platform branding** (`#platform-branding`): display name, SEO title/description, accent colour, home hero copy, maintenance message, copilot name.  
+Master → **Auth policy** (`#auth-session-policy`): admin/student/checkout session lengths, pending payment TTL, manual payment confirm toggle.  
+Master → **Cron ops** (`#cron-ops`): list Vercel-scheduled jobs and **Run now**.  
+Master → **Hub maintenance**: Tuition / Play / Dex / **Developers** toggles + shared message.
+
+### Master Admin Console — customise demo logins live
+
+After seed, open **`/admin/master#demo-logins`** (Master → **Demo logins**). You can change display name, email, and password for:
+
 | Slot | Default org |
 |------|-------------|
 | Platform master | — |

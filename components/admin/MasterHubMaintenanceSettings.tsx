@@ -5,9 +5,9 @@ import type { HubKey } from "@/lib/ecosystem/hubs";
 import { HUBS } from "@/lib/ecosystem/hubs";
 import { readJsonResponse } from "@/utils/read-json-response";
 
-type HubMaintenanceState = Record<HubKey, boolean>;
+type HubMaintenancePayload = Record<HubKey, boolean> & { message?: string };
 
-const HUB_ORDER: HubKey[] = ["tuition", "play", "dex"];
+const HUB_ORDER: HubKey[] = ["tuition", "play", "dex", "developers"];
 
 const BUTTON_LABEL: Record<HubKey, string> = {
   tuition: "Tuition is Under Maintenance",
@@ -17,8 +17,9 @@ const BUTTON_LABEL: Record<HubKey, string> = {
 };
 
 export function MasterHubMaintenanceSettings() {
-  const [state, setState] = useState<HubMaintenanceState | null>(null);
-  const [busy, setBusy] = useState<HubKey | null>(null);
+  const [state, setState] = useState<HubMaintenancePayload | null>(null);
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState<HubKey | "message" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
 
@@ -26,8 +27,11 @@ export function MasterHubMaintenanceSettings() {
     let cancelled = false;
     void (async () => {
       const r = await fetch("/api/master/hub-maintenance", { credentials: "include" });
-      const parsed = await readJsonResponse<HubMaintenanceState>(r);
-      if (!cancelled && parsed.ok) setState(parsed.data);
+      const parsed = await readJsonResponse<HubMaintenancePayload>(r);
+      if (!cancelled && parsed.ok) {
+        setState(parsed.data);
+        setMessage(parsed.data.message ?? "");
+      }
       if (!cancelled && !parsed.ok) setError(parsed.error);
     })();
     return () => {
@@ -48,14 +52,38 @@ export function MasterHubMaintenanceSettings() {
         credentials: "include",
         body: JSON.stringify({ [hub]: next }),
       });
-      const parsed = await readJsonResponse<HubMaintenanceState>(r);
+      const parsed = await readJsonResponse<HubMaintenancePayload>(r);
       if (!parsed.ok) throw new Error(parsed.error);
       setState(parsed.data);
+      if (parsed.data.message !== undefined) setMessage(parsed.data.message);
       setSaved(
         next
           ? `${HUBS[hub].label} is now under maintenance — public routes for that hub are blocked.`
           : `${HUBS[hub].label} is live again.`,
       );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Save failed");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function saveMessage() {
+    setBusy("message");
+    setError(null);
+    setSaved(null);
+    try {
+      const r = await fetch("/api/master/hub-maintenance", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ message }),
+      });
+      const parsed = await readJsonResponse<HubMaintenancePayload>(r);
+      if (!parsed.ok) throw new Error(parsed.error);
+      setState(parsed.data);
+      setMessage(parsed.data.message ?? "");
+      setSaved("Maintenance message saved.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
     } finally {
@@ -100,6 +128,26 @@ export function MasterHubMaintenanceSettings() {
           );
         })}
       </div>
+
+      <label className="mt-5 block">
+        <span className="text-xs font-medium text-slate-400">Shared maintenance message (optional)</span>
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          rows={3}
+          maxLength={500}
+          className="mt-1.5 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-slate-100"
+          placeholder="Shown on every hub maintenance screen. Leave blank for the default copy."
+        />
+      </label>
+      <button
+        type="button"
+        disabled={busy === "message"}
+        onClick={() => void saveMessage()}
+        className="mt-3 rounded-lg border border-rose-400/40 bg-rose-600/20 px-4 py-2 text-sm font-semibold text-rose-50 hover:bg-rose-600/30 disabled:opacity-60"
+      >
+        {busy === "message" ? "Saving…" : "Save message"}
+      </button>
 
       {error ? <p className="mt-3 text-sm text-rose-400">{error}</p> : null}
       {saved ? <p className="mt-3 text-sm text-emerald-300/90">{saved}</p> : null}

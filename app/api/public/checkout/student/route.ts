@@ -62,7 +62,7 @@ export async function POST(req: Request) {
       },
       { status: created ? 201 : 200 },
     );
-    attachCheckoutSessionCookie(res, checkoutToken);
+    await attachCheckoutSessionCookie(res, checkoutToken);
     return res;
   } catch (e) {
     return apiErrorResponse(e, {

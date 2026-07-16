@@ -4,6 +4,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { signAdminToken, cookieName } from "@/lib/auth";
 import { ADMIN_REMEMBER_MAX_AGE_SEC, ADMIN_SESSION_MAX_AGE_SEC } from "@/lib/admin-password-reset";
+import { getPlatformAuthPolicy } from "@/lib/platform-customisation";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
 import { apiErrorResponse } from "@/lib/api-error";
 import { recordAdminLogin } from "@/lib/record-login";
@@ -55,14 +56,19 @@ export async function POST(req: Request) {
     await recordAdminLogin(admin.id);
     revalidateAdminProfile(admin.id);
 
-    const maxAgeSec = parsed.data.rememberMe ? ADMIN_REMEMBER_MAX_AGE_SEC : ADMIN_SESSION_MAX_AGE_SEC;
+    const policy = await getPlatformAuthPolicy();
+    const maxAgeSec = parsed.data.rememberMe
+      ? policy.adminRememberDays * 24 * 60 * 60
+      : policy.adminSessionHours * 60 * 60;
+    // Fall back to legacy constants if policy somehow returns invalid (already clamped).
+    const resolvedMaxAge = maxAgeSec > 0 ? maxAgeSec : parsed.data.rememberMe ? ADMIN_REMEMBER_MAX_AGE_SEC : ADMIN_SESSION_MAX_AGE_SEC;
     const token = await signAdminToken(
       {
         sub: admin.id,
         email: admin.email,
         role: admin.role,
       },
-      maxAgeSec
+      resolvedMaxAge
     );
     const res = NextResponse.json({
       admin: {
@@ -78,7 +84,7 @@ export async function POST(req: Request) {
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: maxAgeSec,
+      maxAge: resolvedMaxAge,
     });
     return res;
   } catch (e) {

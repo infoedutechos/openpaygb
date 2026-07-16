@@ -40,6 +40,7 @@ export function SiteFooter({ settings, bottomNavClearance }: Props) {
   const blurb = settings.footerIntro.trim() || DEFAULT_BLURB;
   const footerLinks = linksForFooter(settings.socialLinks);
   const showCommunity = footerLinks.length > 0 || settings.shareEnabled;
+  const brand = settings.platformDisplayName?.trim() || settings.shareDefaultTitle?.trim() || "ODEL HUB";
 
   return (
     <footer
@@ -50,7 +51,7 @@ export function SiteFooter({ settings, bottomNavClearance }: Props) {
       <div className="mx-auto max-w-6xl px-4 py-10">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-7 lg:gap-8">
           <div className="space-y-4 lg:col-span-2">
-            <p className="text-lg font-semibold tracking-tight text-white">ODEL HUB</p>
+            <p className="text-lg font-semibold tracking-tight text-white">{brand}</p>
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-400">{blurb}</p>
 
             {showCommunity ? (
@@ -72,7 +73,7 @@ export function SiteFooter({ settings, bottomNavClearance }: Props) {
                 <CommunityLiveFeed className="mt-4" />
                 {settings.shareEnabled ? (
                   <div className="mt-4">
-                    <ShareButton variant="primary" label="Share ODEL HUB" />
+                    <ShareButton variant="primary" label={`Share ${brand}`} />
                   </div>
                 ) : null}
               </div>

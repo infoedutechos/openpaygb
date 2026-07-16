@@ -83,6 +83,11 @@ export type SiteUiSettingsRow = {
   copilotBubbleImageUploadedAt: string | null;
   copilotBubbleImageUrl: string | null;
   copilotAssistantName: string;
+  /** Master branding — display name for footer / chrome. */
+  platformDisplayName: string;
+  themeAccentHex: string;
+  homeHeroHeadline: string;
+  homeHeroSubhead: string;
 };
 
 export type PublicSiteUiSettings = Pick<
@@ -113,6 +118,10 @@ export type PublicSiteUiSettings = Pick<
   | "hasCopilotBubbleImage"
   | "copilotBubbleImageUrl"
   | "copilotAssistantName"
+  | "platformDisplayName"
+  | "themeAccentHex"
+  | "homeHeroHeadline"
+  | "homeHeroSubhead"
 >;
 
 function envTelegramSupportUrl(): string {

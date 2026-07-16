@@ -98,6 +98,10 @@ function rowToSettings(row: SiteUiDbRow): SiteUiSettingsRow {
     copilotBubbleImageUploadedAt: bubbleAt?.toISOString() ?? null,
     copilotBubbleImageUrl: copilotBubbleImageUrl(bubbleAt),
     copilotAssistantName: row.copilotAssistantName?.trim() || "ODEL HUB Copilot",
+    platformDisplayName: "ODEL HUB",
+    themeAccentHex: "",
+    homeHeroHeadline: "",
+    homeHeroSubhead: "",
   };
 }
 
@@ -323,6 +327,10 @@ function toPublicSiteUiSettings(s: SiteUiSettingsRow): PublicSiteUiSettings {
     hasCopilotBubbleImage: s.hasCopilotBubbleImage,
     copilotBubbleImageUrl: s.copilotBubbleImageUrl,
     copilotAssistantName: s.copilotAssistantName,
+    platformDisplayName: s.platformDisplayName,
+    themeAccentHex: s.themeAccentHex,
+    homeHeroHeadline: s.homeHeroHeadline,
+    homeHeroSubhead: s.homeHeroSubhead,
   };
 }
 
@@ -333,8 +341,20 @@ export async function getPublicSiteUiSettings(): Promise<PublicSiteUiSettings> {
   }
 
   try {
-    const s = await getPlatformSiteUiSettings();
-    const data = toPublicSiteUiSettings(s);
+    const [{ getPlatformBranding }, s] = await Promise.all([
+      import("@/lib/platform-customisation"),
+      getPlatformSiteUiSettings(),
+    ]);
+    const branding = await getPlatformBranding();
+    const data = toPublicSiteUiSettings({
+      ...s,
+      platformDisplayName: branding.platformDisplayName,
+      themeAccentHex: branding.themeAccentHex,
+      homeHeroHeadline: branding.homeHeroHeadline,
+      homeHeroSubhead: branding.homeHeroSubhead,
+      copilotAssistantName: branding.copilotAssistantName || s.copilotAssistantName,
+      shareDefaultTitle: branding.platformDisplayName || s.shareDefaultTitle,
+    });
     publicSiteUiCache = { at: now, data };
     return data;
   } catch (err) {

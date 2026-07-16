@@ -26,18 +26,24 @@ export default async function HomePage() {
         <div className="relative grid gap-10 md:grid-cols-[1.15fr_0.85fr] md:items-center">
           <div className="space-y-6">
             <p className="inline-flex items-center gap-2 rounded-full border border-cyan-400/25 bg-cyan-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200">
-              OdelPay · OpenPayGB
+              {siteUi.platformDisplayName?.trim() || "ODEL HUB"} · OdelPay · OpenPayGB
             </p>
             <h1 className="text-3xl font-semibold leading-[1.08] text-white sm:text-4xl md:text-5xl lg:text-[3.25rem]">
-              <span className="text-cyan-100">OdelPay</span> for higher institutions and schools;{" "}
-              <span className="bg-gradient-to-r from-violet-200 to-fuchsia-300 bg-clip-text text-transparent">
-                OpenPayGB
-              </span>{" "}
-              for global wallet, card, and Dex.
+              {siteUi.homeHeroHeadline?.trim() ? (
+                siteUi.homeHeroHeadline.trim()
+              ) : (
+                <>
+                  <span className="text-cyan-100">OdelPay</span> for higher institutions and schools;{" "}
+                  <span className="bg-gradient-to-r from-violet-200 to-fuchsia-300 bg-clip-text text-transparent">
+                    OpenPayGB
+                  </span>{" "}
+                  for global wallet, card, and Dex.
+                </>
+              )}
             </h1>
             <p className="max-w-xl text-lg leading-relaxed text-slate-400">
-              Three product lines with separate entry points: tuition and admin for universities, school workspace registration for
-              primary and secondary, and OpenPayGB for OPGB wallet, MoMo, TON, and Dex liquidity.
+              {siteUi.homeHeroSubhead?.trim() ||
+                "Three product lines with separate entry points: tuition and admin for universities, school workspace registration for primary and secondary, and OpenPayGB for OPGB wallet, MoMo, TON, and Dex liquidity."}
             </p>
             <div className="flex flex-wrap gap-3 pt-1">
               <Link
@@ -75,7 +81,7 @@ export default async function HomePage() {
             {(communityLinks.length > 0 || siteUi.shareEnabled) && (
               <div className="flex flex-wrap items-center gap-3 pt-2">
                 <SocialLinksRow links={communityLinks} />
-                <ShareButton variant="primary" label="Share ODEL HUB" />
+                <ShareButton variant="primary" label={`Share ${siteUi.platformDisplayName?.trim() || "ODEL HUB"}`} />
               </div>
             )}
           </div>

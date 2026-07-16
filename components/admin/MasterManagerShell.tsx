@@ -75,6 +75,21 @@ const nav: { href: string; label: string; desc?: string }[] = [
     desc: "Customise seed demo accounts",
   },
   {
+    href: "/admin/master#platform-branding",
+    label: "Branding",
+    desc: "Name, SEO, hero, accent",
+  },
+  {
+    href: "/admin/master#auth-session-policy",
+    label: "Auth policy",
+    desc: "Sessions & payment TTL",
+  },
+  {
+    href: "/admin/master#cron-ops",
+    label: "Cron ops",
+    desc: "Scheduled jobs · run now",
+  },
+  {
     href: "/admin/master#payment-providers",
     label: "Payment providers",
     desc: "PSP APIs & toggles",

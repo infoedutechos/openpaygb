@@ -23,13 +23,14 @@ function getSecret(): Uint8Array {
 
 export async function signCheckoutSession(
   payload: CheckoutSessionPayload,
-  maxAgeSec = 60 * 60 * 24,
+  maxAgeSec?: number,
 ): Promise<string> {
+  const age = maxAgeSec ?? (await resolveCheckoutSessionMaxAgeSec());
   return new SignJWT({ organizationId: payload.organizationId })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(payload.sub)
     .setIssuedAt()
-    .setExpirationTime(`${maxAgeSec}s`)
+    .setExpirationTime(`${age}s`)
     .sign(getSecret());
 }
 
@@ -113,11 +114,26 @@ export function checkoutSessionCookieName() {
   return COOKIE;
 }
 
-export function attachCheckoutSessionCookie(res: Response, token: string): Response {
+export async function resolveCheckoutSessionMaxAgeSec(): Promise<number> {
+  try {
+    const { getPlatformAuthPolicy } = await import("@/lib/platform-customisation");
+    const policy = await getPlatformAuthPolicy();
+    return Math.max(3600, policy.checkoutSessionHours * 60 * 60);
+  } catch {
+    return 60 * 60 * 24;
+  }
+}
+
+export async function attachCheckoutSessionCookie(
+  res: Response,
+  token: string,
+  maxAgeSec?: number,
+): Promise<Response> {
+  const age = maxAgeSec ?? (await resolveCheckoutSessionMaxAgeSec());
   const secure = process.env.NODE_ENV === "production";
   res.headers.append(
     "Set-Cookie",
-    `${COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 24}${secure ? "; Secure" : ""}`,
+    `${COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${age}${secure ? "; Secure" : ""}`,
   );
   return res;
 }

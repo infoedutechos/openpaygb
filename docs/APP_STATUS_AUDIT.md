@@ -18,6 +18,7 @@
 | School ERP (12 modules: session, accounts, bills, defaulters, receipts, staff, outflow, inventory, reports) | **Implemented** — see [SCHOOL_FEES_PAYMENTS_REFERENCE.md](./SCHOOL_FEES_PAYMENTS_REFERENCE.md) |
 | Payment-to-bill allocation (`PaymentAllocation`) + online confirm hook | **Implemented** |
 | Production email delivery | **Requires** `RESEND_*` or `BREVO_API_KEY` + `NEXT_PUBLIC_APP_URL` |
+| Master Admin full platform customisation | **Implemented** — branding, auth/session policy, cron ops, hub maintenance (incl. Developers), demo logins |
 
 ---
 

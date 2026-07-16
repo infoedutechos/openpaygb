@@ -86,7 +86,7 @@ export async function POST(req: Request) {
     });
 
     const res = NextResponse.json({ ok: true, ...(adminMayResume ? { checkoutToken } : {}) });
-    attachCheckoutSessionCookie(res, checkoutToken);
+    await attachCheckoutSessionCookie(res, checkoutToken);
     return res;
   } catch (e) {
     return apiErrorResponse(e, {

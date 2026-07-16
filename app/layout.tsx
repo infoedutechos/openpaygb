@@ -12,6 +12,7 @@ import { PwaTitleBarMenu } from "@/components/PwaTitleBarMenu";
 import { PwaRefreshShortcutHandler } from "@/components/PwaRefreshShortcutHandler";
 import { StandaloneAppRoot } from "@/components/standalone/StandaloneAppRoot";
 import { buildRootMetadata } from "@/lib/root-metadata";
+import { getPlatformBranding } from "@/lib/platform-customisation";
 import { resolveRequestSiteOrigin } from "@/lib/request-site-origin";
 import { getPublicSiteUiSettings } from "@/lib/site-ui-settings";
 import { headers } from "next/headers";
@@ -24,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
   if (appId) {
     const app = standaloneAppById(appId);
     const { title, description } = standaloneMetadataForApp(app);
-    const root = buildRootMetadata(siteUi, base);
+    const root = await buildRootMetadata(siteUi, base);
     return {
       ...root,
       title,
@@ -37,10 +38,15 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const siteUi = await getPublicSiteUiSettings();
+  const [siteUi, branding] = await Promise.all([getPublicSiteUiSettings(), getPlatformBranding()]);
+  const accent = branding.themeAccentHex.trim();
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="min-h-dvh antialiased flex flex-col" suppressHydrationWarning>
+      <body
+        className="min-h-dvh antialiased flex flex-col"
+        suppressHydrationWarning
+        style={accent ? ({ ["--accent" as string]: accent } as React.CSSProperties) : undefined}
+      >
         <StandaloneAppRoot>
           <PlatformSocialProvider initial={siteUi}>
             <TonConnectAppProvider>

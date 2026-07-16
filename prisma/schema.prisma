@@ -1154,6 +1154,28 @@ model SiteUiSettings {
    * Values: `{ "email": string, "name": string }` — passwords live only as bcrypt on users.
    */
   demoLoginDirectory          Json   @default("{}")
+  /** Public brand name used in footer, metadata, maintenance screens. */
+  platformDisplayName         String  @default("ODEL HUB")
+  /** Optional SEO title override (empty = derive from platformDisplayName). */
+  seoTitle                    String  @default("")
+  /** Optional SEO / Open Graph description. */
+  seoDescription              String  @default("")
+  /** Optional accent hex for CSS `--accent` (empty = theme default). */
+  themeAccentHex              String  @default("")
+  /** Optional home hero headline override. */
+  homeHeroHeadline            String  @default("")
+  /** Optional home hero supporting sentence. */
+  homeHeroSubhead             String  @default("")
+  /** Shared message on hub maintenance screens. */
+  hubMaintenanceMessage       String  @default("")
+  developersHubMaintenance    Boolean @default(false)
+  /** Auth / session policy (hours / days). */
+  adminSessionHours           Int     @default(8)
+  adminRememberDays           Int     @default(30)
+  studentSessionDays          Int     @default(7)
+  checkoutSessionHours        Int     @default(24)
+  pendingPaymentTtlHours      Int     @default(48)
+  adminManualPaymentConfirm   Boolean @default(true)
   updatedAt        DateTime @updatedAt
   createdAt        DateTime @default(now())
 

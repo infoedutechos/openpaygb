@@ -16,6 +16,9 @@ import { MasterOpenPayCardSettings } from "@/components/admin/MasterOpenPayCardS
 import { MasterOpenPayCardsOverview } from "@/components/admin/MasterOpenPayCardsOverview";
 import { MasterDeploymentEnvSettings } from "@/components/admin/MasterDeploymentEnvSettings";
 import { MasterDemoLoginsSettings } from "@/components/admin/MasterDemoLoginsSettings";
+import { MasterPlatformBrandingSettings } from "@/components/admin/MasterPlatformBrandingSettings";
+import { MasterAuthSessionSettings } from "@/components/admin/MasterAuthSessionSettings";
+import { MasterCronOpsPanel } from "@/components/admin/MasterCronOpsPanel";
 import { MasterKnowledgeBaseSettings } from "@/components/admin/MasterKnowledgeBaseSettings";
 import { MasterPlatformCommunicationsSettings } from "@/components/admin/MasterPlatformCommunicationsSettings";
 import { MasterHubMaintenanceSettings } from "@/components/admin/MasterHubMaintenanceSettings";
@@ -204,6 +207,24 @@ export default function MasterManagerOverviewPage() {
           Environment
         </Link>
         <Link
+          href="/admin/master#platform-branding"
+          className="rounded-xl border border-sky-500/35 bg-sky-950/25 px-5 py-2.5 text-sm font-medium text-sky-100 hover:border-sky-400/55"
+        >
+          Platform branding
+        </Link>
+        <Link
+          href="/admin/master#auth-session-policy"
+          className="rounded-xl border border-amber-500/35 bg-amber-950/25 px-5 py-2.5 text-sm font-medium text-amber-100 hover:border-amber-400/55"
+        >
+          Auth policy
+        </Link>
+        <Link
+          href="/admin/master#cron-ops"
+          className="rounded-xl border border-fuchsia-500/35 bg-fuchsia-950/25 px-5 py-2.5 text-sm font-medium text-fuchsia-100 hover:border-fuchsia-400/55"
+        >
+          Cron ops
+        </Link>
+        <Link
           href="/admin/master#demo-logins"
           className="rounded-xl border border-emerald-500/35 bg-emerald-950/25 px-5 py-2.5 text-sm font-medium text-emerald-100 hover:border-emerald-400/55"
         >
@@ -272,6 +293,12 @@ export default function MasterManagerOverviewPage() {
       </div>
 
       <MasterDeploymentEnvSettings />
+
+      <MasterPlatformBrandingSettings />
+
+      <MasterAuthSessionSettings />
+
+      <MasterCronOpsPanel />
 
       <MasterDemoLoginsSettings />
 

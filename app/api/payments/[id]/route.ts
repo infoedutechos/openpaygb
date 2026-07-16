@@ -5,7 +5,7 @@ import { getAdminFromCookies } from "@/lib/auth";
 import { organizationWhereForSession } from "@/lib/admin-org-scope";
 import { isValidObjectId } from "@/lib/object-id";
 import { handleFirstTimeConfirmation } from "@/lib/on-payment-confirmed";
-import { isAdminManualPaymentConfirmAllowed } from "@/lib/admin-payment-confirm-policy";
+import { resolveAdminManualPaymentConfirmAllowed } from "@/lib/admin-payment-confirm-policy";
 import { buildStudentProgrammeProgress } from "@/lib/tuition-progress";
 
 const PatchBody = z
@@ -120,11 +120,11 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
 
   const wantsConfirm =
     parsed.data.status === "confirmed" && existing.status !== "confirmed";
-  if (wantsConfirm && !isAdminManualPaymentConfirmAllowed()) {
+  if (wantsConfirm && !(await resolveAdminManualPaymentConfirmAllowed())) {
     return NextResponse.json(
       {
         error: "Manual confirmation is disabled",
-        hint: "Payments are confirmed by TON cron and MoMo webhooks only. Set ADMIN_MANUAL_PAYMENT_CONFIRM=true temporarily for edge-case overrides.",
+        hint: "Payments are confirmed by TON cron and MoMo webhooks only. Enable manual confirm in Master → Auth policy, or set ADMIN_MANUAL_PAYMENT_CONFIRM=true temporarily.",
       },
       { status: 403 }
     );

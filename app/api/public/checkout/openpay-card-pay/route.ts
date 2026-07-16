@@ -135,7 +135,7 @@ export async function POST(req: Request) {
       },
       { status: 201 },
     );
-    if (checkoutToken) attachCheckoutSessionCookie(res, checkoutToken);
+    if (checkoutToken) await attachCheckoutSessionCookie(res, checkoutToken);
     return res;
   } catch (e) {
     return apiErrorResponse(e, {
