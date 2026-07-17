@@ -282,7 +282,7 @@ export function SchoolDetailModal({
                                     ) : null}
                                   </p>
                                   <p className="mt-1">
-                                    Tuition {formatUgx(f.tuitionUgx)} · Functional {formatUgx(f.functionalFeesUgx)}
+                                    Fees {formatUgx(f.tuitionUgx)} · Other Requirements {formatUgx(f.functionalFeesUgx)}
                                   </p>
                                 </li>
                               ))}
@@ -293,8 +293,8 @@ export function SchoolDetailModal({
                                 <tr className="text-left text-slate-400">
                                   <th className="pr-2">Yr/Sem</th>
                                   <th className="pr-2">Key</th>
-                                  <th className="pr-2">Tuition</th>
-                                  <th>Functional</th>
+                                  <th className="pr-2">Fees</th>
+                                  <th>Other Reqs</th>
                                 </tr>
                               </thead>
                               <tbody>

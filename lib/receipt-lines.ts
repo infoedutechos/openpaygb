@@ -105,7 +105,7 @@ function legacyAggregateLines(payment: ReceiptPaymentLike): ReceiptFeeLine[] {
   if (payment.tuitionUgx > 0) {
     lines.push({
       id: "legacy-tuition",
-      label: "Tuition",
+      label: "Fees",
       feeKey: "tuition",
       recurrenceLabel: "",
       year: payment.year,
@@ -118,7 +118,7 @@ function legacyAggregateLines(payment: ReceiptPaymentLike): ReceiptFeeLine[] {
   if (payment.functionalFeesUgx > 0) {
     lines.push({
       id: "legacy-functional",
-      label: "Functional fees",
+      label: "Other Requirements",
       feeKey: "functional",
       recurrenceLabel: "",
       year: payment.year,

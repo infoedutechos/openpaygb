@@ -41,8 +41,8 @@ export function ReceiptFeeBreakdown({
           <thead>
             <tr className={`border-b ${borderClass} text-xs ${headerClass}`}>
               <th className="px-3 py-2 font-medium">Fee line</th>
-              <th className="px-3 py-2 text-right font-medium">Tuition</th>
-              <th className="px-3 py-2 text-right font-medium">Functional</th>
+              <th className="px-3 py-2 text-right font-medium">Fees</th>
+              <th className="px-3 py-2 text-right font-medium">Other Requirements</th>
               <th className="px-3 py-2 text-right font-medium">Line total</th>
             </tr>
           </thead>
@@ -72,11 +72,11 @@ export function ReceiptFeeBreakdown({
 
       <dl className={`space-y-2 text-sm ${valueClass}`}>
         <div className="flex justify-between gap-4">
-          <dt className={labelClass}>Subtotal — tuition</dt>
+          <dt className={labelClass}>Subtotal — fees</dt>
           <dd className="font-mono">UGX {breakdown.subtotalTuitionUgx.toLocaleString()}</dd>
         </div>
         <div className="flex justify-between gap-4">
-          <dt className={labelClass}>Subtotal — functional</dt>
+          <dt className={labelClass}>Subtotal — other requirements</dt>
           <dd className="font-mono">UGX {breakdown.subtotalFunctionalUgx.toLocaleString()}</dd>
         </div>
         <div className="flex justify-between gap-4">

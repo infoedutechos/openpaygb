@@ -536,10 +536,10 @@ export default function AdminProgrammesManager() {
       <div>
         <h1 className="text-2xl font-semibold text-white">Programs &amp; fee schedules</h1>
         <p className="mt-1 text-sm leading-relaxed text-slate-300">
-          Every programme sits under <strong className="text-slate-300">In-service</strong> or{" "}
-          <strong className="text-slate-300">Regular</strong>. Below, lists are grouped that way. Add or edit programmes and{" "}
+          Every programme sits under <strong className="text-slate-300">Day</strong> or{" "}
+          <strong className="text-slate-300">Boarding</strong>. Below, lists are grouped that way. Add or edit programmes and{" "}
           <strong className="text-slate-300">fee items</strong>: each line is an item code, whether it is{" "}
-          <strong className="text-slate-300">tuition</strong> or <strong className="text-slate-300">functional</strong>, a single UGX amount, and how often it applies —{" "}
+          <strong className="text-slate-300">Fees</strong> or <strong className="text-slate-300">Other Requirements</strong>, a single UGX amount, and how often it applies —{" "}
           <strong className="text-slate-300">{periodLabels.perPeriodRecurrence.toLowerCase()}</strong> (year +{" "}
           {periodLabels.periodSingular.toLowerCase()} 1–3), <strong className="text-slate-300">each year</strong> (same
           amount for any {periodLabels.periodSingular.toLowerCase()} in that year), or{" "}
@@ -722,8 +722,8 @@ export default function AdminProgrammesManager() {
             <span className="font-mono text-slate-400">code,name</span>. Example:{" "}
             <span className="font-mono text-slate-400">BEP-ENG/RE,Bachelor in Education Primary (ENG/RE)</span>.
             Existing codes are
-            skipped. Choose whether imported rows are <strong className="text-slate-400">Regular</strong> or{" "}
-            <strong className="text-slate-400">In-service</strong> before uploading.
+            skipped. Choose whether imported rows are <strong className="text-slate-400">Boarding</strong> or{" "}
+            <strong className="text-slate-400">Day</strong> before uploading.
           </p>
           <p className="mt-2 text-xs font-medium text-slate-400">Download blank formats</p>
           <div className="mt-1.5 flex flex-wrap gap-2">
@@ -1059,7 +1059,7 @@ export default function AdminProgrammesManager() {
               Add fee item
             </h3>
             <p className="mt-2 text-xs leading-relaxed text-slate-500">
-              For each line: set the item, whether it is tuition or functional, the amount, then how often that amount
+              For each line: set the item, whether it is Fees or Other Requirements, the amount, then how often that amount
               applies — paid once, paid per semester (semesters 1–3 only), or paid per year (same charge for all three
               semesters in that year).
             </p>
@@ -1068,7 +1068,7 @@ export default function AdminProgrammesManager() {
               <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
                 Columns match the form:{" "}
                 <span className="text-slate-400">
-                  Item, Line Type (Tuition or Functional), Amount, Fee Charge Category, Academic Year, Semester
+                  Item, Line Type (Fees or Other Requirements), Amount, Fee Charge Category, Academic Year, Semester
                 </span>
                 . Use the same wording as the dropdowns (e.g. Per semester, Per year, Paid once). For Per year, leave
                 Semester empty or 0.
@@ -1120,7 +1120,7 @@ export default function AdminProgrammesManager() {
               charge rule.
             </p>
             <fieldset className="mt-4">
-              <legend className="text-xs font-medium text-slate-400">2. Line type (tuition or functional)</legend>
+              <legend className="text-xs font-medium text-slate-400">2. Line type (Fees or Other Requirements)</legend>
               <div className="mt-2 flex flex-col gap-3 text-sm text-slate-200 sm:flex-row sm:flex-wrap sm:gap-4">
                 <label className="inline-flex min-h-[44px] cursor-pointer items-center gap-3 sm:min-h-0 sm:gap-2">
                   <input
@@ -1130,7 +1130,7 @@ export default function AdminProgrammesManager() {
                     onChange={() => setFeeCategory("tuition")}
                     className="h-4 w-4 shrink-0 border-white/30 text-cyan-500"
                   />
-                  Tuition
+                  Fees
                 </label>
                 <label className="inline-flex min-h-[44px] cursor-pointer items-center gap-3 sm:min-h-0 sm:gap-2">
                   <input
@@ -1140,7 +1140,7 @@ export default function AdminProgrammesManager() {
                     onChange={() => setFeeCategory("functional")}
                     className="h-4 w-4 shrink-0 border-white/30 text-cyan-500"
                   />
-                  Functional
+                  Other Requirements
                 </label>
               </div>
             </fieldset>
@@ -1318,22 +1318,22 @@ function FeeEditorMobileCard({
             onChange={(e) => setSingleKind(e.target.value as "tuition" | "functional")}
             className={`mt-1 ${feeInputCls}`}
           >
-            <option value="tuition">Tuition</option>
-            <option value="functional">Functional</option>
+            <option value="tuition">Fees</option>
+            <option value="functional">Other Requirements</option>
           </select>
         </label>
       ) : (
-        <p className="mt-2 text-xs text-amber-200/90">Both tuition & functional (legacy)</p>
+        <p className="mt-2 text-xs text-amber-200/90">Both Fees & Other Requirements (legacy)</p>
       )}
       <div className="mt-3 space-y-2">
         {mixed ? (
           <>
             <label className="block">
-              <span className="text-[11px] text-slate-500">Tuition UGX</span>
+              <span className="text-[11px] text-slate-500">Fees UGX</span>
               <input value={tuition} onChange={(e) => setTuition(e.target.value)} className={`mt-1 ${feeInputCls}`} />
             </label>
             <label className="block">
-              <span className="text-[11px] text-slate-500">Functional UGX</span>
+              <span className="text-[11px] text-slate-500">Other Requirements UGX</span>
               <input value={func} onChange={(e) => setFunc(e.target.value)} className={`mt-1 ${feeInputCls}`} />
             </label>
           </>
@@ -1389,8 +1389,8 @@ function FeeEditorRow({
             onChange={(e) => setSingleKind(e.target.value as "tuition" | "functional")}
             className="max-w-[10rem] rounded border border-white/10 bg-black/30 px-1 py-0.5 text-xs text-white"
           >
-            <option value="tuition">Tuition</option>
-            <option value="functional">Functional</option>
+            <option value="tuition">Fees</option>
+            <option value="functional">Other Requirements</option>
           </select>
         )}
       </td>
@@ -1403,13 +1403,13 @@ function FeeEditorRow({
             <input
               value={tuition}
               onChange={(e) => setTuition(e.target.value)}
-              placeholder="Tuition"
+              placeholder="Fees"
               className="w-28 rounded border border-white/10 bg-black/30 px-2 py-1 text-xs text-white"
             />
             <input
               value={func}
               onChange={(e) => setFunc(e.target.value)}
-              placeholder="Functional"
+              placeholder="Other Requirements"
               className="w-28 rounded border border-white/10 bg-black/30 px-2 py-1 text-xs text-white"
             />
           </div>

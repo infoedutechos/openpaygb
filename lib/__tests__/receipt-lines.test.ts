@@ -92,6 +92,6 @@ describe("buildReceiptBreakdown", () => {
     );
 
     expect(breakdown.isLegacyAggregate).toBe(true);
-    expect(breakdown.lines.map((l) => l.label)).toEqual(["Tuition", "Functional fees"]);
+    expect(breakdown.lines.map((l) => l.label)).toEqual(["Fees", "Other Requirements"]);
   });
 });

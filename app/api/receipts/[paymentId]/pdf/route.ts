@@ -146,7 +146,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ paymentId: stri
   }
   y -= 2;
   line(`Fees subtotal (UGX): ${breakdown.subtotalUgx.toLocaleString()}`, 9);
-  line(`  Tuition: ${breakdown.subtotalTuitionUgx.toLocaleString()} · Functional: ${breakdown.subtotalFunctionalUgx.toLocaleString()}`, 8, false, rgb(0.35, 0.35, 0.38));
+  line(`  Fees: ${breakdown.subtotalTuitionUgx.toLocaleString()} · Other Requirements: ${breakdown.subtotalFunctionalUgx.toLocaleString()}`, 8, false, rgb(0.35, 0.35, 0.38));
   if (breakdown.platformFeeUgx > 0) {
     line(`Processing / transaction fee (UGX): ${breakdown.platformFeeUgx.toLocaleString()}`, 9);
   }

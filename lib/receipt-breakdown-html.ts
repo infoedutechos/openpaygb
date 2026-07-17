@@ -54,8 +54,8 @@ export function receiptBreakdownHtml(
   <thead>
     <tr style="background:#f8fafc;color:#64748b;font-size:12px;">
       <th style="padding:6px 8px;text-align:left;">Fee line</th>
-      <th style="padding:6px 8px;text-align:right;">Tuition (UGX)</th>
-      <th style="padding:6px 8px;text-align:right;">Functional (UGX)</th>
+      <th style="padding:6px 8px;text-align:right;">Fees (UGX)</th>
+      <th style="padding:6px 8px;text-align:right;">Other Requirements (UGX)</th>
       <th style="padding:6px 8px;text-align:right;">Line total</th>
     </tr>
   </thead>

@@ -141,6 +141,11 @@ model Organization {
   activeSchoolTerm           Int                        @default(1)
   /** Sequential receipt counter for school manual payments (RP-N). */
   schoolReceiptCounter       Int                        @default(0)
+  /**
+   * SchoolPay-style numeric School Code (6 digits, unique app-side). Parents/agents use it with a
+   * student's admission/registration number to find the school and start fee checkout.
+   */
+  schoolPayCode              String                     @default("")
   /** Active academic session row (optional; falls back to currentAcademicYearLabel). */
   activeSchoolSessionId      String?                    @db.ObjectId
   activeSchoolSession        SchoolSession?             @relation("ActiveSchoolSession", fields: [activeSchoolSessionId], references: [id], onDelete: NoAction, onUpdate: NoAction)

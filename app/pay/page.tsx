@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { RequestSchoolWorkspaceCta } from "@/components/tuition/RequestSchoolWorkspaceCta";
+import { SchoolCodeQuickPay } from "@/components/pay/SchoolCodeQuickPay";
 import { listActiveOrganizations } from "@/lib/organizations";
 
 export const revalidate = 60;
@@ -18,6 +19,10 @@ export default async function PayIndexPage() {
           institution.
         </p>
       </header>
+
+      <div className="mt-6">
+        <SchoolCodeQuickPay />
+      </div>
 
       {organizations.length === 0 ? (
         <p className="mt-8 rounded-xl border border-amber-500/30 bg-amber-950/25 px-4 py-3 text-center text-sm text-amber-100">

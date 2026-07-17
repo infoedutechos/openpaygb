@@ -395,11 +395,11 @@ export function PayFeesBreakdown({
           </p>
         ) : null}
         <div className="flex justify-between text-slate-300">
-          <span>Tuition (selected{payingInstallments ? ", installment 1" : ""})</span>
+          <span>Fees (selected{payingInstallments ? ", installment 1" : ""})</span>
           <span>UGX {quote.tuitionUgx.toLocaleString()}</span>
         </div>
         <div className="flex justify-between text-slate-300">
-          <span>Functional (selected{payingInstallments ? ", installment 1" : ""})</span>
+          <span>Other Requirements (selected{payingInstallments ? ", installment 1" : ""})</span>
           <span>UGX {quote.functionalFeesUgx.toLocaleString()}</span>
         </div>
         <div className="flex justify-between text-slate-400">

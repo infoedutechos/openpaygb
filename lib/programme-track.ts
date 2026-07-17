@@ -9,9 +9,13 @@ export const ProgrammeTrack = {
 
 export type ProgrammeTrack = (typeof ProgrammeTrack)[keyof typeof ProgrammeTrack];
 
+/**
+ * Display labels (2026-07): tracks are shown as **Day** / **Boarding**.
+ * Stored enum values stay `inservice` / `regular` — no data migration needed.
+ */
 export const PROGRAMME_TRACK_LABEL: Record<ProgrammeTrack, string> = {
-  inservice: "In-service",
-  regular: "Regular",
+  inservice: "Day",
+  regular: "Boarding",
 };
 
 export function normalizeProgrammeTrack(raw: unknown): ProgrammeTrack {
@@ -19,8 +23,10 @@ export function normalizeProgrammeTrack(raw: unknown): ProgrammeTrack {
   const s = String(raw ?? "")
     .trim()
     .toLowerCase();
-  if (s === "inservice" || s === "in-service" || s === "in_service") return ProgrammeTrack.inservice;
-  if (s === "regular") return ProgrammeTrack.regular;
+  if (s === "inservice" || s === "in-service" || s === "in_service" || s === "day") {
+    return ProgrammeTrack.inservice;
+  }
+  if (s === "regular" || s === "boarding") return ProgrammeTrack.regular;
   return ProgrammeTrack.regular;
 }
 

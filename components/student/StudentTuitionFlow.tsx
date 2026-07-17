@@ -1615,11 +1615,11 @@ export function StudentTuitionFlow() {
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-200/80">Auto calculation</p>
             <div className="mt-3 space-y-2 border-t border-white/10 pt-3">
               <div className="flex justify-between text-slate-400">
-                <span>Tuition (selected{installmentCount > 1 ? ", installment 1" : ""})</span>
+                <span>Fees (selected{installmentCount > 1 ? ", installment 1" : ""})</span>
                 <span className="font-mono text-slate-200">UGX {quote.tuitionUgx.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-slate-400">
-                <span>Functional fees (selected{installmentCount > 1 ? ", installment 1" : ""})</span>
+                <span>Other Requirements (selected{installmentCount > 1 ? ", installment 1" : ""})</span>
                 <span className="font-mono text-slate-200">UGX {quote.functionalFeesUgx.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-slate-400">

@@ -23,9 +23,9 @@ export type ParsedFeeUploadResult = {
 
 const TEMPLATE_LINES = [
   "Item,Line Type,Amount,Fee Charge Category,Academic Year,Semester",
-  "tuition_block,Tuition,1500000,Per semester,1,1",
-  "library_levy,Functional,50000,Per year,1,",
-  "exam_fee,Functional,25000,Paid once,2,2",
+  "tuition_block,Fees,1500000,Per semester,1,1",
+  "library_levy,Other Requirements,50000,Per year,1,",
+  "exam_fee,Other Requirements,25000,Paid once,2,2",
 ] as const;
 
 export function programmeFeeCsvTemplate(): string {
@@ -68,9 +68,19 @@ function normalizeHeader(h: string): string {
 }
 
 function parseLineType(raw: string): FeeUploadLineType | null {
-  const t = raw.trim().toLowerCase();
-  if (t === "tuition" || t === "t") return "tuition";
-  if (t === "functional" || t === "function" || t === "f") return "functional";
+  const t = raw.trim().toLowerCase().replace(/\s+/g, " ");
+  if (t === "tuition" || t === "t" || t === "fees" || t === "fee") return "tuition";
+  if (
+    t === "functional" ||
+    t === "function" ||
+    t === "f" ||
+    t === "other requirements" ||
+    t === "other requirement" ||
+    t === "requirements" ||
+    t === "other"
+  ) {
+    return "functional";
+  }
   return null;
 }
 
@@ -196,7 +206,7 @@ export function parseProgrammeFeeUploadCsv(text: string): ParsedFeeUploadResult 
     }
     const lineType = parseLineType(cells[colLineType] ?? "");
     if (!lineType) {
-      parseErrors.push(`Line ${idx}: Line Type must be Tuition or Functional (got "${cells[colLineType]}").`);
+      parseErrors.push(`Line ${idx}: Line Type must be Fees or Other Requirements (got "${cells[colLineType]}").`);
       continue;
     }
     const amtRaw = (cells[colAmount] ?? "").replace(/,/g, "").trim();

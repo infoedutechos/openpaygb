@@ -8,6 +8,7 @@ import { SchoolPayBillModal } from "@/components/admin/school/SchoolPayBillModal
 import { SchoolStudentActionSheet } from "@/components/admin/school/SchoolStudentActionSheet";
 import { SchoolStudentEditModal } from "@/components/admin/school/SchoolStudentEditModal";
 import { SchoolStudentImportModal } from "@/components/admin/school/SchoolStudentImportModal";
+import { SchoolPayCodePanel } from "@/components/admin/SchoolPayCodePanel";
 import { TuitionHubCheckoutExplainerCompact } from "@/components/admin/TuitionHubCheckoutExplainer";
 import { TenantList } from "@/components/tuition/TenantList";
 import { useTuitionAdminGate } from "@/hooks/useTuitionAdminGate";
@@ -142,6 +143,7 @@ export default function AdminStudentsPage() {
         </p>
         <TuitionHubCheckoutExplainerCompact className="mt-2 max-w-3xl" />
       </div>
+      <SchoolPayCodePanel organizationSlug={isMaster ? organizationSlugFilter.trim().toLowerCase() || undefined : undefined} />
       {isSchoolTenant ? <SchoolBulkBillsPanel onAssigned={() => void load(q)} /> : null}
       {isSchoolTenant ? (
         <div className="flex flex-wrap gap-2 text-sm">
@@ -269,7 +271,8 @@ export default function AdminStudentsPage() {
             {isSchoolTenant ? (
               <>
                 <input
-                  placeholder="Admission no."
+                  placeholder="Admission / registration no. (used with the School Code to pay)"
+                  title="Parents use this number together with your School Code to find the student and pay fees"
                   value={createForm.admissionNo}
                   onChange={(e) => setCreateForm((f) => ({ ...f, admissionNo: e.target.value }))}
                   className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
