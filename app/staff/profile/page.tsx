@@ -10,6 +10,7 @@ type StaffMe = {
     email: string;
     address: string;
     sex: string;
+    dateOfBirth: string | null;
     employmentDate: string | null;
     duty: string;
     salaryUgx: number;
@@ -40,6 +41,7 @@ export default function StaffProfilePage() {
     ["Email", s.email || "—"],
     ["Address", s.address || "—"],
     ["Sex", s.sex],
+    ["Date of birth", s.dateOfBirth || "—"],
     ["Employment date", s.employmentDate || "—"],
     ["Status", s.status],
     ["Contract salary", `UGX ${s.salaryUgx.toLocaleString()}`],

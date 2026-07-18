@@ -41,6 +41,7 @@ export async function GET() {
         email: staff.email,
         address: staff.address,
         sex: staff.sex,
+        dateOfBirth: staff.dateOfBirth?.toISOString().slice(0, 10) ?? null,
         employmentDate: staff.employmentDate?.toISOString().slice(0, 10) ?? null,
         duty: staff.duty,
         salaryUgx: staff.salaryUgx,
