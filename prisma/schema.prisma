@@ -175,6 +175,11 @@ model Organization {
   staffSeqDigits             Int                        @default(4)
   staffSeparator             String                     @default("-")
   staffSeqStart              Int                        @default(1)
+  /**
+   * Configurable staff duty catalogue for HR forms.
+   * JSON array: `[{ "label": "DOS", "category": "teaching" | "non_teaching" }, ...]`
+   */
+  staffDuties                Json                       @default("[]")
   /** School letterhead for receipts — phone / email / address (public-safe). */
   letterheadPhone            String                     @default("")
   letterheadEmail            String                     @default("")
@@ -611,6 +616,7 @@ model SchoolStaff {
   email           String            @default("")
   address         String            @default("")
   sex             SchoolStaffSex    @default(other)
+  dateOfBirth     DateTime?
   employmentDate  DateTime?
   duty            String            @default("")
   salaryUgx       Int               @default(0)

@@ -15,6 +15,7 @@ const CreateBody = z.object({
   email: z.string().optional(),
   address: z.string().optional(),
   sex: z.nativeEnum(SchoolStaffSex).optional(),
+  dateOfBirth: z.string().optional().or(z.literal("")),
   employmentDate: z.string().optional(),
   duty: z.string().optional(),
   salaryUgx: z.number().int().min(0).optional(),
@@ -31,6 +32,7 @@ function serializeStaff(s: {
   email: string;
   address: string;
   sex: SchoolStaffSex;
+  dateOfBirth: Date | null;
   employmentDate: Date | null;
   duty: string;
   salaryUgx: number;
@@ -45,6 +47,7 @@ function serializeStaff(s: {
     email: s.email,
     address: s.address,
     sex: s.sex,
+    dateOfBirth: s.dateOfBirth?.toISOString().slice(0, 10) ?? null,
     employmentDate: s.employmentDate?.toISOString().slice(0, 10) ?? null,
     duty: s.duty,
     salaryUgx: s.salaryUgx,
@@ -104,6 +107,7 @@ export async function POST(req: Request) {
         email: body.email?.trim() ?? "",
         address: body.address?.trim() ?? "",
         sex: body.sex ?? SchoolStaffSex.other,
+        dateOfBirth: body.dateOfBirth?.trim() ? new Date(body.dateOfBirth.trim()) : null,
         employmentDate: body.employmentDate ? new Date(body.employmentDate) : null,
         duty: body.duty?.trim() ?? "",
         salaryUgx: body.salaryUgx ?? 0,

@@ -20,6 +20,8 @@ export async function PATCH(req: Request, { params }: Params) {
         email: z.string().optional(),
         address: z.string().optional(),
         sex: z.nativeEnum(SchoolStaffSex).optional(),
+        dateOfBirth: z.string().optional().or(z.literal("")),
+        clearDateOfBirth: z.boolean().optional(),
         employmentDate: z.string().optional(),
         duty: z.string().optional(),
         salaryUgx: z.number().int().min(0).optional(),
@@ -40,6 +42,13 @@ export async function PATCH(req: Request, { params }: Params) {
       portalPasswordHash = await bcrypt.hash(body.portalPassword.trim(), 10);
     }
 
+    let dateOfBirth: Date | null | undefined;
+    if (body.clearDateOfBirth) {
+      dateOfBirth = null;
+    } else if (body.dateOfBirth !== undefined) {
+      dateOfBirth = body.dateOfBirth.trim() ? new Date(body.dateOfBirth.trim()) : null;
+    }
+
     const updated = await prisma.schoolStaff.updateMany({
       where: { id, organizationId: auth.scope.organizationId },
       data: {
@@ -48,6 +57,7 @@ export async function PATCH(req: Request, { params }: Params) {
         ...(body.email !== undefined ? { email: body.email.trim() } : {}),
         ...(body.address !== undefined ? { address: body.address.trim() } : {}),
         ...(body.sex ? { sex: body.sex } : {}),
+        ...(dateOfBirth !== undefined ? { dateOfBirth } : {}),
         ...(body.employmentDate ? { employmentDate: new Date(body.employmentDate) } : {}),
         ...(body.duty !== undefined ? { duty: body.duty.trim() } : {}),
         ...(body.salaryUgx !== undefined ? { salaryUgx: body.salaryUgx } : {}),
