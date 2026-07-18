@@ -80,6 +80,11 @@ const nav: { href: string; label: string; desc?: string }[] = [
     desc: "Customise, publish & download demos",
   },
   {
+    href: "/admin/master#visitor-analytics",
+    label: "Visitors",
+    desc: "Daily · total · countries",
+  },
+  {
     href: "/admin/master#platform-branding",
     label: "Branding",
     desc: "Name, SEO, hero, accent",

@@ -5,6 +5,7 @@ import { SocialLinksRow } from "@/components/SocialLinksRow";
 import { ShareButton } from "@/components/ShareButton";
 import { SaveToHomeScreenCard } from "@/components/SaveToHomeScreenCard";
 import { ProductLinesSection } from "@/components/ecosystem/ProductLinesSection";
+import { SiteVisitorStats } from "@/components/hub/SiteVisitorStats";
 import { getPublicSiteUiSettings, linksForFooter } from "@/lib/site-ui-settings";
 
 export default async function HomePage() {
@@ -118,6 +119,8 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      <SiteVisitorStats />
 
       <ProductLinesSection />
 

@@ -16,6 +16,7 @@ import { MasterOpenPayCardSettings } from "@/components/admin/MasterOpenPayCardS
 import { MasterOpenPayCardsOverview } from "@/components/admin/MasterOpenPayCardsOverview";
 import { MasterDeploymentEnvSettings } from "@/components/admin/MasterDeploymentEnvSettings";
 import { MasterDemoLoginsSettings } from "@/components/admin/MasterDemoLoginsSettings";
+import { MasterVisitorAnalyticsSettings } from "@/components/admin/MasterVisitorAnalyticsSettings";
 import { MasterPlatformBrandingSettings } from "@/components/admin/MasterPlatformBrandingSettings";
 import { MasterAuthSessionSettings } from "@/components/admin/MasterAuthSessionSettings";
 import { MasterCronOpsPanel } from "@/components/admin/MasterCronOpsPanel";
@@ -225,6 +226,12 @@ export default function MasterManagerOverviewPage() {
           Cron ops
         </Link>
         <Link
+          href="/admin/master#visitor-analytics"
+          className="rounded-xl border border-sky-500/35 bg-sky-950/25 px-5 py-2.5 text-sm font-medium text-sky-100 hover:border-sky-400/55"
+        >
+          Visitors
+        </Link>
+        <Link
           href="/admin/master#demo-logins"
           className="rounded-xl border border-emerald-500/35 bg-emerald-950/25 px-5 py-2.5 text-sm font-medium text-emerald-100 hover:border-emerald-400/55"
         >
@@ -301,6 +308,8 @@ export default function MasterManagerOverviewPage() {
       <MasterCronOpsPanel />
 
       <MasterDemoLoginsSettings />
+
+      <MasterVisitorAnalyticsSettings />
 
       <MasterHubMaintenanceSettings />
 

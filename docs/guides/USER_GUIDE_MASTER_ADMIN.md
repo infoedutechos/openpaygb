@@ -159,7 +159,20 @@ Restore-related:
 - `POST /api/master/backup/restore`
 - `GET /api/master/backup/status`
 
-## 10) Download project artifacts (organised catalogue)
+## 10) Visitor analytics
+
+1. Open **Visitors** (`/admin/master#visitor-analytics`).
+2. Review **today** and **all-time** unique visitors + page views.
+3. Inspect **last 30 days**, **countries today**, **countries (all time)**, and **top locations** (city/region when the edge provides them).
+4. Optionally toggle **Show visitor counts on the home page**.
+
+API:
+
+- `GET /api/master/visitor-stats`
+- `PATCH /api/master/visitor-stats` `{ "showPublicVisitorStats": true|false }`
+- Public: `POST /api/public/visit`, `GET /api/public/visit-stats`
+
+## 11) Download project artifacts (organised catalogue)
 
 1. Open **Docs & downloads** (`/admin/master#project-download`).
 2. Use the **categorised catalogue**:

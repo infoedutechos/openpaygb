@@ -1216,6 +1216,8 @@ model SiteUiSettings {
    * publicPasswordHint + SEED_* overrides sync automatically into the MAC directory.
    */
   demoPasswordSync            Boolean @default(true)
+  /** When true, home page shows daily + total visitor counts (aggregates only). */
+  showPublicVisitorStats      Boolean @default(true)
   /** Public brand name used in footer, metadata, maintenance screens. */
   platformDisplayName         String  @default("ODEL HUB")
   /** Optional SEO title override (empty = derive from platformDisplayName). */
@@ -2511,4 +2513,63 @@ model NotificationRead {
   @@unique([notificationId, readerKey])
   @@index([readerKey])
   @@map("notification_reads")
+}
+
+/** Lifetime site traffic counters (singleton key = "platform"). */
+model SiteVisitTotals {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  key            String   @unique @default("platform")
+  uniqueVisitors Int      @default(0)
+  pageViews      Int      @default(0)
+  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now())
+
+  @@map("site_visit_totals")
+}
+
+/** Per-UTC-day site traffic. */
+model SiteVisitDay {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  day            String   @unique
+  uniqueVisitors Int      @default(0)
+  pageViews      Int      @default(0)
+  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now())
+
+  @@map("site_visit_days")
+}
+
+/** Per-day geo breakdown (country + optional city/region). */
+model SiteVisitGeoDay {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  day            String
+  countryCode    String
+  /** City / region label when available; empty string when unknown. */
+  location       String   @default("")
+  uniqueVisitors Int      @default(0)
+  pageViews      Int      @default(0)
+  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now())
+
+  @@unique([day, countryCode, location])
+  @@index([day])
+  @@index([countryCode])
+  @@map("site_visit_geo_days")
+}
+
+/**
+ * First-seen visitor keys per UTC day (for unique counting).
+ * visitorKey is a SHA-256 of the anonymous cookie — never store raw IP.
+ */
+model SiteVisitSeen {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  day         String
+  visitorKey  String
+  countryCode String   @default("XX")
+  location    String   @default("")
+  createdAt   DateTime @default(now())
+
+  @@unique([day, visitorKey])
+  @@index([day])
+  @@map("site_visit_seen")
 }

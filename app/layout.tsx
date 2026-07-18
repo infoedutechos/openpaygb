@@ -11,6 +11,7 @@ import { ConditionalSiteBottomNav } from "@/components/ConditionalSiteBottomNav"
 import { PwaTitleBarMenu } from "@/components/PwaTitleBarMenu";
 import { PwaRefreshShortcutHandler } from "@/components/PwaRefreshShortcutHandler";
 import { StandaloneAppRoot } from "@/components/standalone/StandaloneAppRoot";
+import { VisitBeacon } from "@/components/hub/VisitBeacon";
 import { buildRootMetadata } from "@/lib/root-metadata";
 import { getPlatformBranding } from "@/lib/platform-customisation";
 import { resolveRequestSiteOrigin } from "@/lib/request-site-origin";
@@ -58,6 +59,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <PwaTitleBarMenu />
               <PwaRefreshShortcutHandler />
               <PlatformAssistShell />
+              <VisitBeacon />
             </TonConnectAppProvider>
           </PlatformSocialProvider>
         </StandaloneAppRoot>
