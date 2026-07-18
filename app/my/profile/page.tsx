@@ -35,7 +35,10 @@ export default function MyProfilePage() {
         <h1 className="text-2xl font-semibold text-white">Profile</h1>
       </header>
       <UserProfilePanel profile={profileFromStudentMe(student)} showWelcome />
-      <StudentPasswordSection portalSignInEnabled={Boolean(student.portalSignInEnabled)} />
+      <StudentPasswordSection
+        portalSignInEnabled={Boolean(student.portalSignInEnabled)}
+        demoPasswordLocked={Boolean(student.demoPasswordLocked)}
+      />
     </div>
   );
 }

@@ -1206,6 +1206,16 @@ model SiteUiSettings {
    * Passwords live as bcrypt on users; optional publicPasswordHint is for published demo sheets only.
    */
   demoLoginDirectory          Json   @default("{}")
+  /**
+   * When true, demo-directory accounts cannot self-serve change/forgot/reset passwords —
+   * only Master Admin → Demo logins can set them (for community test sharing).
+   */
+  demoPasswordLock            Boolean @default(true)
+  /**
+   * When true, if a demo account password does change (lock off, or Master sets it),
+   * publicPasswordHint + SEED_* overrides sync automatically into the MAC directory.
+   */
+  demoPasswordSync            Boolean @default(true)
   /** Public brand name used in footer, metadata, maintenance screens. */
   platformDisplayName         String  @default("ODEL HUB")
   /** Optional SEO title override (empty = derive from platformDisplayName). */

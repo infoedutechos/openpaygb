@@ -5,6 +5,10 @@ import { prisma } from "@/lib/prisma";
 import { hashAdminResetToken } from "@/lib/admin-password-reset";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
 import { apiErrorResponse } from "@/lib/api-error";
+import {
+  enforceDemoPasswordChange,
+  syncDemoPasswordToMac,
+} from "@/lib/demo-password-policy";
 
 const Body = z.object({
   token: z.string().min(16),
@@ -33,6 +37,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Reset link is invalid or has expired. Request a new one." }, { status: 400 });
     }
 
+    const gate = await enforceDemoPasswordChange({
+      kind: "admin",
+      email: row.adminUser.email,
+    });
+    if (!gate.ok) {
+      return NextResponse.json({ error: gate.error }, { status: gate.status });
+    }
+
     const passwordHash = await bcrypt.hash(parsed.data.password, 10);
 
     await prisma.$transaction([
@@ -42,6 +54,14 @@ export async function POST(req: Request) {
       }),
       prisma.adminPasswordResetToken.deleteMany({ where: { adminUserId: row.adminUserId } }),
     ]);
+
+    if (gate.slot) {
+      await syncDemoPasswordToMac({
+        slotKey: gate.slot,
+        password: parsed.data.password,
+        updatedBy: row.adminUser.email,
+      });
+    }
 
     return NextResponse.json({ ok: true });
   } catch (e) {

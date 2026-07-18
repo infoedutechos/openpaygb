@@ -60,9 +60,18 @@ function downloadBlob(body: string, filename: string, contentType: string) {
   URL.revokeObjectURL(url);
 }
 
+type DemoPolicy = {
+  lockSelfService: boolean;
+  syncChangesToMac: boolean;
+};
+
 export function MasterDemoLoginsSettings() {
   const [slots, setSlots] = useState<DemoSlot[]>([]);
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
+  const [policy, setPolicy] = useState<DemoPolicy>({
+    lockSelfService: true,
+    syncChangesToMac: true,
+  });
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -82,9 +91,10 @@ export function MasterDemoLoginsSettings() {
     setError(null);
     try {
       const r = await fetch("/api/master/demo-logins", { credentials: "include" });
-      const parsed = await readJsonResponse<{ slots: DemoSlot[] }>(r);
+      const parsed = await readJsonResponse<{ slots: DemoSlot[]; policy?: DemoPolicy }>(r);
       if (!parsed.ok) throw new Error(parsed.error);
       applySlots(parsed.data.slots ?? []);
+      if (parsed.data.policy) setPolicy(parsed.data.policy);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load demo logins");
     } finally {
@@ -117,6 +127,33 @@ export function MasterDemoLoginsSettings() {
       publishPasswordAsHint: d.publishPasswordAsHint,
       provisionIfMissing: true,
     };
+  }
+
+  async function savePolicy(next: DemoPolicy) {
+    setBusy(true);
+    setError(null);
+    setSaved(null);
+    try {
+      const r = await fetch("/api/master/demo-logins", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ policy: next }),
+      });
+      const parsed = await readJsonResponse<{
+        policy?: DemoPolicy;
+        messages?: string[];
+        error?: string;
+      }>(r);
+      if (!parsed.ok) throw new Error(parsed.error);
+      if (parsed.data.policy) setPolicy(parsed.data.policy);
+      else setPolicy(next);
+      setSaved((parsed.data.messages ?? ["Demo password policy saved."]).join(" · "));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save policy");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function saveAll() {
@@ -277,6 +314,54 @@ export function MasterDemoLoginsSettings() {
           {saved}
         </p>
       ) : null}
+
+      <div className="mt-5 rounded-xl border border-amber-500/30 bg-amber-950/20 p-4">
+        <h3 className="text-sm font-semibold text-amber-100">Community test password policy</h3>
+        <p className="mt-1 text-xs text-slate-400">
+          Use these when sharing demo credentials with communities. Defaults are both on.
+        </p>
+        <div className="mt-3 space-y-3 text-sm text-slate-300">
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              className="mt-1 rounded border-white/20"
+              checked={policy.lockSelfService}
+              disabled={busy || loading}
+              onChange={(e) => {
+                const next = { ...policy, lockSelfService: e.target.checked };
+                setPolicy(next);
+                void savePolicy(next);
+              }}
+            />
+            <span>
+              <span className="font-medium text-white">Lock demo passwords</span>
+              <span className="mt-0.5 block text-xs text-slate-500">
+                Demo accounts cannot change or reset passwords themselves — only MAC Demo logins can.
+              </span>
+            </span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              className="mt-1 rounded border-white/20"
+              checked={policy.syncChangesToMac}
+              disabled={busy || loading}
+              onChange={(e) => {
+                const next = { ...policy, syncChangesToMac: e.target.checked };
+                setPolicy(next);
+                void savePolicy(next);
+              }}
+            />
+            <span>
+              <span className="font-medium text-white">Sync password changes back to MAC</span>
+              <span className="mt-0.5 block text-xs text-slate-500">
+                If a demo password does change (lock off), update the public password hint and SEED_*
+                overrides automatically so lobbies stay accurate.
+              </span>
+            </span>
+          </label>
+        </div>
+      </div>
 
       <ul className="mt-5 space-y-4">
         {slots.map((s) => {

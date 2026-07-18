@@ -42,7 +42,11 @@ export function AdminAccountPasswordSection({
   return (
     <div className="space-y-2">
       {successHeading ? <h2 className="text-sm font-semibold text-white">{successHeading}</h2> : null}
-      <ChangePasswordCard action="/api/auth/admin/change-password" />
+      <ChangePasswordCard
+        action="/api/auth/admin/change-password"
+        canChange={!authMe?.demoPasswordLocked}
+        disabledMessage="This is a shared demo account. Password changes are locked by Master Admin — ask the platform master to update it under Demo logins (/admin/master#demo-logins)."
+      />
     </div>
   );
 }

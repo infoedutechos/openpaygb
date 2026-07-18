@@ -33,4 +33,9 @@ export type AuthMeJson = {
   paymentOps?: { manualConfirmAllowed: boolean };
   /** Profile/org loaded from JWT only — Atlas unreachable. */
   dbDegraded?: boolean;
+  /**
+   * When true, this admin is a MAC demo-directory account and self-service
+   * password changes are locked by Master policy.
+   */
+  demoPasswordLocked?: boolean;
 };

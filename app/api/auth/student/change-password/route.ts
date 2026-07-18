@@ -4,6 +4,10 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getStudentFromCookies } from "@/lib/student-auth";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
+import {
+  enforceDemoPasswordChange,
+  syncDemoPasswordToMac,
+} from "@/lib/demo-password-policy";
 
 const Body = z.object({
   currentPassword: z.string().min(1).max(500),
@@ -26,7 +30,7 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Invalid body. New password must be at least 10 characters." },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -36,7 +40,7 @@ export async function POST(req: Request) {
 
   const student = await prisma.student.findUnique({
     where: { id: session.sub },
-    select: { id: true, organizationId: true, portalPasswordHash: true },
+    select: { id: true, email: true, organizationId: true, portalPasswordHash: true },
   });
 
   if (!student || student.organizationId !== session.organizationId) {
@@ -49,8 +53,17 @@ export async function POST(req: Request) {
         error:
           "Portal password is not set on your account. Ask your school admin to set an initial portal password, or complete registration with a password.",
       },
-      { status: 403 }
+      { status: 403 },
     );
+  }
+
+  const gate = await enforceDemoPasswordChange({
+    kind: "student",
+    email: student.email?.trim() || "",
+    organizationId: student.organizationId,
+  });
+  if (!gate.ok) {
+    return NextResponse.json({ error: gate.error }, { status: gate.status });
   }
 
   const ok = await bcrypt.compare(parsed.data.currentPassword, student.portalPasswordHash);
@@ -63,6 +76,14 @@ export async function POST(req: Request) {
     where: { id: student.id },
     data: { portalPasswordHash },
   });
+
+  if (gate.slot) {
+    await syncDemoPasswordToMac({
+      slotKey: gate.slot,
+      password: parsed.data.newPassword,
+      updatedBy: student.email?.trim() || student.id,
+    });
+  }
 
   return NextResponse.json({ ok: true });
 }

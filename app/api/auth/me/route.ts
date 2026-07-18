@@ -9,6 +9,10 @@ import { apiErrorResponse } from "@/lib/api-error";
 import { isTransientMongoError } from "@/lib/prisma-retry";
 import { ADMIN_SESSION_COOKIE_NAME, hasAdminShellAccess } from "@/utils/admin-session";
 import { toEpochMs, toIsoString } from "@/lib/iso-date";
+import {
+  findDemoAdminSlotByEmail,
+  loadDemoPasswordPolicy,
+} from "@/lib/demo-password-policy";
 
 export async function GET() {
   try {
@@ -81,6 +85,17 @@ export async function GET() {
       ? `/api/auth/admin/profile-image?v=${profileImageMs}`
       : null;
 
+    let demoPasswordLocked = false;
+    try {
+      const [policy, demoSlot] = await Promise.all([
+        loadDemoPasswordPolicy(),
+        findDemoAdminSlotByEmail(admin.email),
+      ]);
+      demoPasswordLocked = Boolean(demoSlot && policy.lockSelfService);
+    } catch {
+      /* policy lookup must not break /me */
+    }
+
     const body: AuthMeJson = {
       admin: {
         id: admin.id,
@@ -98,6 +113,7 @@ export async function GET() {
       tuitionSession: true,
       adminShellAccess,
       paymentOps,
+      demoPasswordLocked,
     };
     return NextResponse.json(body);
   } catch (e) {

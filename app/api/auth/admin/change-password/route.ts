@@ -5,6 +5,10 @@ import { prisma } from "@/lib/prisma";
 import { getAdminFromCookies } from "@/lib/auth";
 import { revalidateAdminProfile } from "@/lib/cached-admin-profile";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
+import {
+  enforceDemoPasswordChange,
+  syncDemoPasswordToMac,
+} from "@/lib/demo-password-policy";
 
 const Body = z.object({
   currentPassword: z.string().min(1).max(500),
@@ -27,7 +31,7 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Invalid body. New password must be at least 10 characters." },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -37,10 +41,15 @@ export async function POST(req: Request) {
 
   const admin = await prisma.adminUser.findUnique({
     where: { id: session.sub },
-    select: { id: true, passwordHash: true },
+    select: { id: true, email: true, passwordHash: true },
   });
   if (!admin) {
     return NextResponse.json({ error: "Account not found" }, { status: 404 });
+  }
+
+  const gate = await enforceDemoPasswordChange({ kind: "admin", email: admin.email });
+  if (!gate.ok) {
+    return NextResponse.json({ error: gate.error }, { status: gate.status });
   }
 
   const ok = await bcrypt.compare(parsed.data.currentPassword, admin.passwordHash);
@@ -54,6 +63,14 @@ export async function POST(req: Request) {
     data: { passwordHash },
   });
   revalidateAdminProfile(admin.id);
+
+  if (gate.slot) {
+    await syncDemoPasswordToMac({
+      slotKey: gate.slot,
+      password: parsed.data.newPassword,
+      updatedBy: admin.email,
+    });
+  }
 
   return NextResponse.json({ ok: true });
 }

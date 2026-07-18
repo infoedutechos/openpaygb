@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getStudentFromCookies } from "@/lib/student-auth";
+import {
+  findDemoStudentSlot,
+  loadDemoPasswordPolicy,
+} from "@/lib/demo-password-policy";
 
 export async function GET() {
   const session = await getStudentFromCookies();
@@ -49,6 +53,19 @@ export async function GET() {
     return NextResponse.json({ student: null }, { status: 401 });
   }
 
+  let demoPasswordLocked = false;
+  try {
+    const [policy, demoSlot] = await Promise.all([
+      loadDemoPasswordPolicy(),
+      row.email?.trim()
+        ? findDemoStudentSlot({ email: row.email, organizationId: row.organizationId })
+        : Promise.resolve(null),
+    ]);
+    demoPasswordLocked = Boolean(demoSlot && policy.lockSelfService);
+  } catch {
+    /* ignore */
+  }
+
   return NextResponse.json({
     student: {
       id: row.id,
@@ -61,6 +78,7 @@ export async function GET() {
       organizationName: row.organization.name,
       organizationSlug: row.organization.slug,
       portalSignInEnabled: Boolean(row.portalPasswordHash),
+      demoPasswordLocked,
       googleSub: row.googleSub ?? null,
       lastLoginAt: row.lastLoginAt?.toISOString() ?? null,
       previousLoginAt: row.previousLoginAt?.toISOString() ?? null,

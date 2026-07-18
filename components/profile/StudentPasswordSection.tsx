@@ -4,9 +4,15 @@ import { ChangePasswordCard } from "@/components/ChangePasswordCard";
 
 type Props = {
   portalSignInEnabled: boolean;
+  demoPasswordLocked?: boolean;
 };
 
-export function StudentPasswordSection({ portalSignInEnabled }: Props) {
+export function StudentPasswordSection({ portalSignInEnabled, demoPasswordLocked = false }: Props) {
+  const canChange = portalSignInEnabled && !demoPasswordLocked;
+  const disabledMessage = demoPasswordLocked
+    ? "This is a shared demo student account. Password changes are locked by Master Admin — ask the platform master to update it under Demo logins."
+    : "Your school has not enabled portal passwords on this account yet. Use registration that sets a password, or ask your admin to enable portal sign-in.";
+
   return (
     <section id="password" className="scroll-mt-6 space-y-3 rounded-xl border border-white/10 bg-[#0d1526]/80 p-5">
       <header>
@@ -15,8 +21,8 @@ export function StudentPasswordSection({ portalSignInEnabled }: Props) {
       </header>
       <ChangePasswordCard
         action="/api/auth/student/change-password"
-        canChange={portalSignInEnabled}
-        disabledMessage="Your school has not enabled portal passwords on this account yet. Use registration that sets a password, or ask your admin to enable portal sign-in."
+        canChange={canChange}
+        disabledMessage={disabledMessage}
       />
     </section>
   );

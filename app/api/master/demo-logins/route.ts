@@ -7,6 +7,10 @@ import {
   applyDemoLoginPatches,
   listDemoLoginsForMaster,
 } from "@/lib/demo-logins";
+import {
+  loadDemoPasswordPolicy,
+  saveDemoPasswordPolicy,
+} from "@/lib/demo-password-policy";
 
 const PatchItem = z.object({
   key: z.enum(DEMO_LOGIN_SLOT_KEYS),
@@ -24,7 +28,13 @@ const PatchItem = z.object({
 });
 
 const PatchBody = z.object({
-  slots: z.array(PatchItem).min(1).max(10),
+  slots: z.array(PatchItem).min(1).max(10).optional(),
+  policy: z
+    .object({
+      lockSelfService: z.boolean().optional(),
+      syncChangesToMac: z.boolean().optional(),
+    })
+    .optional(),
 });
 
 export async function GET() {
@@ -32,10 +42,14 @@ export async function GET() {
     const gate = await requireMaster();
     if (!gate.ok) return gate.response;
 
-    const slots = await listDemoLoginsForMaster();
+    const [slots, policy] = await Promise.all([
+      listDemoLoginsForMaster(),
+      loadDemoPasswordPolicy(),
+    ]);
     return NextResponse.json({
       slots,
-      note: "Passwords are never returned as hashes. Use Download for a credentials sheet (public hint or last SEED_* override). Leave password blank to keep the current hash. Publish on lobbies controls /OdelPaySchools and /OdelPayUniversities auto-updated panels.",
+      policy,
+      note: "Passwords are never returned as hashes. Use Download for a credentials sheet. Lock blocks community testers from changing demo passwords; Sync keeps MAC hints / SEED_* updated when a password does change.",
     });
   } catch (e) {
     return apiErrorResponse(e, {
@@ -54,6 +68,25 @@ export async function PATCH(req: Request) {
     const parsed = PatchBody.safeParse(json);
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid body", details: parsed.error.flatten() }, { status: 400 });
+    }
+
+    if (!parsed.data.slots?.length && !parsed.data.policy) {
+      return NextResponse.json({ error: "Provide slots and/or policy" }, { status: 400 });
+    }
+
+    let policy = await loadDemoPasswordPolicy();
+    if (parsed.data.policy) {
+      policy = await saveDemoPasswordPolicy(parsed.data.policy);
+    }
+
+    if (!parsed.data.slots?.length) {
+      const slots = await listDemoLoginsForMaster();
+      return NextResponse.json({
+        slots,
+        policy,
+        updated: [],
+        messages: ["Demo password policy saved."],
+      });
     }
 
     const patches = parsed.data.slots.map((s) => ({
@@ -80,6 +113,7 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json({
       slots: result.slots,
+      policy,
       updated: result.updated,
       messages: result.messages,
     });

@@ -5,6 +5,7 @@ import { hashAdminResetToken, newAdminResetTokenPlain } from "@/lib/admin-passwo
 import { sendAdminPasswordResetEmail } from "@/lib/admin-password-reset-email";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
 import { apiErrorResponse } from "@/lib/api-error";
+import { enforceDemoPasswordChange } from "@/lib/demo-password-policy";
 
 const Body = z.object({
   email: z.string().email(),
@@ -32,6 +33,11 @@ export async function POST(req: Request) {
 
     if (!admin) {
       return NextResponse.json({ error: NOT_REGISTERED, registered: false }, { status: 404 });
+    }
+
+    const gate = await enforceDemoPasswordChange({ kind: "admin", email: admin.email });
+    if (!gate.ok) {
+      return NextResponse.json({ error: gate.error, registered: true }, { status: gate.status });
     }
 
     await prisma.adminPasswordResetToken.deleteMany({ where: { adminUserId: admin.id } });

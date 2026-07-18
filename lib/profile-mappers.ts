@@ -36,6 +36,7 @@ export type StudentMeProfile = {
   organizationName: string;
   organizationSlug: string;
   portalSignInEnabled?: boolean;
+  demoPasswordLocked?: boolean;
   lastLoginAt?: string | null;
   previousLoginAt?: string | null;
   createdAt?: string | null;
