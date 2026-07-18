@@ -159,15 +159,22 @@ Restore-related:
 - `POST /api/master/backup/restore`
 - `GET /api/master/backup/status`
 
-## 10) Download project artifacts
+## 10) Download project artifacts (organised catalogue)
 
-1. Open project download section.
-2. Choose export part (`full`, `tuition`, `organizations`, `programmes`, `payments`, `env`, `knowledge-base`, etc.).
-3. Download and archive for audit, handoff, or migration.
+1. Open **Docs & downloads** (`/admin/master#project-download`).
+2. Use the **categorised catalogue**:
+   - **Whole project** — full ZIP (data + demo logins + env + docs + source)
+   - **Documentation & guides** — project description, user guides, full docs library
+   - **Live platform data** — tuition and scoped JSON exports
+   - **Access & credentials** — master admins, demo Schools/Universities logins, environment
+   - **Source code** — repository archive
+3. Download an entire category ZIP or individual parts.
+4. Archive securely (env and demo sheets contain secrets).
 
 API:
 
-- `GET /api/master/project-download?part=...`
+- `GET /api/master/project-download?part=...` — parts include `full`, `documentation`, `demo-logins`, `cat-documentation`, `cat-data`, `cat-credentials`, …
+- `GET /api/master/project-download?catalogue=1` — JSON catalogue metadata
 
 ## Master operations playbook
 

@@ -37,7 +37,7 @@ const nav: { href: string; label: string; desc?: string }[] = [
   {
     href: "/admin/master#project-download",
     label: "Docs & downloads",
-    desc: "Project description & user guides",
+    desc: "Categorised project downloadables",
   },
   {
     href: "/admin/master#openpay-cards-overview",
@@ -77,7 +77,7 @@ const nav: { href: string; label: string; desc?: string }[] = [
   {
     href: "/admin/master#demo-logins",
     label: "Demo logins",
-    desc: "Customise seed demo accounts",
+    desc: "Customise, publish & download demos",
   },
   {
     href: "/admin/master#platform-branding",

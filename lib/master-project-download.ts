@@ -8,6 +8,12 @@ import { ZipArchive, type Archiver } from "archiver";
 import { buildTuitionBackupSnapshot } from "@/lib/backup/tuition-snapshot";
 import { buildVercelEnvExport } from "@/lib/deployment-env-export";
 import { deploymentEnv } from "@/lib/deployment-env-resolve";
+import { buildDemoLoginsExport } from "@/lib/demo-logins";
+import {
+  isProjectDownloadPart,
+  partsForCategoryZip,
+  type ProjectDownloadPart,
+} from "@/lib/master-download-catalogue";
 import { prisma } from "@/lib/prisma";
 import {
   appendDocumentationToArchive,
@@ -16,20 +22,8 @@ import {
   buildUserGuidesDownload,
 } from "@/lib/project-documentation";
 
-export type ProjectDownloadPart =
-  | "full"
-  | "tuition"
-  | "organizations"
-  | "programmes"
-  | "payments"
-  | "master-admins"
-  | "env"
-  | "knowledge-base"
-  | "notifications"
-  | "source"
-  | "project-description"
-  | "user-guides"
-  | "documentation";
+export type { ProjectDownloadPart } from "@/lib/master-download-catalogue";
+export { isProjectDownloadPart, PROJECT_DOWNLOAD_PART_IDS } from "@/lib/master-download-catalogue";
 
 const SOURCE_SKIP = new Set([
   "node_modules",
@@ -217,7 +211,82 @@ export type DownloadPayload = {
   filename: string;
 };
 
-export async function buildProjectDownload(part: ProjectDownloadPart): Promise<DownloadPayload> {
+async function buildDemoLoginsPack(): Promise<DownloadPayload> {
+  const s = stamp();
+  const [json, csv, md] = await Promise.all([
+    buildDemoLoginsExport("json"),
+    buildDemoLoginsExport("csv"),
+    buildDemoLoginsExport("md"),
+  ]);
+  const body = await new Promise<Buffer>((resolve, reject) => {
+    const stream = new PassThrough();
+    const chunks: Buffer[] = [];
+    stream.on("data", (c: Buffer) => chunks.push(c));
+    stream.on("end", () => resolve(Buffer.concat(chunks)));
+    stream.on("error", reject);
+    const archive = new ZipArchive({ zlib: { level: 6 } });
+    archive.on("error", reject);
+    archive.pipe(stream);
+    archive.append(json.body, { name: json.filename });
+    archive.append(csv.body, { name: csv.filename });
+    archive.append(md.body, { name: md.filename });
+    archive.append(
+      JSON.stringify(
+        {
+          exportedAt: new Date().toISOString(),
+          bundle: "demo-logins",
+          note: "Same directory as Master Admin → Demo logins. Public lobbies auto-update when publishPublic is enabled.",
+          files: [json.filename, csv.filename, md.filename],
+        },
+        null,
+        2,
+      ),
+      { name: "MANIFEST.json" },
+    );
+    void archive.finalize();
+  });
+  return {
+    body,
+    contentType: "application/zip",
+    filename: `odelhub-demo-logins-${s}.zip`,
+  };
+}
+
+async function zipPayloads(
+  entries: Array<{ archivePath: string; payload: DownloadPayload }>,
+  filename: string,
+): Promise<DownloadPayload> {
+  const body = await new Promise<Buffer>((resolve, reject) => {
+    const stream = new PassThrough();
+    const chunks: Buffer[] = [];
+    stream.on("data", (c: Buffer) => chunks.push(c));
+    stream.on("end", () => resolve(Buffer.concat(chunks)));
+    stream.on("error", reject);
+    const archive = new ZipArchive({ zlib: { level: 6 } });
+    archive.on("error", reject);
+    archive.pipe(stream);
+    for (const entry of entries) {
+      const content =
+        typeof entry.payload.body === "string" ? entry.payload.body : entry.payload.body;
+      archive.append(content, { name: entry.archivePath });
+    }
+    archive.append(
+      JSON.stringify(
+        {
+          exportedAt: new Date().toISOString(),
+          files: entries.map((e) => e.archivePath),
+        },
+        null,
+        2,
+      ),
+      { name: "MANIFEST.json" },
+    );
+    void archive.finalize();
+  });
+  return { body, contentType: "application/zip", filename };
+}
+
+async function buildAtomicPart(part: ProjectDownloadPart): Promise<DownloadPayload> {
   const s = stamp();
 
   if (part === "tuition") {
@@ -245,6 +314,10 @@ export async function buildProjectDownload(part: ProjectDownloadPart): Promise<D
       contentType: "application/json; charset=utf-8",
       filename: `odelhub-master-admins-${s}.json`,
     };
+  }
+
+  if (part === "demo-logins") {
+    return buildDemoLoginsPack();
   }
 
   if (part === "env") {
@@ -286,7 +359,7 @@ export async function buildProjectDownload(part: ProjectDownloadPart): Promise<D
     return buildFullDocumentationDownload();
   }
 
-  if (part === "source") {
+  if (part === "source" || part === "cat-source") {
     const gitZip = gitArchiveBuffer();
     if (gitZip) {
       return {
@@ -306,20 +379,64 @@ export async function buildProjectDownload(part: ProjectDownloadPart): Promise<D
     throw new Error("Source archive unavailable — no local .git and GitHub codeload fetch failed.");
   }
 
-  // full bundle
+  throw new Error(`Atomic part not handled: ${part}`);
+}
+
+async function buildCategoryBundle(categoryZipPart: ProjectDownloadPart): Promise<DownloadPayload> {
+  const s = stamp();
+  const parts = partsForCategoryZip(categoryZipPart);
+  if (!parts.length) {
+    throw new Error(`Unknown category zip: ${categoryZipPart}`);
+  }
+  const entries: Array<{ archivePath: string; payload: DownloadPayload }> = [];
+  for (const p of parts) {
+    const payload = await buildAtomicPart(p);
+    entries.push({ archivePath: `${p}/${payload.filename}`, payload });
+  }
+  return zipPayloads(entries, `odelhub-category-${categoryZipPart.replace(/^cat-/, "")}-${s}.zip`);
+}
+
+export async function buildProjectDownload(part: ProjectDownloadPart): Promise<DownloadPayload> {
+  if (!isProjectDownloadPart(part)) {
+    throw new Error(`Invalid project download part: ${part}`);
+  }
+
+  if (
+    part === "cat-documentation" ||
+    part === "cat-data" ||
+    part === "cat-credentials" ||
+    part === "cat-source"
+  ) {
+    return buildCategoryBundle(part);
+  }
+
+  if (part !== "full") {
+    return buildAtomicPart(part);
+  }
+
+  const s = stamp();
   const tuition = await buildTuitionBackupSnapshot();
   const envText = await buildVercelEnvExport();
   const kb = await buildKnowledgeBaseExport();
   const notes = await buildNotificationsExport();
   const admins = await buildMasterAdminsExport();
+  const [demoJson, demoCsv, demoMd] = await Promise.all([
+    buildDemoLoginsExport("json"),
+    buildDemoLoginsExport("csv"),
+    buildDemoLoginsExport("md"),
+  ]);
 
   const manifest = {
     exportedAt: new Date().toISOString(),
     app: "ODEL HUB Pay",
     bundle: "full",
+    catalogue: "Master Admin → Docs & downloads (#project-download)",
     contents: [
       "data/tuition-backup.json",
       "data/master-admins.json",
+      "data/demo-logins.json",
+      "data/demo-logins.csv",
+      "data/demo-logins.md",
       "data/deployment-env.env",
       "data/knowledge-base.json",
       "data/notifications.json",
@@ -348,6 +465,9 @@ export async function buildProjectDownload(part: ProjectDownloadPart): Promise<D
     archive.append(JSON.stringify(manifest, null, 2), { name: "MANIFEST.json" });
     archive.append(JSON.stringify(tuition, null, 2), { name: "data/tuition-backup.json" });
     archive.append(JSON.stringify(admins, null, 2), { name: "data/master-admins.json" });
+    archive.append(demoJson.body, { name: "data/demo-logins.json" });
+    archive.append(demoCsv.body, { name: "data/demo-logins.csv" });
+    archive.append(demoMd.body, { name: "data/demo-logins.md" });
     archive.append(envText, { name: "data/deployment-env.env" });
     archive.append(JSON.stringify(kb, null, 2), { name: "data/knowledge-base.json" });
     archive.append(JSON.stringify(notes, null, 2), { name: "data/notifications.json" });

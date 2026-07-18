@@ -12,6 +12,7 @@ import {
   registrationSegmentTitle,
   type RegistrationSegment,
 } from "@/lib/institution-tier";
+import { DemoLoginLiveHint } from "@/components/demo/DemoLoginLiveHint";
 import { LOGIN_CHOOSER_PATH } from "@/lib/login-entry";
 
 function LoginInner() {
@@ -228,14 +229,17 @@ function LoginInner() {
           </Link>
         </p>
         <RequestSchoolWorkspaceCta variant="inline" className="pt-2" />
-        {process.env.NODE_ENV === "development" ? (
-          <p className="text-center text-xs text-slate-600">
-            Dev seed: school <span className="font-mono text-slate-500">default</span>, email{" "}
-            <span className="font-mono text-slate-500">student@odelhub.local</span>, password{" "}
-            <span className="font-mono text-slate-500">ChangeMe_Student123!</span> (or run{" "}
-            <span className="font-mono text-slate-500">npm run student:set-password</span>).
-          </p>
-        ) : null}
+        <DemoLoginLiveHint
+          className="pt-2"
+          audience={segment === "schools" ? "school" : segment === "higher" ? "university" : "all"}
+          title={
+            segment === "schools"
+              ? "Demo Schools — student login"
+              : segment === "higher"
+                ? "Demo Universities — student login"
+                : "Demo login details"
+          }
+        />
       </div>
     </div>
   );

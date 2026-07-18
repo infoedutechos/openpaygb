@@ -10,8 +10,12 @@ import {
 import {
   DEMO_LOGIN_SLOT_KEYS,
   DEMO_LOGIN_SLOT_META,
+  csvEscape,
   defaultDemoLoginDirectory,
+  resolveDemoLoginMeta,
+  type DemoLoginAudience,
   type DemoLoginDirectory,
+  type DemoLoginPublicView,
   type DemoLoginSlotKey,
   type DemoLoginStored,
 } from "@/lib/demo-logins-shared";
@@ -19,8 +23,12 @@ import {
 export {
   DEMO_LOGIN_SLOT_KEYS,
   DEMO_LOGIN_SLOT_META,
+  csvEscape,
   defaultDemoLoginDirectory,
+  resolveDemoLoginMeta,
+  type DemoLoginAudience,
   type DemoLoginDirectory,
+  type DemoLoginPublicView,
   type DemoLoginSlotKey,
   type DemoLoginStored,
 } from "@/lib/demo-logins-shared";
@@ -30,6 +38,7 @@ export type DemoLoginView = {
   label: string;
   kind: "admin" | "student";
   role: "master" | "org_admin" | null;
+  audience: DemoLoginAudience;
   orgSlug: string | null;
   orgName: string | null;
   loginPath: string;
@@ -38,6 +47,9 @@ export type DemoLoginView = {
   userId: string | null;
   exists: boolean;
   hasPassword: boolean;
+  publishPublic: boolean;
+  publicPasswordHint: string;
+  notes: string;
   portalSignInEnabled?: boolean;
 };
 
@@ -46,6 +58,14 @@ export type DemoLoginPatch = {
   email?: string;
   name?: string;
   password?: string;
+  label?: string;
+  orgSlug?: string | null;
+  loginPath?: string;
+  publishPublic?: boolean;
+  publicPasswordHint?: string;
+  notes?: string;
+  /** When true and password is set, also store it as publicPasswordHint. */
+  publishPasswordAsHint?: boolean;
   provisionIfMissing?: boolean;
 };
 
@@ -57,6 +77,29 @@ function isDirectory(value: unknown): value is DemoLoginDirectory {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
+function parseStoredEntry(raw: unknown, fallback: DemoLoginStored): DemoLoginStored {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { ...fallback };
+  const entry = raw as Record<string, unknown>;
+  const email =
+    typeof entry.email === "string" && entry.email.trim()
+      ? normalizeEmail(entry.email)
+      : fallback.email;
+  const name =
+    typeof entry.name === "string" && entry.name.trim() ? entry.name.trim() : fallback.name;
+  const next: DemoLoginStored = { email, name };
+  if (typeof entry.label === "string") next.label = entry.label.trim() || undefined;
+  if (entry.orgSlug === null) next.orgSlug = null;
+  else if (typeof entry.orgSlug === "string") next.orgSlug = entry.orgSlug.trim() || null;
+  if (typeof entry.loginPath === "string") next.loginPath = entry.loginPath.trim() || undefined;
+  if (typeof entry.publishPublic === "boolean") next.publishPublic = entry.publishPublic;
+  else if (typeof fallback.publishPublic === "boolean") next.publishPublic = fallback.publishPublic;
+  if (typeof entry.publicPasswordHint === "string") {
+    next.publicPasswordHint = entry.publicPasswordHint;
+  }
+  if (typeof entry.notes === "string") next.notes = entry.notes;
+  return next;
+}
+
 export async function loadDemoLoginDirectory(): Promise<Record<DemoLoginSlotKey, DemoLoginStored>> {
   const defaults = defaultDemoLoginDirectory();
   const row = await prisma.siteUiSettings.findUnique({
@@ -66,16 +109,7 @@ export async function loadDemoLoginDirectory(): Promise<Record<DemoLoginSlotKey,
   const stored = isDirectory(row?.demoLoginDirectory) ? row!.demoLoginDirectory : {};
   const merged = { ...defaults };
   for (const key of DEMO_LOGIN_SLOT_KEYS) {
-    const entry = stored[key];
-    if (entry && typeof entry === "object") {
-      const email =
-        typeof entry.email === "string" && entry.email.trim()
-          ? normalizeEmail(entry.email)
-          : defaults[key].email;
-      const name =
-        typeof entry.name === "string" && entry.name.trim() ? entry.name.trim() : defaults[key].name;
-      merged[key] = { email, name };
-    }
+    merged[key] = parseStoredEntry(stored[key], defaults[key]);
   }
   return merged;
 }
@@ -111,18 +145,28 @@ async function upsertSeedEnv(name: string, value: string, updatedBy: string) {
   });
 }
 
+export async function peekSeedEnvOverride(name: string): Promise<string | null> {
+  const row = await prisma.deploymentEnvOverride.findUnique({ where: { name } });
+  if (!row) return null;
+  try {
+    return decryptDeploymentEnvValue(row.valueEnc);
+  } catch {
+    return null;
+  }
+}
+
 export async function listDemoLoginsForMaster(): Promise<DemoLoginView[]> {
   const directory = await loadDemoLoginDirectory();
   const views: DemoLoginView[] = [];
 
   for (const key of DEMO_LOGIN_SLOT_KEYS) {
-    const meta = DEMO_LOGIN_SLOT_META[key];
     const stored = directory[key];
+    const { meta, label, orgSlug, loginPath, publishPublic } = resolveDemoLoginMeta(key, stored);
     let orgName: string | null = null;
     let orgId: string | null = null;
-    if (meta.orgSlug) {
+    if (orgSlug) {
       const org = await prisma.organization.findUnique({
-        where: { slug: meta.orgSlug },
+        where: { slug: orgSlug },
         select: { id: true, name: true },
       });
       orgId = org?.id ?? null;
@@ -149,17 +193,21 @@ export async function listDemoLoginsForMaster(): Promise<DemoLoginView[]> {
       }
       views.push({
         key,
-        label: meta.label,
+        label,
         kind: "admin",
         role: meta.role ?? null,
-        orgSlug: meta.orgSlug,
+        audience: meta.audience,
+        orgSlug,
         orgName,
-        loginPath: meta.loginPath,
+        loginPath,
         email: admin?.email ?? stored.email,
         name: admin?.name?.trim() || stored.name,
         userId: admin?.id ?? null,
         exists: Boolean(admin),
         hasPassword: Boolean(admin?.passwordHash),
+        publishPublic,
+        publicPasswordHint: stored.publicPasswordHint?.trim() || "",
+        notes: stored.notes?.trim() || "",
       });
       continue;
     }
@@ -172,22 +220,49 @@ export async function listDemoLoginsForMaster(): Promise<DemoLoginView[]> {
       : null;
     views.push({
       key,
-      label: meta.label,
+      label,
       kind: "student",
       role: null,
-      orgSlug: meta.orgSlug,
+      audience: meta.audience,
+      orgSlug,
       orgName,
-      loginPath: meta.loginPath,
+      loginPath,
       email: student?.email?.trim() || stored.email,
       name: student?.name?.trim() || stored.name,
       userId: student?.id ?? null,
       exists: Boolean(student),
       hasPassword: Boolean(student?.portalPasswordHash),
+      publishPublic,
+      publicPasswordHint: stored.publicPasswordHint?.trim() || "",
+      notes: stored.notes?.trim() || "",
       portalSignInEnabled: Boolean(student?.portalPasswordHash),
     });
   }
 
   return views;
+}
+
+export async function listPublicDemoLogins(opts?: {
+  audience?: DemoLoginAudience | "all";
+}): Promise<DemoLoginPublicView[]> {
+  const audience = opts?.audience ?? "all";
+  const views = await listDemoLoginsForMaster();
+  return views
+    .filter((v) => v.publishPublic)
+    .filter((v) => audience === "all" || v.audience === audience)
+    .map((v) => ({
+      key: v.key,
+      label: v.label,
+      kind: v.kind,
+      audience: v.audience,
+      orgSlug: v.orgSlug,
+      orgName: v.orgName,
+      loginPath: v.loginPath,
+      email: v.email,
+      name: v.name,
+      passwordHint: v.publicPasswordHint.trim() ? v.publicPasswordHint.trim() : null,
+      notes: v.notes.trim() ? v.notes.trim() : null,
+    }));
 }
 
 export type ApplyDemoLoginsResult =
@@ -209,10 +284,10 @@ export async function applyDemoLoginPatches(
     const meta = DEMO_LOGIN_SLOT_META[patch.key];
     if (!meta) return { ok: false, error: `Unknown slot: ${patch.key}`, status: 400 };
 
+    const prev = directory[patch.key];
     const nextEmail =
-      patch.email !== undefined ? normalizeEmail(patch.email) : directory[patch.key].email;
-    const nextName =
-      patch.name !== undefined ? patch.name.trim() : directory[patch.key].name;
+      patch.email !== undefined ? normalizeEmail(patch.email) : prev.email;
+    const nextName = patch.name !== undefined ? patch.name.trim() : prev.name;
     const password = patch.password?.trim() ?? "";
 
     if (!nextEmail || !nextEmail.includes("@")) {
@@ -225,16 +300,42 @@ export async function applyDemoLoginPatches(
       return { ok: false, error: `${meta.label}: password must be at least 10 characters`, status: 400 };
     }
 
+    const nextStored: DemoLoginStored = {
+      email: nextEmail,
+      name: nextName,
+      label: patch.label !== undefined ? patch.label.trim() || undefined : prev.label,
+      orgSlug:
+        patch.orgSlug !== undefined
+          ? patch.orgSlug === null || patch.orgSlug === ""
+            ? null
+            : patch.orgSlug.trim()
+          : prev.orgSlug,
+      loginPath:
+        patch.loginPath !== undefined ? patch.loginPath.trim() || undefined : prev.loginPath,
+      publishPublic:
+        patch.publishPublic !== undefined ? patch.publishPublic : prev.publishPublic,
+      publicPasswordHint:
+        patch.publicPasswordHint !== undefined
+          ? patch.publicPasswordHint
+          : prev.publicPasswordHint,
+      notes: patch.notes !== undefined ? patch.notes : prev.notes,
+    };
+
+    if (password && patch.publishPasswordAsHint) {
+      nextStored.publicPasswordHint = password;
+    }
+
+    const resolved = resolveDemoLoginMeta(patch.key, nextStored);
     let orgId: string | null = null;
-    if (meta.orgSlug) {
+    if (resolved.orgSlug) {
       const org = await prisma.organization.findUnique({
-        where: { slug: meta.orgSlug },
+        where: { slug: resolved.orgSlug },
         select: { id: true },
       });
       if (!org) {
         return {
           ok: false,
-          error: `${meta.label}: organization "${meta.orgSlug}" not found — run npm run seed first`,
+          error: `${resolved.label}: organization "${resolved.orgSlug}" not found — run npm run seed or pick an existing slug`,
           status: 404,
         };
       }
@@ -243,7 +344,7 @@ export async function applyDemoLoginPatches(
 
     if (meta.kind === "admin") {
       let admin =
-        (await prisma.adminUser.findUnique({ where: { email: directory[patch.key].email } })) ??
+        (await prisma.adminUser.findUnique({ where: { email: prev.email } })) ??
         (meta.role === "master"
           ? await prisma.adminUser.findFirst({ where: { role: "master" }, orderBy: { createdAt: "asc" } })
           : orgId
@@ -257,13 +358,13 @@ export async function applyDemoLoginPatches(
         if (!password) {
           return {
             ok: false,
-            error: `${meta.label}: account missing — provide a password to provision`,
+            error: `${resolved.label}: account missing — provide a password to provision`,
             status: 400,
           };
         }
         const clash = await prisma.adminUser.findUnique({ where: { email: nextEmail } });
         if (clash) {
-          return { ok: false, error: `${meta.label}: email ${nextEmail} already in use`, status: 409 };
+          return { ok: false, error: `${resolved.label}: email ${nextEmail} already in use`, status: 409 };
         }
         const passwordHash = await bcrypt.hash(password, 10);
         admin = await prisma.adminUser.create({
@@ -275,14 +376,14 @@ export async function applyDemoLoginPatches(
             passwordHash,
           },
         });
-        messages.push(`${meta.label}: provisioned`);
+        messages.push(`${resolved.label}: provisioned`);
       } else if (!admin) {
-        return { ok: false, error: `${meta.label}: account not found`, status: 404 };
+        return { ok: false, error: `${resolved.label}: account not found`, status: 404 };
       } else {
         if (nextEmail !== admin.email) {
           const clash = await prisma.adminUser.findUnique({ where: { email: nextEmail } });
           if (clash && clash.id !== admin.id) {
-            return { ok: false, error: `${meta.label}: email ${nextEmail} already in use`, status: 409 };
+            return { ok: false, error: `${resolved.label}: email ${nextEmail} already in use`, status: 409 };
           }
         }
         const data: { email?: string; name?: string; passwordHash?: string } = {};
@@ -291,14 +392,14 @@ export async function applyDemoLoginPatches(
         if (password) data.passwordHash = await bcrypt.hash(password, 10);
         if (Object.keys(data).length) {
           await prisma.adminUser.update({ where: { id: admin.id }, data });
-          messages.push(`${meta.label}: updated`);
+          messages.push(`${resolved.label}: updated`);
         } else {
-          messages.push(`${meta.label}: unchanged`);
+          messages.push(`${resolved.label}: directory saved`);
         }
       }
     } else {
       let student = await prisma.student.findFirst({
-        where: { organizationId: orgId!, email: directory[patch.key].email },
+        where: { organizationId: orgId!, email: prev.email },
       });
       if (!student) {
         student = await prisma.student.findFirst({
@@ -309,7 +410,7 @@ export async function applyDemoLoginPatches(
         if (!password) {
           return {
             ok: false,
-            error: `${meta.label}: account missing — provide a password to provision`,
+            error: `${resolved.label}: account missing — provide a password to provision`,
             status: 400,
           };
         }
@@ -319,15 +420,15 @@ export async function applyDemoLoginPatches(
             organizationId: orgId!,
             name: nextName,
             email: nextEmail,
-            programmeCode: meta.orgSlug === "riverside-demo" ? "P7-STREAM" : "BEP-ENG/RE",
+            programmeCode: resolved.orgSlug === "riverside-demo" ? "P7-STREAM" : "BEP-ENG/RE",
             year: 1,
             semester: 1,
             portalPasswordHash,
           },
         });
-        messages.push(`${meta.label}: provisioned`);
+        messages.push(`${resolved.label}: provisioned`);
       } else if (!student) {
-        return { ok: false, error: `${meta.label}: account not found`, status: 404 };
+        return { ok: false, error: `${resolved.label}: account not found`, status: 404 };
       } else {
         const data: { email?: string; name?: string; portalPasswordHash?: string } = {};
         if (nextEmail !== student.email) data.email = nextEmail;
@@ -335,14 +436,14 @@ export async function applyDemoLoginPatches(
         if (password) data.portalPasswordHash = await bcrypt.hash(password, 10);
         if (Object.keys(data).length) {
           await prisma.student.update({ where: { id: student.id }, data });
-          messages.push(`${meta.label}: updated`);
+          messages.push(`${resolved.label}: updated`);
         } else {
-          messages.push(`${meta.label}: unchanged`);
+          messages.push(`${resolved.label}: directory saved`);
         }
       }
     }
 
-    directory[patch.key] = { email: nextEmail, name: nextName };
+    directory[patch.key] = nextStored;
     updated.push(patch.key);
 
     if (meta.seedEmailEnv) {
@@ -358,12 +459,131 @@ export async function applyDemoLoginPatches(
   return { ok: true, slots, updated, messages };
 }
 
-export async function peekSeedEnvOverride(name: string): Promise<string | null> {
-  const row = await prisma.deploymentEnvOverride.findUnique({ where: { name } });
-  if (!row) return null;
-  try {
-    return decryptDeploymentEnvValue(row.valueEnc);
-  } catch {
-    return null;
+export type DemoLoginsExportFormat = "json" | "csv" | "md";
+
+export async function buildDemoLoginsExport(format: DemoLoginsExportFormat): Promise<{
+  filename: string;
+  contentType: string;
+  body: string;
+}> {
+  const slots = await listDemoLoginsForMaster();
+  const stamp = new Date().toISOString().slice(0, 10);
+  const rows = await Promise.all(
+    slots.map(async (s) => {
+      const meta = DEMO_LOGIN_SLOT_META[s.key];
+      let seedPassword: string | null = null;
+      if (meta.seedPasswordEnv) {
+        seedPassword = await peekSeedEnvOverride(meta.seedPasswordEnv);
+      }
+      const passwordForSheet =
+        s.publicPasswordHint.trim() || seedPassword || (s.hasPassword ? "(set — not stored in plaintext)" : "(not set)");
+      return {
+        key: s.key,
+        label: s.label,
+        audience: s.audience,
+        kind: s.kind,
+        role: s.role,
+        orgSlug: s.orgSlug,
+        orgName: s.orgName,
+        loginPath: s.loginPath,
+        email: s.email,
+        name: s.name,
+        exists: s.exists,
+        hasPassword: s.hasPassword,
+        publishPublic: s.publishPublic,
+        publicPasswordHint: s.publicPasswordHint,
+        password: passwordForSheet,
+        notes: s.notes,
+      };
+    }),
+  );
+
+  if (format === "json") {
+    return {
+      filename: `odelhub-demo-logins-${stamp}.json`,
+      contentType: "application/json; charset=utf-8",
+      body: JSON.stringify(
+        {
+          exportedAt: new Date().toISOString(),
+          source: "Master Admin Console — Demo logins",
+          note: "Password column uses public hint when set, else last SEED_* deployment-env override. Hashes are never exported.",
+          slots: rows,
+        },
+        null,
+        2,
+      ),
+    };
   }
+
+  if (format === "csv") {
+    const headers = [
+      "key",
+      "label",
+      "audience",
+      "kind",
+      "orgSlug",
+      "orgName",
+      "loginPath",
+      "email",
+      "name",
+      "password",
+      "publishPublic",
+      "notes",
+    ];
+    const lines = [
+      headers.join(","),
+      ...rows.map((r) =>
+        [
+          r.key,
+          r.label,
+          r.audience,
+          r.kind,
+          r.orgSlug ?? "",
+          r.orgName ?? "",
+          r.loginPath,
+          r.email,
+          r.name,
+          r.password,
+          String(r.publishPublic),
+          r.notes,
+        ]
+          .map((c) => csvEscape(String(c)))
+          .join(","),
+      ),
+    ];
+    return {
+      filename: `odelhub-demo-logins-${stamp}.csv`,
+      contentType: "text/csv; charset=utf-8",
+      body: lines.join("\n"),
+    };
+  }
+
+  const md = [
+    `# ODEL HUB — Demo login details`,
+    ``,
+    `Exported: ${new Date().toISOString()}`,
+    ``,
+    `Source: Master Admin Console (\`/admin/master#demo-logins\`).`,
+    `Public lobbies auto-update from the same directory when **Publish on lobbies** is enabled.`,
+    ``,
+    ...rows.flatMap((r) => [
+      `## ${r.label}`,
+      ``,
+      `- **Slot:** \`${r.key}\` (${r.audience} · ${r.kind})`,
+      `- **Org:** ${r.orgName ? `${r.orgName} (\`${r.orgSlug}\`)` : r.orgSlug ? `\`${r.orgSlug}\`` : "—"}`,
+      `- **Login:** ${r.loginPath}`,
+      `- **Name:** ${r.name}`,
+      `- **Email:** \`${r.email}\``,
+      `- **Password:** \`${r.password}\``,
+      `- **Published publicly:** ${r.publishPublic ? "yes" : "no"}`,
+      r.notes ? `- **Notes:** ${r.notes}` : null,
+      ``,
+    ]).filter((line): line is string => line !== null),
+  ].join("\n");
+
+  return {
+    filename: `odelhub-demo-logins-${stamp}.md`,
+    contentType: "text/markdown; charset=utf-8",
+    body: md,
+  };
 }

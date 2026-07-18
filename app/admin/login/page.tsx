@@ -7,6 +7,7 @@ import { PasswordRevealInput } from "@/components/PasswordRevealInput";
 import Link from "next/link";
 import { RequestSchoolWorkspaceCta } from "@/components/tuition/RequestSchoolWorkspaceCta";
 import { AdminInstitutionLoginCards } from "@/components/admin/AdminInstitutionLoginCards";
+import { DemoLoginLiveHint } from "@/components/demo/DemoLoginLiveHint";
 import {
   ADMIN_LOGIN_COPY,
   adminLoginModeFromSearch,
@@ -307,6 +308,25 @@ function AdminLoginForm() {
                 </li>
               </ul>
             </div>
+          ) : null}
+
+          {loginMode === "schools" || loginMode === "higher" || loginMode === "master" ? (
+            <DemoLoginLiveHint
+              audience={
+                loginMode === "schools"
+                  ? "school"
+                  : loginMode === "higher"
+                    ? "university"
+                    : "platform"
+              }
+              title={
+                loginMode === "schools"
+                  ? "Demo Schools — admin login"
+                  : loginMode === "higher"
+                    ? "Demo Universities — admin login"
+                    : "Demo platform master login"
+              }
+            />
           ) : null}
 
           {showForm ? (

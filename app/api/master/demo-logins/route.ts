@@ -13,6 +13,13 @@ const PatchItem = z.object({
   email: z.string().email().optional(),
   name: z.string().min(1).max(120).optional(),
   password: z.string().min(10).max(128).optional().or(z.literal("")),
+  label: z.string().max(120).optional().or(z.literal("")),
+  orgSlug: z.string().max(80).optional().nullable(),
+  loginPath: z.string().max(200).optional().or(z.literal("")),
+  publishPublic: z.boolean().optional(),
+  publicPasswordHint: z.string().max(128).optional().or(z.literal("")),
+  notes: z.string().max(500).optional().or(z.literal("")),
+  publishPasswordAsHint: z.boolean().optional(),
   provisionIfMissing: z.boolean().optional(),
 });
 
@@ -28,7 +35,7 @@ export async function GET() {
     const slots = await listDemoLoginsForMaster();
     return NextResponse.json({
       slots,
-      note: "Passwords are never returned. Leave password blank to keep the current hash. Changes also sync SEED_* deployment-env overrides for the next seed.",
+      note: "Passwords are never returned as hashes. Use Download for a credentials sheet (public hint or last SEED_* override). Leave password blank to keep the current hash. Publish on lobbies controls /OdelPaySchools and /OdelPayUniversities auto-updated panels.",
     });
   } catch (e) {
     return apiErrorResponse(e, {
@@ -54,6 +61,13 @@ export async function PATCH(req: Request) {
       email: s.email,
       name: s.name,
       password: s.password?.trim() ? s.password : undefined,
+      label: s.label,
+      orgSlug: s.orgSlug,
+      loginPath: s.loginPath,
+      publishPublic: s.publishPublic,
+      publicPasswordHint: s.publicPasswordHint,
+      notes: s.notes,
+      publishPasswordAsHint: s.publishPasswordAsHint,
       provisionIfMissing: s.provisionIfMissing,
     }));
 

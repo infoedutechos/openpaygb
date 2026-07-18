@@ -356,7 +356,7 @@ export const PLATFORM_KB_SEED: KnowledgeSeedArticle[] = [
     title: "Riverside Academy demo school",
     summary: "Try term-based school checkout on riverside-demo.",
     body:
-      "**Checkout:** `/pay/riverside-demo` — Primary Seven programme, Term 1–3 fee schedule.\n\n**Lobby:** `/OdelPaySchools` lists active school tenants including Riverside when seeded.\n\n**Local seed credentials (after `npm run seed`):**\n- School admin: `school.admin@odelhub.local` → `/admin/login?school=1`\n- School student: `school.student@odelhub.local` → `/student/login` (org slug `riverside-demo`)\n\nUniversity demo student remains on tenant `default` — see LOCAL_DEV_AND_CREDENTIALS.md.",
+      "**Checkout:** `/pay/riverside-demo` — Primary Seven programme, Term 1–3 fee schedule.\n\n**Lobby:** `/OdelPaySchools` lists active school tenants including Riverside when seeded.\n\n**Demo logins (auto-updated):** Open `/OdelPaySchools` or Master Admin → **Demo logins** (`/admin/master#demo-logins`). Emails, names, and optional public password hints are customisable and downloadable (JSON/CSV/Markdown) from MAC. Defaults after seed: school admin `school.admin@odelhub.local` → `/school/login` or `/admin/login?school=1`; school student `school.student@odelhub.local` → `/student/login` (org `riverside-demo`). University demos live on `/OdelPayUniversities` (tenant `default`).",
     category: "schools",
     tags: ["demo", "riverside", "school", "term"],
     audience: "tuition",

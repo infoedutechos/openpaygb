@@ -234,13 +234,13 @@ export default function MasterManagerOverviewPage() {
           href="/admin/master#project-download"
           className="rounded-xl border border-cyan-500/35 bg-cyan-950/25 px-5 py-2.5 text-sm font-medium text-cyan-100 hover:border-cyan-400/55"
         >
-          Project download
+          Project downloadables
         </Link>
         <Link
           href="/admin/master#project-download"
           className="rounded-xl border border-emerald-500/35 bg-emerald-950/25 px-5 py-2.5 text-sm font-medium text-emerald-100 hover:border-emerald-400/55"
         >
-          Download docs & guides
+          Docs · data · credentials
         </Link>
         <Link
           href="/admin/master#platform-communications"

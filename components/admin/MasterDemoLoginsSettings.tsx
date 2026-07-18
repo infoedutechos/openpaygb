@@ -8,6 +8,7 @@ type DemoSlot = {
   label: string;
   kind: "admin" | "student";
   role: string | null;
+  audience: string;
   orgSlug: string | null;
   orgName: string | null;
   loginPath: string;
@@ -16,13 +17,48 @@ type DemoSlot = {
   userId: string | null;
   exists: boolean;
   hasPassword: boolean;
+  publishPublic: boolean;
+  publicPasswordHint: string;
+  notes: string;
 };
 
 type Draft = {
   email: string;
   name: string;
   password: string;
+  label: string;
+  orgSlug: string;
+  loginPath: string;
+  publishPublic: boolean;
+  publicPasswordHint: string;
+  notes: string;
+  publishPasswordAsHint: boolean;
 };
+
+function draftFromSlot(s: DemoSlot): Draft {
+  return {
+    email: s.email,
+    name: s.name,
+    password: "",
+    label: s.label,
+    orgSlug: s.orgSlug ?? "",
+    loginPath: s.loginPath,
+    publishPublic: s.publishPublic,
+    publicPasswordHint: s.publicPasswordHint,
+    notes: s.notes,
+    publishPasswordAsHint: false,
+  };
+}
+
+function downloadBlob(body: string, filename: string, contentType: string) {
+  const blob = new Blob([body], { type: contentType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 export function MasterDemoLoginsSettings() {
   const [slots, setSlots] = useState<DemoSlot[]>([]);
@@ -36,7 +72,7 @@ export function MasterDemoLoginsSettings() {
     setSlots(next);
     const d: Record<string, Draft> = {};
     for (const s of next) {
-      d[s.key] = { email: s.email, name: s.name, password: "" };
+      d[s.key] = draftFromSlot(s);
     }
     setDrafts(d);
   }, []);
@@ -64,23 +100,31 @@ export function MasterDemoLoginsSettings() {
     setDrafts((prev) => ({ ...prev, [key]: { ...prev[key], ...patch } }));
   }
 
+  function patchBodyFromDraft(key: string) {
+    const d = drafts[key];
+    if (!d) throw new Error("Missing draft");
+    return {
+      key,
+      email: d.email.trim(),
+      name: d.name.trim(),
+      password: d.password.trim() || undefined,
+      label: d.label.trim(),
+      orgSlug: d.orgSlug.trim() || null,
+      loginPath: d.loginPath.trim(),
+      publishPublic: d.publishPublic,
+      publicPasswordHint: d.publicPasswordHint,
+      notes: d.notes,
+      publishPasswordAsHint: d.publishPasswordAsHint,
+      provisionIfMissing: true,
+    };
+  }
+
   async function saveAll() {
     setBusy(true);
     setError(null);
     setSaved(null);
     try {
-      const body = {
-        slots: slots.map((s) => {
-          const d = drafts[s.key] ?? { email: s.email, name: s.name, password: "" };
-          return {
-            key: s.key,
-            email: d.email.trim(),
-            name: d.name.trim(),
-            password: d.password.trim() || undefined,
-            provisionIfMissing: true,
-          };
-        }),
-      };
+      const body = { slots: slots.map((s) => patchBodyFromDraft(s.key)) };
       const r = await fetch("/api/master/demo-logins", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -94,7 +138,12 @@ export function MasterDemoLoginsSettings() {
       }>(r);
       if (!parsed.ok) throw new Error(parsed.error);
       applySlots(parsed.data.slots ?? []);
-      setSaved((parsed.data.messages ?? ["Demo logins saved."]).join(" · "));
+      setSaved(
+        [
+          ...(parsed.data.messages ?? ["Demo logins saved."]),
+          "Public lobbies (/OdelPaySchools, /OdelPayUniversities) auto-update for published slots.",
+        ].join(" · "),
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Save failed");
     } finally {
@@ -107,23 +156,11 @@ export function MasterDemoLoginsSettings() {
     setError(null);
     setSaved(null);
     try {
-      const d = drafts[key];
-      if (!d) throw new Error("Missing draft");
       const r = await fetch("/api/master/demo-logins", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          slots: [
-            {
-              key,
-              email: d.email.trim(),
-              name: d.name.trim(),
-              password: d.password.trim() || undefined,
-              provisionIfMissing: true,
-            },
-          ],
-        }),
+        body: JSON.stringify({ slots: [patchBodyFromDraft(key)] }),
       });
       const parsed = await readJsonResponse<{
         slots: DemoSlot[];
@@ -139,6 +176,31 @@ export function MasterDemoLoginsSettings() {
     }
   }
 
+  async function download(format: "json" | "csv" | "md") {
+    setBusy(true);
+    setError(null);
+    try {
+      const r = await fetch(`/api/master/demo-logins/export?format=${format}`, {
+        credentials: "include",
+      });
+      if (!r.ok) {
+        const parsed = await readJsonResponse<{ error?: string }>(r);
+        throw new Error(parsed.ok ? parsed.data.error || r.statusText : parsed.error);
+      }
+      const body = await r.text();
+      const cd = r.headers.get("Content-Disposition") || "";
+      const match = /filename="([^"]+)"/.exec(cd);
+      const filename = match?.[1] ?? `odelhub-demo-logins.${format}`;
+      const contentType = r.headers.get("Content-Type") || "application/octet-stream";
+      downloadBlob(body, filename, contentType);
+      setSaved(`Downloaded ${filename}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Download failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <section
       id="demo-logins"
@@ -148,11 +210,16 @@ export function MasterDemoLoginsSettings() {
         <div>
           <h2 className="text-sm font-semibold text-emerald-100">Demo logins (MAC)</h2>
           <p className="mt-2 max-w-3xl text-sm text-slate-400">
-            Customise every seeded demo account — platform master, university admin/student, and Riverside
-            school admin/student. Changes update live database users immediately and sync{" "}
-            <code className="text-xs text-emerald-200/80">SEED_*</code> deployment-env overrides for the next{" "}
-            <code className="text-xs">npm run seed</code>. Passwords are never shown; leave blank to keep the
-            current password.
+            Fully customise every seeded demo account — label, email, name, org slug, login path, public
+            password hint, and notes. Published school/university slots auto-update on{" "}
+            <code className="text-xs text-emerald-200/80">/OdelPaySchools</code> and{" "}
+            <code className="text-xs text-emerald-200/80">/OdelPayUniversities</code>. Changes also sync{" "}
+            <code className="text-xs text-emerald-200/80">SEED_*</code> deployment-env overrides. Download a
+            credentials sheet anytime (JSON / CSV / Markdown), or from the organised catalogue under{" "}
+            <a href="/admin/master#project-download" className="text-cyan-300 hover:underline">
+              Docs &amp; downloads
+            </a>{" "}
+            (Access &amp; credentials).
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -167,10 +234,34 @@ export function MasterDemoLoginsSettings() {
           <button
             type="button"
             disabled={busy || loading}
+            onClick={() => void download("json")}
+            className="rounded-lg border border-cyan-500/40 bg-cyan-950/30 px-3 py-2 text-xs font-medium text-cyan-100 hover:border-cyan-400/60 disabled:opacity-50"
+          >
+            Download JSON
+          </button>
+          <button
+            type="button"
+            disabled={busy || loading}
+            onClick={() => void download("csv")}
+            className="rounded-lg border border-cyan-500/40 bg-cyan-950/30 px-3 py-2 text-xs font-medium text-cyan-100 hover:border-cyan-400/60 disabled:opacity-50"
+          >
+            Download CSV
+          </button>
+          <button
+            type="button"
+            disabled={busy || loading}
+            onClick={() => void download("md")}
+            className="rounded-lg border border-cyan-500/40 bg-cyan-950/30 px-3 py-2 text-xs font-medium text-cyan-100 hover:border-cyan-400/60 disabled:opacity-50"
+          >
+            Download Markdown
+          </button>
+          <button
+            type="button"
+            disabled={busy || loading}
             onClick={() => void saveAll()}
             className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-slate-950 hover:bg-emerald-500 disabled:opacity-50"
           >
-            {busy ? "Saving…" : "Save all demos"}
+            {busy ? "Working…" : "Save all demos"}
           </button>
         </div>
       </div>
@@ -189,24 +280,18 @@ export function MasterDemoLoginsSettings() {
 
       <ul className="mt-5 space-y-4">
         {slots.map((s) => {
-          const d = drafts[s.key] ?? { email: s.email, name: s.name, password: "" };
+          const d =
+            drafts[s.key] ??
+            draftFromSlot(s);
           return (
-            <li
-              key={s.key}
-              className="rounded-xl border border-white/10 bg-black/20 p-4"
-            >
+            <li key={s.key} className="rounded-xl border border-white/10 bg-black/20 p-4">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
-                  <p className="text-sm font-medium text-white">{s.label}</p>
+                  <p className="text-sm font-medium text-white">{d.label || s.label}</p>
                   <p className="mt-1 text-[11px] text-slate-500">
-                    {s.kind}
+                    {s.key} · {s.audience} · {s.kind}
                     {s.role ? ` · ${s.role}` : ""}
-                    {s.orgSlug ? ` · org ${s.orgSlug}` : ""}
-                    {s.orgName ? ` (${s.orgName})` : ""}
-                    {" · "}
-                    <a href={s.loginPath} className="text-cyan-300/90 underline-offset-2 hover:underline">
-                      {s.loginPath}
-                    </a>
+                    {s.orgName ? ` · ${s.orgName}` : ""}
                     {" · "}
                     {s.exists ? (
                       <span className="text-emerald-300/90">linked</span>
@@ -214,6 +299,7 @@ export function MasterDemoLoginsSettings() {
                       <span className="text-amber-300/90">missing — will provision on save</span>
                     )}
                     {s.exists && s.hasPassword ? " · password set" : s.exists ? " · no password" : ""}
+                    {d.publishPublic ? " · published" : " · hidden from lobbies"}
                   </p>
                 </div>
                 <button
@@ -225,7 +311,15 @@ export function MasterDemoLoginsSettings() {
                   Save
                 </button>
               </div>
-              <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <label className="block text-xs text-slate-500">
+                  Public label
+                  <input
+                    value={d.label}
+                    onChange={(e) => updateDraft(s.key, { label: e.target.value })}
+                    className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"
+                  />
+                </label>
                 <label className="block text-xs text-slate-500">
                   Display name
                   <input
@@ -245,6 +339,24 @@ export function MasterDemoLoginsSettings() {
                   />
                 </label>
                 <label className="block text-xs text-slate-500">
+                  Org slug
+                  <input
+                    value={d.orgSlug}
+                    onChange={(e) => updateDraft(s.key, { orgSlug: e.target.value })}
+                    className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"
+                    placeholder="default / riverside-demo"
+                    disabled={s.key === "master"}
+                  />
+                </label>
+                <label className="block text-xs text-slate-500">
+                  Login path
+                  <input
+                    value={d.loginPath}
+                    onChange={(e) => updateDraft(s.key, { loginPath: e.target.value })}
+                    className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"
+                  />
+                </label>
+                <label className="block text-xs text-slate-500">
                   New password (optional)
                   <input
                     type="password"
@@ -254,6 +366,46 @@ export function MasterDemoLoginsSettings() {
                     placeholder="Leave blank to keep"
                     autoComplete="new-password"
                   />
+                </label>
+                <label className="block text-xs text-slate-500 sm:col-span-2">
+                  Public password hint (shown on lobbies when published)
+                  <input
+                    value={d.publicPasswordHint}
+                    onChange={(e) => updateDraft(s.key, { publicPasswordHint: e.target.value })}
+                    className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"
+                    placeholder="Optional — leave empty to hide password on public pages"
+                    autoComplete="off"
+                  />
+                </label>
+                <label className="block text-xs text-slate-500 sm:col-span-2 lg:col-span-3">
+                  Notes
+                  <input
+                    value={d.notes}
+                    onChange={(e) => updateDraft(s.key, { notes: e.target.value })}
+                    className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"
+                    placeholder="Optional note for download sheet / lobbies"
+                  />
+                </label>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-4 text-xs text-slate-400">
+                <label className="flex cursor-pointer items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={d.publishPublic}
+                    onChange={(e) => updateDraft(s.key, { publishPublic: e.target.checked })}
+                    className="rounded border-white/20"
+                  />
+                  Publish on public lobbies / login hints
+                </label>
+                <label className="flex cursor-pointer items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={d.publishPasswordAsHint}
+                    onChange={(e) => updateDraft(s.key, { publishPasswordAsHint: e.target.checked })}
+                    className="rounded border-white/20"
+                    disabled={!d.password.trim()}
+                  />
+                  Also publish new password as public hint
                 </label>
               </div>
             </li>

@@ -1196,7 +1196,8 @@ model SiteUiSettings {
   /**
    * Canonical demo login directory (master-editable).
    * Keys: master | university_admin | university_student | school_admin | school_student
-   * Values: `{ "email": string, "name": string }` — passwords live only as bcrypt on users.
+   * Values: `{ email, name, label?, orgSlug?, loginPath?, publishPublic?, publicPasswordHint?, notes? }`
+   * Passwords live as bcrypt on users; optional publicPasswordHint is for published demo sheets only.
    */
   demoLoginDirectory          Json   @default("{}")
   /** Public brand name used in footer, metadata, maintenance screens. */

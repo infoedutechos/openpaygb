@@ -19,7 +19,7 @@ Seed wipes tuition data and recreates the **default** (university) tenant, a **s
 
 ### Local seed quick reference
 
-After **`npm run seed`**:
+After **`npm run seed`**, defaults are:
 
 | What | Where |
 |------|--------|
@@ -30,11 +30,32 @@ After **`npm run seed`**:
 
 Default passwords: `SEED_ADMIN_PASSWORD` (default `ChangeMe_Admin123!`) for school + university org admins; `SEED_STUDENT_PASSWORD` (default `ChangeMe_Student123!`) for both students; `SEED_MASTER_PASSWORD` for seed master. Override via `.env` / `.env.local` — **`npm run seed` prints the actual emails and passwords** used for that run.
 
+**Live source of truth:** Master Admin Console → **Demo logins** (`/admin/master#demo-logins`). Public panels on `/OdelPaySchools` and `/OdelPayUniversities` (and login pages) **auto-update** from that directory. Download JSON / CSV / Markdown from the same MAC panel.
+
 **Example with local overrides** (`SEED_ADMIN_EMAIL=oiptechcore@gmail.com`, `SEED_ADMIN_PASSWORD=…`): university org admin uses that email/password; Riverside school admin uses `SEED_SCHOOL_ADMIN_EMAIL` (default `school.admin@odelhub.local`) with the same `SEED_ADMIN_PASSWORD`.
 
-### Master Admin Console — customise demo logins live
+### Master Admin Console — customise & download demo logins
 
-After seed, open **`/admin/master#demo-logins`** (Master → **Demo logins**). You can change display name, email, and password for:
+After seed, open **`/admin/master#demo-logins`**. For each slot you can edit:
+
+| Field | Effect |
+|-------|--------|
+| Public label, name, email | Live account + public panels |
+| Org slug, login path | Which tenant / URL the demo uses |
+| New password | Updates bcrypt; optional “publish as public hint” |
+| Public password hint | Shown on lobbies when **Publish on lobbies** is on |
+| Notes | Included on public panels + downloads |
+| Publish on lobbies | Controls `/OdelPaySchools`, `/OdelPayUniversities`, login hints |
+
+**Downloads:** JSON, CSV, or Markdown credentials sheet (password column = public hint, else last `SEED_*` deployment-env override).
+
+| Slot | Default org | Default published |
+|------|-------------|-------------------|
+| Platform master | — | no |
+| University org admin | `default` | yes |
+| University demo student | `default` | yes |
+| Riverside school admin | `riverside-demo` | yes |
+| Riverside school student | `riverside-demo` | yes |
 
 ### Master Admin Console — full platform customisation
 
@@ -42,20 +63,6 @@ Master → **Platform branding** (`#platform-branding`): display name, SEO title
 Master → **Auth policy** (`#auth-session-policy`): admin/student/checkout session lengths, pending payment TTL, manual payment confirm toggle.  
 Master → **Cron ops** (`#cron-ops`): list Vercel-scheduled jobs and **Run now**.  
 Master → **Hub maintenance**: Tuition / Play / Dex / **Developers** toggles + shared message.
-
-### Master Admin Console — customise demo logins live
-
-After seed, open **`/admin/master#demo-logins`** (Master → **Demo logins**). You can change display name, email, and password for:
-
-| Slot | Default org |
-|------|-------------|
-| Platform master | — |
-| University org admin | `default` |
-| University demo student | `default` |
-| Riverside school admin | `riverside-demo` |
-| Riverside school student | `riverside-demo` |
-
-Changes update live `AdminUser` / `Student` rows immediately and sync `SEED_*` deployment-env overrides for the next seed. Passwords are never displayed in the MAC UI.
 
 ### Standalone product lobbies (after seed)
 
@@ -65,8 +72,8 @@ Changes update live `AdminUser` / `Student` rows immediately and sync `SEED_*` d
 | OdelPay — Schools | http://localhost:3000/OdelPaySchools |
 | OpenPayGB | http://localhost:3000/opgb |
 | School term checkout (demo) | http://localhost:3000/pay/riverside-demo |
-| School admin (Riverside seed) | `school.admin@odelhub.local` / `SEED_ADMIN_PASSWORD` → `/admin/login?school=1` |
-| School student (Riverside seed) | `school.student@odelhub.local` / `SEED_STUDENT_PASSWORD` → `/student/login` (org `riverside-demo`) |
+
+Demo login details on the Schools / Universities lobbies are **auto-updated** from MAC — do not treat static seed emails in older docs as authoritative after customisation.
 
 ---
 

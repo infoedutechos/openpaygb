@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { InstitutionTier } from "@prisma/client";
+import { DemoLoginDetailsPanel } from "@/components/demo/DemoLoginDetailsPanel";
+import { listPublicDemoLogins } from "@/lib/demo-logins";
 import { listActiveOrganizationsByTier } from "@/lib/organizations";
 import { productLineById, type ProductLineId } from "@/lib/ecosystem/product-lines";
 
@@ -51,6 +53,11 @@ export async function ProductLineLanding({
   const line = productLineById(lineId)!;
   const a = ACCENT[lineId];
   const tenants = tenantTier ? await listActiveOrganizationsByTier(tenantTier) : [];
+  const demoAudience =
+    tenantTier === "school" ? "school" : tenantTier === "university" ? "university" : null;
+  const demoSlots = demoAudience
+    ? await listPublicDemoLogins({ audience: demoAudience })
+    : [];
 
   return (
     <div className="mx-auto max-w-3xl space-y-8 px-4 pb-24 pt-10">
@@ -84,6 +91,18 @@ export async function ProductLineLanding({
           </Link>
         </p>
       </header>
+
+      {demoAudience ? (
+        <DemoLoginDetailsPanel
+          title={
+            demoAudience === "school"
+              ? "Demo Schools — login details"
+              : "Demo Universities — login details"
+          }
+          accent={demoAudience === "school" ? "school" : "university"}
+          slots={demoSlots}
+        />
+      ) : null}
 
       {tenantTier ? (
         <section className="space-y-4">

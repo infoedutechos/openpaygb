@@ -3,13 +3,17 @@
 **Last updated:** 2026-07-18  
 **Product:** Multi-tenant tuition payments (TON, mobile money, OpenPayGB virtual card) for schools and higher institutions in Uganda and East Africa.
 
-Download these guides from **Master Admin → Project download** (`/admin/master#project-download`):
+Download from **Master Admin → Docs & downloads** (`/admin/master#project-download`) — organised catalogue:
 
-| Download | Contents |
+| Category | Contents |
 |----------|----------|
-| **Project description** | Full technical & product specification (`PROJECT_DESCRIPTION.md`) |
-| **User guides (ZIP)** | All role guides below in one archive |
-| **Full documentation (ZIP)** | Entire `docs/` library including flows, deployment, and runbooks |
+| **Whole project** | Full ZIP (data + demo logins + env + docs + source) |
+| **Documentation & guides** | Project description, user guides pack, full `docs/` library |
+| **Live platform data** | Tuition / orgs / programmes / payments / KB / notifications |
+| **Access & credentials** | Master admins, demo Schools/Universities logins, environment |
+| **Source code** | Repository archive |
+
+Each category supports a one-click category ZIP plus individual part downloads.
 
 ---
 
