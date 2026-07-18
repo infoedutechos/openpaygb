@@ -43,6 +43,7 @@ Primary entry:
 | Users | `/admin/users` |
 | Settings | `/admin/settings` |
 | Admission number format | `/admin/settings#admission-number` |
+| Staff ID format | `/admin/settings#staff-id` |
 | Receipt letterhead | `/admin/settings#receipt-letterhead` |
 | Help | `/help` |
 

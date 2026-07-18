@@ -13,6 +13,11 @@ import {
   sanitizeAdmissionPrefix,
   sanitizeAdmissionSeparator,
 } from "@/lib/admission-format";
+import {
+  orgToStaffFormatConfig,
+  previewStaffFormat,
+  sanitizeStaffPrefix,
+} from "@/lib/staff-format";
 
 const PatchBody = z.object({
   currentAcademicYearLabel: z.string().max(40).optional(),
@@ -23,6 +28,13 @@ const PatchBody = z.object({
   admissionSeqDigits: z.number().int().min(3).max(6).optional(),
   admissionSeparator: z.string().max(3).optional(),
   admissionSeqStart: z.number().int().min(1).max(999999).optional(),
+  staffFormatConfigured: z.boolean().optional(),
+  staffPrefix: z.string().max(12).optional(),
+  staffIncludeYear: z.boolean().optional(),
+  staffYearSource: z.enum(["calendar", "academic", "none"]).optional(),
+  staffSeqDigits: z.number().int().min(3).max(6).optional(),
+  staffSeparator: z.string().max(3).optional(),
+  staffSeqStart: z.number().int().min(1).max(999999).optional(),
   letterheadPhone: z.string().max(40).optional(),
   letterheadEmail: z.string().max(120).optional(),
   letterheadAddress: z.string().max(240).optional(),
@@ -42,6 +54,13 @@ function serializeOrgSettings(org: {
   admissionSeqDigits: number;
   admissionSeparator: string;
   admissionSeqStart: number;
+  staffFormatConfigured: boolean;
+  staffPrefix: string;
+  staffIncludeYear: boolean;
+  staffYearSource: string;
+  staffSeqDigits: number;
+  staffSeparator: string;
+  staffSeqStart: number;
   letterheadPhone: string;
   letterheadEmail: string;
   letterheadAddress: string;
@@ -49,6 +68,8 @@ function serializeOrgSettings(org: {
 }) {
   const admission = orgToAdmissionFormatConfig(org);
   const preview = previewAdmissionFormat(admission);
+  const staff = orgToStaffFormatConfig(org);
+  const staffPreview = previewStaffFormat(staff);
   return {
     slug: org.slug,
     name: org.name,
@@ -69,6 +90,15 @@ function serializeOrgSettings(org: {
     admissionSeqStart: admission.seqStart,
     admissionPreview: preview.example,
     admissionResolvedPrefix: admission.prefix,
+    staffFormatConfigured: staff.configured,
+    staffPrefix: org.staffPrefix?.trim() ?? "",
+    staffIncludeYear: staff.includeYear,
+    staffYearSource: staff.yearSource,
+    staffSeqDigits: staff.seqDigits,
+    staffSeparator: staff.separator,
+    staffSeqStart: staff.seqStart,
+    staffPreview: staffPreview.example,
+    staffResolvedPrefix: staff.prefix,
     letterheadPhone: org.letterheadPhone?.trim() ?? "",
     letterheadEmail: org.letterheadEmail?.trim() ?? "",
     letterheadAddress: org.letterheadAddress?.trim() ?? "",
@@ -94,11 +124,19 @@ const orgSelect = {
   admissionSeqDigits: true,
   admissionSeparator: true,
   admissionSeqStart: true,
+  staffFormatConfigured: true,
+  staffPrefix: true,
+  staffIncludeYear: true,
+  staffYearSource: true,
+  staffSeqDigits: true,
+  staffSeparator: true,
+  staffSeqStart: true,
   letterheadPhone: true,
   letterheadEmail: true,
   letterheadAddress: true,
   letterheadLogoUploadedAt: true,
 } as const;
+
 
 export async function GET() {
   try {
@@ -196,6 +234,39 @@ export async function PATCH(req: Request) {
         parsed.data.admissionFormatConfigured !== undefined
           ? parsed.data.admissionFormatConfigured
           : true;
+    }
+
+    const touchingStaff =
+      parsed.data.staffFormatConfigured !== undefined ||
+      parsed.data.staffPrefix !== undefined ||
+      parsed.data.staffIncludeYear !== undefined ||
+      parsed.data.staffYearSource !== undefined ||
+      parsed.data.staffSeqDigits !== undefined ||
+      parsed.data.staffSeparator !== undefined ||
+      parsed.data.staffSeqStart !== undefined;
+
+    if (touchingStaff) {
+      if (parsed.data.staffPrefix !== undefined) {
+        data.staffPrefix = sanitizeStaffPrefix(parsed.data.staffPrefix, org.slug);
+        if (!parsed.data.staffPrefix.trim()) data.staffPrefix = "";
+      }
+      if (parsed.data.staffIncludeYear !== undefined) {
+        data.staffIncludeYear = parsed.data.staffIncludeYear;
+      }
+      if (parsed.data.staffYearSource !== undefined) {
+        data.staffYearSource = normalizeYearSource(parsed.data.staffYearSource);
+      }
+      if (parsed.data.staffSeqDigits !== undefined) {
+        data.staffSeqDigits = clampSeqDigits(parsed.data.staffSeqDigits);
+      }
+      if (parsed.data.staffSeparator !== undefined) {
+        data.staffSeparator = sanitizeAdmissionSeparator(parsed.data.staffSeparator);
+      }
+      if (parsed.data.staffSeqStart !== undefined) {
+        data.staffSeqStart = clampSeqStart(parsed.data.staffSeqStart);
+      }
+      data.staffFormatConfigured =
+        parsed.data.staffFormatConfigured !== undefined ? parsed.data.staffFormatConfigured : true;
     }
 
     if (parsed.data.letterheadPhone !== undefined) {

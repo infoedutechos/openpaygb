@@ -163,6 +163,18 @@ model Organization {
   admissionSeparator         String                     @default("-")
   /** When no matching numbers exist yet, start sequence from this value (usually 1). */
   admissionSeqStart          Int                        @default(1)
+  /**
+   * When true, admin has saved preferred Staff ID format under Settings.
+   * Until then, New Staff shows a Configure format CTA (defaults still work).
+   */
+  staffFormatConfigured      Boolean                    @default(false)
+  /** Custom prefix for Staff IDs (e.g. STF). Empty = derive from slug. */
+  staffPrefix                String                     @default("")
+  staffIncludeYear           Boolean                    @default(true)
+  staffYearSource            String                     @default("calendar")
+  staffSeqDigits             Int                        @default(4)
+  staffSeparator             String                     @default("-")
+  staffSeqStart              Int                        @default(1)
   /** School letterhead for receipts — phone / email / address (public-safe). */
   letterheadPhone            String                     @default("")
   letterheadEmail            String                     @default("")
@@ -603,6 +615,10 @@ model SchoolStaff {
   duty            String            @default("")
   salaryUgx       Int               @default(0)
   status          SchoolStaffStatus @default(active)
+  /** Portal password for Staff ID login (`/staff/login`). Null = portal sign-in disabled. */
+  portalPasswordHash String?
+  lastLoginAt     DateTime?
+  previousLoginAt DateTime?
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   salaryPayments  SchoolSalaryPayment[]

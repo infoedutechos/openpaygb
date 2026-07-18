@@ -10,7 +10,7 @@ You manage **programmes**, **year/semester** fee schedules, students, admission 
 
 ## Overview
 
-Higher-institution admins operate the Tuition Hub with a university-oriented sidebar: Dashboard, Tuition balance, Students, Programs, Payments, Virtual cards, Receipts, Reports, Users, Settings.
+Higher-institution admins operate the Tuition Hub with a university-oriented sidebar: Dashboard, Tuition balance, Students, Programs, Payments, Virtual cards, Staff, Receipts, Reports, Users, Settings.
 
 Primary entry:
 
@@ -32,12 +32,14 @@ Primary entry:
 | Payments | `/admin/payments` |
 | Payment requests | `/admin/payment-requests` |
 | Virtual cards | `/admin/virtual-cards` |
+| Staff | `/admin/school-staff` |
 | Programs | `/admin/programmes` |
 | Receipts | `/admin/receipts` |
 | Reports | `/admin/reports` |
 | Users | `/admin/users` |
 | Settings | `/admin/settings` |
 | Admission number format | `/admin/settings#admission-number` |
+| Staff ID format | `/admin/settings#staff-id` |
 | Receipt letterhead | `/admin/settings#receipt-letterhead` |
 | Help | `/help` |
 
@@ -56,11 +58,12 @@ Defined in `components/admin/TuitionAdminShell.tsx` (`UNIVERSITY_SEGMENTS`).
 | Payments | `/admin/payments` | Payment list, status, reconciliation |
 | Payment requests | `/admin/payment-requests` | Payment request queue |
 | Virtual cards | `/admin/virtual-cards` | OpenPayGB card records |
+| Staff | `/admin/school-staff` | Staff IDs, portal passwords, salary |
 | Programs | `/admin/programmes` | Programme and fee schedule management |
 | Receipts | `/admin/receipts` | Receipt lookup and PDF |
 | Reports | `/admin/reports` | Tuition and operational reporting |
 | Users | `/admin/users` | Workspace users |
-| Settings | `/admin/settings` | Admission format, letterhead, password |
+| Settings | `/admin/settings` | Admission & Staff ID format, letterhead, password |
 
 Also available: Dex hub link for university tenants; dashboard chat; logout.
 
@@ -182,6 +185,12 @@ Receipt APIs:
 4. Confirm card rail appears in payment history as `openpay_card`.
 
 There is **no** separate institution OPGB “treasury wallet” screen in the Tuition Hub. Student OPGB balances and withdraws use the student portal + Dex (`/dex/offramp`); masters operate the withdraw queue at `/admin/master/opgb-ops`. Use the Dex sidebar link for crypto rails when enabled.
+
+### 7b) Staff HR (Staff IDs)
+
+1. Configure Staff ID format at `/admin/settings#staff-id`.
+2. Open `/admin/school-staff` to add employees — Staff ID auto-allocates; set an optional portal password.
+3. Employees sign in at `/staff/login?segment=higher` with Staff ID + password (dashboard: profile & salary).
 
 ### 8) Users and settings
 

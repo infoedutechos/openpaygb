@@ -83,28 +83,41 @@ export default function SchoolStaffPage() {
   const [editId, setEditId] = useState<string | null>(null);
 
   const [form, setForm] = useState({
-
     staffCode: "",
-
     name: "",
-
     phone: "",
-
     email: "",
-
     address: "",
-
     sex: "other",
-
     employmentDate: "",
-
     duty: "",
-
     salaryUgx: 0,
-
+    portalPassword: "",
   });
+  const [staffFormatConfigured, setStaffFormatConfigured] = useState(true);
+  const [allocBusy, setAllocBusy] = useState(false);
 
+  const allocateStaffId = useCallback(async () => {
+    setAllocBusy(true);
+    try {
+      const r = await schoolFetch("/api/admin/school/staff/next-code");
+      const j = (await r.json()) as {
+        staffCode?: string;
+        staffFormatConfigured?: boolean;
+        error?: string;
+      };
+      if (!r.ok || !j.staffCode) return;
+      setForm((f) => ({ ...f, staffCode: j.staffCode! }));
+      setStaffFormatConfigured(Boolean(j.staffFormatConfigured));
+    } finally {
+      setAllocBusy(false);
+    }
+  }, [schoolFetch]);
 
+  useEffect(() => {
+    if (editId) return;
+    void allocateStaffId();
+  }, [allocateStaffId, editId]);
 
   const load = useCallback(async () => {
 
@@ -181,9 +194,14 @@ export default function SchoolStaffPage() {
       <div>
 
         <h1 className="text-2xl font-semibold text-white">Staff</h1>
-
-        <p className="text-sm text-slate-400">Teaching and non-teaching staff with salary records.</p>
-
+        <p className="text-sm text-slate-400">
+          Teaching and non-teaching staff with salary records. Staff IDs auto-allocate like admission numbers;
+          set a portal password so employees can sign in at{" "}
+          <a href="/staff/login" className="text-cyan-400 hover:underline">
+            /staff/login
+          </a>
+          .
+        </p>
       </div>
 
 
@@ -242,50 +260,72 @@ export default function SchoolStaffPage() {
 
                 });
 
-                setForm({ staffCode: "", name: "", phone: "", email: "", address: "", sex: "other", employmentDate: "", duty: "", salaryUgx: 0 });
-
+                setForm({
+                  staffCode: "",
+                  name: "",
+                  phone: "",
+                  email: "",
+                  address: "",
+                  sex: "other",
+                  employmentDate: "",
+                  duty: "",
+                  salaryUgx: 0,
+                  portalPassword: "",
+                });
                 setEditId(null);
-
                 await load();
-
+                if (!editId) void allocateStaffId();
               })();
-
             }}
-
           >
-
-            <input placeholder="Staff ID" required value={form.staffCode} onChange={(e) => setForm({ ...form, staffCode: e.target.value })} className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white" disabled={Boolean(editId)} />
-
+            <div className="sm:col-span-2 flex flex-wrap items-center gap-2">
+              <input
+                placeholder="Staff ID"
+                required={!editId}
+                value={form.staffCode}
+                onChange={(e) => setForm({ ...form, staffCode: e.target.value.toUpperCase() })}
+                className="min-w-[12rem] flex-1 rounded-lg border border-white/15 bg-black/30 px-3 py-2 font-mono text-white"
+                disabled={Boolean(editId)}
+              />
+              {!editId ? (
+                <button
+                  type="button"
+                  disabled={allocBusy}
+                  onClick={() => void allocateStaffId()}
+                  className="rounded-lg border border-white/15 px-3 py-2 text-xs text-cyan-300"
+                >
+                  {allocBusy ? "…" : "Regen"}
+                </button>
+              ) : null}
+              {!staffFormatConfigured && !editId ? (
+                <a href="/admin/settings#staff-id" className="text-xs text-amber-300 hover:underline">
+                  Configure Staff ID format
+                </a>
+              ) : null}
+            </div>
             <input placeholder="Name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white" />
-
             <input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white" />
-
             <input placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white" />
-
             <input placeholder="Address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white sm:col-span-2" />
-
             <select value={form.sex} onChange={(e) => setForm({ ...form, sex: e.target.value })} className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white">
-
               <option value="male">Male</option>
-
               <option value="female">Female</option>
-
               <option value="other">Other</option>
-
             </select>
-
             <input type="date" value={form.employmentDate} onChange={(e) => setForm({ ...form, employmentDate: e.target.value })} className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white" />
-
             <input placeholder="Duty (e.g. DOS)" value={form.duty} onChange={(e) => setForm({ ...form, duty: e.target.value })} className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white" />
-
             <input type="number" placeholder="Salary UGX" value={form.salaryUgx || ""} onChange={(e) => setForm({ ...form, salaryUgx: Number(e.target.value) })} className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white" />
-
+            <input
+              type="password"
+              placeholder={editId ? "New portal password (optional)" : "Portal password (optional, min 8)"}
+              value={form.portalPassword}
+              onChange={(e) => setForm({ ...form, portalPassword: e.target.value })}
+              className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white sm:col-span-2"
+              minLength={form.portalPassword ? 8 : undefined}
+            />
             <button type="submit" className="sm:col-span-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white">
-
               {editId ? "Update staff" : "Add staff"}
-
             </button>
-
           </form>
 
 
@@ -353,6 +393,8 @@ export default function SchoolStaffPage() {
                           duty: s.duty,
 
                           salaryUgx: s.salaryUgx,
+
+                          portalPassword: "",
 
                         });
 
@@ -455,6 +497,8 @@ export default function SchoolStaffPage() {
                               duty: s.duty,
 
                               salaryUgx: s.salaryUgx,
+
+                              portalPassword: "",
 
                             });
 

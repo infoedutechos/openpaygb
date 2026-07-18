@@ -6,6 +6,8 @@
 export type AudienceGuideId =
   | "student_schools"
   | "student_higher"
+  | "staff_schools"
+  | "staff_higher"
   | "admin_schools"
   | "admin_higher";
 
@@ -46,6 +48,26 @@ export const AUDIENCE_GUIDES: Record<AudienceGuideId, AudienceGuide> = {
     markdownHref: "/api/docs/guides/USER_GUIDE_STUDENT_HIGHER.md",
     docsIndexHref: USER_GUIDES_INDEX_HREF,
   },
+  staff_schools: {
+    id: "staff_schools",
+    label: "Staff guide (schools)",
+    dashboardLabel: "Staff guide — schools",
+    helpHref: "/help/guide-staff-schools",
+    helpSlug: "guide-staff-schools",
+    markdownPath: "guides/USER_GUIDE_STAFF_SCHOOLS.md",
+    markdownHref: "/api/docs/guides/USER_GUIDE_STAFF_SCHOOLS.md",
+    docsIndexHref: USER_GUIDES_INDEX_HREF,
+  },
+  staff_higher: {
+    id: "staff_higher",
+    label: "Staff guide (higher)",
+    dashboardLabel: "Staff guide — higher",
+    helpHref: "/help/guide-staff-higher",
+    helpSlug: "guide-staff-higher",
+    markdownPath: "guides/USER_GUIDE_STAFF_HIGHER.md",
+    markdownHref: "/api/docs/guides/USER_GUIDE_STAFF_HIGHER.md",
+    docsIndexHref: USER_GUIDES_INDEX_HREF,
+  },
   admin_schools: {
     id: "admin_schools",
     label: "Admin guide (schools)",
@@ -71,6 +93,8 @@ export const AUDIENCE_GUIDES: Record<AudienceGuideId, AudienceGuide> = {
 export const AUDIENCE_GUIDE_LIST: AudienceGuide[] = [
   AUDIENCE_GUIDES.student_schools,
   AUDIENCE_GUIDES.student_higher,
+  AUDIENCE_GUIDES.staff_schools,
+  AUDIENCE_GUIDES.staff_higher,
   AUDIENCE_GUIDES.admin_schools,
   AUDIENCE_GUIDES.admin_higher,
 ];
@@ -88,6 +112,14 @@ export function adminGuideForTier(institutionTier: string | null | undefined): A
   return institutionTier === "school" ? AUDIENCE_GUIDES.admin_schools : AUDIENCE_GUIDES.admin_higher;
 }
 
+export function staffGuideForTier(institutionTier: string | null | undefined): AudienceGuide {
+  return institutionTier === "school" ? AUDIENCE_GUIDES.staff_schools : AUDIENCE_GUIDES.staff_higher;
+}
+
 export function studentGuidesForPortal(): AudienceGuide[] {
   return [AUDIENCE_GUIDES.student_schools, AUDIENCE_GUIDES.student_higher];
+}
+
+export function staffGuidesForPortal(): AudienceGuide[] {
+  return [AUDIENCE_GUIDES.staff_schools, AUDIENCE_GUIDES.staff_higher];
 }

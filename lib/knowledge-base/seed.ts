@@ -208,6 +208,30 @@ export const PLATFORM_KB_SEED: KnowledgeSeedArticle[] = [
     source: "seed",
   },
   {
+    slug: "guide-staff-schools",
+    title: "Guide: school staff (employees)",
+    summary: "Staff ID login, profile, and salary history for K–12 employees.",
+    body:
+      "Full handbook: docs/guides/USER_GUIDE_STAFF_SCHOOLS.md. Sign in at /staff/login?segment=schools with Staff ID + portal password. Admins allocate Staff IDs under /admin/school-staff and configure format at /admin/settings#staff-id.",
+    category: "admin",
+    tags: ["guide", "staff", "schools", "salary", "staff-id"],
+    audience: "admin",
+    sortOrder: 16,
+    source: "seed",
+  },
+  {
+    slug: "guide-staff-higher",
+    title: "Guide: higher institution staff",
+    summary: "Staff ID portal for university and tertiary employees.",
+    body:
+      "Full handbook: docs/guides/USER_GUIDE_STAFF_HIGHER.md. Sign in at /staff/login?segment=higher. Dashboard shows profile and salary history. Admins manage Staff under /admin/school-staff.",
+    category: "admin",
+    tags: ["guide", "staff", "university", "salary", "staff-id"],
+    audience: "admin",
+    sortOrder: 17,
+    source: "seed",
+  },
+  {
     slug: "programme-fees-admin",
     title: "Manage programmes and fees (school admin)",
     summary: "Configure tuition programmes, years, semesters, and fee lines.",

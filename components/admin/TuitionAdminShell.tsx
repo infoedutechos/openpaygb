@@ -29,6 +29,7 @@ const UNIVERSITY_SEGMENTS: { suffix: string; label: string; schoolOnly?: boolean
   { suffix: "/payments", label: "Payments" },
   { suffix: "/payment-requests", label: "Payment requests" },
   { suffix: "/virtual-cards", label: "Virtual cards", universityOnly: true },
+  { suffix: "/school-staff", label: "Staff", universityOnly: true },
   { suffix: "/programmes", label: "Programs" },
   { suffix: "/receipts", label: "Receipts" },
   { suffix: "/reports", label: "Reports", universityOnly: true },

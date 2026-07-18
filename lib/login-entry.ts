@@ -11,7 +11,7 @@ export type LoginChooserCard = {
   title: string;
   subtitle: string;
   href: string;
-  accent: "sky" | "cyan" | "violet" | "emerald";
+  accent: "sky" | "cyan" | "violet" | "emerald" | "amber" | "rose";
   /** In-app help article for this audience handbook */
   guideHref: string;
   guideLabel: string;
@@ -37,9 +37,27 @@ export const LOGIN_CHOOSER_CARDS: LoginChooserCard[] = [
     guideLabel: AUDIENCE_GUIDES.student_higher.label,
   },
   {
+    id: "staff_schools",
+    title: "Staff Login for Schools",
+    subtitle: "Teachers & employees — Staff ID + portal password",
+    href: "/staff/login?segment=schools",
+    accent: "amber",
+    guideHref: AUDIENCE_GUIDES.staff_schools.helpHref,
+    guideLabel: AUDIENCE_GUIDES.staff_schools.label,
+  },
+  {
+    id: "staff_higher",
+    title: "Staff Login for Higher Institutions",
+    subtitle: "Institution employees — Staff ID + portal password",
+    href: "/staff/login?segment=higher",
+    accent: "rose",
+    guideHref: AUDIENCE_GUIDES.staff_higher.helpHref,
+    guideLabel: AUDIENCE_GUIDES.staff_higher.label,
+  },
+  {
     id: "admin_schools",
     title: "Admin Login for Schools",
-    subtitle: "School staff — programmes, students, bills & receipts",
+    subtitle: "Bursar / school admin — programmes, students, bills & receipts",
     href: "/admin/login?school=1",
     accent: "violet",
     guideHref: AUDIENCE_GUIDES.admin_schools.helpHref,
@@ -48,7 +66,7 @@ export const LOGIN_CHOOSER_CARDS: LoginChooserCard[] = [
   {
     id: "admin_higher",
     title: "Admin Login for Higher Institutions",
-    subtitle: "Institution staff — programmes, fees & tuition admin",
+    subtitle: "Institution admin — programmes, fees & tuition hub",
     href: "/admin/login?segment=higher",
     accent: "emerald",
     guideHref: AUDIENCE_GUIDES.admin_higher.helpHref,

@@ -7,11 +7,13 @@ import {
 } from "@/lib/audience-guides";
 
 describe("audience-guides", () => {
-  it("exposes four handbooks", () => {
-    expect(AUDIENCE_GUIDE_LIST).toHaveLength(4);
+  it("exposes six handbooks", () => {
+    expect(AUDIENCE_GUIDE_LIST).toHaveLength(6);
     expect(AUDIENCE_GUIDE_LIST.map((g) => g.helpHref)).toEqual([
       "/help/guide-student-schools",
       "/help/guide-student-higher",
+      "/help/guide-staff-schools",
+      "/help/guide-staff-higher",
       "/help/guide-admin-schools",
       "/help/guide-admin-higher",
     ]);

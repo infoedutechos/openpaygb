@@ -4,6 +4,7 @@ import Link from "next/link";
 import { TuitionHubCheckoutExplainer } from "@/components/admin/TuitionHubCheckoutExplainer";
 import { OrgFaviconSettings } from "@/components/admin/OrgFaviconSettings";
 import { AdmissionFormatSettings } from "@/components/admin/AdmissionFormatSettings";
+import { StaffFormatSettings } from "@/components/admin/StaffFormatSettings";
 import { OrgLetterheadSettings } from "@/components/admin/OrgLetterheadSettings";
 import { SchoolAppropriationSettings } from "@/components/admin/school/SchoolAppropriationSettings";
 import { TenantList } from "@/components/tuition/TenantList";
@@ -61,6 +62,7 @@ export default function AdminSettingsPage() {
       {!isMaster ? (
         <>
           <AdmissionFormatSettings />
+          <StaffFormatSettings />
           <OrgLetterheadSettings />
           <OrgFaviconSettings />
         </>

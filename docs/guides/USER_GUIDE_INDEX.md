@@ -20,6 +20,8 @@ Download these guides from **Master Admin → Project download** (`/admin/master
 | **Platform master admin** | [USER_GUIDE_MASTER_ADMIN.md](./USER_GUIDE_MASTER_ADMIN.md) | `/admin/login?master=1` → `/admin/master` |
 | **School admin** (K–12 / primary–secondary) | [USER_GUIDE_ADMIN_SCHOOLS.md](./USER_GUIDE_ADMIN_SCHOOLS.md) | `/school/login` → `/admin` · register `/admin/register?segment=schools` |
 | **Higher institution admin** (university / tertiary) | [USER_GUIDE_ADMIN_HIGHER.md](./USER_GUIDE_ADMIN_HIGHER.md) | `/school/login` → `/admin` · register `/admin/register?segment=higher` |
+| **Staff (schools)** | [USER_GUIDE_STAFF_SCHOOLS.md](./USER_GUIDE_STAFF_SCHOOLS.md) | `/staff/login?segment=schools` · Staff ID + portal password |
+| **Staff (higher institutions)** | [USER_GUIDE_STAFF_HIGHER.md](./USER_GUIDE_STAFF_HIGHER.md) | `/staff/login?segment=higher` · Staff ID + portal password |
 | **Student / parent (schools)** | [USER_GUIDE_STUDENT_SCHOOLS.md](./USER_GUIDE_STUDENT_SCHOOLS.md) | `/student/login?segment=schools` · pay `/pay` (School Code) |
 | **Student (higher institutions)** | [USER_GUIDE_STUDENT_HIGHER.md](./USER_GUIDE_STUDENT_HIGHER.md) | `/student/login?segment=higher` · lobby `/OdelPayUniversities` |
 | **Guest payer** (no account) | [USER_GUIDE_GUEST_PAYER.md](./USER_GUIDE_GUEST_PAYER.md) | `/pay` or `/pay/<orgSlug>` |

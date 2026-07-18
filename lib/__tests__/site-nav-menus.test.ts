@@ -35,6 +35,8 @@ describe("site-nav-menus", () => {
     expect(guides?.links.map((l) => l.href)).toEqual([
       "/help/guide-student-schools",
       "/help/guide-student-higher",
+      "/help/guide-staff-schools",
+      "/help/guide-staff-higher",
       "/help/guide-admin-schools",
       "/help/guide-admin-higher",
       "/api/docs/guides/USER_GUIDE_INDEX.md",
@@ -54,8 +56,10 @@ describe("site-nav-menus", () => {
     const higher = SITE_HEADER_MENUS.find((m) => m.id === "odelpay_higher");
     const schools = SITE_HEADER_MENUS.find((m) => m.id === "odelpay_schools");
     expect(higher?.items.some((i) => i.href === "/help/guide-student-higher")).toBe(true);
+    expect(higher?.items.some((i) => i.href === "/help/guide-staff-higher")).toBe(true);
     expect(higher?.items.some((i) => i.href === "/help/guide-admin-higher")).toBe(true);
     expect(schools?.items.some((i) => i.href === "/help/guide-student-schools")).toBe(true);
+    expect(schools?.items.some((i) => i.href === "/help/guide-staff-schools")).toBe(true);
     expect(schools?.items.some((i) => i.href === "/help/guide-admin-schools")).toBe(true);
   });
 });

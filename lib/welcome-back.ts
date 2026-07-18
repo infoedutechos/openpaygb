@@ -2,12 +2,14 @@ export type UserRoleLabel =
   | "master"
   | "school_admin"
   | "student"
+  | "staff"
   | "guest";
 
 const ROLE_LABELS: Record<UserRoleLabel, string> = {
   master: "Platform master admin",
   school_admin: "School administrator",
   student: "Student",
+  staff: "Staff",
   guest: "Guest payer",
 };
 

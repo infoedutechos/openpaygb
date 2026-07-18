@@ -8,6 +8,7 @@ import type { NextRequest } from "next/server";
 import { PUBLIC_SCHOOL_LOGIN_PATH, PLATFORM_MASTER_LOGIN_PATH } from "@/lib/admin-auth-entry";
 import { verifyPayAdminJwt } from "@/lib/admin-jwt-verify";
 import { verifyStudentJwt } from "@/lib/student-jwt-verify";
+import { verifyStaffJwt } from "@/lib/staff-jwt-verify";
 import { verifyAdminSessionTokenEdge } from "@/lib/admin-session-edge";
 import { DEVELOPER_SESSION_COOKIE, verifyDeveloperSession } from "@/lib/developer-session";
 import {
@@ -20,6 +21,7 @@ const PAY_ADMIN_COOKIE = "odelhub_admin";
 const URA_ADMIN_SESSION = "admin_session";
 const STUDENT_COOKIE = "odelhub_student";
 const STUDENT_SIGNUP_COOKIE = "odelhub_student_signup";
+const STAFF_COOKIE = "odelhub_staff";
 
 function redirectStudentLogin(req: NextRequest, nextPath?: string) {
   const login = new URL("/student/login", req.url);
@@ -31,14 +33,34 @@ function redirectStudentLogin(req: NextRequest, nextPath?: string) {
   return res;
 }
 
+function redirectStaffLogin(req: NextRequest, nextPath?: string) {
+  const login = new URL("/staff/login", req.url);
+  if (nextPath && nextPath !== "/staff") {
+    login.searchParams.set("next", nextPath);
+  }
+  const res = NextResponse.redirect(login);
+  res.cookies.delete(STAFF_COOKIE);
+  return res;
+}
+
 async function hasValidStudentCookie(req: NextRequest): Promise<boolean> {
   const token = req.cookies.get(STUDENT_COOKIE)?.value;
   if (!token) return false;
   return (await verifyStudentJwt(token)) !== null;
 }
 
+async function hasValidStaffCookie(req: NextRequest): Promise<boolean> {
+  const token = req.cookies.get(STAFF_COOKIE)?.value;
+  if (!token) return false;
+  return (await verifyStaffJwt(token)) !== null;
+}
+
 function hasStudentCookie(req: NextRequest): boolean {
   return Boolean(req.cookies.get(STUDENT_COOKIE)?.value);
+}
+
+function hasStaffCookie(req: NextRequest): boolean {
+  return Boolean(req.cookies.get(STAFF_COOKIE)?.value);
 }
 
 async function hasValidUraAdminSession(req: NextRequest): Promise<boolean> {
@@ -128,6 +150,19 @@ export async function middleware(req: NextRequest) {
     }
     if (!(await hasValidStudentCookie(req))) {
       return redirectStudentLogin(req, pathname + req.nextUrl.search);
+    }
+    return NextResponse.next({ request: { headers: requestHeaders } });
+  }
+
+  if (pathname === "/staff" || pathname.startsWith("/staff/")) {
+    if (pathname === "/staff/login" || pathname.startsWith("/staff/login")) {
+      return NextResponse.next({ request: { headers: requestHeaders } });
+    }
+    if (!hasStaffCookie(req)) {
+      return redirectStaffLogin(req, pathname + req.nextUrl.search);
+    }
+    if (!(await hasValidStaffCookie(req))) {
+      return redirectStaffLogin(req, pathname + req.nextUrl.search);
     }
     return NextResponse.next({ request: { headers: requestHeaders } });
   }

@@ -29,6 +29,18 @@ const ACCENT: Record<
     title: "text-emerald-200",
     ring: "hover:ring-emerald-400/40",
   },
+  amber: {
+    border: "border-amber-500/35",
+    bg: "bg-amber-950/25",
+    title: "text-amber-200",
+    ring: "hover:ring-amber-400/40",
+  },
+  rose: {
+    border: "border-rose-500/35",
+    bg: "bg-rose-950/25",
+    title: "text-rose-200",
+    ring: "hover:ring-rose-400/40",
+  },
 };
 
 export function LoginChooserCards() {
