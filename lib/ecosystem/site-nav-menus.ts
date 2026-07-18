@@ -40,10 +40,11 @@ export const SITE_HEADER_UTILITY_LINKS: SiteHeaderUtilityLink[] = [
     title: "Self-register your school on our platform",
   },
   {
-    label: "Student portal",
-    href: "/student/login",
+    label: "Log in",
+    href: "/login",
     signedInHref: "/my/dashboard",
     signedInLabel: "My dashboard",
+    title: "Student or admin sign-in for schools and higher institutions",
   },
   { label: "Admin", href: "/admin", variant: "admin" },
 ];

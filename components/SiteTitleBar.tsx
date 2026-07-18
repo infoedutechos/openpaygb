@@ -4,6 +4,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 
 function pageLabel(pathname: string, masterLogin: boolean): string {
   if (pathname === "/") return "Home";
+  if (pathname === "/login") return "Log in";
   if (pathname.startsWith("/student/login")) return "Student sign in";
   if (pathname.startsWith("/student/register")) return "Student register";
   if (pathname.startsWith("/student/guest")) return "Guest student";

@@ -1,18 +1,28 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PasswordRevealInput } from "@/components/PasswordRevealInput";
 import { ContinueWithGoogleButton } from "@/components/student/ContinueWithGoogleButton";
 import { RequestSchoolWorkspaceCta } from "@/components/tuition/RequestSchoolWorkspaceCta";
 import type { TenantRow } from "@/components/tuition/TenantList";
+import {
+  institutionTierFromSegmentParam,
+  registrationSegmentTitle,
+  type RegistrationSegment,
+} from "@/lib/institution-tier";
+import { LOGIN_CHOOSER_PATH } from "@/lib/login-entry";
 
 function LoginInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/student";
   const qpError = searchParams.get("error");
+  const segmentRaw = searchParams.get("segment");
+  const tier = institutionTierFromSegmentParam(segmentRaw);
+  const segment: RegistrationSegment | null =
+    segmentRaw === "schools" || segmentRaw === "higher" ? segmentRaw : null;
 
   const [orgs, setOrgs] = useState<TenantRow[]>([]);
   const [organizationSlug, setOrganizationSlug] = useState("default");
@@ -23,9 +33,16 @@ function LoginInner() {
   const [showGoogleHint, setShowGoogleHint] = useState(false);
   const [busy, setBusy] = useState(false);
 
+  const heading = useMemo(() => {
+    if (segment === "schools") return "Student Login for Schools";
+    if (segment === "higher") return "Student Login for Higher Institutions";
+    return "Student portal";
+  }, [segment]);
+
   useEffect(() => {
     void (async () => {
-      const r = await fetch("/api/public/organizations");
+      const qp = tier ? `?tier=${encodeURIComponent(tier)}` : "";
+      const r = await fetch(`/api/public/organizations${qp}`);
       if (!r.ok) return;
       const j = (await r.json()) as { organizations?: TenantRow[] };
       const list = j.organizations ?? [];
@@ -37,7 +54,7 @@ function LoginInner() {
         });
       }
     })();
-  }, []);
+  }, [tier]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -85,16 +102,24 @@ function LoginInner() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-[#050810] px-4 py-12 text-slate-200">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold text-white">Student portal</h1>
+          <h1 className="text-2xl font-semibold text-white">{heading}</h1>
           <p className="mt-2 text-sm text-slate-400">
-            Sign in with your school and either email or admission number, plus portal password — or use Google if you
-            registered that way.
+            {segment
+              ? `${registrationSegmentTitle(segment)} — sign in with email or admission number, plus portal password.`
+              : "Sign in with your school and either email or admission number, plus portal password — or use Google if you registered that way."}
+          </p>
+          <p className="mt-2 text-xs text-slate-500">
+            <Link href={LOGIN_CHOOSER_PATH} className="text-cyan-300 hover:underline">
+              ← All login options
+            </Link>
           </p>
         </div>
 
         <form onSubmit={onSubmit} className="space-y-4 rounded-2xl border border-white/10 bg-[#0d1526] p-8">
           <div>
-            <label className="text-xs font-medium text-slate-300">School</label>
+            <label className="text-xs font-medium text-slate-300">
+              {segment === "higher" ? "Institution" : "School"}
+            </label>
             {orgs.length > 0 ? (
               <select
                 value={organizationSlug}

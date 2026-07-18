@@ -5,10 +5,8 @@ import {
   adminLoginPathForMode,
   type AdminLoginMode,
 } from "@/lib/admin-auth-entry";
-import {
-  registrationSegmentSubtitle,
-  registrationSegmentTitle,
-} from "@/lib/institution-tier";
+import { registrationSegmentSubtitle } from "@/lib/institution-tier";
+import { LOGIN_CHOOSER_PATH } from "@/lib/login-entry";
 
 type CardDef = {
   mode: AdminLoginMode;
@@ -23,7 +21,7 @@ type CardDef = {
 const INSTITUTION_CARDS: CardDef[] = [
   {
     mode: "higher",
-    title: registrationSegmentTitle("higher"),
+    title: "Admin Login for Higher Institutions",
     subtitle: registrationSegmentSubtitle("higher"),
     border: "border-cyan-500/30",
     bg: "bg-cyan-950/25",
@@ -32,7 +30,7 @@ const INSTITUTION_CARDS: CardDef[] = [
   },
   {
     mode: "schools",
-    title: registrationSegmentTitle("schools"),
+    title: "Admin Login for Schools",
     subtitle: registrationSegmentSubtitle("schools"),
     border: "border-sky-500/30",
     bg: "bg-sky-950/20",
@@ -105,9 +103,14 @@ export function AdminInstitutionLoginCards({
     <section aria-labelledby="admin-login-cards-heading" className="space-y-4">
       <div className="text-center">
         <h2 id="admin-login-cards-heading" className="text-sm font-semibold text-slate-300">
-          Choose your sign-in
+          Choose your admin sign-in
         </h2>
-        <p className="mt-1 text-xs text-slate-500">Institution admins and platform master use separate workspaces.</p>
+        <p className="mt-1 text-xs text-slate-500">
+          Looking for student login?{" "}
+          <Link href={LOGIN_CHOOSER_PATH} className="text-cyan-300 hover:underline">
+            All login options
+          </Link>
+        </p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         {INSTITUTION_CARDS.map((card) => (

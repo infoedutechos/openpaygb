@@ -65,10 +65,10 @@ export default async function HomePage() {
                 Open Play Hub
               </Link>
               <Link
-                href="/school/login"
+                href="/login"
                 className="rounded-xl border border-cyan-400/35 bg-cyan-500/10 px-6 py-3 text-sm font-semibold text-cyan-100 hover:border-cyan-300/50 hover:bg-cyan-500/20 transition-colors"
               >
-                School admin sign in
+                Log in
               </Link>
               <Link
                 href="/admin/login?master=1"

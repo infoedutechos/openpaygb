@@ -21,9 +21,10 @@ describe("site-nav-menus", () => {
     expect(SITE_HEADER_UTILITY_LINKS.map((l) => l.label)).toEqual([
       "Pay tuition",
       "Register school",
-      "Student portal",
+      "Log in",
       "Admin",
     ]);
+    expect(SITE_HEADER_UTILITY_LINKS.find((l) => l.label === "Log in")?.href).toBe("/login");
   });
 
   it("defines footer columns for product lines and ecosystem", () => {

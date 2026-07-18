@@ -1,0 +1,63 @@
+import Link from "next/link";
+import { LOGIN_CHOOSER_CARDS, type LoginChooserCard } from "@/lib/login-entry";
+
+const ACCENT: Record<
+  LoginChooserCard["accent"],
+  { border: string; bg: string; title: string; ring: string }
+> = {
+  sky: {
+    border: "border-sky-500/35",
+    bg: "bg-sky-950/25",
+    title: "text-sky-200",
+    ring: "hover:ring-sky-400/40",
+  },
+  cyan: {
+    border: "border-cyan-500/35",
+    bg: "bg-cyan-950/25",
+    title: "text-cyan-200",
+    ring: "hover:ring-cyan-400/40",
+  },
+  violet: {
+    border: "border-violet-500/35",
+    bg: "bg-violet-950/25",
+    title: "text-violet-200",
+    ring: "hover:ring-violet-400/40",
+  },
+  emerald: {
+    border: "border-emerald-500/35",
+    bg: "bg-emerald-950/25",
+    title: "text-emerald-200",
+    ring: "hover:ring-emerald-400/40",
+  },
+};
+
+export function LoginChooserCards() {
+  return (
+    <section aria-labelledby="login-chooser-heading" className="space-y-5">
+      <div className="text-center">
+        <h1 id="login-chooser-heading" className="text-2xl font-semibold text-white sm:text-3xl">
+          Log in
+        </h1>
+        <p className="mt-2 text-sm text-slate-400">
+          Choose the portal that matches your school or institution.
+        </p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {LOGIN_CHOOSER_CARDS.map((card) => {
+          const a = ACCENT[card.accent];
+          return (
+            <Link
+              key={card.id}
+              href={card.href}
+              className={`block rounded-2xl border ${a.border} ${a.bg} p-5 text-left shadow-lg shadow-black/25 transition-all hover:brightness-105 hover:ring-2 ${a.ring}`}
+            >
+              <p className={`text-sm font-semibold ${a.title}`}>{card.title}</p>
+              <p className="mt-1.5 text-xs leading-relaxed text-slate-400">{card.subtitle}</p>
+              <p className="mt-3 text-xs font-semibold text-slate-300">Continue →</p>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}

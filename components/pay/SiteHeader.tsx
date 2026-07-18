@@ -45,7 +45,7 @@ export function SiteHeader() {
     setMobileOpen(false);
   }, [pathname]);
 
-  const studentHref = studentSignedIn ? "/my/dashboard" : "/student/login";
+  const studentHref = studentSignedIn ? "/my/dashboard" : "/login";
   const studentLabel = studentSignedIn ? "My dashboard" : "Log in";
 
   const utilityLinkClass = (variant: "default" | "accent" | "admin" = "default") => {
