@@ -7,11 +7,24 @@ import { signStudentToken, studentCookieName } from "@/lib/student-auth";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
 import { recordStudentLogin } from "@/lib/record-login";
 
-const Body = z.object({
-  organizationSlug: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(8),
-});
+const Body = z
+  .object({
+    organizationSlug: z.string().min(2),
+    /** Email login (optional if admissionNo is provided). */
+    email: z.string().email().optional().or(z.literal("")),
+    /** Admission / registration number login (optional if email is provided). */
+    admissionNo: z.string().min(1).max(64).optional().or(z.literal("")),
+    password: z.string().min(8),
+  })
+  .superRefine((val, ctx) => {
+    if (!val.email?.trim() && !val.admissionNo?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Provide email or admission number",
+        path: ["email"],
+      });
+    }
+  });
 
 export async function POST(req: Request) {
   try {
@@ -32,9 +45,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "School not found" }, { status: 404 });
     }
 
-    const emailLower = parsed.data.email.toLowerCase();
+    const emailLower = parsed.data.email?.trim().toLowerCase() ?? "";
+    const admissionNo = parsed.data.admissionNo?.trim() ?? "";
+
     const matches = await prisma.student.findMany({
-      where: { organizationId: org.id, email: emailLower },
+      where: {
+        organizationId: org.id,
+        ...(emailLower
+          ? { email: emailLower }
+          : { admissionNo }),
+      },
       select: {
         id: true,
         organizationId: true,
@@ -44,17 +64,28 @@ export async function POST(req: Request) {
         semester: true,
         portalPasswordHash: true,
         googleSub: true,
+        admissionNo: true,
+        email: true,
       },
       take: 5,
     });
 
+    const idLabel = emailLower ? "email" : "admission number";
+
     if (matches.length === 0) {
-      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
+      return NextResponse.json(
+        { error: `Invalid ${idLabel} or password` },
+        { status: 401 },
+      );
     }
     if (matches.length > 1) {
       return NextResponse.json(
-        { error: "Multiple accounts share this email. Contact your school." },
-        { status: 409 }
+        {
+          error: emailLower
+            ? "Multiple accounts share this email. Contact your school."
+            : "Multiple students share this admission number. Contact your school.",
+        },
+        { status: 409 },
       );
     }
 
@@ -62,8 +93,8 @@ export async function POST(req: Request) {
     if (!student.portalPasswordHash) {
       const googleSignInAvailable = Boolean(student.googleSub?.trim());
       const error = googleSignInAvailable
-        ? "This account uses Google sign-in. Use Continue with Google below, or ask your school admin to set an email password."
-        : "No portal password on file for this email. If you only paid tuition as a guest, register for the student portal or ask your school admin to set a portal password (Admin → Students).";
+        ? "This account uses Google sign-in. Use Continue with Google below, or ask your school admin to set a portal password."
+        : `No portal password on file for this ${idLabel}. If you only paid tuition as a guest, register for the student portal or ask your school admin to set a portal password (Admin → Students).`;
       return NextResponse.json(
         {
           error,
@@ -76,7 +107,10 @@ export async function POST(req: Request) {
 
     const ok = await bcrypt.compare(parsed.data.password, student.portalPasswordHash);
     if (!ok) {
-      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
+      return NextResponse.json(
+        { error: `Invalid ${idLabel} or password` },
+        { status: 401 },
+      );
     }
 
     await recordStudentLogin(student.id);

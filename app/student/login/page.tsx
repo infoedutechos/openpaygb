@@ -16,7 +16,7 @@ function LoginInner() {
 
   const [orgs, setOrgs] = useState<TenantRow[]>([]);
   const [organizationSlug, setOrganizationSlug] = useState("default");
-  const [email, setEmail] = useState("");
+  const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(qpError);
   const [loginHint, setLoginHint] = useState<string | null>(null);
@@ -46,13 +46,15 @@ function LoginInner() {
     setShowGoogleHint(false);
     setBusy(true);
     try {
+      const id = loginId.trim();
+      const looksLikeEmail = id.includes("@");
       const r = await fetch("/api/auth/student-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
           organizationSlug: organizationSlug.trim().toLowerCase(),
-          email: email.trim(),
+          ...(looksLikeEmail ? { email: id } : { admissionNo: id }),
           password,
         }),
       });
@@ -85,7 +87,8 @@ function LoginInner() {
         <div className="text-center">
           <h1 className="text-2xl font-semibold text-white">Student portal</h1>
           <p className="mt-2 text-sm text-slate-400">
-            Sign in with your school, email, and portal password — or use Google if you registered that way.
+            Sign in with your school and either email or admission number, plus portal password — or use Google if you
+            registered that way.
           </p>
         </div>
 
@@ -116,15 +119,19 @@ function LoginInner() {
             )}
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-300">Email</label>
+            <label className="text-xs font-medium text-slate-300">Email or admission number</label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              value={loginId}
+              onChange={(e) => setLoginId(e.target.value)}
               required
               className="mt-1 w-full rounded-lg border border-[var(--border)] bg-black/40 px-3 py-2 text-sm text-white"
-              autoComplete="email"
+              autoComplete="username"
+              placeholder="email@example.com or admission no."
             />
+            <p className="mt-1 text-[11px] text-slate-500">
+              No email? Use the admission / registration number from the school.
+            </p>
           </div>
           <div>
             <label className="text-xs font-medium text-slate-300">Password</label>

@@ -224,7 +224,7 @@ export default function AdminStudentsPage() {
                         : { programmeCode: createForm.programmeCode.trim() }),
                       year: createForm.year,
                       semester: createForm.semester,
-                      ...(createForm.email.trim() && createForm.password.trim().length >= 10
+                      ...(createForm.password.trim().length >= 10
                         ? { portalPassword: createForm.password.trim() }
                         : {}),
                     }),
@@ -268,15 +268,15 @@ export default function AdminStudentsPage() {
               onChange={(e) => setCreateForm((f) => ({ ...f, name: e.target.value }))}
               className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
             />
+            <input
+              placeholder="Admission / registration no. (portal login without email)"
+              title="Parents and students can sign in with this number + portal password when they do not have or use email"
+              value={createForm.admissionNo}
+              onChange={(e) => setCreateForm((f) => ({ ...f, admissionNo: e.target.value }))}
+              className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
+            />
             {isSchoolTenant ? (
               <>
-                <input
-                  placeholder="Admission / registration no. (used with the School Code to pay)"
-                  title="Parents use this number together with your School Code to find the student and pay fees"
-                  value={createForm.admissionNo}
-                  onChange={(e) => setCreateForm((f) => ({ ...f, admissionNo: e.target.value }))}
-                  className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
-                />
                 <select
                   value={createForm.sex}
                   onChange={(e) => setCreateForm((f) => ({ ...f, sex: e.target.value as "male" | "female" | "other" }))}
@@ -296,19 +296,35 @@ export default function AdminStudentsPage() {
             ) : null}
             <input
               type="email"
-              placeholder="Email (required for portal login)"
+              placeholder="Email (optional — use admission no. if no email)"
               value={createForm.email}
               onChange={(e) => setCreateForm((f) => ({ ...f, email: e.target.value }))}
               className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
             />
             <input
-              placeholder="Portal password (min 10 chars, required if email set)"
+              placeholder={
+                createForm.email.trim()
+                  ? "Portal password (min 10 chars — required with email)"
+                  : createForm.admissionNo.trim()
+                    ? "Portal password (min 10 chars — enables login with admission no.)"
+                    : "Portal password (optional)"
+              }
               value={createForm.password}
               required={Boolean(createForm.email.trim())}
-              minLength={createForm.email.trim() ? 10 : undefined}
+              minLength={
+                createForm.email.trim() || createForm.password.trim() || createForm.admissionNo.trim()
+                  ? 10
+                  : undefined
+              }
               onChange={(e) => setCreateForm((f) => ({ ...f, password: e.target.value }))}
               className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
             />
+            <p className="sm:col-span-2 text-xs leading-relaxed text-slate-500">
+              Portal sign-in works with <strong className="text-slate-400">email + password</strong> or{" "}
+              <strong className="text-slate-400">admission number + password</strong> (no email needed). Leave
+              password blank only if this student should not use the portal yet. Admission number is also used
+              with the School Code to pay fees.
+            </p>
             {isSchoolTenant ? (
               <>
                 <select

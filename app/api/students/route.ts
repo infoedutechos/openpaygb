@@ -36,6 +36,13 @@ const CreateBody = z
         path: ["portalPassword"],
       });
     }
+    if (val.portalPassword?.trim() && !val.email?.trim() && !val.admissionNo?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Set an email or admission number so the student can sign in to the portal",
+        path: ["admissionNo"],
+      });
+    }
     const hasProgramme = Boolean(val.programmeCode?.trim());
     const hasClassStream = Boolean(val.schoolClassId?.trim() && val.schoolStreamId?.trim());
     if (!hasProgramme && !hasClassStream) {
@@ -80,9 +87,27 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid body", details: parsed.error.flatten() }, { status: 400 });
   }
   const data = parsed.data;
+  const admissionNo = data.admissionNo?.trim() ?? "";
+  const email = (data.email ?? "").trim().toLowerCase();
   const portalPasswordHash = data.portalPassword?.trim()
     ? await bcrypt.hash(data.portalPassword.trim(), 10)
     : undefined;
+
+  if (admissionNo && portalPasswordHash) {
+    const clash = await prisma.student.findFirst({
+      where: { organizationId, admissionNo },
+      select: { id: true },
+    });
+    if (clash) {
+      return NextResponse.json(
+        {
+          error:
+            "Another student already uses this admission number. Admission numbers must be unique for portal login.",
+        },
+        { status: 409 },
+      );
+    }
+  }
 
   let programmeCode = data.programmeCode?.trim().toUpperCase() ?? "";
   let schoolClassId: string | undefined;
@@ -107,8 +132,8 @@ export async function POST(req: Request) {
     data: {
       organizationId,
       name: data.name,
-      admissionNo: data.admissionNo?.trim() ?? "",
-      email: data.email ?? "",
+      admissionNo,
+      email,
       phone: data.phone,
       address: data.address?.trim() ?? "",
       sex: data.sex ?? "other",
