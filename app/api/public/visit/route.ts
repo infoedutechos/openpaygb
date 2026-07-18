@@ -5,6 +5,7 @@ import { clientIp, rateLimitHit } from "@/lib/rate-limit";
 import { visitGeoFromHeaders } from "@/lib/visit-geo";
 import {
   VISITOR_COOKIE,
+  hashVisitorId,
   newVisitorId,
   recordSiteVisit,
 } from "@/lib/site-visits";
@@ -15,13 +16,14 @@ const Body = z.object({
   path: z.string().max(200).optional(),
 });
 
+/**
+ * Visit beacon — privacy:
+ * - Never persists raw IP addresses (not in Mongo, not in response).
+ * - Rate-limit keys use SHA-256 hashes only.
+ * - DB stores hashed visitor cookie id + country/city aggregates.
+ */
 export async function POST(req: Request) {
   try {
-    const ip = clientIp(req);
-    if (rateLimitHit(`site-visit:${ip}`, 60, 60_000)) {
-      return NextResponse.json({ ok: true, throttled: true });
-    }
-
     const json = await req.json().catch(() => ({}));
     const parsed = Body.safeParse(json);
     const path = parsed.success ? parsed.data.path : undefined;
@@ -33,6 +35,15 @@ export async function POST(req: Request) {
     if (!visitorRawId || visitorRawId.length < 8 || visitorRawId.length > 80) {
       visitorRawId = newVisitorId();
       setCookie = true;
+    }
+
+    // Rate-limit by hashed visitor id (never use raw IP as the key).
+    // For brand-new cookies, fold a hashed IP into the key so bots without cookies are still throttled.
+    const rateKey = setCookie
+      ? `site-visit:new:${hashVisitorId(`ip:${clientIp(req)}`)}`
+      : `site-visit:${hashVisitorId(visitorRawId)}`;
+    if (rateLimitHit(rateKey, 60, 60_000)) {
+      return NextResponse.json({ ok: true, throttled: true });
     }
 
     const geo = visitGeoFromHeaders(req.headers);

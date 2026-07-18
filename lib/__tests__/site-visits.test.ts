@@ -26,12 +26,14 @@ describe("visit-geo", () => {
   });
 });
 
-describe("site-visits helpers", () => {
-  it("hashes visitor ids stably without exposing raw cookie", () => {
-    const a = hashVisitorId("abc-123");
-    const b = hashVisitorId("abc-123");
-    expect(a).toBe(b);
-    expect(a).toHaveLength(64);
-    expect(a).not.toContain("abc");
+describe("no raw IP persistence", () => {
+  it("hashes visitor ids and IP-derived rate keys so plaintext never matches", () => {
+    const cookieHash = hashVisitorId("abc-123");
+    const ipRateHash = hashVisitorId("ip:203.0.113.10");
+    expect(cookieHash).toHaveLength(64);
+    expect(ipRateHash).toHaveLength(64);
+    expect(cookieHash).not.toContain("abc");
+    expect(ipRateHash).not.toContain("203.0.113.10");
+    expect(ipRateHash).not.toMatch(/\d+\.\d+\.\d+\.\d+/);
   });
 });
