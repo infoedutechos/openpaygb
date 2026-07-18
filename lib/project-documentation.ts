@@ -18,6 +18,10 @@ export const PROJECT_DESCRIPTION_REL = "PROJECT_DESCRIPTION.md";
 export const USER_GUIDE_FILES = [
   "guides/USER_GUIDE_INDEX.md",
   "guides/USER_GUIDE_MASTER_ADMIN.md",
+  "guides/USER_GUIDE_ADMIN_SCHOOLS.md",
+  "guides/USER_GUIDE_ADMIN_HIGHER.md",
+  "guides/USER_GUIDE_STUDENT_SCHOOLS.md",
+  "guides/USER_GUIDE_STUDENT_HIGHER.md",
   "guides/USER_GUIDE_SCHOOL_ADMIN.md",
   "guides/USER_GUIDE_STUDENT.md",
   "guides/USER_GUIDE_GUEST_PAYER.md",

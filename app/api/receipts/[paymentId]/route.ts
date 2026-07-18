@@ -67,6 +67,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ paymentId: stri
     focusPaymentId: payment.id,
     institutionTier,
   });
+  const { getReceiptBranding } = await import("@/lib/receipt-branding");
+  const branding = await getReceiptBranding(payment.organizationId);
 
   return NextResponse.json({
     receipt: {
@@ -89,6 +91,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ paymentId: stri
       progress,
       feeBreakdown: breakdown,
       ledger,
+      branding,
       verificationUrl: `/receipt/${payment.id}`,
       receiptAccessToken: createReceiptAccessToken({
         id: payment.id,

@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { TuitionHubCheckoutExplainer } from "@/components/admin/TuitionHubCheckoutExplainer";
 import { OrgFaviconSettings } from "@/components/admin/OrgFaviconSettings";
+import { AdmissionFormatSettings } from "@/components/admin/AdmissionFormatSettings";
+import { OrgLetterheadSettings } from "@/components/admin/OrgLetterheadSettings";
 import { SchoolAppropriationSettings } from "@/components/admin/school/SchoolAppropriationSettings";
 import { TenantList } from "@/components/tuition/TenantList";
 import { useAuthMe } from "@/hooks/useAuthMe";
@@ -42,8 +44,8 @@ export default function AdminSettingsPage() {
                   classes & streams
                 </Link>
               </>
-            ) : null}{" "}
-            and your school favicon below.
+            ) : null}
+            , admission number format, receipt letterhead, and your school favicon below.
           </p>
         )}
         <TuitionHubCheckoutExplainer className="mt-6 max-w-2xl" />
@@ -56,7 +58,13 @@ export default function AdminSettingsPage() {
         ) : null}
       </div>
 
-      {!isMaster ? <OrgFaviconSettings /> : null}
+      {!isMaster ? (
+        <>
+          <AdmissionFormatSettings />
+          <OrgLetterheadSettings />
+          <OrgFaviconSettings />
+        </>
+      ) : null}
 
       {schoolScope ? <SchoolAppropriationSettings /> : null}
 

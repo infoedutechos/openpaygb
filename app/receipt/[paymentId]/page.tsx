@@ -103,6 +103,8 @@ export default async function ReceiptPage({
     focusPaymentId: paymentId,
     institutionTier,
   });
+  const { getReceiptBranding } = await import("@/lib/receipt-branding");
+  const branding = await getReceiptBranding(payment.organizationId);
   const verifyUrl = absoluteUrl(`/receipt/${paymentId}`);
   let qrDataUrl: string | null = null;
   if (verifyUrl.startsWith("http")) {
@@ -121,8 +123,51 @@ export default async function ReceiptPage({
     <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 sm:px-0">
       <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-lg sm:p-6">
         <p className="text-xs uppercase tracking-[0.2em] text-sky-400">Official receipt</p>
-        <h1 className="mt-2 text-xl font-semibold text-white sm:text-2xl">{organization?.name ?? "ODEL HUB"}</h1>
-        <p className="text-sm text-slate-400">Ledger account · tuition payment</p>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="flex items-start gap-3">
+            {branding.platform.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={branding.platform.logoUrl}
+                alt={branding.platform.name}
+                className="h-12 w-12 object-contain"
+              />
+            ) : null}
+            <div>
+              <h1 className="text-lg font-semibold text-white sm:text-xl">{branding.platform.name}</h1>
+              <p className="text-xs text-slate-400">Platform</p>
+              {[branding.platform.phone, branding.platform.email]
+                .filter(Boolean)
+                .map((line) => (
+                  <p key={line} className="text-xs text-slate-400">
+                    {line}
+                  </p>
+                ))}
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            {branding.school.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={branding.school.logoUrl}
+                alt={branding.school.name}
+                className="h-12 w-12 rounded bg-white/90 object-contain p-0.5"
+              />
+            ) : null}
+            <div>
+              <h2 className="text-lg font-semibold text-white sm:text-xl">{branding.school.name}</h2>
+              <p className="text-xs text-slate-400">School</p>
+              {[branding.school.phone, branding.school.email, branding.school.address]
+                .filter(Boolean)
+                .map((line) => (
+                  <p key={line} className="text-xs text-slate-400">
+                    {line}
+                  </p>
+                ))}
+            </div>
+          </div>
+        </div>
+        <p className="mt-3 text-sm text-slate-400">Ledger account · tuition payment</p>
         <dl className="mt-6 space-y-2 text-sm text-slate-200">
           <div className="flex justify-between gap-4">
             <dt className="text-slate-500">Student</dt>

@@ -146,6 +146,30 @@ model Organization {
    * student's admission/registration number to find the school and start fee checkout.
    */
   schoolPayCode              String                     @default("")
+  /**
+   * When true, school/higher admin has saved their preferred admission/registration number format
+   * under Settings. Until then, Create student shows a Configure format CTA (defaults still work).
+   */
+  admissionFormatConfigured  Boolean                    @default(false)
+  /** Custom prefix for admission numbers (e.g. RIV). Empty = derive from slug (first 3 alphanumerics). */
+  admissionPrefix            String                     @default("")
+  /** Include a year/session token between prefix and sequence. */
+  admissionIncludeYear       Boolean                    @default(true)
+  /** calendar = YYYY; academic = digits from currentAcademicYearLabel; none = omit year even if includeYear. */
+  admissionYearSource        String                     @default("calendar")
+  /** Zero-padded sequence width (3–6). */
+  admissionSeqDigits         Int                        @default(4)
+  /** Separator between parts (typically "-"). */
+  admissionSeparator         String                     @default("-")
+  /** When no matching numbers exist yet, start sequence from this value (usually 1). */
+  admissionSeqStart          Int                        @default(1)
+  /** School letterhead for receipts — phone / email / address (public-safe). */
+  letterheadPhone            String                     @default("")
+  letterheadEmail            String                     @default("")
+  letterheadAddress          String                     @default("")
+  /** Optional letterhead logo (PNG/ICO); receipts fall back to favicon when unset. */
+  letterheadLogo             Bytes?
+  letterheadLogoUploadedAt   DateTime?
   /** Active academic session row (optional; falls back to currentAcademicYearLabel). */
   activeSchoolSessionId      String?                    @db.ObjectId
   activeSchoolSession        SchoolSession?             @relation("ActiveSchoolSession", fields: [activeSchoolSessionId], references: [id], onDelete: NoAction, onUpdate: NoAction)

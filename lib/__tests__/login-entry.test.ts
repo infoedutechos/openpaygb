@@ -10,5 +10,6 @@ describe("login chooser", () => {
       "Admin Login for Schools",
       "Admin Login for Higher Institutions",
     ]);
+    expect(LOGIN_CHOOSER_CARDS.every((c) => c.guideHref.startsWith("/help/"))).toBe(true);
   });
 });

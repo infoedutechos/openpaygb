@@ -46,18 +46,39 @@ export function LoginChooserCards() {
         {LOGIN_CHOOSER_CARDS.map((card) => {
           const a = ACCENT[card.accent];
           return (
-            <Link
+            <div
               key={card.id}
-              href={card.href}
-              className={`block rounded-2xl border ${a.border} ${a.bg} p-5 text-left shadow-lg shadow-black/25 transition-all hover:brightness-105 hover:ring-2 ${a.ring}`}
+              className={`rounded-2xl border ${a.border} ${a.bg} p-5 text-left shadow-lg shadow-black/25`}
             >
-              <p className={`text-sm font-semibold ${a.title}`}>{card.title}</p>
-              <p className="mt-1.5 text-xs leading-relaxed text-slate-400">{card.subtitle}</p>
-              <p className="mt-3 text-xs font-semibold text-slate-300">Continue →</p>
-            </Link>
+              <Link
+                href={card.href}
+                className={`block transition-all hover:brightness-105 hover:ring-2 ${a.ring} rounded-xl -m-1 p-1`}
+              >
+                <p className={`text-sm font-semibold ${a.title}`}>{card.title}</p>
+                <p className="mt-1.5 text-xs leading-relaxed text-slate-400">{card.subtitle}</p>
+                <p className="mt-3 text-xs font-semibold text-slate-300">Continue →</p>
+              </Link>
+              <Link
+                href={card.guideHref}
+                className="mt-3 inline-block text-[11px] font-medium text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
+              >
+                {card.guideLabel}
+              </Link>
+            </div>
           );
         })}
       </div>
+      <p className="text-center text-xs text-slate-500">
+        Prefer a downloadable handbook? See{" "}
+        <Link href="/api/docs/guides/USER_GUIDE_INDEX.md" className="text-cyan-400/90 hover:underline">
+          user guides index
+        </Link>{" "}
+        or Help center at{" "}
+        <Link href="/help" className="text-cyan-400/90 hover:underline">
+          /help
+        </Link>
+        .
+      </p>
     </section>
   );
 }

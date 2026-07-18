@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getAdminFromCookies } from "@/lib/auth";
 import { getDefaultOrganizationId } from "@/lib/default-organization";
 import { prisma } from "@/lib/prisma";
-import { allocateAdmissionNo } from "@/lib/admission-no";
+import { allocateAdmissionNo, orgToAdmissionFormatConfig, previewAdmissionFormat } from "@/lib/admission-no";
 import { apiErrorResponse } from "@/lib/api-error";
 
 /** Preview / allocate next admission number for the admin's organization. */
@@ -26,8 +26,30 @@ export async function GET(req: Request) {
     }
     if (!organizationId) organizationId = await getDefaultOrganizationId();
 
+    const org = await prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: {
+        slug: true,
+        admissionFormatConfigured: true,
+        admissionPrefix: true,
+        admissionIncludeYear: true,
+        admissionYearSource: true,
+        admissionSeqDigits: true,
+        admissionSeparator: true,
+        admissionSeqStart: true,
+        currentAcademicYearLabel: true,
+      },
+    });
+    const cfg = orgToAdmissionFormatConfig(org ?? { slug: "STU" });
+    const preview = previewAdmissionFormat(cfg);
     const admissionNo = await allocateAdmissionNo(organizationId);
-    return NextResponse.json({ admissionNo });
+
+    return NextResponse.json({
+      admissionNo,
+      admissionFormatConfigured: cfg.configured,
+      formatPreview: preview.example,
+      settingsPath: "/admin/settings#admission-number",
+    });
   } catch (e) {
     return apiErrorResponse(e, {
       route: "GET /api/students/next-admission",

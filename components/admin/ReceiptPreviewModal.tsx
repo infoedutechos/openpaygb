@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { ReceiptFeeBreakdown } from "@/components/receipt/ReceiptFeeBreakdown";
+import { ReceiptLetterhead } from "@/components/receipt/ReceiptLetterhead";
 import type { ReceiptBreakdown } from "@/lib/receipt-lines";
+import type { ReceiptBranding } from "@/lib/receipt-branding-types";
 
 type Receipt = {
   paymentId: string;
@@ -17,6 +19,7 @@ type Receipt = {
   issuedAt: string;
   verificationUrl: string;
   feeBreakdown?: ReceiptBreakdown;
+  branding?: ReceiptBranding;
 };
 
 function programmeShort(code: string): string {
@@ -108,6 +111,9 @@ export function ReceiptPreviewModal({
 
   if (!open) return null;
 
+  const periodLabel = receipt?.branding?.periodLabel ?? "Semester";
+  const platformName = receipt?.branding?.platform.name ?? "ODEL HUB";
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-slate-200/80 p-0 backdrop-blur-[2px] sm:items-center sm:p-4"
@@ -123,7 +129,7 @@ export function ReceiptPreviewModal({
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-3 top-3 rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+          className="absolute right-3 top-3 z-10 rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
           aria-label="Close receipt preview"
         >
           <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
@@ -131,13 +137,20 @@ export function ReceiptPreviewModal({
           </svg>
         </button>
 
-        <div className="px-8 pb-8 pt-10 text-center">
-          <h2 id="receipt-preview-title" className="text-xl font-bold tracking-tight text-slate-900">
-            ODEL HUB
+        <div className="px-6 pb-8 pt-10">
+          <h2 id="receipt-preview-title" className="sr-only">
+            Official Receipt
           </h2>
-          <p className="mt-0.5 text-sm text-slate-500">Official Receipt</p>
+          {receipt?.branding ? (
+            <ReceiptLetterhead platform={receipt.branding.platform} school={receipt.branding.school} />
+          ) : (
+            <div className="border-b border-slate-200 pb-4 text-center">
+              <p className="text-xl font-bold tracking-tight text-slate-900">{platformName}</p>
+              <p className="mt-0.5 text-sm text-slate-500">Official Receipt</p>
+            </div>
+          )}
 
-          <div className="mt-8 space-y-3 text-left">
+          <div className="mt-6 space-y-3 text-left">
             {loading && <p className="text-center text-sm text-slate-500">Loading…</p>}
             {error && <p className="text-center text-sm text-rose-600">{error}</p>}
             {receipt && !loading && (
@@ -146,7 +159,7 @@ export function ReceiptPreviewModal({
                 <ReceiptRow label="Student" value={receipt.studentName} />
                 <ReceiptRow label="Programme" value={programmeShort(receipt.programmeCode)} />
                 <ReceiptRow label="Year" value={`YR${receipt.year}`} />
-                <ReceiptRow label="Semester" value={`Sem ${receipt.semester}`} />
+                <ReceiptRow label={periodLabel} value={`${periodLabel} ${receipt.semester}`} />
                 {receipt.feeBreakdown ? (
                   <div className="w-full pt-2">
                     <ReceiptFeeBreakdown breakdown={receipt.feeBreakdown} variant="light" />
@@ -177,7 +190,10 @@ export function ReceiptPreviewModal({
                 width={140}
                 height={140}
               />
-              <p className="mt-4 text-center text-sm text-slate-600">Thank you for choosing ODEL Hub</p>
+              <p className="mt-4 text-center text-sm text-slate-600">
+                Thank you for choosing {platformName}
+                {receipt.branding?.school.name ? ` · ${receipt.branding.school.name}` : ""}
+              </p>
             </div>
           ) : null}
 
@@ -194,4 +210,3 @@ export function ReceiptPreviewModal({
     </div>
   );
 }
-

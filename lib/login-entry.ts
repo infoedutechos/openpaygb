@@ -14,6 +14,9 @@ export type LoginChooserCard = {
   subtitle: string;
   href: string;
   accent: "sky" | "cyan" | "violet" | "emerald";
+  /** In-app help article for this audience handbook */
+  guideHref: string;
+  guideLabel: string;
 };
 
 export const LOGIN_CHOOSER_CARDS: LoginChooserCard[] = [
@@ -23,6 +26,8 @@ export const LOGIN_CHOOSER_CARDS: LoginChooserCard[] = [
     subtitle: "Primary & secondary — portal with email or admission number",
     href: "/student/login?segment=schools",
     accent: "sky",
+    guideHref: "/help/guide-student-schools",
+    guideLabel: "Student schools guide",
   },
   {
     id: "student_higher",
@@ -30,6 +35,8 @@ export const LOGIN_CHOOSER_CARDS: LoginChooserCard[] = [
     subtitle: "Universities & tertiary — portal with email or admission number",
     href: "/student/login?segment=higher",
     accent: "cyan",
+    guideHref: "/help/guide-student-higher",
+    guideLabel: "Student higher guide",
   },
   {
     id: "admin_schools",
@@ -37,6 +44,8 @@ export const LOGIN_CHOOSER_CARDS: LoginChooserCard[] = [
     subtitle: "School staff — programmes, students, bills & receipts",
     href: "/admin/login?school=1",
     accent: "violet",
+    guideHref: "/help/guide-admin-schools",
+    guideLabel: "School admin guide",
   },
   {
     id: "admin_higher",
@@ -44,5 +53,7 @@ export const LOGIN_CHOOSER_CARDS: LoginChooserCard[] = [
     subtitle: "Institution staff — programmes, fees & tuition admin",
     href: "/admin/login?segment=higher",
     accent: "emerald",
+    guideHref: "/help/guide-admin-higher",
+    guideLabel: "Higher admin guide",
   },
 ];

@@ -59,6 +59,7 @@ export default function AdminStudentsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [createBusy, setCreateBusy] = useState(false);
   const [admissionBusy, setAdmissionBusy] = useState(false);
+  const [admissionFormatConfigured, setAdmissionFormatConfigured] = useState(true);
   const [createdShare, setCreatedShare] = useState<StudentShareCardData | null>(null);
   const [createForm, setCreateForm] = useState({
     name: "",
@@ -89,9 +90,14 @@ export default function AdminStudentsPage() {
       const r = await fetch(`/api/students/next-admission${qp.toString() ? `?${qp}` : ""}`, {
         credentials: "include",
       });
-      const j = (await r.json()) as { admissionNo?: string; error?: string };
+      const j = (await r.json()) as {
+        admissionNo?: string;
+        admissionFormatConfigured?: boolean;
+        error?: string;
+      };
       if (!r.ok || !j.admissionNo) throw new Error(j.error ?? "Could not allocate admission number");
       setCreateForm((f) => ({ ...f, admissionNo: j.admissionNo! }));
+      setAdmissionFormatConfigured(Boolean(j.admissionFormatConfigured));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not allocate admission number");
     } finally {
@@ -315,7 +321,7 @@ export default function AdminStudentsPage() {
                 readOnly
                 required
                 placeholder={admissionBusy ? "Generating admission no.…" : "Admission / registration no."}
-                title="Auto-generated when you open Create student. Used for portal login and fee payments with the School Code."
+                title="Auto-generated from your school’s registered students and admission format settings."
                 value={createForm.admissionNo}
                 className="min-w-0 flex-1 rounded-md border border-cyan-500/30 bg-[#0d1526] px-3 py-2 font-mono text-sm font-semibold tracking-wide text-cyan-100"
               />
@@ -329,6 +335,20 @@ export default function AdminStudentsPage() {
                 {admissionBusy ? "…" : "Regen"}
               </button>
             </div>
+            {!admissionFormatConfigured && !isMaster ? (
+              <div className="sm:col-span-2 flex flex-wrap items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-950/20 px-3 py-2.5">
+                <p className="flex-1 text-xs text-amber-100/90">
+                  Your school has not configured a custom admission number format yet. Defaults still work
+                  (e.g. RIV-2026-0042). Configure your preferred format in Settings.
+                </p>
+                <Link
+                  href="/admin/settings#admission-number"
+                  className="shrink-0 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-500"
+                >
+                  Configure admission number format
+                </Link>
+              </div>
+            ) : null}
             {isSchoolTenant ? (
               <>
                 <select

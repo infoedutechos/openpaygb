@@ -70,9 +70,11 @@ export async function GET(req: Request, ctx: { params: Promise<{ paymentId: stri
     focusPaymentId: paymentId,
     institutionTier,
   });
+  const { getReceiptBranding } = await import("@/lib/receipt-branding");
+  const branding = await getReceiptBranding(payment.organizationId);
 
   const pdf = await PDFDocument.create();
-  const page = pdf.addPage([842, Math.max(595, 280 + ledger.rows.length * 12)]);
+  const page = pdf.addPage([842, Math.max(595, 320 + ledger.rows.length * 12)]);
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
 
@@ -83,7 +85,22 @@ export async function GET(req: Request, ctx: { params: Promise<{ paymentId: stri
     y -= size + 6;
   };
 
-  line(`${organization?.name ?? "ODEL HUB"}`, 14, true);
+  line(branding.platform.name, 14, true);
+  if (branding.platform.phone || branding.platform.email) {
+    line(
+      [branding.platform.phone, branding.platform.email].filter(Boolean).join(" · "),
+      8,
+      false,
+      rgb(0.35, 0.35, 0.38),
+    );
+  }
+  line(branding.school.name, 12, true);
+  const schoolContact = [branding.school.phone, branding.school.email, branding.school.address]
+    .filter(Boolean)
+    .join(" · ");
+  if (schoolContact) {
+    line(schoolContact, 8, false, rgb(0.35, 0.35, 0.38));
+  }
   line("Ledger Account · Official receipt", 9, false, rgb(0.35, 0.35, 0.38));
   y -= 8;
   line(`Student: ${payment.student.name}`, 10, true);
