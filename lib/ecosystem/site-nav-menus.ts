@@ -44,9 +44,19 @@ export const SITE_HEADER_UTILITY_LINKS: SiteHeaderUtilityLink[] = [
     href: "/login",
     signedInHref: "/my/dashboard",
     signedInLabel: "My dashboard",
-    title: "Student or admin sign-in for schools and higher institutions",
+    title: "User sign-in: student, staff, or school/institution admin",
   },
-  { label: "Admin", href: "/admin", variant: "admin" },
+  {
+    label: "School admin",
+    href: "/admin",
+    variant: "admin",
+    title: "Tuition hub for school / institution admins (not the developer portal)",
+  },
+  {
+    label: "Developers",
+    href: "/developers",
+    title: "Builder portal — Partner API; open every product side",
+  },
 ];
 
 export const SITE_HEADER_MENUS: SiteNavMenu[] = [
@@ -104,11 +114,12 @@ export const SITE_HEADER_MENUS: SiteNavMenu[] = [
     href: "/developers",
     accent: "emerald",
     items: [
-      { label: "Developer hub", href: "/developers", description: "Partner API & OPGB integrators" },
+      { label: "Developer hub (builder portal)", href: "/developers", description: "Partner API · faces all sides" },
       { label: "Register app", href: "/developers/register", description: "Self-serve OAuth app registry" },
-      { label: "Dashboard", href: "/developers/dashboard", description: "API keys & webhooks" },
-      { label: "Dex integration FAQ", href: "/help?hub=dex", description: "OPGB / Dex help articles" },
+      { label: "API dashboard", href: "/developers/dashboard", description: "API keys & webhooks" },
+      { label: "User login chooser", href: "/login", description: "Open every user-facing sign-in" },
       { label: "Partner API docs", href: "/help/partner-api-overview", description: "Payments & webhooks" },
+      { label: "Dex integration FAQ", href: "/help?hub=dex", description: "OPGB / Dex help articles" },
     ],
   },
   {

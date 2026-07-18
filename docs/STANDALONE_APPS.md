@@ -13,6 +13,8 @@ Six product surfaces can run as **true standalone apps** from the same Next.js c
 
 Registry: `lib/standalone-apps.ts`. Middleware sets `x-standalone-app` and enforces allowed routes.
 
+**Access model:** User-facing portals stay role-locked (student / staff / org admin cookies). The **OdelHub Devs** standalone intentionally allows navigation to all product sides (`/login`, `/student`, `/staff`, `/admin`, pay, lobbies, Dex) so developers can face every surface — each portal still requires its own sign-in. See [ACCESS_SURFACES.md](./ACCESS_SURFACES.md).
+
 ---
 
 ## Mode A — Subdomains on one Vercel project (recommended)

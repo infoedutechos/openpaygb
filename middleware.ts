@@ -232,6 +232,8 @@ export const config = {
     "/school-admin/:path*",
     "/student",
     "/student/:path*",
+    "/staff",
+    "/staff/:path*",
     "/my",
     "/my/:path*",
     "/developers/dashboard",

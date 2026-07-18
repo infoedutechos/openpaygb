@@ -15,6 +15,7 @@ export async function verifyStudentJwt(token: string): Promise<StudentJwtPayload
     const secret = jwtSecretStudentBytes();
     if (!secret) return null;
     const { payload } = await jwtVerify(token, secret);
+    if (payload.typ === "staff") return null;
     const sub = typeof payload.sub === "string" ? payload.sub : null;
     const organizationId =
       typeof payload.organizationId === "string" ? payload.organizationId : null;

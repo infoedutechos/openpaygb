@@ -9,6 +9,8 @@ import { WelcomeBackStrip } from "@/components/profile/WelcomeBackStrip";
 import { useAuthMe } from "@/hooks/useAuthMe";
 import { DEX_SIDEBAR_NAV, pathnameIsDexHub } from "@/lib/dex-nav";
 import { AUDIENCE_GUIDE_LIST, USER_GUIDES_INDEX_HREF } from "@/lib/audience-guides";
+import { OPERATOR_ALL_SIDES_LINKS } from "@/lib/access-surfaces";
+import { OperatorAllSidesNav } from "@/components/nav/OperatorAllSidesNav";
 
 const nav: { href: string; label: string; desc?: string }[] = [
   { href: "/admin/master", label: "Overview", desc: "Platform totals" },
@@ -115,7 +117,7 @@ const nav: { href: string; label: string; desc?: string }[] = [
   {
     href: USER_GUIDES_INDEX_HREF,
     label: "User guides",
-    desc: "Four audience handbooks",
+    desc: "Audience handbooks (students · staff · admins)",
   },
 ];
 
@@ -193,7 +195,17 @@ export default function MasterManagerShell({
         </nav>
 
         <div className="mt-6 space-y-1 border-t border-amber-500/10 px-2 pt-4">
-          <p className="px-3 text-[10px] uppercase tracking-wider text-slate-600">Operations</p>
+          <p className="px-3 text-[10px] uppercase tracking-wider text-slate-600">All product sides</p>
+          {OPERATOR_ALL_SIDES_LINKS.filter((l) => l.kind !== "master").map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="block rounded-lg px-3 py-1.5 text-xs text-slate-400 hover:bg-white/[0.04] hover:text-amber-100"
+            >
+              {link.label}
+            </Link>
+          ))}
+          <p className="px-3 pt-3 text-[10px] uppercase tracking-wider text-slate-600">Operations</p>
           <Link
             href="/admin/profile"
             className="block rounded-lg px-3 py-2 text-sm text-amber-200/85 hover:bg-amber-950/35 hover:text-amber-50"
@@ -207,6 +219,13 @@ export default function MasterManagerShell({
           >
             Tuition hub
             <span className="block text-[11px] text-slate-600">School admin view</span>
+          </Link>
+          <Link
+            href="/developers"
+            className="block rounded-lg px-3 py-2 text-sm text-emerald-200/80 hover:bg-emerald-950/40 hover:text-emerald-100"
+          >
+            Developers
+            <span className="block text-[11px] text-slate-600">Builder portal</span>
           </Link>
         </div>
 
@@ -233,11 +252,21 @@ export default function MasterManagerShell({
           }))}
           secondarySections={[
             {
+              id: "all-sides",
+              label: "All product sides",
+              items: OPERATOR_ALL_SIDES_LINKS.map((l) => ({
+                href: l.href,
+                label: l.label,
+                description: l.description,
+              })),
+            },
+            {
               id: "ops",
               label: "Operations",
               items: [
                 { href: "/admin/profile", label: "Profile", description: "Account & password" },
                 { href: "/admin", label: "Tuition hub", description: "School admin view" },
+                { href: "/developers", label: "Developers", description: "Builder portal" },
               ],
             },
             {
@@ -249,7 +278,14 @@ export default function MasterManagerShell({
               })),
             },
           ]}
-          afterSections={<DashboardChatNavButton variant="master" />}
+          afterSections={
+            <>
+              <DashboardChatNavButton variant="master" />
+              <div className="mt-3 px-1">
+                <OperatorAllSidesNav compact />
+              </div>
+            </>
+          }
           trailing={
             <Link href="/admin" className="text-[11px] font-medium text-cyan-400/80">
               Tuition

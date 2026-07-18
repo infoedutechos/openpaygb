@@ -13,6 +13,8 @@ export const HIDE_SITE_CHROME_NAV_PREFIXES = [
   "/OdelPaySchools",
   "/developers",
   "/receipt",
+  "/staff",
+  "/login",
   "/api",
 ] as const;
 

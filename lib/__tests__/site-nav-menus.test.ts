@@ -22,9 +22,11 @@ describe("site-nav-menus", () => {
       "Pay tuition",
       "Register school",
       "Log in",
-      "Admin",
+      "School admin",
+      "Developers",
     ]);
     expect(SITE_HEADER_UTILITY_LINKS.find((l) => l.label === "Log in")?.href).toBe("/login");
+    expect(SITE_HEADER_UTILITY_LINKS.find((l) => l.label === "Developers")?.href).toBe("/developers");
   });
 
   it("defines footer columns for product lines and ecosystem", () => {

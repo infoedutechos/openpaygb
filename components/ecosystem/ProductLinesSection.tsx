@@ -64,22 +64,44 @@ function ProductLineCard({ line }: { line: ProductLine }) {
 
 export function ProductLinesSection() {
   const ordered = PRODUCT_LINE_ORDER.map((id) => PRODUCT_LINES.find((p) => p.id === id)!);
+  const userLines = ordered.filter((l) => l.surface === "user");
+  const builderLines = ordered.filter((l) => l.surface === "builder");
+
   return (
-    <section aria-labelledby="product-lines-heading">
-      <div className="mb-4">
-        <h2 id="product-lines-heading" className="text-lg font-semibold text-white">
-          Product lines
-        </h2>
-        <p className="mt-1 text-sm text-slate-500">
-          OdelPay for higher education and schools; OpenPayGB for global wallet, card, and Dex — each with its own entry
-          point.
-        </p>
-      </div>
-      <div className="grid gap-4 md:grid-cols-3">
-        {ordered.map((line) => (
-          <ProductLineCard key={line.id} line={line} />
-        ))}
-      </div>
-    </section>
+    <div className="space-y-10">
+      <section aria-labelledby="user-product-lines-heading">
+        <div className="mb-4">
+          <h2 id="user-product-lines-heading" className="text-lg font-semibold text-white">
+            User-facing products
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Strictly for the matching audience — students, staff, school/institution admins, and payers. Each portal uses
+            its own sign-in.
+          </p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {userLines.map((line) => (
+            <ProductLineCard key={line.id} line={line} />
+          ))}
+        </div>
+      </section>
+
+      <section aria-labelledby="builder-product-lines-heading">
+        <div className="mb-4">
+          <h2 id="builder-product-lines-heading" className="text-lg font-semibold text-white">
+            Developer-facing (builders)
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Partner API and app registry. Developers can open every user product side from the builder portal; gated
+            dashboards still require the relevant user role.
+          </p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {builderLines.map((line) => (
+            <ProductLineCard key={line.id} line={line} />
+          ))}
+        </div>
+      </section>
+    </div>
   );
 }

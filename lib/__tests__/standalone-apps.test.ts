@@ -65,6 +65,10 @@ describe("standalone-apps", () => {
     expect(isPathAllowedForStandalone("/developers", app)).toBe(true);
     expect(isPathAllowedForStandalone("/developers/dashboard", app)).toBe(true);
     expect(isPathAllowedForStandalone("/docs", app)).toBe(true);
+    expect(isPathAllowedForStandalone("/login", app)).toBe(true);
+    expect(isPathAllowedForStandalone("/student/login", app)).toBe(true);
+    expect(isPathAllowedForStandalone("/staff/login", app)).toBe(true);
+    expect(isPathAllowedForStandalone("/admin/login", app)).toBe(true);
     expect(isPathAllowedForStandalone("/clicker", app)).toBe(false);
   });
 });
