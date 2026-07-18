@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton";
 import { DashboardGuideNavLinks } from "@/components/nav/DashboardGuideNavLinks";
+import { DashboardMobileChrome } from "@/components/nav/DashboardMobileChrome";
 import { WelcomeBackStrip } from "@/components/profile/WelcomeBackStrip";
 import { useAuthMe } from "@/hooks/useAuthMe";
 import { DEX_SIDEBAR_NAV, pathnameIsDexHub } from "@/lib/dex-nav";
@@ -219,42 +220,51 @@ export default function MasterManagerShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col bg-gradient-to-b from-[#100c0a]/80 to-transparent">
-        <header className="border-b border-amber-500/10 md:hidden">
-          <div className="flex items-center justify-between gap-3 px-4 py-3">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-400/80">Master</p>
-              <p className="text-sm text-white">Manager</p>
-            </div>
-            <div className="flex shrink-0 gap-3 text-[11px]">
-              <Link href="/admin/profile" className="text-amber-400/90">
-                Profile
-              </Link>
-              <Link href="/admin" className="text-cyan-400/80">
-                Tuition
-              </Link>
-              <button type="button" onClick={() => void logout()} className="text-slate-600">
-                Out
-              </button>
-            </div>
-          </div>
-          <nav className="flex gap-2 overflow-x-auto px-4 pb-3 text-[11px] text-slate-400">
-            {nav.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`shrink-0 rounded-md px-2 py-2 min-h-[44px] inline-flex items-center transition-colors ${
-                  navActive(pathname, item.href)
-                    ? "bg-amber-500/15 font-medium text-amber-100"
-                    : "hover:text-white"
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-            <DashboardChatNavButton variant="master" compact />
-            <DashboardGuideNavLinks guides={AUDIENCE_GUIDE_LIST} compact />
-          </nav>
-        </header>
+        <DashboardMobileChrome
+          title="Manager console"
+          subtitle="Master · ODEL HUB platform"
+          accent="amber"
+          panelId="master-manager-mobile-menu"
+          items={nav.map((item) => ({
+            href: item.href,
+            label: item.label,
+            description: item.desc,
+            active: navActive(pathname, item.href),
+          }))}
+          secondarySections={[
+            {
+              id: "ops",
+              label: "Operations",
+              items: [
+                { href: "/admin/profile", label: "Profile", description: "Account & password" },
+                { href: "/admin", label: "Tuition hub", description: "School admin view" },
+              ],
+            },
+            {
+              id: "guides",
+              label: "Guides",
+              items: AUDIENCE_GUIDE_LIST.map((g) => ({
+                href: g.helpHref,
+                label: g.dashboardLabel,
+              })),
+            },
+          ]}
+          afterSections={<DashboardChatNavButton variant="master" />}
+          trailing={
+            <Link href="/admin" className="text-[11px] font-medium text-cyan-400/80">
+              Tuition
+            </Link>
+          }
+          footer={
+            <button
+              type="button"
+              onClick={() => void logout()}
+              className="w-full rounded-lg px-3 py-2.5 text-left text-sm text-rose-200/90 hover:bg-white/[0.04]"
+            >
+              Logout
+            </button>
+          }
+        />
         <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 md:py-8">{children}</div>
       </div>
       </div>

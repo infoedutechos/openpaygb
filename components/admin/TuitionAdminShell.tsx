@@ -13,6 +13,7 @@ import { DbDegradedBanner } from "@/components/admin/DbDegradedBanner";
 import { WorkspaceEmailUnverifiedBanner } from "@/components/admin/WorkspaceEmailUnverifiedBanner";
 import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton";
 import { DashboardGuideNavLinks } from "@/components/nav/DashboardGuideNavLinks";
+import { DashboardMobileChrome } from "@/components/nav/DashboardMobileChrome";
 import { WelcomeBackStrip } from "@/components/profile/WelcomeBackStrip";
 import { adminRoleToProfileRole } from "@/lib/profile-mappers";
 import { DEX_SIDEBAR_NAV, pathnameIsDexHub } from "@/lib/dex-nav";
@@ -35,7 +36,6 @@ const UNIVERSITY_SEGMENTS: { suffix: string; label: string; schoolOnly?: boolean
   { suffix: "/settings", label: "Settings" },
 ];
 
-/** Reference app sidebar — school fees & payments ERP (HisGrace Gestio). */
 const SCHOOL_ERP_SEGMENTS: { suffix: string; label: string }[] = [
   { suffix: "/school-dashboard", label: "Dashboard" },
   { suffix: "/profile", label: "Profile" },
@@ -112,6 +112,12 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
     router.refresh();
   }
 
+  const mobileItems = navItems.map((item) => ({
+    href: item.href,
+    label: item.label,
+    active: navActive(pathname, item.href),
+  }));
+
   return (
     <div className="flex min-h-[calc(100vh-1px)] bg-[#070d18] text-slate-200">
       <aside className="hidden w-56 shrink-0 flex-col border-r border-white/10 bg-[#0a101f] py-6 pl-4 pr-2 text-slate-200 md:flex">
@@ -171,45 +177,53 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="border-b border-white/10 bg-[#0a101f] md:hidden">
-          <div className="flex items-center justify-between gap-2 px-3 py-3">
-            <div className="min-w-0">
-              <p className="truncate text-xs font-semibold text-white" title={shellTitle}>
-                {shellTitle}
-              </p>
-              <p className="truncate text-[10px] text-slate-500" title={shellSubtitle}>
-                {shellSubtitle}
-              </p>
-            </div>
-            <div className="flex shrink-0 gap-3 text-[11px]">
+        <DashboardMobileChrome
+          title={shellTitle}
+          subtitle={shellSubtitle}
+          accent="cyan"
+          panelId="tuition-admin-mobile-menu"
+          items={mobileItems}
+          secondarySections={[
+            {
+              id: "guides",
+              label: "Guides",
+              items: guideLinks.map((g) => ({ href: g.helpHref, label: g.dashboardLabel })),
+            },
+            {
+              id: "help",
+              label: "Support",
+              items: [{ href: "/help", label: "Help center" }],
+            },
+          ]}
+          afterSections={<DashboardChatNavButton variant="tuition" />}
+          trailing={
+            isMaster ? (
+              <Link href="/admin/master" className="text-[11px] font-medium text-amber-400/90">
+                Manager
+              </Link>
+            ) : null
+          }
+          footer={
+            <div className="space-y-2">
               {isMaster ? (
-                <Link href="/admin/master" className="text-amber-400/90">
-                  Manager
+                <Link
+                  href="/admin/master"
+                  className="block rounded-lg border border-amber-500/40 bg-amber-950/30 px-3 py-2 text-center text-xs font-medium text-amber-100"
+                >
+                  Manager console
                 </Link>
               ) : null}
-              <button type="button" onClick={() => void logout()} className="text-slate-500 hover:text-rose-200">
-                Out
+              <RequestSchoolWorkspaceCta variant="compact" />
+              <button
+                type="button"
+                onClick={() => void logout()}
+                className="w-full rounded-lg px-3 py-2.5 text-left text-sm text-rose-200/90 hover:bg-white/5"
+              >
+                Logout
               </button>
             </div>
-          </div>
-          <nav className="flex gap-2 overflow-x-auto px-3 pb-3 text-[11px]">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`shrink-0 rounded-md px-2 py-2 min-h-[44px] inline-flex items-center transition-colors ${
-                  navActive(pathname, item.href)
-                    ? "bg-cyan-500/15 font-medium text-cyan-100"
-                    : "text-slate-400 hover:text-white"
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-            <DashboardChatNavButton variant="tuition" compact />
-            <DashboardGuideNavLinks guides={guideLinks} compact />
-          </nav>
-        </header>
+          }
+        />
         <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 md:py-8">
           <AdminWorkspaceBar />
           {authMe?.dbDegraded ? <DbDegradedBanner /> : null}
@@ -217,7 +231,8 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
           {showSchoolErp ? <SchoolContextBar /> : null}
           {isMaster && !orgSlug && pathname.includes("/school-") ? (
             <p className="mb-4 rounded-lg border border-amber-500/30 bg-amber-950/30 px-4 py-2 text-sm text-amber-100">
-              Select a school workspace using <strong>?orgSlug=</strong> in the URL or the workspace filter to load school ERP data.
+              Select a school workspace using <strong>?orgSlug=</strong> in the URL or the workspace filter to load
+              school ERP data.
             </p>
           ) : null}
           {children}

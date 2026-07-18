@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton";
 import { DashboardGuideNavLinks } from "@/components/nav/DashboardGuideNavLinks";
+import { DashboardMobileChrome } from "@/components/nav/DashboardMobileChrome";
 import { WelcomeBackStrip } from "@/components/profile/WelcomeBackStrip";
 import { useStudentMe } from "@/hooks/useStudentMe";
 import { profileFromStudentMe } from "@/lib/profile-mappers";
@@ -54,6 +55,7 @@ export function StudentPortalShell({
   const router = useRouter();
   const { data: studentMe } = useStudentMe();
   const studentProfile = studentMe?.student ? profileFromStudentMe(studentMe.student) : null;
+  const guides = studentGuidesForPortal();
 
   if (mode === "student" && isBareStudentPath(pathname)) {
     return <>{children}</>;
@@ -96,7 +98,7 @@ export function StudentPortalShell({
             </Link>
           ))}
           <DashboardChatNavButton variant="student" />
-          <DashboardGuideNavLinks guides={studentGuidesForPortal()} />
+          <DashboardGuideNavLinks guides={guides} />
         </nav>
         <button
           type="button"
@@ -108,35 +110,39 @@ export function StudentPortalShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="border-b border-white/10 bg-[#0a101f]/90 md:hidden">
-          <div className="flex items-center justify-between gap-2 px-3 py-3">
-            <span className="text-xs font-semibold text-cyan-200">Student portal</span>
+        <DashboardMobileChrome
+          title="Student portal"
+          subtitle="Tuition & receipts"
+          accent="cyan"
+          panelId="student-portal-mobile-menu"
+          items={NAV.map((item) => ({
+            href: item.href,
+            label: item.label,
+            active: navActive(pathname, item.href),
+          }))}
+          secondarySections={[
+            {
+              id: "guides",
+              label: "Guides",
+              items: guides.map((g) => ({ href: g.helpHref, label: g.dashboardLabel })),
+            },
+            {
+              id: "help",
+              label: "Support",
+              items: [{ href: "/help", label: "Help center" }],
+            },
+          ]}
+          afterSections={<DashboardChatNavButton variant="student" />}
+          footer={
             <button
               type="button"
               onClick={() => void logout()}
-              className="shrink-0 text-xs text-slate-500 hover:text-rose-200"
+              className="w-full rounded-lg px-3 py-2.5 text-left text-sm text-rose-200/90 hover:bg-white/5"
             >
               Sign out
             </button>
-          </div>
-          <nav className="flex gap-2 overflow-x-auto px-3 pb-3 text-[11px] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {NAV.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex min-h-[44px] shrink-0 items-center rounded-lg px-3 py-2 ${
-                  navActive(pathname, item.href)
-                    ? "bg-cyan-500/15 font-semibold text-cyan-200"
-                    : "text-slate-400 hover:text-white"
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-            <DashboardChatNavButton variant="student" compact />
-            <DashboardGuideNavLinks guides={studentGuidesForPortal()} compact />
-          </nav>
-        </header>
+          }
+        />
         <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 md:max-w-4xl md:py-8">{children}</div>
       </div>
     </div>

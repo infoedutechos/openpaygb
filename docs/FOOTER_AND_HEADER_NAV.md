@@ -25,9 +25,22 @@ The Atlantis Pro footer uses a **four-column grid** on a light background:
 - Put **admin, help, and policy** links under Services.
 - Put the **four audience handbooks** in a dedicated **Guides** footer column, and also under each OdelPay product column + header dropdowns.
 
-**Canonical guide URLs:** `lib/audience-guides.ts` → `/help/guide-student-schools`, `/help/guide-student-higher`, `/help/guide-admin-schools`, `/help/guide-admin-higher`.
+## Mobile hidable menus (2026-07-18)
 
-**Dashboards:** `DashboardGuideNavLinks` is wired into Tuition Admin shell, Student portal shell, and Master Manager shell sidebars (and mobile strips).
+Shared primitives: `components/nav/MobileNavDrawer.tsx`, `MobileNavMenuButton`, `DashboardMobileChrome`.
+
+| Surface | Mobile menu |
+|---------|-------------|
+| Site header (marketing) | Existing hamburger → `SiteHeaderMobileDrawer` |
+| Tuition admin / school ERP | Hamburger drawer (replaces scroll strip) |
+| Student portal | Hamburger drawer |
+| Master Manager | Hamburger drawer |
+| Developers hub | Hamburger drawer + desktop top bar |
+| Dex / OPGB | Top hamburger + bottom dock |
+| Home / OdelPay lobbies | Top hamburger + bottom hub switcher |
+| Pay checkout | Top hamburger + bottom dock |
+
+Docs: see `lib/audience-guides.ts` for guide links included in many drawers.
 
 ---
 

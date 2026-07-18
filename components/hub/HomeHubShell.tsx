@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import TuitionHubBottomNav from "@/components/hub/TuitionHubBottomNav";
 import PlayHubBottomNav from "@/components/hub/PlayHubBottomNav";
 import DexHubBottomNav from "@/components/hub/DexHubBottomNav";
+import { TuitionHubMobileMenu } from "@/components/hub/TuitionHubMobileMenu";
+import { DexHubMobileMenu } from "@/components/hub/DexHubMobileMenu";
 import { useStandaloneApp } from "@/components/standalone/StandaloneAppProvider";
 import { HUB_ORDER, homeHubFromSearchParam, homeUrlForHub, type HubKey } from "@/lib/ecosystem/hubs";
 
@@ -41,6 +43,7 @@ function HomeHubShellInner({ children }: { children: ReactNode }) {
   if (app?.hideEcosystemLinks) {
     return (
       <div className="pb-40">
+        <TuitionHubMobileMenu />
         {children}
         <div
           className="fixed bottom-0 left-1/2 z-50 w-full max-w-xl -translate-x-1/2 overflow-hidden rounded-t-2xl border border-slate-600/40 bg-[rgb(6_14_26_/_0.98)] shadow-[0_-12px_40px_rgba(0,0,0,0.45)] backdrop-blur-md"
@@ -54,6 +57,13 @@ function HomeHubShellInner({ children }: { children: ReactNode }) {
 
   return (
     <div className="pb-40">
+      {hub === "dex" ? (
+        <DexHubMobileMenu />
+      ) : hub === "tuition" ? (
+        <TuitionHubMobileMenu />
+      ) : (
+        <TuitionHubMobileMenu title="Play Hub" subtitle="URAPearls · games · tasks" />
+      )}
       {children}
       <div
         className="fixed bottom-0 left-1/2 z-50 w-full max-w-xl -translate-x-1/2 overflow-hidden rounded-t-2xl border border-slate-600/40 bg-[rgb(6_14_26_/_0.98)] shadow-[0_-12px_40px_rgba(0,0,0,0.45)] backdrop-blur-md"

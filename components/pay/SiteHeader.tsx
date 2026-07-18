@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { SiteHeaderMobileDrawer } from "@/components/pay/SiteHeaderMobileDrawer";
 import { SiteHeaderNavDropdown } from "@/components/pay/SiteHeaderNavDropdown";
+import { MobileNavMenuButton } from "@/components/nav/MobileNavDrawer";
 import { SITE_HEADER_MENUS, SITE_HEADER_UTILITY_LINKS } from "@/lib/ecosystem/site-nav-menus";
 import { payProgrammesHref } from "@/lib/tuition-nav";
 
@@ -118,28 +119,13 @@ export function SiteHeader() {
           >
             Sign up
           </Link>
-          <button
-            type="button"
-            aria-expanded={mobileOpen}
-            aria-controls="site-mobile-menu"
-            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          <MobileNavMenuButton
+            open={mobileOpen}
             onClick={() => setMobileOpen((v) => !v)}
-            className="rounded-lg p-2 text-cyan-200 transition-colors hover:bg-cyan-500/10 hover:text-cyan-100"
-          >
-            {mobileOpen ? (
-              <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5" aria-hidden>
-                <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
-              </svg>
-            ) : (
-              <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5" aria-hidden>
-                <path
-                  fillRule="evenodd"
-                  d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75Zm0 5.5a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 10.25Zm0 5.5a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            )}
-          </button>
+            controlsId="site-mobile-menu"
+            accent="cyan"
+            className="border-cyan-500/25"
+          />
         </div>
       </div>
 
