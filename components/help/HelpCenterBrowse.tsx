@@ -45,16 +45,21 @@ const HUBS: { id: PlatformHub; label: string; blurb: string }[] = [
 
 const QUICK_LINKS: Record<PlatformHub, { label: string; href: string }[]> = {
   all: [
+    { label: "Student guide (schools)", href: "/help/guide-student-schools" },
+    { label: "Student guide (higher)", href: "/help/guide-student-higher" },
+    { label: "Admin guide (schools)", href: "/help/guide-admin-schools" },
+    { label: "Admin guide (higher)", href: "/help/guide-admin-higher" },
+    { label: "User guides index", href: "/api/docs/guides/USER_GUIDE_INDEX.md" },
     { label: "Platform terms", href: "/policies/terms" },
     { label: "Developers", href: "/developers" },
-    { label: "Demo school checkout", href: "/pay/riverside-demo" },
     { label: "Help chat", href: "/help" },
   ],
   tuition: [
+    { label: "Student guide (schools)", href: "/help/guide-student-schools" },
+    { label: "Student guide (higher)", href: "/help/guide-student-higher" },
     { label: "Pay tuition", href: "/pay" },
     { label: "Student sign in", href: "/student/login" },
     { label: "Riverside demo", href: "/pay/riverside-demo" },
-    { label: "School admin login", href: "/admin/login?school=1" },
   ],
   dex: [
     { label: "OpenPayGB lobby", href: "/opgb" },
@@ -68,8 +73,9 @@ const QUICK_LINKS: Record<PlatformHub, { label: string; href: string }[]> = {
     { label: "URAPearls privacy", href: "/clicker/privacy" },
   ],
   admin: [
+    { label: "Admin guide (schools)", href: "/help/guide-admin-schools" },
+    { label: "Admin guide (higher)", href: "/help/guide-admin-higher" },
     { label: "Register school", href: "/admin/register?segment=schools" },
-    { label: "Workspace status", href: "/school/workspace-status" },
     { label: "School admin sign in", href: "/admin/login?school=1" },
     { label: "Master console", href: "/admin/login?master=1" },
   ],
@@ -83,8 +89,22 @@ const FEATURED_SLUGS: Partial<Record<PlatformHub, string[]>> = {
     "integrate-odel-hub",
     "openpay-card-overview",
   ],
-  tuition: ["tuition-pay-guest", "riverside-demo-school", "ton-connect-pay", "mobile-money-rails"],
-  admin: ["school-admin-login", "workspace-registration", "riverside-demo-school"],
+  tuition: [
+    "guide-student-schools",
+    "guide-student-higher",
+    "tuition-pay-guest",
+    "riverside-demo-school",
+    "ton-connect-pay",
+    "mobile-money-rails",
+  ],
+  admin: [
+    "guide-admin-schools",
+    "guide-admin-higher",
+    "admission-number-format",
+    "school-admin-login",
+    "workspace-registration",
+    "riverside-demo-school",
+  ],
 };
 
 function hubFromParam(raw: string | null): PlatformHub {

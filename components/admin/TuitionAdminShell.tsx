@@ -12,10 +12,12 @@ import { invalidateAuthMeCache, useAuthMe } from "@/hooks/useAuthMe";
 import { DbDegradedBanner } from "@/components/admin/DbDegradedBanner";
 import { WorkspaceEmailUnverifiedBanner } from "@/components/admin/WorkspaceEmailUnverifiedBanner";
 import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton";
+import { DashboardGuideNavLinks } from "@/components/nav/DashboardGuideNavLinks";
 import { WelcomeBackStrip } from "@/components/profile/WelcomeBackStrip";
 import { adminRoleToProfileRole } from "@/lib/profile-mappers";
 import { DEX_SIDEBAR_NAV, pathnameIsDexHub } from "@/lib/dex-nav";
 import { SchoolContextBar } from "@/components/admin/school/SchoolContextBar";
+import { adminGuideForTier, AUDIENCE_GUIDES } from "@/lib/audience-guides";
 
 const UNIVERSITY_SEGMENTS: { suffix: string; label: string; schoolOnly?: boolean; universityOnly?: boolean }[] = [
   { suffix: "", label: "Dashboard" },
@@ -95,6 +97,12 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
   const adminWelcomeName =
     authMe?.admin?.name?.trim() || authMe?.admin?.email?.trim() || null;
   const adminWelcomeRole = authMe?.admin ? adminRoleToProfileRole(authMe.admin.role) : null;
+  const guideLinks = useMemo(() => {
+    if (isMaster) {
+      return [AUDIENCE_GUIDES.admin_schools, AUDIENCE_GUIDES.admin_higher];
+    }
+    return [adminGuideForTier(authMe?.admin?.organization?.institutionTier)];
+  }, [isMaster, authMe?.admin?.organization?.institutionTier]);
 
   async function logout() {
     invalidateAuthMeCache();
@@ -142,6 +150,7 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
             </Link>
           ))}
           <DashboardChatNavButton variant="tuition" />
+          <DashboardGuideNavLinks guides={guideLinks} />
         </nav>
         {isMaster ? (
           <Link
@@ -198,6 +207,7 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
               </Link>
             ))}
             <DashboardChatNavButton variant="tuition" compact />
+            <DashboardGuideNavLinks guides={guideLinks} compact />
           </nav>
         </header>
         <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 md:py-8">

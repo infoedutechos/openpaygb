@@ -1,12 +1,10 @@
 /** Canonical public login chooser and deep links for OdelPay audiences. */
 
+import { AUDIENCE_GUIDES, type AudienceGuideId } from "@/lib/audience-guides";
+
 export const LOGIN_CHOOSER_PATH = "/login";
 
-export type LoginAudience =
-  | "student_schools"
-  | "student_higher"
-  | "admin_schools"
-  | "admin_higher";
+export type LoginAudience = AudienceGuideId;
 
 export type LoginChooserCard = {
   id: LoginAudience;
@@ -26,8 +24,8 @@ export const LOGIN_CHOOSER_CARDS: LoginChooserCard[] = [
     subtitle: "Primary & secondary — portal with email or admission number",
     href: "/student/login?segment=schools",
     accent: "sky",
-    guideHref: "/help/guide-student-schools",
-    guideLabel: "Student schools guide",
+    guideHref: AUDIENCE_GUIDES.student_schools.helpHref,
+    guideLabel: AUDIENCE_GUIDES.student_schools.label,
   },
   {
     id: "student_higher",
@@ -35,8 +33,8 @@ export const LOGIN_CHOOSER_CARDS: LoginChooserCard[] = [
     subtitle: "Universities & tertiary — portal with email or admission number",
     href: "/student/login?segment=higher",
     accent: "cyan",
-    guideHref: "/help/guide-student-higher",
-    guideLabel: "Student higher guide",
+    guideHref: AUDIENCE_GUIDES.student_higher.helpHref,
+    guideLabel: AUDIENCE_GUIDES.student_higher.label,
   },
   {
     id: "admin_schools",
@@ -44,8 +42,8 @@ export const LOGIN_CHOOSER_CARDS: LoginChooserCard[] = [
     subtitle: "School staff — programmes, students, bills & receipts",
     href: "/admin/login?school=1",
     accent: "violet",
-    guideHref: "/help/guide-admin-schools",
-    guideLabel: "School admin guide",
+    guideHref: AUDIENCE_GUIDES.admin_schools.helpHref,
+    guideLabel: AUDIENCE_GUIDES.admin_schools.label,
   },
   {
     id: "admin_higher",
@@ -53,7 +51,7 @@ export const LOGIN_CHOOSER_CARDS: LoginChooserCard[] = [
     subtitle: "Institution staff — programmes, fees & tuition admin",
     href: "/admin/login?segment=higher",
     accent: "emerald",
-    guideHref: "/help/guide-admin-higher",
-    guideLabel: "Higher admin guide",
+    guideHref: AUDIENCE_GUIDES.admin_higher.helpHref,
+    guideLabel: AUDIENCE_GUIDES.admin_higher.label,
   },
 ];

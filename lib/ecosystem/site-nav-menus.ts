@@ -62,6 +62,8 @@ export const SITE_HEADER_MENUS: SiteNavMenu[] = [
       { label: "Receipts", href: "/receipt", description: "Payment receipts and ledger" },
       { label: "Institution admin", href: "/school/login", description: "School / org admin sign-in" },
       { label: "Register higher institution", href: "/admin/register?segment=higher", description: "Request a workspace" },
+      { label: "Student guide (higher)", href: "/help/guide-student-higher", description: "Year/semester portal handbook" },
+      { label: "Admin guide (higher)", href: "/help/guide-admin-higher", description: "Programmes, fees & students" },
     ],
   },
   {
@@ -76,9 +78,10 @@ export const SITE_HEADER_MENUS: SiteNavMenu[] = [
       { label: "Request workspace", href: "/admin/register?segment=schools", description: "Self-register your school" },
       { label: "Workspace status", href: "/school/workspace-status", description: "Track registration approval" },
       { label: "School admin", href: "/school/login", description: "Programmes, students, payments" },
+      { label: "Student guide (schools)", href: "/help/guide-student-schools", description: "Term fees & School Code" },
+      { label: "Admin guide (schools)", href: "/help/guide-admin-schools", description: "Sessions, bills & letterhead" },
     ],
-  },
-  {
+  },  {
     id: "openpaygb",
     label: "OPGB",
     href: "/opgb",
@@ -132,6 +135,8 @@ export const SITE_FOOTER_COLUMNS: SiteFooterColumn[] = [
       { label: "Programmes", href: "/pay/default?programmes=1" },
       { label: "Receipts", href: "/receipt" },
       { label: "Register institution", href: "/admin/register?segment=higher" },
+      { label: "Student guide (higher)", href: "/help/guide-student-higher" },
+      { label: "Admin guide (higher)", href: "/help/guide-admin-higher" },
     ],
   },
   {
@@ -142,6 +147,19 @@ export const SITE_FOOTER_COLUMNS: SiteFooterColumn[] = [
       { label: "Workspace status", href: "/school/workspace-status" },
       { label: "School admin", href: "/school/login" },
       { label: "Demo term checkout", href: "/pay/riverside-demo" },
+      { label: "Student guide (schools)", href: "/help/guide-student-schools" },
+      { label: "Admin guide (schools)", href: "/help/guide-admin-schools" },
+    ],
+  },
+  {
+    heading: "Guides",
+    links: [
+      { label: "Student guide (schools)", href: "/help/guide-student-schools" },
+      { label: "Student guide (higher)", href: "/help/guide-student-higher" },
+      { label: "Admin guide (schools)", href: "/help/guide-admin-schools" },
+      { label: "Admin guide (higher)", href: "/help/guide-admin-higher" },
+      { label: "All user guides (index)", href: "/api/docs/guides/USER_GUIDE_INDEX.md" },
+      { label: "Help center", href: "/help" },
     ],
   },
   {

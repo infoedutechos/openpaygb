@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton";
+import { DashboardGuideNavLinks } from "@/components/nav/DashboardGuideNavLinks";
 import { WelcomeBackStrip } from "@/components/profile/WelcomeBackStrip";
 import { useStudentMe } from "@/hooks/useStudentMe";
 import { profileFromStudentMe } from "@/lib/profile-mappers";
 import { DEX_SIDEBAR_NAV, pathnameIsDexHub } from "@/lib/dex-nav";
+import { studentGuidesForPortal } from "@/lib/audience-guides";
 
 export type StudentPortalShellMode = "my" | "student";
 
@@ -94,6 +96,7 @@ export function StudentPortalShell({
             </Link>
           ))}
           <DashboardChatNavButton variant="student" />
+          <DashboardGuideNavLinks guides={studentGuidesForPortal()} />
         </nav>
         <button
           type="button"
@@ -131,6 +134,7 @@ export function StudentPortalShell({
               </Link>
             ))}
             <DashboardChatNavButton variant="student" compact />
+            <DashboardGuideNavLinks guides={studentGuidesForPortal()} compact />
           </nav>
         </header>
         <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 md:max-w-4xl md:py-8">{children}</div>

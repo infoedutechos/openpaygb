@@ -49,8 +49,8 @@ export function SiteFooter({ settings, bottomNavClearance }: Props) {
       }`}
     >
       <div className="mx-auto max-w-6xl px-4 py-10">
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-7 lg:gap-8">
-          <div className="space-y-4 lg:col-span-2">
+        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 xl:gap-6">
+          <div className="space-y-4 md:col-span-2 xl:col-span-2">
             <p className="text-lg font-semibold tracking-tight text-white">{brand}</p>
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-400">{blurb}</p>
 

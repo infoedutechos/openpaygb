@@ -23,6 +23,11 @@ The Atlantis Pro footer uses a **four-column grid** on a light background:
 - Keep **brand + social** in the first column on wide screens.
 - Group links by **product line** (OdelPay Higher, OdelPay Schools) and **settlement layer** (OpenPayGB / Dex).
 - Put **admin, help, and policy** links under Services.
+- Put the **four audience handbooks** in a dedicated **Guides** footer column, and also under each OdelPay product column + header dropdowns.
+
+**Canonical guide URLs:** `lib/audience-guides.ts` → `/help/guide-student-schools`, `/help/guide-student-higher`, `/help/guide-admin-schools`, `/help/guide-admin-higher`.
+
+**Dashboards:** `DashboardGuideNavLinks` is wired into Tuition Admin shell, Student portal shell, and Master Manager shell sidebars (and mobile strips).
 
 ---
 

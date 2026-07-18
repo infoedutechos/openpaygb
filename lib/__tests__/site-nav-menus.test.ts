@@ -29,7 +29,17 @@ describe("site-nav-menus", () => {
 
   it("defines footer columns for product lines and ecosystem", () => {
     expect(SITE_FOOTER_COLUMNS.map((c) => c.heading)).toContain("OdelPay — Schools");
+    expect(SITE_FOOTER_COLUMNS.map((c) => c.heading)).toContain("Guides");
     expect(SITE_FOOTER_COLUMNS.map((c) => c.heading)).toContain("Policies");
+    const guides = SITE_FOOTER_COLUMNS.find((c) => c.heading === "Guides");
+    expect(guides?.links.map((l) => l.href)).toEqual([
+      "/help/guide-student-schools",
+      "/help/guide-student-higher",
+      "/help/guide-admin-schools",
+      "/help/guide-admin-higher",
+      "/api/docs/guides/USER_GUIDE_INDEX.md",
+      "/help",
+    ]);
     const policies = SITE_FOOTER_COLUMNS.find((c) => c.heading === "Policies");
     expect(policies?.links.map((l) => l.label)).toEqual([
       "Platform Terms of Service",
@@ -38,5 +48,14 @@ describe("site-nav-menus", () => {
       "Payment Provider Policy",
       "Help",
     ]);
+  });
+
+  it("includes audience handbooks in Higher and Schools header menus", () => {
+    const higher = SITE_HEADER_MENUS.find((m) => m.id === "odelpay_higher");
+    const schools = SITE_HEADER_MENUS.find((m) => m.id === "odelpay_schools");
+    expect(higher?.items.some((i) => i.href === "/help/guide-student-higher")).toBe(true);
+    expect(higher?.items.some((i) => i.href === "/help/guide-admin-higher")).toBe(true);
+    expect(schools?.items.some((i) => i.href === "/help/guide-student-schools")).toBe(true);
+    expect(schools?.items.some((i) => i.href === "/help/guide-admin-schools")).toBe(true);
   });
 });

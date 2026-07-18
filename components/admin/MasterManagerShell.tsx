@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton";
+import { DashboardGuideNavLinks } from "@/components/nav/DashboardGuideNavLinks";
 import { WelcomeBackStrip } from "@/components/profile/WelcomeBackStrip";
 import { useAuthMe } from "@/hooks/useAuthMe";
 import { DEX_SIDEBAR_NAV, pathnameIsDexHub } from "@/lib/dex-nav";
+import { AUDIENCE_GUIDE_LIST, USER_GUIDES_INDEX_HREF } from "@/lib/audience-guides";
 
 const nav: { href: string; label: string; desc?: string }[] = [
   { href: "/admin/master", label: "Overview", desc: "Platform totals" },
@@ -109,6 +111,11 @@ const nav: { href: string; label: string; desc?: string }[] = [
     label: "Documentation",
     desc: "Searchable docs library",
   },
+  {
+    href: USER_GUIDES_INDEX_HREF,
+    label: "User guides",
+    desc: "Four audience handbooks",
+  },
 ];
 
 function navActive(pathname: string, href: string): boolean {
@@ -181,6 +188,7 @@ export default function MasterManagerShell({
             </Link>
           ))}
           <DashboardChatNavButton variant="master" />
+          <DashboardGuideNavLinks guides={AUDIENCE_GUIDE_LIST} />
         </nav>
 
         <div className="mt-6 space-y-1 border-t border-amber-500/10 px-2 pt-4">
@@ -244,6 +252,7 @@ export default function MasterManagerShell({
               </Link>
             ))}
             <DashboardChatNavButton variant="master" compact />
+            <DashboardGuideNavLinks guides={AUDIENCE_GUIDE_LIST} compact />
           </nav>
         </header>
         <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 md:py-8">{children}</div>

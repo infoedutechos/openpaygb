@@ -152,6 +152,15 @@ export function DeveloperDashboard() {
           <Link href="/help?hub=dex" className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-200 hover:border-emerald-400/40">
             Integration FAQ
           </Link>
+          <Link
+            href="/api/docs/guides/USER_GUIDE_PARTNER_INTEGRATOR.md"
+            className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-200 hover:border-emerald-400/40"
+          >
+            Partner integrator guide
+          </Link>
+          <Link href="/help" className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-200 hover:border-emerald-400/40">
+            Help center
+          </Link>
           <button type="button" onClick={() => void logout()} className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-400 hover:text-white">
             Sign out
           </button>
