@@ -8,6 +8,7 @@ import type { BalanceProgrammeProgress } from "@/components/tuition/TuitionBalan
 import { useTuitionAdminGate } from "@/hooks/useTuitionAdminGate";
 import { useAuthMe } from "@/hooks/useAuthMe";
 import { useSchoolAdminApi } from "@/hooks/useSchoolAdminApi";
+import { useSchoolClassFilter } from "@/hooks/useSchoolClassFilter";
 import { schoolTermLabel } from "@/lib/school-term";
 
 type Row = {
@@ -48,6 +49,7 @@ export default function AdminReceiptsPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [schoolClassId] = useSchoolClassFilter();
 
   const load = useCallback(async () => {
     if (authLoading) return;
@@ -62,8 +64,14 @@ export default function AdminReceiptsPage() {
       return;
     }
     const r = isSchoolTenant
-      ? await schoolFetch("/api/admin/school/receipts", undefined, { limit: 100 })
-      : await fetch("/api/payments?limit=100&status=confirmed", { credentials: "include" });
+      ? await schoolFetch("/api/admin/school/receipts", undefined, {
+          limit: 100,
+          ...(schoolClassId ? { schoolClassId } : {}),
+        })
+      : await fetch(
+          `/api/payments?limit=100&status=confirmed${schoolClassId ? `&schoolClassId=${encodeURIComponent(schoolClassId)}` : ""}`,
+          { credentials: "include" },
+        );
     const j = await r.json();
     if (isSchoolTenant) {
       setRows(
@@ -127,7 +135,7 @@ export default function AdminReceiptsPage() {
         })
       )
     );
-  }, [authLoading, ensureTuitionSession, isSchoolTenant, schoolFetch]);
+  }, [authLoading, ensureTuitionSession, isSchoolTenant, schoolFetch, schoolClassId]);
 
   useEffect(() => {
     void load();
@@ -152,7 +160,11 @@ export default function AdminReceiptsPage() {
           </Link>
           <button
             type="button"
-            onClick={() => { window.location.href = schoolUrl("/api/admin/school/receipts/export"); }}
+            onClick={() => {
+              window.location.href = schoolUrl("/api/admin/school/receipts/export", {
+                ...(schoolClassId ? { schoolClassId } : {}),
+              });
+            }}
             className="rounded-lg border border-white/15 px-3 py-2 text-cyan-300"
           >
             Export Excel (CSV)

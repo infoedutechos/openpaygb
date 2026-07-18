@@ -12,9 +12,11 @@ export async function GET(req: Request) {
 
     const termParam = url.searchParams.get("term");
     const term = termParam ? normalizeSchoolTerm(termParam) : undefined;
+    const schoolClassId = url.searchParams.get("schoolClassId")?.trim() || undefined;
     const receipts = await listSchoolReceipts({
       organizationId: auth.scope.organizationId,
       term,
+      schoolClassId,
     });
 
     const header = ["ReceiptNo", "Date", "StudentName", "Class", "Term", "PaymentMode", "TotalUgx", "Rail"];

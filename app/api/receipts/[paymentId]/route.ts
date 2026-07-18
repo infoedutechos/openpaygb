@@ -69,6 +69,14 @@ export async function GET(req: Request, ctx: { params: Promise<{ paymentId: stri
   });
   const { getReceiptBranding } = await import("@/lib/receipt-branding");
   const branding = await getReceiptBranding(payment.organizationId);
+  const schoolReceiptNo = payment.schoolReceiptNo?.trim() || null;
+  const displayReceiptNo =
+    schoolReceiptNo ||
+    (() => {
+      const year = new Date(issuedAt).getFullYear();
+      const seq = parseInt(payment.id.slice(-6), 16) % 1_000_000;
+      return `ODEL/${year}/${String(seq).padStart(6, "0")}`;
+    })();
 
   return NextResponse.json({
     receipt: {
@@ -92,6 +100,9 @@ export async function GET(req: Request, ctx: { params: Promise<{ paymentId: stri
       feeBreakdown: breakdown,
       ledger,
       branding,
+      schoolReceiptNo,
+      displayReceiptNo,
+      paymentMode: payment.paymentMode,
       verificationUrl: `/receipt/${payment.id}`,
       receiptAccessToken: createReceiptAccessToken({
         id: payment.id,

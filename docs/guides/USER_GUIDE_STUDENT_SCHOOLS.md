@@ -118,6 +118,9 @@ You typically see:
 - Links to receipts, settings, and pay
 - Virtual card panel (if enabled)
 - Balance summary with installment cues
+- **OPGB wallet** panel (multi-asset balances) with a link to withdraw via `/dex/offramp` when enabled
+
+You can show/hide wallet balances on the home panel. Card balance also appears under `/student/card`.
 
 ### Balance (`/student/balance`)
 

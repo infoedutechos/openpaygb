@@ -75,7 +75,8 @@ export async function getReceiptBranding(organizationId: string): Promise<Receip
 
   const platform: ReceiptBrandingBlock = {
     name: platformName,
-    logoUrl: absUrl(platformLogoUrl(siteUi?.platformLogoUploadedAt ?? null)),
+    // Relative paths so Preview works on the current host (abs URLs can break if APP_URL mismatches).
+    logoUrl: platformLogoUrl(siteUi?.platformLogoUploadedAt ?? null),
     phone: supportPhone,
     email: supportEmail,
     address: "",
@@ -84,11 +85,11 @@ export async function getReceiptBranding(organizationId: string): Promise<Receip
 
   const school: ReceiptBrandingBlock = {
     name: org?.name?.trim() || "School",
-    logoUrl: absUrl(schoolLogoPath),
+    logoUrl: schoolLogoPath,
     phone: schoolPhone,
     email: schoolEmail,
     address: schoolAddress,
-    website: schoolWebsite,
+    website: schoolWebsite.startsWith("http") ? schoolWebsite : schoolWebsite ? absUrl(schoolWebsite) ?? schoolWebsite : "",
   };
 
   return {

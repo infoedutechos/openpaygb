@@ -20,6 +20,8 @@ type Receipt = {
   verificationUrl: string;
   feeBreakdown?: ReceiptBreakdown;
   branding?: ReceiptBranding;
+  schoolReceiptNo?: string | null;
+  displayReceiptNo?: string | null;
 };
 
 function programmeShort(code: string): string {
@@ -30,6 +32,12 @@ function formatReceiptNo(paymentId: string, issuedAt: string): string {
   const year = new Date(issuedAt).getFullYear();
   const seq = parseInt(paymentId.slice(-6), 16) % 1_000_000;
   return `ODEL/${year}/${String(seq).padStart(6, "0")}`;
+}
+
+function receiptDisplayNo(receipt: Receipt): string {
+  const preferred = receipt.displayReceiptNo?.trim() || receipt.schoolReceiptNo?.trim();
+  if (preferred) return preferred;
+  return formatReceiptNo(receipt.paymentId, receipt.issuedAt);
 }
 
 function abbrevTx(s: string, head = 4, tail = 4): string {
@@ -155,7 +163,7 @@ export function ReceiptPreviewModal({
             {error && <p className="text-center text-sm text-rose-600">{error}</p>}
             {receipt && !loading && (
               <>
-                <ReceiptRow label="Receipt No" value={formatReceiptNo(receipt.paymentId, receipt.issuedAt)} />
+                <ReceiptRow label="Receipt No" value={receiptDisplayNo(receipt)} />
                 <ReceiptRow label="Student" value={receipt.studentName} />
                 <ReceiptRow label="Programme" value={programmeShort(receipt.programmeCode)} />
                 <ReceiptRow label="Year" value={`YR${receipt.year}`} />

@@ -19,6 +19,7 @@ export type SchoolReceiptRow = {
 export async function listSchoolReceipts(input: {
   organizationId: string;
   term?: number;
+  schoolClassId?: string;
   limit?: number;
 }): Promise<SchoolReceiptRow[]> {
   const payments = await prisma.payment.findMany({
@@ -26,6 +27,9 @@ export async function listSchoolReceipts(input: {
       organizationId: input.organizationId,
       status: PaymentStatus.confirmed,
       ...(input.term ? { semester: normalizeSchoolTerm(input.term) } : {}),
+      ...(input.schoolClassId
+        ? { student: { schoolClassId: input.schoolClassId } }
+        : {}),
     },
     orderBy: { confirmedAt: "desc" },
     take: input.limit ?? 500,

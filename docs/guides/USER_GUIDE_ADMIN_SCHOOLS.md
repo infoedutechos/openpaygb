@@ -240,6 +240,22 @@ When someone says “I paid but cannot see it”:
 
 ---
 
+## School funds, accounts, and outflow (not a personal crypto wallet)
+
+School admins do **not** have a personal OPGB org wallet on the Tuition Hub dashboard. School money is tracked in the ERP:
+
+| View | URL | What you see |
+|------|-----|--------------|
+| Dashboard KPIs | `/admin/school-dashboard` | Received, outstanding, income vs expenditure |
+| Accounts | `/admin/school-accounts` | Income & expenditure accounts and balances |
+| Outflow | `/admin/school-outflow` | Vouchers, salary payments, fund-guarded cash out |
+
+To pay suppliers or salary: use **Outflow** after funds are appropriated. Crypto/MoMo custodial withdraw queues for students live under Dex (`/dex/offramp`); platform masters clear withdraw ops at `/admin/master/opgb-ops`.
+
+Virtual OpenPayGB **student** cards are a higher-institution feature (`/admin/virtual-cards`); school ERP focuses on bills and accounts instead.
+
+---
+
 ## Escalation to platform master
 
 Escalate when you need:

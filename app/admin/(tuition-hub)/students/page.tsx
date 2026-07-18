@@ -15,6 +15,7 @@ import { TenantList } from "@/components/tuition/TenantList";
 import { useTuitionAdminGate } from "@/hooks/useTuitionAdminGate";
 import { useMasterOrgSlug } from "@/hooks/useMasterOrgSlug";
 import { useSchoolAdminApi } from "@/hooks/useSchoolAdminApi";
+import { useSchoolClassFilter } from "@/hooks/useSchoolClassFilter";
 
 type ClassOption = {
   id: string;
@@ -76,7 +77,7 @@ export default function AdminStudentsPage() {
     password: "",
   });
   const [schoolClasses, setSchoolClasses] = useState<ClassOption[]>([]);
-  const [classFilter, setClassFilter] = useState("");
+  const [classFilter, setClassFilter] = useSchoolClassFilter();
   const [payBillStudent, setPayBillStudent] = useState<{ id: string; name: string } | null>(null);
   const [actionStudent, setActionStudent] = useState<{ id: string; name: string } | null>(null);
   const [editStudentId, setEditStudentId] = useState<string | null>(null);

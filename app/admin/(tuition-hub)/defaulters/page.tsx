@@ -3,6 +3,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { formatUgx } from "@/components/admin/school/SchoolContextBar";
 import { useSchoolAdminApi } from "@/hooks/useSchoolAdminApi";
+import { useSchoolClassFilter } from "@/hooks/useSchoolClassFilter";
 
 type Row = {
   studentId: string;
@@ -27,14 +28,18 @@ export default function DefaultersPage() {
   const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("all_due");
   const [rows, setRows] = useState<Row[]>([]);
   const [q, setQ] = useState("");
+  const [schoolClassId] = useSchoolClassFilter();
 
   const load = useCallback(async () => {
     if (needsOrgSlug) return;
-    const r = await schoolFetch("/api/admin/school/defaulters", undefined, { tab });
+    const r = await schoolFetch("/api/admin/school/defaulters", undefined, {
+      tab,
+      ...(schoolClassId ? { schoolClassId } : {}),
+    });
     if (!r.ok) return;
     const j = (await r.json()) as { rows?: Row[] };
     setRows(j.rows ?? []);
-  }, [needsOrgSlug, schoolFetch, tab]);
+  }, [needsOrgSlug, schoolFetch, tab, schoolClassId]);
 
   useEffect(() => {
     void load();
@@ -77,14 +82,26 @@ export default function DefaultersPage() {
         <div className="flex gap-2">
           <button
             type="button"
-            onClick={() => { window.location.href = schoolUrl("/api/admin/school/defaulters/export", { tab, format: "csv" }); }}
+            onClick={() => {
+              window.location.href = schoolUrl("/api/admin/school/defaulters/export", {
+                tab,
+                format: "csv",
+                ...(schoolClassId ? { schoolClassId } : {}),
+              });
+            }}
             className="text-sm text-cyan-300 underline"
           >
             Export CSV
           </button>
           <button
             type="button"
-            onClick={() => { window.location.href = schoolUrl("/api/admin/school/defaulters/export", { tab, format: "pdf" }); }}
+            onClick={() => {
+              window.location.href = schoolUrl("/api/admin/school/defaulters/export", {
+                tab,
+                format: "pdf",
+                ...(schoolClassId ? { schoolClassId } : {}),
+              });
+            }}
             className="text-sm text-emerald-300 underline"
           >
             Export PDF

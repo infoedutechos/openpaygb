@@ -177,9 +177,11 @@ Receipt APIs:
 ### 7) Virtual cards in institution operations
 
 1. Open `/admin/virtual-cards`.
-2. Review card status and balances.
+2. Review card status and balances (per-student OpenPayGB cards).
 3. Assist students with activation/funding on `/student/card`.
 4. Confirm card rail appears in payment history as `openpay_card`.
+
+There is **no** separate institution OPGB “treasury wallet” screen in the Tuition Hub. Student OPGB balances and withdraws use the student portal + Dex (`/dex/offramp`); masters operate the withdraw queue at `/admin/master/opgb-ops`. Use the Dex sidebar link for crypto rails when enabled.
 
 ### 8) Users and settings
 

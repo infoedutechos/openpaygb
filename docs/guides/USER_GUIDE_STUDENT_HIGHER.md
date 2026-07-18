@@ -107,6 +107,9 @@ At `/student` you can see:
 - Quick links to receipts and password settings
 - Virtual card panel
 - Embedded tuition balance panel with installment cues
+- **OPGB wallet** balances (show/hide) and withdraw via `/dex/offramp` when enabled
+
+Card details and top-up: `/student/card`.
 
 ---
 

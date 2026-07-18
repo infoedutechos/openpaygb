@@ -105,6 +105,7 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const status = url.searchParams.get("status") ?? "";
   const studentId = url.searchParams.get("studentId") ?? "";
+  const schoolClassId = url.searchParams.get("schoolClassId")?.trim() ?? "";
   const railParam = url.searchParams.get("rail") ?? "";
   const limit = Math.min(Number(url.searchParams.get("limit") ?? "100") || 100, 500);
   const organizationSlug = url.searchParams.get("organizationSlug")?.trim().toLowerCase() ?? "";
@@ -134,6 +135,11 @@ export async function GET(req: Request) {
     tenantFilter = { organizationId: org.id };
   }
 
+  const classFilter =
+    schoolClassId && isValidObjectId(schoolClassId)
+      ? { student: { schoolClassId } }
+      : {};
+
   const rows = await prisma.payment.findMany({
     where: {
       ...orgWhere,
@@ -143,6 +149,7 @@ export async function GET(req: Request) {
         : {}),
       ...(studentId && isValidObjectId(studentId) ? { studentId } : {}),
       ...railFilter,
+      ...classFilter,
     },
     orderBy: { createdAt: "desc" },
     take: limit,

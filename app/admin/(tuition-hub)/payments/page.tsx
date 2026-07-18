@@ -9,6 +9,7 @@ import { TenantList } from "@/components/tuition/TenantList";
 import type { BalanceProgrammeProgress } from "@/components/tuition/TuitionBalancePanel";
 import { useTuitionAdminGate } from "@/hooks/useTuitionAdminGate";
 import { useMasterOrgSlug } from "@/hooks/useMasterOrgSlug";
+import { useSchoolClassFilter } from "@/hooks/useSchoolClassFilter";
 
 type PaymentRow = {
   id: string;
@@ -113,6 +114,7 @@ function AdminPaymentsPageInner() {
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [refundingId, setRefundingId] = useState<string | null>(null);
   const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [schoolClassId] = useSchoolClassFilter();
 
   useEffect(() => {
     const status = searchParams.get("status");
@@ -150,6 +152,7 @@ function AdminPaymentsPageInner() {
     q.set("limit", master ? "500" : "200");
     if (filterStatus) q.set("status", filterStatus);
     if (filterRail) q.set("rail", filterRail);
+    if (schoolClassId) q.set("schoolClassId", schoolClassId);
     const slugTrim = organizationSlugFilter.trim().toLowerCase();
     if (slugTrim && master) q.set("organizationSlug", slugTrim);
 
@@ -167,7 +170,15 @@ function AdminPaymentsPageInner() {
       if (match) setSelected(match);
     }
     setLoading(false);
-  }, [authLoading, ensureTuitionSession, filterStatus, filterRail, organizationSlugFilter, highlightId]);
+  }, [
+    authLoading,
+    ensureTuitionSession,
+    filterStatus,
+    filterRail,
+    organizationSlugFilter,
+    highlightId,
+    schoolClassId,
+  ]);
 
   useEffect(() => {
     void load();

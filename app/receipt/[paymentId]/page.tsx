@@ -105,6 +105,14 @@ export default async function ReceiptPage({
   });
   const { getReceiptBranding } = await import("@/lib/receipt-branding");
   const branding = await getReceiptBranding(payment.organizationId);
+  const schoolReceiptNo = payment.schoolReceiptNo?.trim() || null;
+  const displayReceiptNo =
+    schoolReceiptNo ||
+    (() => {
+      const year = new Date(issuedAt).getFullYear();
+      const seq = parseInt(paymentId.slice(-6), 16) % 1_000_000;
+      return `ODEL/${year}/${String(seq).padStart(6, "0")}`;
+    })();
   const verifyUrl = absoluteUrl(`/receipt/${paymentId}`);
   let qrDataUrl: string | null = null;
   if (verifyUrl.startsWith("http")) {
@@ -157,7 +165,7 @@ export default async function ReceiptPage({
             <div>
               <h2 className="text-lg font-semibold text-white sm:text-xl">{branding.school.name}</h2>
               <p className="text-xs text-slate-400">School</p>
-              {[branding.school.phone, branding.school.email, branding.school.address]
+              {[branding.school.phone, branding.school.email, branding.school.address, branding.school.website]
                 .filter(Boolean)
                 .map((line) => (
                   <p key={line} className="text-xs text-slate-400">
@@ -169,6 +177,10 @@ export default async function ReceiptPage({
         </div>
         <p className="mt-3 text-sm text-slate-400">Ledger account · tuition payment</p>
         <dl className="mt-6 space-y-2 text-sm text-slate-200">
+          <div className="flex justify-between gap-4">
+            <dt className="text-slate-500">Receipt No</dt>
+            <dd className="font-mono">{displayReceiptNo}</dd>
+          </div>
           <div className="flex justify-between gap-4">
             <dt className="text-slate-500">Student</dt>
             <dd>{payment.student.name ?? "—"}</dd>

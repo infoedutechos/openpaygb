@@ -35,12 +35,14 @@ export async function listSchoolDefaulters(input: {
   term: number;
   tab?: DefaulterTab;
   sessionId?: string | null;
+  schoolClassId?: string;
 }): Promise<{ rows: DefaulterRow[]; groups: { classCode: string; count: number; totalDebtUgx: number }[] }> {
   const term = normalizeSchoolTerm(input.term);
   const students = await prisma.student.findMany({
     where: {
       organizationId: input.organizationId,
       ...schoolSessionWhere(input.sessionId),
+      ...(input.schoolClassId ? { schoolClassId: input.schoolClassId } : {}),
     },
     include: {
       schoolClass: { select: { code: true, name: true } },

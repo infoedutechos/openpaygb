@@ -72,11 +72,42 @@ export async function GET(req: Request, ctx: { params: Promise<{ paymentId: stri
   });
   const { getReceiptBranding } = await import("@/lib/receipt-branding");
   const branding = await getReceiptBranding(payment.organizationId);
+  const schoolReceiptNo = payment.schoolReceiptNo?.trim() || null;
+  const displayReceiptNo =
+    schoolReceiptNo ||
+    (() => {
+      const year = new Date(issuedAt).getFullYear();
+      const seq = parseInt(payment.id.slice(-6), 16) % 1_000_000;
+      return `ODEL/${year}/${String(seq).padStart(6, "0")}`;
+    })();
 
   const pdf = await PDFDocument.create();
-  const page = pdf.addPage([842, Math.max(595, 320 + ledger.rows.length * 12)]);
+  const page = pdf.addPage([842, Math.max(595, 360 + ledger.rows.length * 12)]);
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+
+  async function tryEmbedLogo(bytes: Buffer | Uint8Array | null | undefined) {
+    if (!bytes?.length) return null;
+    const buf = Buffer.isBuffer(bytes) ? bytes : Buffer.from(bytes);
+    try {
+      if (buf[0] === 0xff && buf[1] === 0xd8) return await pdf.embedJpg(buf);
+      if (buf[0] === 0x89 && buf[1] === 0x50) return await pdf.embedPng(buf);
+    } catch {
+      return null;
+    }
+    return null;
+  }
+
+  const { getPlatformLogoRecord } = await import("@/lib/platform-logo");
+  const platformLogoRec = await getPlatformLogoRecord();
+  const orgLogo = await prisma.organization.findUnique({
+    where: { id: payment.organizationId },
+    select: { letterheadLogo: true, faviconIco: true },
+  });
+  const platformImg = await tryEmbedLogo(platformLogoRec.bytes);
+  const schoolImg =
+    (await tryEmbedLogo(orgLogo?.letterheadLogo ?? null)) ??
+    (await tryEmbedLogo(orgLogo?.faviconIco ?? null));
 
   let y = 560;
   const left = 40;
@@ -85,6 +116,12 @@ export async function GET(req: Request, ctx: { params: Promise<{ paymentId: stri
     y -= size + 6;
   };
 
+  if (platformImg) {
+    const h = 36;
+    const w = (platformImg.width / platformImg.height) * h;
+    page.drawImage(platformImg, { x: left, y: y - h + 8, width: Math.min(w, 80), height: h });
+    y -= h + 4;
+  }
   line(branding.platform.name, 14, true);
   if (branding.platform.phone || branding.platform.email) {
     line(
@@ -94,14 +131,26 @@ export async function GET(req: Request, ctx: { params: Promise<{ paymentId: stri
       rgb(0.35, 0.35, 0.38),
     );
   }
+  if (schoolImg) {
+    const h = 32;
+    const w = (schoolImg.width / schoolImg.height) * h;
+    page.drawImage(schoolImg, { x: left, y: y - h + 6, width: Math.min(w, 72), height: h });
+    y -= h + 4;
+  }
   line(branding.school.name, 12, true);
-  const schoolContact = [branding.school.phone, branding.school.email, branding.school.address]
+  const schoolContact = [
+    branding.school.phone,
+    branding.school.email,
+    branding.school.address,
+    branding.school.website,
+  ]
     .filter(Boolean)
     .join(" · ");
   if (schoolContact) {
     line(schoolContact, 8, false, rgb(0.35, 0.35, 0.38));
   }
   line("Ledger Account · Official receipt", 9, false, rgb(0.35, 0.35, 0.38));
+  line(`Receipt No: ${displayReceiptNo}`, 10, true);
   y -= 8;
   line(`Student: ${payment.student.name}`, 10, true);
   if (programme?.name) {

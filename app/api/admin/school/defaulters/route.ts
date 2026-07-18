@@ -15,12 +15,14 @@ export async function GET(req: Request) {
     const term = normalizeSchoolTerm(url.searchParams.get("term") ?? auth.context.activeTerm);
     const tabParam = url.searchParams.get("tab") as DefaulterTab | null;
     const tab = tabParam && TABS.includes(tabParam) ? tabParam : undefined;
+    const schoolClassId = url.searchParams.get("schoolClassId")?.trim() || undefined;
 
     const result = await listSchoolDefaulters({
       organizationId: auth.scope.organizationId,
       term,
       tab,
       sessionId: auth.context.sessionId,
+      schoolClassId,
     });
 
     return NextResponse.json({ term, tab: tab ?? "all_due", ...result, context: auth.context });

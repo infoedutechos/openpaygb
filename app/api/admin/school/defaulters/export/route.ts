@@ -30,6 +30,8 @@ export async function GET(req: Request) {
 
     const tab = url.searchParams.get("tab") ?? undefined;
 
+    const schoolClassId = url.searchParams.get("schoolClassId")?.trim() || undefined;
+
     const { rows } = await listSchoolDefaulters({
 
       organizationId: auth.scope.organizationId,
@@ -37,6 +39,10 @@ export async function GET(req: Request) {
       term,
 
       tab: tab as Parameters<typeof listSchoolDefaulters>[0]["tab"],
+
+      sessionId: auth.context.sessionId,
+
+      schoolClassId,
 
     });
 
