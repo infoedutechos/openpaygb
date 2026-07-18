@@ -11,6 +11,9 @@ import { resolveStudentEnrollmentFromClassStream } from "@/lib/school-structure-
 import { isValidObjectId } from "@/lib/object-id";
 import { loadSchoolOrgContext } from "@/lib/school-org-context";
 import { schoolSessionWhere } from "@/lib/school-session-scope";
+import { allocateAdmissionNo, studentCardPath } from "@/lib/admission-no";
+import { ensureSchoolPayCode } from "@/lib/school-pay-code";
+import { appBaseUrl } from "@/lib/root-metadata";
 
 const CreateBody = z
   .object({
@@ -36,13 +39,7 @@ const CreateBody = z
         path: ["portalPassword"],
       });
     }
-    if (val.portalPassword?.trim() && !val.email?.trim() && !val.admissionNo?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Set an email or admission number so the student can sign in to the portal",
-        path: ["admissionNo"],
-      });
-    }
+    // Admission number is auto-allocated when blank; portalPassword alone is fine.
     const hasProgramme = Boolean(val.programmeCode?.trim());
     const hasClassStream = Boolean(val.schoolClassId?.trim() && val.schoolStreamId?.trim());
     if (!hasProgramme && !hasClassStream) {
@@ -87,26 +84,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid body", details: parsed.error.flatten() }, { status: 400 });
   }
   const data = parsed.data;
-  const admissionNo = data.admissionNo?.trim() ?? "";
+  const requestedAdmission = data.admissionNo?.trim() ?? "";
+  let admissionNo = requestedAdmission;
+  if (!admissionNo) {
+    admissionNo = await allocateAdmissionNo(organizationId);
+  }
   const email = (data.email ?? "").trim().toLowerCase();
   const portalPasswordHash = data.portalPassword?.trim()
     ? await bcrypt.hash(data.portalPassword.trim(), 10)
     : undefined;
 
-  if (admissionNo && portalPasswordHash) {
-    const clash = await prisma.student.findFirst({
-      where: { organizationId, admissionNo },
-      select: { id: true },
-    });
-    if (clash) {
-      return NextResponse.json(
-        {
-          error:
-            "Another student already uses this admission number. Admission numbers must be unique for portal login.",
-        },
-        { status: 409 },
-      );
-    }
+  const clash = await prisma.student.findFirst({
+    where: { organizationId, admissionNo },
+    select: { id: true },
+  });
+  if (clash) {
+    // Previewed / concurrent create — allocate a fresh unique number.
+    admissionNo = await allocateAdmissionNo(organizationId);
   }
 
   let programmeCode = data.programmeCode?.trim().toUpperCase() ?? "";
@@ -147,17 +141,34 @@ export async function POST(req: Request) {
       ...(portalPasswordHash ? { portalPasswordHash } : {}),
     },
   });
+
+  const org = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    select: { name: true, slug: true, institutionTier: true },
+  });
+  const schoolPayCode = await ensureSchoolPayCode(organizationId);
+  const base = appBaseUrl();
+  const cardUrl = `${base}${studentCardPath(doc.id)}`;
+
   return NextResponse.json(
     {
       student: {
         id: doc.id,
         name: doc.name,
+        admissionNo: doc.admissionNo,
+        email: doc.email,
+        phone: doc.phone,
         programmeCode: doc.programmeCode,
         year: doc.year,
         semester: doc.semester,
+        organizationName: org?.name ?? "",
+        organizationSlug: org?.slug ?? "",
+        schoolPayCode,
+        cardUrl,
+        periodLabel: org?.institutionTier === "school" ? "Term" : "Semester",
       },
     },
-    { status: 201 }
+    { status: 201 },
   );
 }
 

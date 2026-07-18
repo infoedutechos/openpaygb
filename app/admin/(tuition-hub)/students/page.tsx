@@ -9,6 +9,7 @@ import { SchoolStudentActionSheet } from "@/components/admin/school/SchoolStuden
 import { SchoolStudentEditModal } from "@/components/admin/school/SchoolStudentEditModal";
 import { SchoolStudentImportModal } from "@/components/admin/school/SchoolStudentImportModal";
 import { SchoolPayCodePanel } from "@/components/admin/SchoolPayCodePanel";
+import { StudentShareCard, type StudentShareCardData } from "@/components/admin/StudentShareCard";
 import { TuitionHubCheckoutExplainerCompact } from "@/components/admin/TuitionHubCheckoutExplainer";
 import { TenantList } from "@/components/tuition/TenantList";
 import { useTuitionAdminGate } from "@/hooks/useTuitionAdminGate";
@@ -57,6 +58,8 @@ export default function AdminStudentsPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [createBusy, setCreateBusy] = useState(false);
+  const [admissionBusy, setAdmissionBusy] = useState(false);
+  const [createdShare, setCreatedShare] = useState<StudentShareCardData | null>(null);
   const [createForm, setCreateForm] = useState({
     name: "",
     admissionNo: "",
@@ -76,6 +79,30 @@ export default function AdminStudentsPage() {
   const [payBillStudent, setPayBillStudent] = useState<{ id: string; name: string } | null>(null);
   const [actionStudent, setActionStudent] = useState<{ id: string; name: string } | null>(null);
   const [editStudentId, setEditStudentId] = useState<string | null>(null);
+
+  const fetchNextAdmission = useCallback(async () => {
+    setAdmissionBusy(true);
+    try {
+      const qp = new URLSearchParams();
+      const slugTrim = organizationSlugFilter.trim().toLowerCase();
+      if (slugTrim && isMaster) qp.set("organizationSlug", slugTrim);
+      const r = await fetch(`/api/students/next-admission${qp.toString() ? `?${qp}` : ""}`, {
+        credentials: "include",
+      });
+      const j = (await r.json()) as { admissionNo?: string; error?: string };
+      if (!r.ok || !j.admissionNo) throw new Error(j.error ?? "Could not allocate admission number");
+      setCreateForm((f) => ({ ...f, admissionNo: j.admissionNo! }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not allocate admission number");
+    } finally {
+      setAdmissionBusy(false);
+    }
+  }, [organizationSlugFilter, isMaster]);
+
+  useEffect(() => {
+    if (!showCreate) return;
+    void fetchNextAdmission();
+  }, [showCreate, fetchNextAdmission]);
 
   useEffect(() => {
     if (!isSchoolTenant) return;
@@ -188,6 +215,13 @@ export default function AdminStudentsPage() {
         </div>
       ) : null}
       {error && <p className="text-sm text-rose-400">{error}</p>}
+      {createdShare ? (
+        <StudentShareCard
+          variant="modal"
+          student={createdShare}
+          onClose={() => setCreatedShare(null)}
+        />
+      ) : null}
       <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
         <button
           type="button"
@@ -229,14 +263,22 @@ export default function AdminStudentsPage() {
                         : {}),
                     }),
                   });
-                  const j = (await r.json()) as { student?: { id: string }; error?: string; details?: unknown };
-                  if (!r.ok) {
+                  const j = (await r.json()) as {
+                    student?: StudentShareCardData;
+                    error?: string;
+                    details?: unknown;
+                  };
+                  if (!r.ok || !j.student) {
                     const detail =
                       j.details && typeof j.details === "object"
                         ? JSON.stringify(j.details)
                         : "";
                     throw new Error(j.error ? `${j.error}${detail ? ` (${detail})` : ""}` : "Create failed");
                   }
+                  setCreatedShare({
+                    ...j.student,
+                    periodLabel: j.student.periodLabel ?? periodLabel,
+                  });
                   setCreateForm({
                     name: "",
                     admissionNo: "",
@@ -268,13 +310,25 @@ export default function AdminStudentsPage() {
               onChange={(e) => setCreateForm((f) => ({ ...f, name: e.target.value }))}
               className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
             />
-            <input
-              placeholder="Admission / registration no. (portal login without email)"
-              title="Parents and students can sign in with this number + portal password when they do not have or use email"
-              value={createForm.admissionNo}
-              onChange={(e) => setCreateForm((f) => ({ ...f, admissionNo: e.target.value }))}
-              className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
-            />
+            <div className="flex gap-2">
+              <input
+                readOnly
+                required
+                placeholder={admissionBusy ? "Generating admission no.…" : "Admission / registration no."}
+                title="Auto-generated when you open Create student. Used for portal login and fee payments with the School Code."
+                value={createForm.admissionNo}
+                className="min-w-0 flex-1 rounded-md border border-cyan-500/30 bg-[#0d1526] px-3 py-2 font-mono text-sm font-semibold tracking-wide text-cyan-100"
+              />
+              <button
+                type="button"
+                disabled={admissionBusy}
+                onClick={() => void fetchNextAdmission()}
+                className="shrink-0 rounded-md border border-white/15 px-2.5 py-2 text-xs text-slate-300 hover:bg-white/5 disabled:opacity-50"
+                title="Generate a different admission number"
+              >
+                {admissionBusy ? "…" : "Regen"}
+              </button>
+            </div>
             {isSchoolTenant ? (
               <>
                 <select
@@ -320,10 +374,11 @@ export default function AdminStudentsPage() {
               className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
             />
             <p className="sm:col-span-2 text-xs leading-relaxed text-slate-500">
-              Portal sign-in works with <strong className="text-slate-400">email + password</strong> or{" "}
-              <strong className="text-slate-400">admission number + password</strong> (no email needed). Leave
-              password blank only if this student should not use the portal yet. Admission number is also used
-              with the School Code to pay fees.
+              Admission / registration number is <strong className="text-slate-400">auto-generated</strong> when you
+              open Create student. After you submit, a printable student card with QR code appears so you can share
+              via WhatsApp, Telegram, and other apps. Portal sign-in works with{" "}
+              <strong className="text-slate-400">email + password</strong> or{" "}
+              <strong className="text-slate-400">admission number + password</strong>.
             </p>
             {isSchoolTenant ? (
               <>
@@ -390,7 +445,7 @@ export default function AdminStudentsPage() {
             </select>
             <button
               type="submit"
-              disabled={createBusy}
+              disabled={createBusy || admissionBusy || !createForm.admissionNo.trim()}
               className="sm:col-span-2 rounded-lg bg-cyan-600 py-2 text-sm font-semibold text-white hover:bg-cyan-500 disabled:opacity-50"
             >
               {createBusy ? "Creating…" : "Create student"}

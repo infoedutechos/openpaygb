@@ -6,6 +6,7 @@ import { ReceiptPreviewModal } from "@/components/admin/ReceiptPreviewModal";
 import type { StudentPaymentRow } from "@/components/admin/StudentPaymentTable";
 import { TuitionBalancePanel, type TuitionBalanceData } from "@/components/tuition/TuitionBalancePanel";
 import { StudentPortalPasswordForm } from "@/components/admin/StudentPortalPasswordForm";
+import { StudentShareCard } from "@/components/admin/StudentShareCard";
 
 function programmeLabel(code: string, year: number, semester: number): string {
   const short = (code.split(/[-/]/)[0] ?? code).trim();
@@ -68,6 +69,7 @@ export type StudentDetailProps = {
   student: {
     id: string;
     name: string;
+    admissionNo?: string;
     email: string;
     phone: string;
     programmeCode: string;
@@ -75,6 +77,9 @@ export type StudentDetailProps = {
     semester: number;
     organizationName: string;
     organizationSlug: string;
+    schoolPayCode?: string;
+    cardUrl?: string;
+    periodLabel?: string;
     portalSignInEnabled?: boolean;
   };
   totalTon: number;
@@ -141,6 +146,14 @@ export function StudentDetailView({
               <span className="font-mono">({student.organizationSlug})</span>
             </p>
             <ul className="mt-4 space-y-2 text-sm text-slate-700">
+              {student.admissionNo ? (
+                <li className="flex flex-wrap items-center gap-2">
+                  <span className="text-slate-400">Admission / registration no.</span>
+                  <span className="font-mono font-semibold tracking-wide text-slate-900">
+                    {student.admissionNo}
+                  </span>
+                </li>
+              ) : null}
               {student.phone ? (
                 <li className="flex items-center gap-2">
                   <span className="text-slate-400" aria-hidden>
@@ -171,6 +184,27 @@ export function StudentDetailView({
             />
           </div>
         </div>
+
+        {student.admissionNo && student.cardUrl ? (
+          <div className="mt-6">
+            <StudentShareCard
+              variant="panel"
+              student={{
+                id: student.id,
+                name: student.name,
+                admissionNo: student.admissionNo,
+                programmeCode: student.programmeCode,
+                year: student.year,
+                semester: student.semester,
+                organizationName: student.organizationName,
+                organizationSlug: student.organizationSlug,
+                schoolPayCode: student.schoolPayCode,
+                cardUrl: student.cardUrl,
+                periodLabel: student.periodLabel,
+              }}
+            />
+          </div>
+        ) : null}
 
         {openPayCardEnabled ? (
           <div className="mt-6 rounded-lg border border-indigo-200 bg-indigo-50/60 px-5 py-4">

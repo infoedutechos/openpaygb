@@ -91,7 +91,8 @@ export async function middleware(req: NextRequest) {
       pathname === "/student/register" ||
       pathname.startsWith("/student/register") ||
       pathname === "/student/claim" ||
-      pathname.startsWith("/student/claim")
+      pathname.startsWith("/student/claim") ||
+      /^\/student\/card\/[a-zA-Z0-9]+$/.test(pathname)
     ) {
       return NextResponse.next({ request: { headers: requestHeaders } });
     }

@@ -9,6 +9,9 @@ import { getStudentBalanceSummary } from "@/lib/tuition-balance";
 import { serializeStudentBalance } from "@/lib/tuition-balance-json";
 import { tryServerDb } from "@/lib/run-server-db";
 import { getOpenPayCardPlatformSettings } from "@/lib/openpay-card-settings";
+import { ensureSchoolPayCode } from "@/lib/school-pay-code";
+import { appBaseUrl } from "@/lib/root-metadata";
+import { studentCardPath } from "@/lib/admission-no";
 
 export default async function AdminStudentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getAdminFromCookies();
@@ -21,7 +24,11 @@ export default async function AdminStudentDetailPage({ params }: { params: Promi
   const studentResult = await tryServerDb(() =>
     prisma.student.findFirst({
       where: { id, ...orgWhere },
-      include: { organization: { select: { slug: true, name: true } } },
+      include: {
+        organization: {
+          select: { id: true, slug: true, name: true, institutionTier: true },
+        },
+      },
     }),
   );
   if (!studentResult.ok) {
@@ -54,7 +61,7 @@ export default async function AdminStudentDetailPage({ params }: { params: Promi
   const totalTon = agg._sum.tonAmount ?? 0;
   const totalUgx = agg._sum.totalUgx ?? 0;
 
-  const [openPayCardSettings, openPayCardResult] = await Promise.all([
+  const [openPayCardSettings, openPayCardResult, schoolPayCode] = await Promise.all([
     getOpenPayCardPlatformSettings(),
     tryServerDb(() =>
       prisma.openPayCard.findUnique({
@@ -62,6 +69,7 @@ export default async function AdminStudentDetailPage({ params }: { params: Promi
         include: { _count: { select: { topups: true } } },
       }),
     ),
+    ensureSchoolPayCode(student.organizationId),
   ]);
 
   const balanceSummary = await getStudentBalanceSummary({
@@ -87,11 +95,15 @@ export default async function AdminStudentDetailPage({ params }: { params: Promi
     confirmedAt: p.confirmedAt?.toISOString() ?? null,
   }));
 
+  const cardUrl = `${appBaseUrl()}${studentCardPath(student.id)}`;
+  const periodLabel = student.organization.institutionTier === "school" ? "Term" : "Semester";
+
   return (
     <StudentDetailView
       student={{
         id: student.id,
         name: student.name,
+        admissionNo: student.admissionNo,
         email: student.email,
         phone: student.phone,
         programmeCode: student.programmeCode,
@@ -99,6 +111,9 @@ export default async function AdminStudentDetailPage({ params }: { params: Promi
         semester: student.semester,
         organizationName: student.organization.name,
         organizationSlug: student.organization.slug,
+        schoolPayCode,
+        cardUrl,
+        periodLabel,
         portalSignInEnabled: Boolean(student.portalPasswordHash),
       }}
       totalTon={totalTon}
