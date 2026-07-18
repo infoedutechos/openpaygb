@@ -166,6 +166,8 @@ Restore-related:
 3. Inspect **last 30 days**, **countries today**, **countries (all time)**, and **top locations** (city/region when the edge provides them).
 4. Optionally toggle **Show visitor counts on the home page**.
 
+**Privacy:** raw IP addresses are **never stored**. Analytics keep a SHA-256 of the anonymous visitor cookie, country code, optional city/region from the CDN edge, and aggregate counts. Rate-limit keys are also hashed.
+
 API:
 
 - `GET /api/master/visitor-stats`

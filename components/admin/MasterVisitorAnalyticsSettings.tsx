@@ -96,7 +96,12 @@ export function MasterVisitorAnalyticsSettings() {
           <h2 className="text-sm font-semibold text-sky-100">Visitor analytics</h2>
           <p className="mt-2 max-w-3xl text-sm text-slate-400">
             Daily and lifetime unique visitors (anonymous cookie), page views, and country / location
-            breakdown from edge geo headers (Vercel / Cloudflare). No raw IPs are stored.
+            breakdown from edge geo headers (Vercel / Cloudflare).
+          </p>
+          <p className="mt-2 max-w-3xl rounded-lg border border-emerald-500/25 bg-emerald-950/20 px-3 py-2 text-xs text-emerald-100/90">
+            Privacy: <strong className="font-semibold">raw IP addresses are never stored</strong>. We keep a
+            SHA-256 of the anonymous visitor cookie, country code, optional city/region, and aggregate counts
+            only. Rate limiting also uses hashed keys — not plaintext IPs.
           </p>
         </div>
         <button

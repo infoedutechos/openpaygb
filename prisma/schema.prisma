@@ -2559,7 +2559,7 @@ model SiteVisitGeoDay {
 
 /**
  * First-seen visitor keys per UTC day (for unique counting).
- * visitorKey is a SHA-256 of the anonymous cookie — never store raw IP.
+ * visitorKey is SHA-256 of the anonymous cookie — raw IP addresses are never stored.
  */
 model SiteVisitSeen {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
