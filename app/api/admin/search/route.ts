@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminFromCookies } from "@/lib/auth";
 import { organizationWhereForSession } from "@/lib/admin-org-scope";
+import { excludeNonTuitionCardHoldersWhere } from "@/lib/admin-openpay-holder";
 import { prisma } from "@/lib/prisma";
 import { apiErrorResponse } from "@/lib/api-error";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
@@ -46,6 +47,7 @@ export async function GET(req: Request) {
 
     const studentWhere = {
       ...(scopedOrgId ? { organizationId: scopedOrgId } : orgWhere),
+      ...excludeNonTuitionCardHoldersWhere(),
       OR: [
         { name: { contains: q } },
         { email: { contains: q } },

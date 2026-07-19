@@ -5,6 +5,7 @@ import type { Payment, Programme, ProgrammeFee } from "@prisma/client";
 import { getAdminFromCookies } from "@/lib/auth";
 import { getDefaultOrganizationId } from "@/lib/default-organization";
 import { organizationWhereForSession } from "@/lib/admin-org-scope";
+import { excludeNonTuitionCardHoldersWhere } from "@/lib/admin-openpay-holder";
 import { prisma } from "@/lib/prisma";
 import { buildStudentProgrammeProgress } from "@/lib/tuition-progress";
 import { resolveStudentEnrollmentFromClassStream } from "@/lib/school-structure-server";
@@ -222,6 +223,7 @@ export async function GET(req: Request) {
       ...orgWhere,
       ...tenantFilter,
       ...sessionFilter,
+      ...excludeNonTuitionCardHoldersWhere(),
       ...(q
         ? {
             OR: [

@@ -5,6 +5,7 @@ import { apiErrorResponse } from "@/lib/api-error";
 import { requireSchoolAdminScope } from "@/lib/school-admin-api";
 import { normalizeSchoolTerm } from "@/lib/school-term";
 import { schoolSessionWhere } from "@/lib/school-session-scope";
+import { excludeNonTuitionCardHoldersWhere } from "@/lib/admin-openpay-holder";
 
 const BulkBillBody = z.object({
   organizationSlug: z.string().optional(),
@@ -73,6 +74,7 @@ export async function POST(req: Request) {
           organizationId: auth.scope.organizationId,
           schoolClassId: body.classId,
           ...schoolSessionWhere(auth.context.sessionId),
+          ...excludeNonTuitionCardHoldersWhere(),
         },
         select: { id: true },
       });

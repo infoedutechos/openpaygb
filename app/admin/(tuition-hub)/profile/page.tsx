@@ -1,6 +1,8 @@
 "use client";
 
 import { EditableAdminProfileSection } from "@/components/profile/EditableAdminProfileSection";
+import { OpenPayCardPanel } from "@/components/student/OpenPayCardPanel";
+import Link from "next/link";
 
 export default function AdminProfilePage() {
   return (
@@ -13,6 +15,15 @@ export default function AdminProfilePage() {
         </p>
       </header>
       <EditableAdminProfileSection includePassword />
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold text-violet-100">My OpenPayGB Card</h2>
+          <Link href="/admin/my-card" className="text-xs text-violet-300/90 hover:underline">
+            Open full card page →
+          </Link>
+        </div>
+        <OpenPayCardPanel apiBase="/api/admin/openpay-card" showTuitionHint={false} />
+      </div>
     </div>
   );
 }

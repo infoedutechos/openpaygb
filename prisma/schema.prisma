@@ -433,10 +433,16 @@ model AdminUser {
   /** Optional profile photo (PNG, JPEG, WebP, ICO) — served from /api/auth/admin/profile-image. */
   profileImage          Bytes?
   profileImageUploadedAt DateTime?
+  /**
+   * Shadow Student id used as OpenPayGB card holder for this admin (wallet / MoMo / TON).
+   * Not a tuition enrollee — programmeCode ADMIN_CARD.
+   */
+  openPayStudentId      String?                   @db.ObjectId
   createdAt             DateTime                  @default(now())
   updatedAt             DateTime                  @updatedAt
 
   @@index([telegramId])
+  @@index([openPayStudentId])
   @@map("adminusers")
 }
 

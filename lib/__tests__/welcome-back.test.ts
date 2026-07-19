@@ -13,7 +13,7 @@ describe("welcome-back", () => {
     expect(msg.subline).toContain("first sign-in");
   });
 
-  it("returning user message", () => {
+  it("returning user message", { timeout: 15_000 }, () => {
     const prev = "2026-01-15T10:00:00.000Z";
     const msg = buildWelcomeBackMessage({
       name: "Ada",

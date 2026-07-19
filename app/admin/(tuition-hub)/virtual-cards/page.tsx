@@ -15,7 +15,7 @@ export default function AdminVirtualCardsPage() {
         apiPath="/api/admin/openpay-cards"
         sectionId="admin-virtual-cards"
         showSchoolColumn={false}
-        description="Cards for students in your organization. Open a student profile to see card details on their record."
+        description="Cards for students and admins in your organization. Admin personal cards use programme ADMIN_CARD."
       />
     </div>
   );

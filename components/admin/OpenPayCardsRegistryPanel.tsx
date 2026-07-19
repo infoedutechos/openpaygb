@@ -194,7 +194,13 @@ export function OpenPayCardsRegistryPanel({
                   <td className="px-3 py-2">
                     <p className="font-medium text-white">{c.studentName}</p>
                     <p className="text-slate-500">{c.studentEmail}</p>
-                    <p className="text-slate-600 font-mono">{c.programmeCode}</p>
+                    <p className="text-slate-600 font-mono">
+                      {c.programmeCode === "ADMIN_CARD" ? (
+                        <span className="text-violet-300/90">Admin card</span>
+                      ) : (
+                        c.programmeCode
+                      )}
+                    </p>
                   </td>
                   {showSchoolColumn ? <td className="px-3 py-2">{c.organizationName}</td> : null}
                   <td className="px-3 py-2 font-mono text-violet-200/90">{c.maskedPan || "—"}</td>

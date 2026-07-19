@@ -20,9 +20,20 @@ type CardStatus = {
   } | null;
   hasCard: boolean;
   canPayTuition: boolean;
+  holderError?: string;
 };
 
-export function OpenPayCardPanel() {
+type Props = {
+  /** API prefix — student default, or `/api/admin/openpay-card` for org admins. */
+  apiBase?: string;
+  /** When false, hide tuition-pay hints (admin wallets). */
+  showTuitionHint?: boolean;
+};
+
+export function OpenPayCardPanel({
+  apiBase = "/api/student/openpay-card",
+  showTuitionHint = true,
+}: Props) {
   const [data, setData] = useState<CardStatus | null>(null);
   const [wantCard, setWantCard] = useState(false);
   const [fundUgx, setFundUgx] = useState("50000");
@@ -41,16 +52,17 @@ export function OpenPayCardPanel() {
 
   const reload = useCallback(async () => {
     try {
-      const r = await fetchJson("/api/student/openpay-card", { credentials: "include" });
+      const r = await fetchJson(apiBase, { credentials: "include" });
       const parsed = await readJsonResponse<CardStatus>(r);
       if (parsed.ok) {
         setData(parsed.data);
         setWantCard(parsed.data.hasCard);
+        if (parsed.data.holderError) setError(parsed.data.holderError);
       }
     } catch (e) {
       setError(clientFetchErrorMessage(e));
     }
-  }, []);
+  }, [apiBase]);
 
   useEffect(() => {
     void reload();
@@ -97,7 +109,7 @@ export function OpenPayCardPanel() {
     setBusy(true);
     setError(null);
     try {
-      const r = await fetch("/api/student/openpay-card/opt-in", {
+      const r = await fetch(`${apiBase}/opt-in`, {
         method: "POST",
         credentials: "include",
       });
@@ -127,7 +139,7 @@ export function OpenPayCardPanel() {
     setNote(null);
     try {
       await pay(async (senderAddr: string) => {
-        const r = await fetch("/api/student/openpay-card/issue/transfer", {
+        const r = await fetch(`${apiBase}/issue/transfer`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -171,7 +183,7 @@ export function OpenPayCardPanel() {
     setError(null);
     setNote(null);
     try {
-      const r = await fetchJson("/api/student/openpay-card/issue/momo-start", {
+      const r = await fetchJson(`${apiBase}/issue/momo-start`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -221,7 +233,7 @@ export function OpenPayCardPanel() {
     setBusy(true);
     setError(null);
     try {
-      const r = await fetchJson("/api/student/openpay-card/fund/momo-start", {
+      const r = await fetchJson(`${apiBase}/fund/momo-start`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -257,7 +269,7 @@ export function OpenPayCardPanel() {
     setError(null);
     try {
       await pay(async (senderAddr: string) => {
-        const r = await fetch("/api/student/openpay-card/fund/transfer", {
+        const r = await fetch(`${apiBase}/fund/transfer`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -289,8 +301,9 @@ export function OpenPayCardPanel() {
       <p className="text-xs font-bold uppercase tracking-wider text-violet-300/90">{PAYMENT_RAIL_OPENPAY_CARD}</p>
       <h2 className="mt-1 text-lg font-semibold text-white">{OPEN_PAY_BRAND} platform card</h2>
       <p className="mt-2 text-sm text-slate-400">
-        Optional closed-loop card for tuition. Activate with <strong className="text-emerald-200/90">Mobile Money</strong>{" "}
-        (MTN / Airtel) or TON, then fund and pay tuition from the card at checkout.
+        {showTuitionHint
+          ? "Optional closed-loop card for tuition. Activate with Mobile Money (MTN / Airtel) or TON, then fund and pay tuition from the card at checkout."
+          : "Your personal OpenPayGB wallet card for this school or institution. Activate with Mobile Money (MTN / Airtel) or TON, then fund the UGX balance."}
       </p>
 
       {!data.hasCard ? (
@@ -415,10 +428,16 @@ export function OpenPayCardPanel() {
             {" · "}
             Balance <strong className="text-white">UGX {data.card.balanceUgx.toLocaleString()}</strong>
           </p>
-          <p className="text-xs text-slate-500">
-            At <a href="/student/pay" className="text-cyan-400 hover:underline">Pay tuition</a>, choose &quot;Pay with{" "}
-            {PAYMENT_RAIL_OPENPAY_CARD}&quot; when you want to use this balance.
-          </p>
+          {showTuitionHint ? (
+            <p className="text-xs text-slate-500">
+              At <a href="/student/pay" className="text-cyan-400 hover:underline">Pay tuition</a>, choose &quot;Pay with{" "}
+              {PAYMENT_RAIL_OPENPAY_CARD}&quot; when you want to use this balance.
+            </p>
+          ) : (
+            <p className="text-xs text-slate-500">
+              Fund this card with Mobile Money or TON. Balance is held as closed-loop UGX on OpenPayGB.
+            </p>
+          )}
           <div className="space-y-3 rounded-lg border border-white/10 bg-black/20 p-3">
             <p className="text-xs font-semibold text-slate-400">Add funds (UGX)</p>
             <input

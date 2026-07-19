@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminFromCookies } from "@/lib/auth";
 import { organizationWhereForSession } from "@/lib/admin-org-scope";
+import { excludeNonTuitionCardHoldersWhere } from "@/lib/admin-openpay-holder";
 import { prisma } from "@/lib/prisma";
 import { getStudentBalanceSummary } from "@/lib/tuition-balance";
 import { summarizeOutstandingUgx } from "@/lib/tuition-balance-compact";
@@ -54,6 +55,7 @@ export async function GET(req: Request) {
       where: {
         ...orgWhere,
         ...tenantFilter,
+        ...excludeNonTuitionCardHoldersWhere(),
         ...(q
           ? {
               OR: [
