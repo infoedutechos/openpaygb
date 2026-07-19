@@ -5,10 +5,10 @@ export default function AdminVirtualCardsPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-xl font-semibold text-white">Virtual cards</h1>
+        <h1 className="text-xl font-semibold text-white">OpenPayGB Card</h1>
         <p className="mt-2 max-w-2xl text-sm text-slate-400">
-          {OPEN_PAY_BRAND} cards issued to students in your school workspace. Balances and top-ups update after on-chain
-          or mobile-money confirmation.
+          {OPEN_PAY_BRAND} cards issued to students in your school or institution workspace. Balances and top-ups update
+          after on-chain or mobile-money confirmation.
         </p>
       </header>
       <OpenPayCardsRegistryPanel

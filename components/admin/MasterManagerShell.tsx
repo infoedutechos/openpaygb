@@ -41,7 +41,7 @@ const nav: { href: string; label: string; desc?: string }[] = [
   },
   {
     href: "/admin/master#openpay-cards-overview",
-    label: "Virtual cards",
+    label: "OpenPayGB Card",
     desc: "OpenPayGB registry",
   },
   {
