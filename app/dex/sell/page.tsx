@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { DexPageBack } from "@/components/dex/DexPageBack";
 import { readJsonResponse } from "@/utils/read-json-response";
 
 const CRYPTO_OPTIONS = ["TON", "USDT", "BTC", "ETH"] as const;
@@ -63,6 +64,7 @@ export default function DexSellPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-8">
+      <DexPageBack />
       <h1 className="text-2xl font-semibold text-white">Sell crypto (quote → offramp)</h1>
       <p className="mt-2 text-sm text-slate-400">
         Quote preview only — this page does not settle a sale. After quoting, continue to{" "}

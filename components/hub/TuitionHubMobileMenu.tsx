@@ -58,6 +58,8 @@ export function TuitionHubMobileMenu({
       subtitle={subtitle}
       accent="cyan"
       panelId="tuition-hub-mobile-menu"
+      backHref="/"
+      backLabel="Lobby"
       items={items}
     />
   );

@@ -289,8 +289,8 @@ export function OpenPayCardPanel() {
       <p className="text-xs font-bold uppercase tracking-wider text-violet-300/90">{PAYMENT_RAIL_OPENPAY_CARD}</p>
       <h2 className="mt-1 text-lg font-semibold text-white">{OPEN_PAY_BRAND} platform card</h2>
       <p className="mt-2 text-sm text-slate-400">
-        Optional closed-loop card for tuition. You choose whether to get a card and whether to pay tuition from it at
-        checkout.
+        Optional closed-loop card for tuition. Activate with <strong className="text-emerald-200/90">Mobile Money</strong>{" "}
+        (MTN / Airtel) or TON, then fund and pay tuition from the card at checkout.
       </p>
 
       {!data.hasCard ? (
@@ -388,7 +388,7 @@ export function OpenPayCardPanel() {
                 onClick={() => void payIssueFeeMomo()}
                 className="rounded-lg bg-emerald-600/80 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
               >
-                Pay with MoMo to activate
+                Pay with Mobile Money to activate
                 {issueFeeUgx != null ? ` (UGX ${issueFeeUgx.toLocaleString()})` : ""}
               </button>
             </div>

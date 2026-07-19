@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { DexPageBack } from "@/components/dex/DexPageBack";
 import { readJsonResponse } from "@/utils/read-json-response";
 
 const CRYPTO_OPTIONS = ["TON", "USDT", "BTC", "ETH"] as const;
@@ -120,6 +121,7 @@ export default function DexBuyPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-8">
+      <DexPageBack />
       <h1 className="text-2xl font-semibold text-white">Buy crypto</h1>
       <p className="mt-2 text-sm text-slate-400">
         Fiat → crypto via OPGB settlement (1 OPGB = 1 UGX). Quote updates as you type.

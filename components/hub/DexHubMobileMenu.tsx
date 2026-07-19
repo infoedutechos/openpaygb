@@ -50,6 +50,8 @@ export function DexHubMobileMenu() {
       subtitle="OpenPayGB · buy · convert · offramp"
       accent="violet"
       panelId="dex-hub-mobile-menu"
+      backHref={pathname === "/dex" || pathname === "/opgb" ? "/" : "/dex"}
+      backLabel={pathname === "/dex" || pathname === "/opgb" ? "Lobby" : "Dex Hub"}
       items={items}
     />
   );

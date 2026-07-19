@@ -4,8 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { PLATFORM_SITE_UI_KEY } from "@/lib/site-ui-shared";
 import { countryDisplayName, utcDayKey, type VisitGeo } from "@/lib/visit-geo";
 import { hashVisitorId } from "@/lib/visit-id";
+import { normalizeVisitAction, normalizeVisitPath } from "@/lib/visit-path";
 
 export { VISITOR_COOKIE, hashVisitorId, newVisitorId } from "@/lib/visit-id";
+export { normalizeVisitPath, normalizeVisitAction } from "@/lib/visit-path";
 
 const TOTALS_KEY = "platform";
 
@@ -24,6 +26,7 @@ export async function recordSiteVisit(opts: {
   const visitorKey = hashVisitorId(opts.visitorRawId);
   const countryCode = opts.geo.countryCode || "XX";
   const location = opts.geo.location?.trim() || "";
+  const path = normalizeVisitPath(opts.path);
 
   let isNewUniqueToday = false;
   try {
@@ -40,7 +43,18 @@ export async function recordSiteVisit(opts: {
     isNewUniqueToday = false;
   }
 
+  let isNewPathUniqueToday = false;
+  try {
+    await prisma.siteVisitPathSeen.create({
+      data: { day, path, visitorKey },
+    });
+    isNewPathUniqueToday = true;
+  } catch {
+    isNewPathUniqueToday = false;
+  }
+
   const uniqueInc = isNewUniqueToday ? 1 : 0;
+  const pathUniqueInc = isNewPathUniqueToday ? 1 : 0;
 
   await Promise.all([
     prisma.siteVisitDay.upsert({
@@ -77,19 +91,62 @@ export async function recordSiteVisit(opts: {
     }),
   ]);
 
-  // Best-effort prune of old dedupe rows (keep ~14 days).
+  try {
+    await prisma.siteVisitPathDay.upsert({
+      where: { day_path: { day, path } },
+      create: { day, path, uniqueVisitors: pathUniqueInc, pageViews: 1 },
+      update: {
+        pageViews: { increment: 1 },
+        ...(pathUniqueInc ? { uniqueVisitors: { increment: 1 } } : {}),
+      },
+    });
+  } catch (err) {
+    console.warn("[site-visits] path day upsert skipped", err);
+  }
+
   const pruneBefore = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   void prisma.siteVisitSeen
+    .deleteMany({ where: { day: { lt: pruneBefore } } })
+    .catch(() => undefined);
+  void prisma.siteVisitPathSeen
+    .deleteMany({ where: { day: { lt: pruneBefore } } })
+    .catch(() => undefined);
+  void prisma.siteVisitActionEvent
     .deleteMany({ where: { day: { lt: pruneBefore } } })
     .catch(() => undefined);
 
   return { ok: true, day, isNewUniqueToday };
 }
 
+export async function recordSiteAction(opts: {
+  visitorRawId: string;
+  path?: string;
+  action: string;
+}): Promise<{ ok: true; day: string }> {
+  const day = utcDayKey();
+  const visitorKey = hashVisitorId(opts.visitorRawId);
+  const path = normalizeVisitPath(opts.path);
+  const action = normalizeVisitAction(opts.action);
+
+  await Promise.all([
+    prisma.siteVisitActionDay.upsert({
+      where: { day_path_action: { day, path, action } },
+      create: { day, path, action, count: 1 },
+      update: { count: { increment: 1 } },
+    }),
+    prisma.siteVisitActionEvent.create({
+      data: { day, path, action, visitorKey },
+    }),
+  ]);
+
+  return { ok: true, day };
+}
+
 export type PublicVisitStats = {
   today: { day: string; uniqueVisitors: number; pageViews: number };
   total: { uniqueVisitors: number; pageViews: number };
   showPublic: boolean;
+  scope: "ecosystem";
 };
 
 export async function getPublicVisitStats(): Promise<PublicVisitStats> {
@@ -114,6 +171,7 @@ export async function getPublicVisitStats(): Promise<PublicVisitStats> {
       pageViews: totals?.pageViews ?? 0,
     },
     showPublic: settings?.showPublicVisitorStats !== false,
+    scope: "ecosystem",
   };
 }
 
@@ -142,6 +200,25 @@ export type MasterVisitStats = {
     uniqueVisitors: number;
     pageViews: number;
   }>;
+  pages: Array<{
+    path: string;
+    todayUnique: number;
+    todayViews: number;
+    windowUnique: number;
+    windowViews: number;
+  }>;
+  actions: Array<{
+    path: string;
+    action: string;
+    count: number;
+  }>;
+  recentActions: Array<{
+    id: string;
+    day: string;
+    path: string;
+    action: string;
+    createdAt: string;
+  }>;
 };
 
 function daysAgoKeys(n: number): string[] {
@@ -157,7 +234,18 @@ export async function getMasterVisitStats(): Promise<MasterVisitStats> {
   const day = utcDayKey();
   const window = daysAgoKeys(30);
 
-  const [todayRow, totals, settings, dayRows, geoToday, geoAll] = await Promise.all([
+  const [
+    todayRow,
+    totals,
+    settings,
+    dayRows,
+    geoToday,
+    geoAll,
+    pathToday,
+    pathWindow,
+    actionRows,
+    recentActions,
+  ] = await Promise.all([
     prisma.siteVisitDay.findUnique({ where: { day } }),
     prisma.siteVisitTotals.findUnique({ where: { key: TOTALS_KEY } }),
     prisma.siteUiSettings.findUnique({
@@ -177,6 +265,33 @@ export async function getMasterVisitStats(): Promise<MasterVisitStats> {
       orderBy: [{ uniqueVisitors: "desc" }, { pageViews: "desc" }],
       take: 500,
     }),
+    prisma.siteVisitPathDay
+      .findMany({
+        where: { day },
+        orderBy: [{ pageViews: "desc" }, { uniqueVisitors: "desc" }],
+        take: 100,
+      })
+      .catch(() => [] as Awaited<ReturnType<typeof prisma.siteVisitPathDay.findMany>>),
+    prisma.siteVisitPathDay
+      .findMany({
+        where: { day: { in: window } },
+        orderBy: [{ pageViews: "desc" }],
+        take: 2000,
+      })
+      .catch(() => [] as Awaited<ReturnType<typeof prisma.siteVisitPathDay.findMany>>),
+    prisma.siteVisitActionDay
+      .findMany({
+        where: { day: { in: window } },
+        orderBy: [{ count: "desc" }],
+        take: 500,
+      })
+      .catch(() => [] as Awaited<ReturnType<typeof prisma.siteVisitActionDay.findMany>>),
+    prisma.siteVisitActionEvent
+      .findMany({
+        orderBy: { createdAt: "desc" },
+        take: 100,
+      })
+      .catch(() => [] as Awaited<ReturnType<typeof prisma.siteVisitActionEvent.findMany>>),
   ]);
 
   const dayMap = new Map(dayRows.map((r) => [r.day, r]));
@@ -223,6 +338,41 @@ export async function getMasterVisitStats(): Promise<MasterVisitStats> {
     .sort((a, b) => b.uniqueVisitors - a.uniqueVisitors || b.pageViews - a.pageViews)
     .slice(0, 40);
 
+  const todayPathMap = new Map(pathToday.map((r) => [r.path, r]));
+  const windowPathAgg = new Map<string, { uniqueVisitors: number; pageViews: number }>();
+  for (const r of pathWindow) {
+    const cur = windowPathAgg.get(r.path) ?? { uniqueVisitors: 0, pageViews: 0 };
+    cur.uniqueVisitors += r.uniqueVisitors;
+    cur.pageViews += r.pageViews;
+    windowPathAgg.set(r.path, cur);
+  }
+  const allPaths = new Set([...todayPathMap.keys(), ...windowPathAgg.keys()]);
+  const pages = [...allPaths]
+    .map((path) => {
+      const t = todayPathMap.get(path);
+      const w = windowPathAgg.get(path);
+      return {
+        path,
+        todayUnique: t?.uniqueVisitors ?? 0,
+        todayViews: t?.pageViews ?? 0,
+        windowUnique: w?.uniqueVisitors ?? 0,
+        windowViews: w?.pageViews ?? 0,
+      };
+    })
+    .sort((a, b) => b.windowViews - a.windowViews || b.todayViews - a.todayViews)
+    .slice(0, 80);
+
+  const actionAgg = new Map<string, { path: string; action: string; count: number }>();
+  for (const r of actionRows) {
+    const key = `${r.path}\0${r.action}`;
+    const cur = actionAgg.get(key) ?? { path: r.path, action: r.action, count: 0 };
+    cur.count += r.count;
+    actionAgg.set(key, cur);
+  }
+  const actions = [...actionAgg.values()]
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 120);
+
   return {
     today: {
       day,
@@ -238,6 +388,15 @@ export async function getMasterVisitStats(): Promise<MasterVisitStats> {
     countriesToday,
     countriesAllTime,
     topLocations,
+    pages,
+    actions,
+    recentActions: recentActions.map((e) => ({
+      id: e.id,
+      day: e.day,
+      path: e.path,
+      action: e.action,
+      createdAt: e.createdAt.toISOString(),
+    })),
   };
 }
 

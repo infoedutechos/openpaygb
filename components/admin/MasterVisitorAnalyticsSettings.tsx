@@ -28,6 +28,25 @@ type MasterVisitStats = {
     uniqueVisitors: number;
     pageViews: number;
   }>;
+  pages?: Array<{
+    path: string;
+    todayUnique: number;
+    todayViews: number;
+    windowUnique: number;
+    windowViews: number;
+  }>;
+  actions?: Array<{
+    path: string;
+    action: string;
+    count: number;
+  }>;
+  recentActions?: Array<{
+    id: string;
+    day: string;
+    path: string;
+    action: string;
+    createdAt: string;
+  }>;
 };
 
 function fmt(n: number) {
@@ -95,8 +114,9 @@ export function MasterVisitorAnalyticsSettings() {
         <div>
           <h2 className="text-sm font-semibold text-sky-100">Visitor analytics</h2>
           <p className="mt-2 max-w-3xl text-sm text-slate-400">
-            Daily and lifetime unique visitors (anonymous cookie), page views, and country / location
-            breakdown from edge geo headers (Vercel / Cloudflare).
+            Ecosystem-wide unique visitors and page views (all hubs and routes). Per-page visitors and
+            individual UI actions appear below for Master drill-down. Geo uses edge headers only
+            (Vercel / Cloudflare).
           </p>
           <p className="mt-2 max-w-3xl rounded-lg border border-emerald-500/25 bg-emerald-950/20 px-3 py-2 text-xs text-emerald-100/90">
             Privacy: <strong className="font-semibold">raw IP addresses are never stored</strong>. We keep a
@@ -139,7 +159,8 @@ export function MasterVisitorAnalyticsSettings() {
             <span>
               <span className="font-medium text-white">Show visitor counts on the home page</span>
               <span className="mt-0.5 block text-xs text-slate-500">
-                Public strip shows today + total unique visitors and page views only (no countries).
+                Public strip shows whole-ecosystem today + total unique visitors and page views only
+                (no countries or per-page detail).
               </span>
             </span>
           </label>
@@ -149,6 +170,133 @@ export function MasterVisitorAnalyticsSettings() {
             <Metric label="Today page views" value={fmt(data.today.pageViews)} hint="UTC day" />
             <Metric label="Total visitors" value={fmt(data.total.uniqueVisitors)} hint="All time" />
             <Metric label="Total page views" value={fmt(data.total.pageViews)} hint="All time" />
+          </div>
+
+          <div className="mt-6">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Pages (ecosystem routes)
+            </h3>
+            <p className="mt-1 text-xs text-slate-500">
+              Visitors and views per path. Dynamic ids are normalized (e.g. <code className="text-slate-400">:id</code>).
+              Window = last 30 UTC days.
+            </p>
+            <div className="mt-2 max-h-80 overflow-auto rounded-lg border border-white/10">
+              <table className="min-w-full text-xs">
+                <thead className="sticky top-0 bg-[#0a1528] text-left text-slate-500">
+                  <tr>
+                    <th className="px-3 py-2">Page</th>
+                    <th className="px-3 py-2">Today visitors</th>
+                    <th className="px-3 py-2">Today views</th>
+                    <th className="px-3 py-2">30d visitors</th>
+                    <th className="px-3 py-2">30d views</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(data.pages ?? []).length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-3 py-6 text-center text-slate-500">
+                        No per-page data yet — new visits after this deploy will appear here.
+                      </td>
+                    </tr>
+                  ) : (
+                    (data.pages ?? []).map((r) => (
+                      <tr key={r.path} className="border-t border-white/5 text-slate-200">
+                        <td className="px-3 py-1.5 font-mono text-[11px]">{r.path}</td>
+                        <td className="px-3 py-1.5 tabular-nums">{fmt(r.todayUnique)}</td>
+                        <td className="px-3 py-1.5 tabular-nums">{fmt(r.todayViews)}</td>
+                        <td className="px-3 py-1.5 tabular-nums">{fmt(r.windowUnique)}</td>
+                        <td className="px-3 py-1.5 tabular-nums">{fmt(r.windowViews)}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-6 lg:grid-cols-2">
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Actions by page (30 days)
+              </h3>
+              <p className="mt-1 text-xs text-slate-500">
+                Aggregated clicks and form submits captured on each route.
+              </p>
+              <div className="mt-2 max-h-72 overflow-auto rounded-lg border border-white/10">
+                <table className="min-w-full text-xs">
+                  <thead className="sticky top-0 bg-[#0a1528] text-left text-slate-500">
+                    <tr>
+                      <th className="px-3 py-2">Page</th>
+                      <th className="px-3 py-2">Action</th>
+                      <th className="px-3 py-2">Count</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(data.actions ?? []).length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="px-3 py-6 text-center text-slate-500">
+                          No actions recorded yet.
+                        </td>
+                      </tr>
+                    ) : (
+                      (data.actions ?? []).map((r) => (
+                        <tr
+                          key={`${r.path}-${r.action}`}
+                          className="border-t border-white/5 text-slate-200"
+                        >
+                          <td className="px-3 py-1.5 font-mono text-[11px]">{r.path}</td>
+                          <td className="max-w-[14rem] truncate px-3 py-1.5" title={r.action}>
+                            {r.action}
+                          </td>
+                          <td className="px-3 py-1.5 tabular-nums">{fmt(r.count)}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Recent individual actions
+              </h3>
+              <p className="mt-1 text-xs text-slate-500">
+                Latest anonymized events (hashed visitor only; pruned after ~14 days).
+              </p>
+              <div className="mt-2 max-h-72 overflow-auto rounded-lg border border-white/10">
+                <table className="min-w-full text-xs">
+                  <thead className="sticky top-0 bg-[#0a1528] text-left text-slate-500">
+                    <tr>
+                      <th className="px-3 py-2">When (UTC)</th>
+                      <th className="px-3 py-2">Page</th>
+                      <th className="px-3 py-2">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(data.recentActions ?? []).length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="px-3 py-6 text-center text-slate-500">
+                          No individual actions yet.
+                        </td>
+                      </tr>
+                    ) : (
+                      (data.recentActions ?? []).map((r) => (
+                        <tr key={r.id} className="border-t border-white/5 text-slate-200">
+                          <td className="whitespace-nowrap px-3 py-1.5 font-mono text-[10px] text-slate-400">
+                            {r.createdAt.replace("T", " ").slice(0, 19)}
+                          </td>
+                          <td className="px-3 py-1.5 font-mono text-[11px]">{r.path}</td>
+                          <td className="max-w-[12rem] truncate px-3 py-1.5" title={r.action}>
+                            {r.action}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
 
           <div className="mt-6 grid gap-6 lg:grid-cols-2">

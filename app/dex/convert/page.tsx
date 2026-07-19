@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { DexPageBack } from "@/components/dex/DexPageBack";
 import { readJsonResponse } from "@/utils/read-json-response";
 
 type Quote = {
@@ -62,6 +63,7 @@ export default function DexConvertPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-8">
+      <DexPageBack />
       <h1 className="text-2xl font-semibold text-white">Convert (quote preview)</h1>
       <p className="mt-2 text-sm text-slate-400">
         Live UGX ↔ TON quote preview only. To execute a swap, use{" "}

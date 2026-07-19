@@ -45,7 +45,7 @@ export function SiteVisitorStats() {
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-200/90">
           Visitors
         </p>
-        <p className="text-[10px] text-slate-500">UTC · unique browsers</p>
+        <p className="text-[10px] text-slate-500">Whole ecosystem · UTC · unique browsers</p>
       </div>
       <dl className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div>

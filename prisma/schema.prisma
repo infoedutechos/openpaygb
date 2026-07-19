@@ -2581,3 +2581,65 @@ model SiteVisitSeen {
   @@index([day])
   @@map("site_visit_seen")
 }
+
+/** Per-day page traffic (normalized path). */
+model SiteVisitPathDay {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  day            String
+  path           String
+  uniqueVisitors Int      @default(0)
+  pageViews      Int      @default(0)
+  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now())
+
+  @@unique([day, path])
+  @@index([day])
+  @@index([path])
+  @@map("site_visit_path_days")
+}
+
+/** First-seen visitor per path per UTC day (path-level unique count). */
+model SiteVisitPathSeen {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  day        String
+  path       String
+  visitorKey String
+  createdAt  DateTime @default(now())
+
+  @@unique([day, path, visitorKey])
+  @@index([day])
+  @@map("site_visit_path_seen")
+}
+
+/** Aggregate UI actions per path per UTC day (clicks, submits, etc.). */
+model SiteVisitActionDay {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  day       String
+  path      String
+  action    String
+  count     Int      @default(0)
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@unique([day, path, action])
+  @@index([day])
+  @@index([path])
+  @@map("site_visit_action_days")
+}
+
+/**
+ * Individual anonymized actions (recent window for MAC drill-down).
+ * visitorKey is hashed — raw IPs never stored. Pruned after ~14 days.
+ */
+model SiteVisitActionEvent {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  day        String
+  path       String
+  action     String
+  visitorKey String
+  createdAt  DateTime @default(now())
+
+  @@index([day, path])
+  @@index([createdAt])
+  @@map("site_visit_action_events")
+}

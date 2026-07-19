@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton";
 import { DashboardGuideNavLinks } from "@/components/nav/DashboardGuideNavLinks";
 import { DashboardMobileChrome } from "@/components/nav/DashboardMobileChrome";
+import { PageBackLink } from "@/components/nav/PageBackLink";
 import { WelcomeBackStrip } from "@/components/profile/WelcomeBackStrip";
 import { useStudentMe } from "@/hooks/useStudentMe";
 import { profileFromStudentMe } from "@/lib/profile-mappers";
@@ -115,6 +116,16 @@ export function StudentPortalShell({
           subtitle="Tuition & receipts"
           accent="cyan"
           panelId="student-portal-mobile-menu"
+          backHref={
+            pathname === "/student" || pathname === "/my/dashboard"
+              ? "/"
+              : mode === "my"
+                ? "/my/dashboard"
+                : "/student"
+          }
+          backLabel={
+            pathname === "/student" || pathname === "/my/dashboard" ? "Lobby" : "Dashboard"
+          }
           items={NAV.map((item) => ({
             href: item.href,
             label: item.label,
@@ -143,7 +154,18 @@ export function StudentPortalShell({
             </button>
           }
         />
-        <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 md:max-w-4xl md:py-8">{children}</div>
+        <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 md:max-w-4xl md:py-8">
+          {pathname !== "/student" && pathname !== "/my/dashboard" ? (
+            <div className="mb-4 hidden md:block">
+              <PageBackLink href={mode === "my" ? "/my/dashboard" : "/student"} label="Dashboard" />
+            </div>
+          ) : (
+            <div className="mb-4 hidden md:block">
+              <PageBackLink href="/" label="Lobby" />
+            </div>
+          )}
+          {children}
+        </div>
       </div>
     </div>
   );

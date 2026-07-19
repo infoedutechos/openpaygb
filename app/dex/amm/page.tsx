@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { DexPageBack } from "@/components/dex/DexPageBack";
 import { readJsonResponse } from "@/utils/read-json-response";
 
 type AmmQuote = {
@@ -66,6 +67,7 @@ export default function DexAmmPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-8">
+      <DexPageBack />
       <h1 className="text-2xl font-semibold text-white">AMM swap</h1>
       <p className="mt-2 text-sm text-slate-400">
         Swap OPGB (1:1 UGX) into TON or USDT. Custodial pool — sign in to execute.

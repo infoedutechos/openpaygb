@@ -249,6 +249,8 @@ export default function MasterManagerShell({
           subtitle="Master · ODEL HUB platform"
           accent="amber"
           panelId="master-manager-mobile-menu"
+          backHref={pathname === "/admin/master" || pathname === "/admin/master/" ? "/admin" : "/admin/master"}
+          backLabel={pathname === "/admin/master" || pathname === "/admin/master/" ? "Tuition admin" : "Manager home"}
           items={nav.map((item) => ({
             href: item.href,
             label: item.label,

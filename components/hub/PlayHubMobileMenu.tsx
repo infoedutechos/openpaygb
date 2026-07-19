@@ -38,6 +38,8 @@ export function PlayHubMobileMenu() {
       subtitle="URAPearls · ecosystem links"
       accent="amber"
       panelId="play-hub-mobile-menu"
+      backHref={pathname.startsWith("/clicker") ? "/" : "/clicker"}
+      backLabel={pathname.startsWith("/clicker") ? "Lobby" : "Play Hub"}
       items={items}
     />
   );

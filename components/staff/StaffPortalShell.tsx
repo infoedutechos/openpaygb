@@ -100,6 +100,8 @@ export function StaffPortalShell({ children }: { children: React.ReactNode }) {
           subtitle="Profile & salary"
           accent="amber"
           panelId="staff-portal-mobile-menu"
+          backHref={pathname === "/staff" || pathname === "/staff/" ? "/" : "/staff"}
+          backLabel={pathname === "/staff" || pathname === "/staff/" ? "Lobby" : "Staff home"}
           items={NAV.map((item) => ({
             href: item.href,
             label: item.label,

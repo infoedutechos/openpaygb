@@ -183,6 +183,8 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
           subtitle={shellSubtitle}
           accent="cyan"
           panelId="tuition-admin-mobile-menu"
+          backHref={pathname === "/admin" || pathname === "/admin/" ? "/" : "/admin"}
+          backLabel={pathname === "/admin" || pathname === "/admin/" ? "Lobby" : "Admin home"}
           items={mobileItems}
           secondarySections={[
             {

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { DexWalletConnect } from "@/components/dex/DexWalletConnect";
+import { DexPageBack } from "@/components/dex/DexPageBack";
 import { HUBS } from "@/lib/ecosystem/hubs";
 
 type Props = { searchParams: Promise<{ next?: string }> };
@@ -10,6 +11,7 @@ export default async function DexOnrampPage({ searchParams }: Props) {
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
+      <DexPageBack />
       <div>
         <h1 className="text-2xl font-semibold text-white">Get funds</h1>
         <p className="mt-2 text-sm leading-relaxed text-slate-400">

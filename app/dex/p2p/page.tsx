@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { DexPageBack } from "@/components/dex/DexPageBack";
 import { clientFetchErrorMessage } from "@/lib/client-fetch-error";
 import { readJsonResponse } from "@/utils/read-json-response";
 import { fetchJson } from "@/utils/fetch-json";
@@ -102,6 +103,7 @@ export default function DexP2pPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-8">
+      <DexPageBack />
       <h1 className="text-2xl font-semibold text-white">P2P market</h1>
       <p className="mt-2 text-sm text-slate-400">
         Autonomous peer offers — accept with OPGB escrow (1 OPGB = 1 UGX).

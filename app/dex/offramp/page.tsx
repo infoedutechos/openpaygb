@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { DexPageBack } from "@/components/dex/DexPageBack";
 import { readJsonResponse } from "@/utils/read-json-response";
 
 const ASSETS = ["opgb", "ton", "usdt", "btc", "eth"] as const;
@@ -44,6 +45,7 @@ export default function DexOfframpPage() {
 
   return (
     <div className="mx-auto max-w-xl space-y-6 px-4 py-8">
+      <DexPageBack />
       <div>
         <h1 className="text-2xl font-semibold text-white">Offramp / Withdraw</h1>
         <p className="mt-2 text-sm leading-relaxed text-slate-400">

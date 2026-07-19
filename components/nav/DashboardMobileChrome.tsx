@@ -9,6 +9,7 @@ import {
   type MobileNavItem,
   type MobileNavSection,
 } from "@/components/nav/MobileNavDrawer";
+import { PageBackLink } from "@/components/nav/PageBackLink";
 
 type Props = {
   title: string;
@@ -23,6 +24,9 @@ type Props = {
   /** Extra header actions (logout link, etc.) */
   trailing?: React.ReactNode;
   panelId?: string;
+  /** Optional back control — shown left of the title on mobile dashboards. */
+  backHref?: string;
+  backLabel?: string;
 };
 
 /**
@@ -39,6 +43,8 @@ export function DashboardMobileChrome({
   footer,
   trailing,
   panelId,
+  backHref,
+  backLabel = "Back",
 }: Props) {
   const pathname = usePathname() ?? "";
   const [open, setOpen] = useState(false);
@@ -68,15 +74,18 @@ export function DashboardMobileChrome({
     <>
       <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0a101f]/95 backdrop-blur-md md:hidden">
         <div className="flex items-center justify-between gap-2 px-3 py-2.5">
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-semibold text-white" title={title}>
-              {title}
-            </p>
-            {subtitle ? (
-              <p className="truncate text-[10px] text-slate-500" title={subtitle}>
-                {subtitle}
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            {backHref ? <PageBackLink href={backHref} label={backLabel} compact /> : null}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-semibold text-white" title={title}>
+                {title}
               </p>
-            ) : null}
+              {subtitle ? (
+                <p className="truncate text-[10px] text-slate-500" title={subtitle}>
+                  {subtitle}
+                </p>
+              ) : null}
+            </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {trailing}

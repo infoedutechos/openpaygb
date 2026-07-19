@@ -112,6 +112,13 @@ export function OpgbWalletPanel() {
         </div>
       ) : null}
       <div className="mt-4 flex flex-wrap gap-2 text-sm">
+        <Link
+          href="/student/card"
+          data-track="Activate OpenPayGB Card with Mobile Money"
+          className="rounded-lg bg-emerald-600 px-3 py-1.5 font-medium text-white hover:bg-emerald-500"
+        >
+          Activate card · Mobile Money
+        </Link>
         <Link href="/dex/buy" className="rounded-lg bg-violet-600 px-3 py-1.5 font-medium text-white hover:bg-violet-500">
           Buy crypto
         </Link>

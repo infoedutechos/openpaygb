@@ -75,6 +75,8 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
         subtitle="Builder portal · all product sides"
         accent="emerald"
         panelId="developers-mobile-menu"
+        backHref={pathname === "/developers" || pathname === "/developers/" ? "/" : "/developers"}
+        backLabel={pathname === "/developers" || pathname === "/developers/" ? "Lobby" : "Developers home"}
         items={DEV_NAV.map((item) => ({
           href: item.href,
           label: item.label,
