@@ -7,6 +7,7 @@ export const FULL_BLEED_PREFIXES = [
   "/student",
   "/my",
   "/dex",
+  "/help",
 ] as const;
 
 export function isFullBleedRoute(pathname: string): boolean {
