@@ -8,6 +8,7 @@ import { IconDex } from "@/components/hub/tuition-nav-icons";
 import { navHome, navLearn, navServices, earnRewardsIcon, navGuild } from "@/images";
 import type { StaticImageData } from "next/image";
 import { useStandaloneApp } from "@/components/standalone/StandaloneAppProvider";
+import { useHubVisibility } from "@/components/hub/HubVisibilityProvider";
 
 type NavEntry =
   | {
@@ -33,14 +34,16 @@ function NavInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { app } = useStandaloneApp();
+  const hubHidden = useHubVisibility();
   const hub = searchParams.get("hub");
   const view = searchParams.get("view");
   const onPlayLanding = pathname === "/" && hub === "play";
   const onClicker = pathname.startsWith("/clicker");
   const onDex = pathname.startsWith("/dex");
-  const navItems = app?.hideEcosystemLinks
-    ? NAV_ITEMS.filter((item) => item.kind !== "dex")
-    : NAV_ITEMS;
+  const navItems = NAV_ITEMS.filter((item) => {
+    if (item.kind === "dex" && (app?.hideEcosystemLinks || hubHidden.dex)) return false;
+    return true;
+  });
   const homeClickerHref = app?.lobbyPath ?? "/clicker";
 
   return (

@@ -7,9 +7,10 @@ import { SaveToHomeScreenCard } from "@/components/SaveToHomeScreenCard";
 import { ProductLinesSection } from "@/components/ecosystem/ProductLinesSection";
 import { SiteVisitorStats } from "@/components/hub/SiteVisitorStats";
 import { getPublicSiteUiSettings, linksForFooter } from "@/lib/site-ui-settings";
+import { getHubVisibilityState } from "@/lib/hub-visibility";
 
 export default async function HomePage() {
-  const siteUi = await getPublicSiteUiSettings();
+  const [siteUi, hubHidden] = await Promise.all([getPublicSiteUiSettings(), getHubVisibilityState()]);
   const communityLinks = linksForFooter(siteUi.socialLinks);
 
   return (
@@ -47,24 +48,30 @@ export default async function HomePage() {
                 "Three product lines with separate entry points: tuition and admin for universities, school workspace registration for primary and secondary, and OpenPayGB for OPGB wallet, MoMo, TON, and Dex liquidity."}
             </p>
             <div className="flex flex-wrap gap-3 pt-1">
-              <Link
-                href="/pay"
-                className="rounded-xl bg-gradient-to-r from-cyan-400 to-sky-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-cyan-500/20 hover:brightness-110 transition-[filter]"
-              >
-                Pay tuition — choose school
-              </Link>
-              <Link
-                href="/?hub=dex"
-                className="rounded-xl border border-violet-400/35 bg-violet-500/15 px-6 py-3 text-sm font-semibold text-violet-50 hover:border-violet-300/50 hover:bg-violet-500/25 transition-colors"
-              >
-                Open Dex Hub
-              </Link>
-              <Link
-                href="/?hub=play"
-                className="rounded-xl border border-white/15 bg-white/[0.06] px-6 py-3 text-sm font-semibold text-slate-100 hover:border-cyan-400/35 hover:bg-white/[0.09] transition-colors"
-              >
-                Open Play Hub
-              </Link>
+              {!hubHidden.tuition ? (
+                <Link
+                  href="/pay"
+                  className="rounded-xl bg-gradient-to-r from-cyan-400 to-sky-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-cyan-500/20 hover:brightness-110 transition-[filter]"
+                >
+                  Pay tuition — choose school
+                </Link>
+              ) : null}
+              {!hubHidden.dex ? (
+                <Link
+                  href="/?hub=dex"
+                  className="rounded-xl border border-violet-400/35 bg-violet-500/15 px-6 py-3 text-sm font-semibold text-violet-50 hover:border-violet-300/50 hover:bg-violet-500/25 transition-colors"
+                >
+                  Open Dex Hub
+                </Link>
+              ) : null}
+              {!hubHidden.play ? (
+                <Link
+                  href="/?hub=play"
+                  className="rounded-xl border border-white/15 bg-white/[0.06] px-6 py-3 text-sm font-semibold text-slate-100 hover:border-cyan-400/35 hover:bg-white/[0.09] transition-colors"
+                >
+                  Open Play Hub
+                </Link>
+              ) : null}
               <Link
                 href="/login"
                 className="rounded-xl border border-cyan-400/35 bg-cyan-500/10 px-6 py-3 text-sm font-semibold text-cyan-100 hover:border-cyan-300/50 hover:bg-cyan-500/20 transition-colors"
@@ -78,7 +85,7 @@ export default async function HomePage() {
                 Platform master →
               </Link>
             </div>
-            <RequestSchoolWorkspaceCta className="max-w-xl" />
+            {!hubHidden.tuition ? <RequestSchoolWorkspaceCta className="max-w-xl" /> : null}
             {(communityLinks.length > 0 || siteUi.shareEnabled) && (
               <div className="flex flex-wrap items-center gap-3 pt-2">
                 <SocialLinksRow links={communityLinks} />
@@ -88,41 +95,43 @@ export default async function HomePage() {
           </div>
           <div className="relative space-y-4">
             <SaveToHomeScreenCard />
-            <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-6 backdrop-blur-md">
-            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Tuition Hub · At a glance</h2>
-            <ul className="space-y-4 text-sm leading-relaxed text-slate-200">
-              <li className="flex gap-3">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-400" aria-hidden />
-                Telegram bot path: menu → programme → term → TON instructions.
-              </li>
-              <li className="flex gap-3">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-400" aria-hidden />
-                Web + TON Connect: wallet, on-chain comment, status polling.
-              </li>
-              <li className="flex gap-3">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300/80" aria-hidden />
-                MoMo webhooks → ledger, Telegram notify, UGX→TON bridge hook (
-                <code className="rounded-md bg-black/35 px-1.5 py-0.5 text-xs text-cyan-100/90">/api/webhooks/momo</code>
-                ).
-              </li>
-              <li className="flex gap-3">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" aria-hidden />
-                <span>
-                  <strong className="font-semibold text-slate-100">Multi-tenant.</strong> Each{" "}
-                  <span className="text-cyan-100/90">organization</span> is a workspace with its own programmes, fee
-                  lines, FX snapshots, students, payments, and TON destination wallet. Public pay can be scoped with an
-                  org slug; org admins see one tenant, platform masters can manage many.
-                </span>
-              </li>
-            </ul>
-            </div>
+            {!hubHidden.tuition ? (
+              <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-6 backdrop-blur-md">
+                <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Tuition Hub · At a glance</h2>
+                <ul className="space-y-4 text-sm leading-relaxed text-slate-200">
+                  <li className="flex gap-3">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-400" aria-hidden />
+                    Telegram bot path: menu → programme → term → TON instructions.
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-400" aria-hidden />
+                    Web + TON Connect: wallet, on-chain comment, status polling.
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300/80" aria-hidden />
+                    MoMo webhooks → ledger, Telegram notify, UGX→TON bridge hook (
+                    <code className="rounded-md bg-black/35 px-1.5 py-0.5 text-xs text-cyan-100/90">/api/webhooks/momo</code>
+                    ).
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" aria-hidden />
+                    <span>
+                      <strong className="font-semibold text-slate-100">Multi-tenant.</strong> Each{" "}
+                      <span className="text-cyan-100/90">organization</span> is a workspace with its own programmes, fee
+                      lines, FX snapshots, students, payments, and TON destination wallet. Public pay can be scoped with an
+                      org slug; org admins see one tenant, platform masters can manage many.
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            ) : null}
           </div>
         </div>
       </section>
 
       <SiteVisitorStats />
 
-      <ProductLinesSection />
+      <ProductLinesSection hubHidden={hubHidden} />
 
       <section className="grid gap-4 sm:grid-cols-3">
         {[

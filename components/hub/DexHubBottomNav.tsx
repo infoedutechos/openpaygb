@@ -11,6 +11,7 @@ import {
 } from "@/components/hub/tuition-nav-icons";
 import { HUBS } from "@/lib/ecosystem/hubs";
 import { useStandaloneApp } from "@/components/standalone/StandaloneAppProvider";
+import { useHubVisibility } from "@/components/hub/HubVisibilityProvider";
 
 type DexTab = "home" | "onramp" | "offramp" | "convert" | "buy";
 
@@ -52,10 +53,13 @@ type Props = { mode?: "fixed" | "slot" };
 function NavInner() {
   const pathname = usePathname();
   const { app } = useStandaloneApp();
+  const hubHidden = useHubVisibility();
   const tab = tabFromPath(pathname);
-  const items = app?.hideEcosystemLinks
-    ? ITEMS.filter((item) => item.id !== "pay" && item.id !== "play")
-    : ITEMS;
+  const items = ITEMS.filter((item) => {
+    if (item.id === "pay" && (app?.hideEcosystemLinks || hubHidden.tuition)) return false;
+    if (item.id === "play" && (app?.hideEcosystemLinks || hubHidden.play)) return false;
+    return true;
+  });
 
   return (
     <nav

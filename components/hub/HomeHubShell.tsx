@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, type ReactNode } from "react";
+import { Suspense, useCallback, useEffect, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import TuitionHubBottomNav from "@/components/hub/TuitionHubBottomNav";
 import PlayHubBottomNav from "@/components/hub/PlayHubBottomNav";
@@ -8,6 +8,7 @@ import DexHubBottomNav from "@/components/hub/DexHubBottomNav";
 import { TuitionHubMobileMenu } from "@/components/hub/TuitionHubMobileMenu";
 import { DexHubMobileMenu } from "@/components/hub/DexHubMobileMenu";
 import { useStandaloneApp } from "@/components/standalone/StandaloneAppProvider";
+import { useHubVisibility } from "@/components/hub/HubVisibilityProvider";
 import { HUB_ORDER, homeHubFromSearchParam, homeUrlForHub, type HubKey } from "@/lib/ecosystem/hubs";
 
 /** Home bottom switcher — developers hub has its own lobby at /developers */
@@ -32,12 +33,27 @@ function HomeHubShellInner({ children }: { children: ReactNode }) {
   const { app } = useStandaloneApp();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const hub = homeHubFromSearchParam(searchParams.get("hub"));
+  const hidden = useHubVisibility();
+  const visibleShellHubs = HOME_SHELL_HUBS.filter((key) => !hidden[key]);
+  const requestedHub = homeHubFromSearchParam(searchParams.get("hub"));
+  const hub: HubKey =
+    requestedHub !== "developers" && !hidden[requestedHub]
+      ? requestedHub
+      : (visibleShellHubs[0] ?? "tuition");
+
+  useEffect(() => {
+    if (requestedHub === "developers") return;
+    if (hidden[requestedHub] && visibleShellHubs[0] && visibleShellHubs[0] !== requestedHub) {
+      router.replace(homeUrlForHub(visibleShellHubs[0]), { scroll: false });
+    }
+  }, [hidden, requestedHub, router, visibleShellHubs]);
+
   const setHub = useCallback(
     (next: HubKey) => {
+      if (hidden[next]) return;
       router.replace(homeUrlForHub(next), { scroll: false });
     },
-    [router],
+    [hidden, router],
   );
 
   if (app?.hideEcosystemLinks) {
@@ -55,6 +71,8 @@ function HomeHubShellInner({ children }: { children: ReactNode }) {
     );
   }
 
+  const showSwitcher = visibleShellHubs.length > 0;
+
   return (
     <div className="pb-40">
       {hub === "dex" ? (
@@ -69,20 +87,28 @@ function HomeHubShellInner({ children }: { children: ReactNode }) {
         className="fixed bottom-0 left-1/2 z-50 w-full max-w-xl -translate-x-1/2 overflow-hidden rounded-t-2xl border border-slate-600/40 bg-[rgb(6_14_26_/_0.98)] shadow-[0_-12px_40px_rgba(0,0,0,0.45)] backdrop-blur-md"
         style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
       >
-        <div className="flex gap-0.5 border-b border-white/10 bg-black/25 px-1.5 py-1.5 sm:gap-1 sm:px-2">
-          {HOME_SHELL_HUBS.map((key) => (
-            <button
-              key={key}
-              type="button"
-              data-active={hub === key}
-              onClick={() => setHub(key)}
-              className={`min-h-[44px] ${HUB_TAB_CLASS[key]}`}
-            >
-              {key === "tuition" ? "Tuition" : key === "play" ? "Play" : "Dex"}
-            </button>
-          ))}
-        </div>
-        {hub === "tuition" ? <TuitionHubBottomNav mode="slot" /> : hub === "play" ? <PlayHubBottomNav mode="slot" /> : <DexHubBottomNav mode="slot" />}
+        {showSwitcher ? (
+          <div className="flex gap-0.5 border-b border-white/10 bg-black/25 px-1.5 py-1.5 sm:gap-1 sm:px-2">
+            {visibleShellHubs.map((key) => (
+              <button
+                key={key}
+                type="button"
+                data-active={hub === key}
+                onClick={() => setHub(key)}
+                className={`min-h-[44px] ${HUB_TAB_CLASS[key as keyof typeof HUB_TAB_CLASS]}`}
+              >
+                {key === "tuition" ? "Tuition" : key === "play" ? "Play" : "Dex"}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        {hub === "tuition" && !hidden.tuition ? (
+          <TuitionHubBottomNav mode="slot" />
+        ) : hub === "play" && !hidden.play ? (
+          <PlayHubBottomNav mode="slot" />
+        ) : hub === "dex" && !hidden.dex ? (
+          <DexHubBottomNav mode="slot" />
+        ) : null}
       </div>
     </div>
   );

@@ -12,10 +12,12 @@ import { PwaTitleBarMenu } from "@/components/PwaTitleBarMenu";
 import { PwaRefreshShortcutHandler } from "@/components/PwaRefreshShortcutHandler";
 import { StandaloneAppRoot } from "@/components/standalone/StandaloneAppRoot";
 import { VisitBeacon } from "@/components/hub/VisitBeacon";
+import { HubVisibilityProvider } from "@/components/hub/HubVisibilityProvider";
 import { buildRootMetadata } from "@/lib/root-metadata";
 import { getPlatformBranding } from "@/lib/platform-customisation";
 import { resolveRequestSiteOrigin } from "@/lib/request-site-origin";
 import { getPublicSiteUiSettings } from "@/lib/site-ui-settings";
+import { getHubVisibilityState } from "@/lib/hub-visibility";
 import { headers } from "next/headers";
 import { parseStandaloneAppId, standaloneAppById, standaloneMetadataForApp } from "@/lib/standalone-apps";
 
@@ -39,7 +41,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [siteUi, branding] = await Promise.all([getPublicSiteUiSettings(), getPlatformBranding()]);
+  const [siteUi, branding, hubVisibility] = await Promise.all([
+    getPublicSiteUiSettings(),
+    getPlatformBranding(),
+    getHubVisibilityState(),
+  ]);
   const accent = branding.themeAccentHex.trim();
   return (
     <html lang="en" suppressHydrationWarning>
@@ -50,17 +56,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       >
         <StandaloneAppRoot>
           <PlatformSocialProvider initial={siteUi}>
-            <TonConnectAppProvider>
-              <ConditionalSiteHeaderServer />
-              <ConditionalMainServer>{children}</ConditionalMainServer>
-              <SiteChromeFooter settings={siteUi} />
-              <ConditionalSiteBottomNav />
-              <ShareFab />
-              <PwaTitleBarMenu />
-              <PwaRefreshShortcutHandler />
-              <PlatformAssistShell />
-              <VisitBeacon />
-            </TonConnectAppProvider>
+            <HubVisibilityProvider initial={hubVisibility}>
+              <TonConnectAppProvider>
+                <ConditionalSiteHeaderServer />
+                <ConditionalMainServer>{children}</ConditionalMainServer>
+                <SiteChromeFooter settings={siteUi} />
+                <ConditionalSiteBottomNav />
+                <ShareFab />
+                <PwaTitleBarMenu />
+                <PwaRefreshShortcutHandler />
+                <PlatformAssistShell />
+                <VisitBeacon />
+              </TonConnectAppProvider>
+            </HubVisibilityProvider>
           </PlatformSocialProvider>
         </StandaloneAppRoot>
       </body>

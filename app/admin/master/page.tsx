@@ -23,6 +23,7 @@ import { MasterCronOpsPanel } from "@/components/admin/MasterCronOpsPanel";
 import { MasterKnowledgeBaseSettings } from "@/components/admin/MasterKnowledgeBaseSettings";
 import { MasterPlatformCommunicationsSettings } from "@/components/admin/MasterPlatformCommunicationsSettings";
 import { MasterHubMaintenanceSettings } from "@/components/admin/MasterHubMaintenanceSettings";
+import { MasterHubVisibilitySettings } from "@/components/admin/MasterHubVisibilitySettings";
 import { MasterTelegramHubSettings } from "@/components/admin/MasterTelegramHubSettings";
 import { MasterPaymentProviders } from "@/components/admin/MasterPaymentProviders";
 import { readJsonResponse } from "@/utils/read-json-response";
@@ -310,6 +311,8 @@ export default function MasterManagerOverviewPage() {
       <MasterDemoLoginsSettings />
 
       <MasterVisitorAnalyticsSettings />
+
+      <MasterHubVisibilitySettings />
 
       <MasterHubMaintenanceSettings />
 

@@ -1163,6 +1163,14 @@ model SiteUiSettings {
   playHubMaintenance    Boolean @default(false)
   /** When true, public Dex Hub routes show a maintenance screen. */
   dexHubMaintenance     Boolean @default(false)
+  /** When true, Tuition Hub is fully hidden (no switcher tab / public routes redirect home). */
+  tuitionHubHidden      Boolean @default(false)
+  /** When true, Play Hub is fully hidden. */
+  playHubHidden         Boolean @default(false)
+  /** When true, Dex Hub is fully hidden. */
+  dexHubHidden          Boolean @default(false)
+  /** When true, Developers Hub is fully hidden. */
+  developersHubHidden   Boolean @default(false)
   /** Platform icon/logo (PNG, ICO, JPEG, WebP) — favicon, PWA, share previews. */
   platformLogo              Bytes?
   platformLogoUploadedAt    DateTime?

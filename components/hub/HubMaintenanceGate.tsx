@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import type { HubKey } from "@/lib/ecosystem/hubs";
 import { HUBS } from "@/lib/ecosystem/hubs";
 import { isHubUnderMaintenance } from "@/lib/hub-maintenance";
+import { isHubHidden } from "@/lib/hub-visibility";
 import { getPlatformBranding } from "@/lib/platform-customisation";
 
 const HUB_ACCENT: Record<HubKey, string> = {
@@ -18,6 +20,11 @@ export async function HubMaintenanceGate({
   hub: HubKey;
   children: React.ReactNode;
 }) {
+  /** Hide = hub disappears entirely (redirect home). Maintenance = hub stays listed but blocked. */
+  if (await isHubHidden(hub)) {
+    redirect("/");
+  }
+
   const underMaintenance = await isHubUnderMaintenance(hub);
   if (!underMaintenance) return <>{children}</>;
 

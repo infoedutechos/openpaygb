@@ -15,6 +15,7 @@ import {
 } from "@/components/hub/tuition-nav-icons";
 import { payProgrammesHref, payTenantBasePath } from "@/lib/tuition-nav";
 import { useStandaloneApp } from "@/components/standalone/StandaloneAppProvider";
+import { useHubVisibility } from "@/components/hub/HubVisibilityProvider";
 
 type ActiveMatch = "lobby" | "programmes" | "pay" | "receipt" | "workspace" | "admin" | "play" | "dex";
 
@@ -43,6 +44,7 @@ function NavInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { app } = useStandaloneApp();
+  const hubHidden = useHubVisibility();
   const hub = searchParams.get("hub");
   const payBase = payTenantBasePath(pathname);
   const programmesHref = payProgrammesHref(pathname);
@@ -68,6 +70,8 @@ function NavInner() {
     { name: "School admin", href: "/school/login", icon: IconAdmin, activeMatch: "admin" as const },
     { name: "Play", href: "/clicker", icon: IconPlayHub, activeMatch: "play" as const },
   ].filter((item) => {
+    if (item.activeMatch === "dex" && hubHidden.dex) return false;
+    if (item.activeMatch === "play" && hubHidden.play) return false;
     if (!app?.hideEcosystemLinks) return true;
     return item.activeMatch !== "dex" && item.activeMatch !== "play";
   });

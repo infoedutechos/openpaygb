@@ -1,5 +1,14 @@
 import Link from "next/link";
-import { PRODUCT_LINE_ORDER, PRODUCT_LINES, type ProductLine } from "@/lib/ecosystem/product-lines";
+import { PRODUCT_LINE_ORDER, PRODUCT_LINES, type ProductLine, type ProductLineId } from "@/lib/ecosystem/product-lines";
+import type { HubKey } from "@/lib/ecosystem/hubs";
+
+/** Product-line cards map onto ecosystem hubs for hide toggles. */
+const PRODUCT_LINE_HUB: Record<ProductLineId, HubKey> = {
+  odelpay_higher: "tuition",
+  odelpay_schools: "tuition",
+  openpaygb: "dex",
+  developers: "developers",
+};
 
 const ACCENT: Record<ProductLine["accent"], { border: string; bg: string; title: string; btn: string; btnGhost: string }> = {
   cyan: {
@@ -62,46 +71,58 @@ function ProductLineCard({ line }: { line: ProductLine }) {
   );
 }
 
-export function ProductLinesSection() {
-  const ordered = PRODUCT_LINE_ORDER.map((id) => PRODUCT_LINES.find((p) => p.id === id)!);
+export function ProductLinesSection({
+  hubHidden,
+}: {
+  hubHidden?: Partial<Record<HubKey, boolean>>;
+}) {
+  const ordered = PRODUCT_LINE_ORDER.map((id) => PRODUCT_LINES.find((p) => p.id === id)!).filter(
+    (line) => !hubHidden?.[PRODUCT_LINE_HUB[line.id]],
+  );
   const userLines = ordered.filter((l) => l.surface === "user");
   const builderLines = ordered.filter((l) => l.surface === "builder");
 
+  if (userLines.length === 0 && builderLines.length === 0) return null;
+
   return (
     <div className="space-y-10">
-      <section aria-labelledby="user-product-lines-heading">
-        <div className="mb-4">
-          <h2 id="user-product-lines-heading" className="text-lg font-semibold text-white">
-            User-facing products
-          </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Strictly for the matching audience — students, staff, school/institution admins, and payers. Each portal uses
-            its own sign-in.
-          </p>
-        </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          {userLines.map((line) => (
-            <ProductLineCard key={line.id} line={line} />
-          ))}
-        </div>
-      </section>
+      {userLines.length > 0 ? (
+        <section aria-labelledby="user-product-lines-heading">
+          <div className="mb-4">
+            <h2 id="user-product-lines-heading" className="text-lg font-semibold text-white">
+              User-facing products
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Strictly for the matching audience — students, staff, school/institution admins, and payers. Each portal uses
+              its own sign-in.
+            </p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {userLines.map((line) => (
+              <ProductLineCard key={line.id} line={line} />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
-      <section aria-labelledby="builder-product-lines-heading">
-        <div className="mb-4">
-          <h2 id="builder-product-lines-heading" className="text-lg font-semibold text-white">
-            Developer-facing (builders)
-          </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Partner API and app registry. Developers can open every user product side from the builder portal; gated
-            dashboards still require the relevant user role.
-          </p>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {builderLines.map((line) => (
-            <ProductLineCard key={line.id} line={line} />
-          ))}
-        </div>
-      </section>
+      {builderLines.length > 0 ? (
+        <section aria-labelledby="builder-product-lines-heading">
+          <div className="mb-4">
+            <h2 id="builder-product-lines-heading" className="text-lg font-semibold text-white">
+              Developer-facing (builders)
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Partner API and app registry. Developers can open every user product side from the builder portal; gated
+              dashboards still require the relevant user role.
+            </p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {builderLines.map((line) => (
+              <ProductLineCard key={line.id} line={line} />
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }
