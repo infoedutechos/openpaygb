@@ -629,6 +629,8 @@ model SchoolStaff {
   status          SchoolStaffStatus @default(active)
   /** Portal password for Staff ID login (`/staff/login`). Null = portal sign-in disabled. */
   portalPasswordHash String?
+  /** Shadow Student id that holds this staff member's personal OpenPayGB card. */
+  openPayStudentId String? @db.ObjectId
   lastLoginAt     DateTime?
   previousLoginAt DateTime?
   createdAt       DateTime          @default(now())
@@ -637,6 +639,7 @@ model SchoolStaff {
 
   @@unique([organizationId, staffCode])
   @@index([organizationId, status])
+  @@index([openPayStudentId])
   @@map("school_staff")
 }
 

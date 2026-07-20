@@ -85,6 +85,9 @@ export default function StaffDashboardPage() {
         <Link href="/staff/profile" className="rounded-lg border border-white/15 px-4 py-2 text-slate-200 hover:bg-white/5">
           My profile
         </Link>
+        <Link href="/staff/card" className="rounded-lg border border-amber-500/40 px-4 py-2 text-amber-100 hover:bg-amber-500/10">
+          OpenPayGB Card
+        </Link>
         <Link href="/staff/salary" className="rounded-lg bg-amber-800/80 px-4 py-2 font-semibold text-white">
           Salary history
         </Link>

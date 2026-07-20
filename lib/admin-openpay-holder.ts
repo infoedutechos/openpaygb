@@ -8,7 +8,7 @@ export const ADMIN_CARD_PROGRAMME = "ADMIN_CARD";
 
 export function isNonTuitionCardProgramme(code: string | null | undefined): boolean {
   const c = (code ?? "").trim().toUpperCase();
-  return c === ADMIN_CARD_PROGRAMME || c === "GUEST";
+  return c === ADMIN_CARD_PROGRAMME || c === "STAFF_CARD" || c === "GUEST";
 }
 
 /**
@@ -135,7 +135,7 @@ export async function ensureAdminOpenPayHolder(
 /** Prisma where fragment: exclude guest/admin card holders from tuition student lists. */
 export function excludeNonTuitionCardHoldersWhere() {
   return {
-    programmeCode: { notIn: [ADMIN_CARD_PROGRAMME, "GUEST"] },
+    programmeCode: { notIn: [ADMIN_CARD_PROGRAMME, "STAFF_CARD", "GUEST"] },
   };
 }
 

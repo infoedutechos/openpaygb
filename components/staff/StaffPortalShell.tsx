@@ -11,6 +11,7 @@ import { staffGuidesForPortal } from "@/lib/audience-guides";
 const NAV: { href: string; label: string }[] = [
   { href: "/staff", label: "Dashboard" },
   { href: "/staff/profile", label: "My profile" },
+  { href: "/staff/card", label: "OpenPayGB Card" },
   { href: "/staff/salary", label: "Salary history" },
   { href: "/", label: "Lobby" },
 ];
