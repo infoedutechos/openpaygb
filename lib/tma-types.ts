@@ -25,7 +25,16 @@ export type TmaMePayload = {
     outstandingUgx: number;
     paidUgx: number;
     progressPct: number;
-    nextInstallment: { dueLabel: string; amountUgx: number } | null;
+    /** True when some confirmed pay exists but period not fully settled (TMA cannot invent custom partials). */
+    partialWithoutInstallment: boolean;
+    expectedFullPayTotalUgx: number;
+    nextInstallment: {
+      dueLabel: string;
+      amountUgx: number;
+      installmentPlanId: string;
+      installmentCount: number;
+      installmentIndex: number;
+    } | null;
   } | null;
   card: {
     maskedPan: string;

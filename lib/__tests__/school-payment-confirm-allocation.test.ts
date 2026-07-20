@@ -6,12 +6,20 @@ import {
   maybeAllocateSchoolPaymentOnConfirm,
 } from "@/lib/school-payment-allocation";
 
+const tx = {
+  paymentAllocation: { create: vi.fn() },
+  studentBillCharge: { findMany: vi.fn() },
+  payment: { update: vi.fn() },
+  organization: { update: vi.fn() },
+};
+
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     paymentAllocation: { count: vi.fn(), create: vi.fn(), aggregate: vi.fn() },
     organization: { findUnique: vi.fn(), update: vi.fn() },
     studentBillCharge: { findMany: vi.fn() },
     payment: { update: vi.fn() },
+    $transaction: vi.fn(async (fn: (client: typeof tx) => Promise<unknown>) => fn(tx)),
   },
 }));
 
@@ -31,6 +39,10 @@ describe("school-payment-allocation confirm hook", () => {
     vi.mocked(prisma.paymentAllocation.create).mockReset();
     vi.mocked(prisma.payment.update).mockReset();
     vi.mocked(prisma.paymentAllocation.aggregate).mockReset();
+    vi.mocked(prisma.$transaction).mockClear();
+    tx.paymentAllocation.create.mockReset();
+    tx.studentBillCharge.findMany.mockReset();
+    tx.payment.update.mockReset();
   });
 
   it("skips manual cash payments", async () => {
@@ -48,7 +60,7 @@ describe("school-payment-allocation confirm hook", () => {
   it("allocates online payments for school tenants", async () => {
     vi.mocked(prisma.paymentAllocation.count).mockResolvedValue(0);
     vi.mocked(prisma.organization.findUnique).mockResolvedValue({ institutionTier: "school" } as never);
-    vi.mocked(prisma.studentBillCharge.findMany).mockResolvedValue([
+    tx.studentBillCharge.findMany.mockResolvedValue([
       { id: "c1", amountUgx: 100_000, allocations: [] },
     ] as never);
 
@@ -62,8 +74,9 @@ describe("school-payment-allocation confirm hook", () => {
       rail: PaymentRail.momo_bridge,
     } as never);
 
-    expect(prisma.payment.update).toHaveBeenCalled();
-    expect(prisma.paymentAllocation.create).toHaveBeenCalledTimes(1);
+    expect(prisma.$transaction).toHaveBeenCalled();
+    expect(tx.payment.update).toHaveBeenCalled();
+    expect(tx.paymentAllocation.create).toHaveBeenCalledTimes(1);
   });
 
   it("computes organization fee recovery from allocations", async () => {

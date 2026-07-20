@@ -119,13 +119,26 @@ export default function MasterManagerOverviewPage() {
       {data.openPayCards ? (
         <div className="grid gap-4 sm:grid-cols-2">
           <Link
-            href="/admin/master#openpay-cards-overview"
+            href="/admin/my-card"
             className="rounded-xl border border-violet-500/30 bg-violet-950/20 p-4 hover:border-violet-400/45 transition-colors"
           >
-            <p className="text-xs uppercase tracking-wide text-violet-300/80">Virtual cards (active)</p>
-            <p className="mt-2 text-2xl font-semibold tabular-nums text-white">{data.openPayCards.active}</p>
+            <p className="text-xs uppercase tracking-wide text-violet-300/80">My OpenPayGB Card</p>
+            <p className="mt-2 text-lg font-semibold text-white">Personal wallet card</p>
+            <p className="mt-1 text-[11px] text-slate-500">Reserve · activate with MoMo / TON · fund</p>
+          </Link>
+          <Link
+            href="/admin/virtual-cards"
+            className="rounded-xl border border-violet-500/30 bg-violet-950/20 p-4 hover:border-violet-400/45 transition-colors"
+          >
+            <p className="text-xs uppercase tracking-wide text-violet-300/80">
+              Virtual cards (active)
+              {data.openPayCards ? ` · ${data.openPayCards.active}` : ""}
+            </p>
+            <p className="mt-2 text-lg font-semibold text-white">OpenPayGB Cards registry</p>
             <p className="mt-1 text-[11px] text-slate-500">
-              UGX {data.openPayCards.totalBalanceUgx.toLocaleString()} total balance · View registry ↓
+              {data.openPayCards
+                ? `UGX ${data.openPayCards.totalBalanceUgx.toLocaleString()} total balance`
+                : "All holders across tenants"}
             </p>
           </Link>
         </div>
@@ -263,10 +276,16 @@ export default function MasterManagerOverviewPage() {
           Knowledge base
         </Link>
         <Link
-          href="/admin/master#openpay-cards-overview"
+          href="/admin/my-card"
           className="rounded-xl border border-violet-500/35 bg-violet-950/25 px-5 py-2.5 text-sm font-medium text-violet-100 hover:border-violet-400/55"
         >
-          Virtual cards
+          My OpenPayGB Card
+        </Link>
+        <Link
+          href="/admin/virtual-cards"
+          className="rounded-xl border border-violet-500/35 bg-violet-950/25 px-5 py-2.5 text-sm font-medium text-violet-100 hover:border-violet-400/55"
+        >
+          OpenPayGB Cards
         </Link>
         <Link
           href="/admin/master#mobile-money-providers"

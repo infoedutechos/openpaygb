@@ -18,6 +18,7 @@
 | B-OPS-06 | Master OPGB ops | `/admin/master/opgb-ops` — resolve P2P disputes (release/refund); withdraw queue (mark paid / reject+restore); withdraw no longer auto-completes |
 | B-SCAN-01 | Deep scan 2026-07-16 | Cron truth, Mongo hot indexes, school ERP nav restore, Dex honesty, TMA multi-org + schools, demo P2P prod gate — [DEEP_SCAN_2026-07-16.md](./DEEP_SCAN_2026-07-16.md) |
 | B-SCAN-02 | Deep scan 2026-07-19 | Idempotent payment confirms, MoMo timing-safe secret, dex-settle cron auth, Telegram token resolve, Help chrome, OpenPayGB sidebar/labels — [DEEP_SCAN_2026-07-19.md](./DEEP_SCAN_2026-07-19.md) |
+| B-SCAN-03 | A+ money + TMA + UI close-out | Refund reverses allocations/OpenPayGB; school alloc `$transaction`; TMA fee quotes; hub-hide dock; delete HelpCenterBrowse; admin OpenPay holder APIs |
 | B-HELP-01 | Help Center Ask-anything workspace | `/help` → `HelpCenterWorkspace` (sidebar + Ready when you are) |
 | B-MAC-03 | Hub hide + visitor per-page/actions | `#hub-visibility`, SiteVisitPath*/Action* models, VisitBeacon actions |
 | B-MAC-01 | Master demo logins console | `/admin/master#demo-logins` + `GET/PATCH /api/master/demo-logins` + export + public `/api/public/demo-logins` — customise/publish/download all five demos; lobbies auto-update |
@@ -89,6 +90,8 @@
 | B-OPS-01 | Production env | [PRODUCTION_GO_LIVE.md](./PRODUCTION_GO_LIVE.md) |
 | B-OPS-05 | Vercel deployment account gate | **Resolved 2026-07-16** — production CLI deploy READY and aliased to `https://odelpay.vercel.app`; commit/push local holistic fix tree so GitHub CI matches production |
 | B-OPS-03 | PSP dashboard paste | After `deployment:provision-sync`, paste `MBIYO_*` / `MOMO_*` / `LIVEPAY_*` webhook secrets into each provider dashboard ([WEBHOOK_SECRETS_ALIGNMENT.md](./WEBHOOK_SECRETS_ALIGNMENT.md)) |
+| B-OPS-07 | Production `db:push` | After deploy: push hub-hide + SiteVisitPath/Action models if not already applied (`npm run db:push` against prod `DATABASE_URL`) |
+| B-OPS-08 | Upstash rate limits | Set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` on Vercel for multi-instance rate limits ([DEPLOYMENT_ENV_PRODUCTION.md](./DEPLOYMENT_ENV_PRODUCTION.md)) |
 | P4 | LivePay KES/GHS/XAF checkout | Stub only until LivePay product expansion — use **Mbiyo** multi-country collect when configured |
 | P3 | Card acquiring on checkout | Flutterwave/Paystack hosted pay — new `PaymentRail.card` (needs merchant account + settlement policy) |
 | P3 | LivePay card issuing API | Request docs/sandbox from LivePay; see investigation §6 Phase 2 |

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createTonPayTransfer, TON } from "@ton-pay/api";
-import { getStudentFromCookies } from "@/lib/student-auth";
+import { requireAdminOpenPayHolder } from "@/lib/admin-openpay-api";
 import { getServerTonPayOptions } from "@/lib/ton-pay-options";
 import {
   ensurePendingOpenPayCard,
@@ -19,9 +19,9 @@ const Body = z.object({
 
 export async function POST(req: Request) {
   try {
-    const session = await getStudentFromCookies();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const gate = await requireAdminOpenPayHolder(req);
+    if (!gate.ok) {
+      return NextResponse.json({ error: gate.error }, { status: gate.status });
     }
 
     const settings = await getOpenPayCardPlatformSettings();
@@ -35,17 +35,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid body", details: parsed.error.flatten() }, { status: 400 });
     }
 
-    const student = await prisma.student.findUnique({
-      where: { id: session.sub },
-      select: { organizationId: true },
-    });
-    if (!student) {
-      return NextResponse.json({ error: "Student not found" }, { status: 404 });
-    }
-
-    let card = await getStudentOpenPayCard(session.sub);
+    let card = await getStudentOpenPayCard(gate.holder.studentId);
     if (!card) {
-      card = await ensurePendingOpenPayCard(session.sub, student.organizationId);
+      card = await ensurePendingOpenPayCard(gate.holder.studentId, gate.holder.organizationId);
     }
     if (card.status === "active") {
       return NextResponse.json({ error: "Your OpenPayGB card is already active" }, { status: 409 });
@@ -84,6 +76,6 @@ export async function POST(req: Request) {
       bodyBase64Hash,
     });
   } catch (e) {
-    return apiErrorResponse(e, { route: "POST /api/student/openpay-card/issue/transfer" });
+    return apiErrorResponse(e, { route: "POST /api/admin/openpay-card/issue/transfer" });
   }
 }

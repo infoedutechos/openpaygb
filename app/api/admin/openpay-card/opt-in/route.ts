@@ -1,15 +1,14 @@
 import { NextResponse } from "next/server";
-import { getAdminFromCookies } from "@/lib/auth";
-import { ensureAdminOpenPayHolder } from "@/lib/admin-openpay-holder";
+import { requireAdminOpenPayHolder } from "@/lib/admin-openpay-api";
 import { ensurePendingOpenPayCard } from "@/lib/openpay-card";
 import { getOpenPayCardPlatformSettings } from "@/lib/openpay-card-settings";
 import { apiErrorResponse } from "@/lib/api-error";
 
-export async function POST() {
+export async function POST(req: Request) {
   try {
-    const session = await getAdminFromCookies();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const gate = await requireAdminOpenPayHolder(req);
+    if (!gate.ok) {
+      return NextResponse.json({ error: gate.error }, { status: gate.status });
     }
 
     const settings = await getOpenPayCardPlatformSettings();
@@ -17,8 +16,7 @@ export async function POST() {
       return NextResponse.json({ error: "OpenPayGB card is not available" }, { status: 503 });
     }
 
-    const holder = await ensureAdminOpenPayHolder(session.sub);
-    const card = await ensurePendingOpenPayCard(holder.studentId, holder.organizationId);
+    const card = await ensurePendingOpenPayCard(gate.holder.studentId, gate.holder.organizationId);
 
     return NextResponse.json({
       card: {

@@ -20,7 +20,7 @@ import { DEX_SIDEBAR_NAV, pathnameIsDexHub } from "@/lib/dex-nav";
 import { SchoolContextBar } from "@/components/admin/school/SchoolContextBar";
 import { adminGuideForTier, AUDIENCE_GUIDES } from "@/lib/audience-guides";
 
-const UNIVERSITY_SEGMENTS: { suffix: string; label: string; schoolOnly?: boolean; universityOnly?: boolean }[] = [
+const UNIVERSITY_SEGMENTS: { suffix: string; label: string; schoolOnly?: boolean }[] = [
   { suffix: "", label: "Dashboard" },
   { suffix: "/profile", label: "Profile" },
   { suffix: "/my-card", label: "My OpenPayGB Card" },
@@ -30,10 +30,10 @@ const UNIVERSITY_SEGMENTS: { suffix: string; label: string; schoolOnly?: boolean
   { suffix: "/payments", label: "Payments" },
   { suffix: "/payment-requests", label: "Payment requests" },
   { suffix: "/virtual-cards", label: "OpenPayGB Cards" },
-  { suffix: "/school-staff", label: "Staff", universityOnly: true },
+  { suffix: "/school-staff", label: "Staff" },
   { suffix: "/programmes", label: "Programs" },
   { suffix: "/receipts", label: "Receipts" },
-  { suffix: "/reports", label: "Reports", universityOnly: true },
+  { suffix: "/reports", label: "Reports" },
   { suffix: "/users", label: "Users" },
   { suffix: "/settings", label: "Settings" },
 ];

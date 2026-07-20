@@ -40,9 +40,19 @@ const nav: { href: string; label: string; desc?: string }[] = [
     desc: "Categorised project downloadables",
   },
   {
+    href: "/admin/my-card",
+    label: "My OpenPayGB Card",
+    desc: "Personal card · MoMo / TON",
+  },
+  {
+    href: "/admin/virtual-cards",
+    label: "OpenPayGB Cards",
+    desc: "Org registry · all holders",
+  },
+  {
     href: "/admin/master#openpay-cards-overview",
-    label: "OpenPayGB Card",
-    desc: "OpenPayGB registry",
+    label: "Cards (platform)",
+    desc: "Cross-tenant OpenPayGB overview",
   },
   {
     href: DEX_SIDEBAR_NAV.href,

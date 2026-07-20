@@ -72,6 +72,17 @@ function NavInner() {
   ].filter((item) => {
     if (item.activeMatch === "dex" && hubHidden.dex) return false;
     if (item.activeMatch === "play" && hubHidden.play) return false;
+    if (
+      hubHidden.tuition &&
+      (item.activeMatch === "lobby" ||
+        item.activeMatch === "programmes" ||
+        item.activeMatch === "pay" ||
+        item.activeMatch === "receipt" ||
+        item.activeMatch === "workspace" ||
+        item.activeMatch === "admin")
+    ) {
+      return false;
+    }
     if (!app?.hideEcosystemLinks) return true;
     return item.activeMatch !== "dex" && item.activeMatch !== "play";
   });

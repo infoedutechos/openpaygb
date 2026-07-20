@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getAdminFromCookies } from "@/lib/auth";
-import { ensureAdminOpenPayHolder } from "@/lib/admin-openpay-holder";
+import { requireAdminOpenPayHolder } from "@/lib/admin-openpay-api";
 import { getStudentOpenPayCard } from "@/lib/openpay-card";
 import { startOpenPayCardMomoTopup } from "@/lib/openpay-card-momo-topup";
 import { getOpenPayCardPlatformSettings } from "@/lib/openpay-card-settings";
@@ -28,9 +27,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
 
-    const session = await getAdminFromCookies();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const gate = await requireAdminOpenPayHolder(req);
+    if (!gate.ok) {
+      return NextResponse.json({ error: gate.error }, { status: gate.status });
     }
 
     const settings = await getOpenPayCardPlatformSettings();
@@ -44,8 +43,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid body", details: parsed.error.flatten() }, { status: 400 });
     }
 
-    const holder = await ensureAdminOpenPayHolder(session.sub);
-    const card = await getStudentOpenPayCard(holder.studentId);
+    const card = await getStudentOpenPayCard(gate.holder.studentId);
     if (!card || card.status !== "active") {
       return NextResponse.json({ error: "Activate your OpenPayGB card before adding funds" }, { status: 409 });
     }
@@ -81,8 +79,8 @@ export async function POST(req: Request) {
       rail: parsed.data.rail,
       phone: phoneForRail,
       network: parsed.data.network?.toUpperCase() as "MTN" | "AIRTEL" | undefined,
-      customerEmail: holder.email || undefined,
-      customerName: holder.name || undefined,
+      customerEmail: gate.holder.email || undefined,
+      customerName: gate.holder.name || undefined,
       purpose: "fund",
     });
 

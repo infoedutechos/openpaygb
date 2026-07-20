@@ -1,23 +1,28 @@
-import { PaymentRail, PaymentStatus, type Payment } from "@prisma/client";
+import { PaymentRail, PaymentStatus, type Payment, type Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { normalizeSchoolTerm } from "@/lib/school-term";
 import { loadSchoolOrgContext } from "@/lib/school-org-context";
 import { billChargeSessionWhere } from "@/lib/school-session-scope";
 import { nextSchoolReceiptNo } from "@/lib/school-receipt-no";
 
+type Db = Prisma.TransactionClient | typeof prisma;
+
 /** Apply payment amount FIFO across unpaid bill charge lines for a student/term. */
-export async function allocatePaymentToBillCharges(input: {
-  organizationId: string;
-  paymentId: string;
-  studentId: string;
-  term: number;
-  amountUgx: number;
-  sessionId?: string | null;
-}): Promise<{ allocations: { billChargeId: string; amountUgx: number }[] }> {
+export async function allocatePaymentToBillCharges(
+  input: {
+    organizationId: string;
+    paymentId: string;
+    studentId: string;
+    term: number;
+    amountUgx: number;
+    sessionId?: string | null;
+  },
+  client: Db = prisma,
+): Promise<{ allocations: { billChargeId: string; amountUgx: number }[] }> {
   const term = normalizeSchoolTerm(input.term);
   let remaining = input.amountUgx;
 
-  const charges = await prisma.studentBillCharge.findMany({
+  const charges = await client.studentBillCharge.findMany({
     where: {
       organizationId: input.organizationId,
       studentId: input.studentId,
@@ -38,7 +43,7 @@ export async function allocatePaymentToBillCharges(input: {
     const due = Math.max(0, charge.amountUgx - paidOnCharge);
     if (due <= 0) continue;
     const slice = Math.min(remaining, due);
-    await prisma.paymentAllocation.create({
+    await client.paymentAllocation.create({
       data: {
         organizationId: input.organizationId,
         paymentId: input.paymentId,
@@ -125,20 +130,26 @@ export async function maybeAllocateSchoolPaymentOnConfirm(payment: Payment): Pro
   if (org?.institutionTier !== "school") return;
 
   const ctx = await loadSchoolOrgContext(payment.organizationId);
-  if (!payment.schoolReceiptNo) {
-    const receiptNo = await nextSchoolReceiptNo(payment.organizationId);
-    await prisma.payment.update({
-      where: { id: payment.id },
-      data: { schoolReceiptNo: receiptNo },
-    });
-  }
 
-  await allocatePaymentToBillCharges({
-    organizationId: payment.organizationId,
-    paymentId: payment.id,
-    studentId: payment.studentId,
-    term: payment.semester,
-    amountUgx: payment.totalUgx,
-    sessionId: ctx?.sessionId,
+  await prisma.$transaction(async (tx) => {
+    if (!payment.schoolReceiptNo) {
+      const receiptNo = await nextSchoolReceiptNo(payment.organizationId, tx);
+      await tx.payment.update({
+        where: { id: payment.id },
+        data: { schoolReceiptNo: receiptNo },
+      });
+    }
+
+    await allocatePaymentToBillCharges(
+      {
+        organizationId: payment.organizationId,
+        paymentId: payment.id,
+        studentId: payment.studentId,
+        term: payment.semester,
+        amountUgx: payment.totalUgx,
+        sessionId: ctx?.sessionId,
+      },
+      tx,
+    );
   });
 }

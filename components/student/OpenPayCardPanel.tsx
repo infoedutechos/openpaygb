@@ -28,11 +28,14 @@ type Props = {
   apiBase?: string;
   /** When false, hide tuition-pay hints (admin wallets). */
   showTuitionHint?: boolean;
+  /** Master tenant filter (`orgSlug`) — appended to all card API calls. */
+  organizationSlug?: string | null;
 };
 
 export function OpenPayCardPanel({
   apiBase = "/api/student/openpay-card",
   showTuitionHint = true,
+  organizationSlug = null,
 }: Props) {
   const [data, setData] = useState<CardStatus | null>(null);
   const [wantCard, setWantCard] = useState(false);
@@ -50,9 +53,20 @@ export function OpenPayCardPanel({
   const wallet = useTonWallet();
   const { pay } = useTonPay();
 
+  const apiUrl = useCallback(
+    (path = "") => {
+      const base = `${apiBase}${path}`;
+      const slug = organizationSlug?.trim().toLowerCase();
+      if (!slug) return base;
+      const sep = base.includes("?") ? "&" : "?";
+      return `${base}${sep}orgSlug=${encodeURIComponent(slug)}`;
+    },
+    [apiBase, organizationSlug],
+  );
+
   const reload = useCallback(async () => {
     try {
-      const r = await fetchJson(apiBase, { credentials: "include" });
+      const r = await fetchJson(apiUrl(), { credentials: "include" });
       const parsed = await readJsonResponse<CardStatus>(r);
       if (parsed.ok) {
         setData(parsed.data);
@@ -62,7 +76,7 @@ export function OpenPayCardPanel({
     } catch (e) {
       setError(clientFetchErrorMessage(e));
     }
-  }, [apiBase]);
+  }, [apiUrl]);
 
   useEffect(() => {
     void reload();
@@ -109,7 +123,7 @@ export function OpenPayCardPanel({
     setBusy(true);
     setError(null);
     try {
-      const r = await fetch(`${apiBase}/opt-in`, {
+      const r = await fetch(apiUrl("/opt-in"), {
         method: "POST",
         credentials: "include",
       });
@@ -139,7 +153,7 @@ export function OpenPayCardPanel({
     setNote(null);
     try {
       await pay(async (senderAddr: string) => {
-        const r = await fetch(`${apiBase}/issue/transfer`, {
+        const r = await fetch(apiUrl("/issue/transfer"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -183,7 +197,7 @@ export function OpenPayCardPanel({
     setError(null);
     setNote(null);
     try {
-      const r = await fetchJson(`${apiBase}/issue/momo-start`, {
+      const r = await fetchJson(apiUrl("/issue/momo-start"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -233,7 +247,7 @@ export function OpenPayCardPanel({
     setBusy(true);
     setError(null);
     try {
-      const r = await fetchJson(`${apiBase}/fund/momo-start`, {
+      const r = await fetchJson(apiUrl("/fund/momo-start"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -269,7 +283,7 @@ export function OpenPayCardPanel({
     setError(null);
     try {
       await pay(async (senderAddr: string) => {
-        const r = await fetch(`${apiBase}/fund/transfer`, {
+        const r = await fetch(apiUrl("/fund/transfer"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",

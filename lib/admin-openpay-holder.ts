@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
+import { getDefaultOrganizationId } from "@/lib/default-organization";
 
 /** Programme code for admin personal OpenPayGB card holders (excluded from tuition rolls). */
 export const ADMIN_CARD_PROGRAMME = "ADMIN_CARD";
@@ -11,10 +12,43 @@ export function isNonTuitionCardProgramme(code: string | null | undefined): bool
 }
 
 /**
- * Resolve or create the shadow Student row that holds an org admin's OpenPayGB card.
+ * Resolve which organization an admin's personal card belongs to.
+ * Org admins are locked to their workspace; masters may use orgSlug or platform default.
+ */
+export async function resolveAdminCardOrganizationId(opts: {
+  role: string;
+  organizationId: string | null | undefined;
+  organizationSlug?: string | null;
+}): Promise<string> {
+  if (opts.role === "org_admin") {
+    if (!opts.organizationId) {
+      throw new Error("Link your account to a school or institution workspace to get an OpenPayGB card.");
+    }
+    return opts.organizationId;
+  }
+
+  const slug = opts.organizationSlug?.trim().toLowerCase();
+  if (slug) {
+    const org = await prisma.organization.findUnique({
+      where: { slug },
+      select: { id: true },
+    });
+    if (!org) throw new Error(`Unknown organization slug "${slug}".`);
+    return org.id;
+  }
+
+  if (opts.organizationId) return opts.organizationId;
+  return getDefaultOrganizationId();
+}
+
+/**
+ * Resolve or create the shadow Student row that holds an admin's OpenPayGB card.
  * Never mutates a tuition student's programme — creates a dedicated ADMIN_CARD row.
  */
-export async function ensureAdminOpenPayHolder(adminUserId: string): Promise<{
+export async function ensureAdminOpenPayHolder(
+  adminUserId: string,
+  opts?: { organizationSlug?: string | null },
+): Promise<{
   studentId: string;
   organizationId: string;
   name: string;
@@ -26,14 +60,18 @@ export async function ensureAdminOpenPayHolder(adminUserId: string): Promise<{
       id: true,
       email: true,
       name: true,
+      role: true,
       organizationId: true,
       openPayStudentId: true,
     },
   });
   if (!admin) throw new Error("Admin not found");
-  if (!admin.organizationId) {
-    throw new Error("Link your account to a school or institution workspace to get an OpenPayGB card.");
-  }
+
+  const organizationId = await resolveAdminCardOrganizationId({
+    role: admin.role,
+    organizationId: admin.organizationId,
+    organizationSlug: opts?.organizationSlug,
+  });
 
   const email = admin.email.trim().toLowerCase();
   const displayName = admin.name?.trim() || email.split("@")[0] || "Admin";
@@ -45,7 +83,7 @@ export async function ensureAdminOpenPayHolder(adminUserId: string): Promise<{
     });
     if (
       linked &&
-      linked.organizationId === admin.organizationId &&
+      linked.organizationId === organizationId &&
       linked.programmeCode.toUpperCase() === ADMIN_CARD_PROGRAMME
     ) {
       return {
@@ -59,7 +97,7 @@ export async function ensureAdminOpenPayHolder(adminUserId: string): Promise<{
 
   let student = await prisma.student.findFirst({
     where: {
-      organizationId: admin.organizationId,
+      organizationId,
       programmeCode: ADMIN_CARD_PROGRAMME,
       email: { equals: email, mode: "insensitive" },
     },
@@ -69,7 +107,7 @@ export async function ensureAdminOpenPayHolder(adminUserId: string): Promise<{
   if (!student) {
     student = await prisma.student.create({
       data: {
-        organizationId: admin.organizationId,
+        organizationId,
         name: displayName,
         email,
         programmeCode: ADMIN_CARD_PROGRAMME,
@@ -99,4 +137,18 @@ export function excludeNonTuitionCardHoldersWhere() {
   return {
     programmeCode: { notIn: [ADMIN_CARD_PROGRAMME, "GUEST"] },
   };
+}
+
+/** Read optional org slug from a request URL (masters: `orgSlug` or `organizationSlug`). */
+export function organizationSlugFromRequest(req: Request): string | null {
+  try {
+    const sp = new URL(req.url).searchParams;
+    return (
+      sp.get("organizationSlug")?.trim().toLowerCase() ||
+      sp.get("orgSlug")?.trim().toLowerCase() ||
+      null
+    );
+  } catch {
+    return null;
+  }
 }

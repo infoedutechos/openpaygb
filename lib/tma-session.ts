@@ -137,21 +137,37 @@ export async function buildTmaMe(initData?: string, link?: TmaLinkHint): Promise
       if (summary) {
         const serialized = serializeStudentBalance(summary);
         const ctx = serialized.contexts[0];
-        const outstandingUgx = ctx?.remainingSubtotalUgx ?? 0;
-        const paidUgx = ctx?.confirmedPaidSubtotalUgx ?? 0;
+        const outstandingUgx = ctx?.remainingFullPayTotalUgx ?? ctx?.remainingSubtotalUgx ?? 0;
+        const paidUgx = ctx?.confirmedPaidTotalUgx ?? ctx?.confirmedPaidSubtotalUgx ?? 0;
+        const expectedFullPayTotalUgx = ctx?.expectedFullPayTotalUgx ?? outstandingUgx;
         const total = outstandingUgx + paidUgx;
         const progressPct = total > 0 ? Math.round((paidUgx / total) * 100) : 0;
         const nextPlan = serialized.installmentPlans.find((p) => p.remainingTotalUgx > 0);
+        const nextSlice =
+          nextPlan?.nextDueIndex != null
+            ? nextPlan.slices.find((s) => s.index === nextPlan.nextDueIndex)
+            : undefined;
+        const hasInstallmentDue = Boolean(nextPlan && nextSlice && nextPlan.nextDueIndex != null);
         balance = {
           outstandingUgx,
           paidUgx,
           progressPct,
-          nextInstallment: nextPlan
-            ? {
-                dueLabel: `${nextPlan.programmeCode} Y${nextPlan.year} S${nextPlan.semester}`,
-                amountUgx: nextPlan.remainingTotalUgx,
-              }
-            : null,
+          expectedFullPayTotalUgx,
+          partialWithoutInstallment:
+            !hasInstallmentDue &&
+            outstandingUgx > 0 &&
+            paidUgx > 0 &&
+            outstandingUgx < expectedFullPayTotalUgx,
+          nextInstallment:
+            nextPlan && nextSlice && nextPlan.nextDueIndex != null
+              ? {
+                  dueLabel: `${nextPlan.programmeCode} Y${nextPlan.year} S${nextPlan.semester} · ${nextPlan.nextDueIndex}/${nextPlan.installmentCount}`,
+                  amountUgx: nextSlice.totalUgx,
+                  installmentPlanId: nextPlan.installmentPlanId,
+                  installmentCount: nextPlan.installmentCount,
+                  installmentIndex: nextPlan.nextDueIndex,
+                }
+              : null,
         };
       }
 

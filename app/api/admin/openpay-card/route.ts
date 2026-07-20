@@ -1,34 +1,30 @@
 import { NextResponse } from "next/server";
-import { getAdminFromCookies } from "@/lib/auth";
-import { ensureAdminOpenPayHolder } from "@/lib/admin-openpay-holder";
+import { requireAdminOpenPayHolder } from "@/lib/admin-openpay-api";
 import { getStudentOpenPayCard } from "@/lib/openpay-card";
 import { getOpenPayCardPlatformSettings } from "@/lib/openpay-card-settings";
 import { openPayCardIssueFeeUgx } from "@/lib/openpay-card-issue-fee";
 import { apiErrorResponse } from "@/lib/api-error";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const session = await getAdminFromCookies();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+    const gate = await requireAdminOpenPayHolder(req);
     const settings = await getOpenPayCardPlatformSettings();
-    let holder: Awaited<ReturnType<typeof ensureAdminOpenPayHolder>> | null = null;
-    try {
-      holder = await ensureAdminOpenPayHolder(session.sub);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Could not resolve card holder";
+
+    if (!gate.ok) {
+      if (gate.status === 401) {
+        return NextResponse.json({ error: gate.error }, { status: 401 });
+      }
       return NextResponse.json({
         platform: { ...settings, issueFeeUgx: null },
         card: null,
         hasCard: false,
         canPayTuition: false,
         holderReady: false,
-        holderError: msg,
+        holderError: gate.error,
       });
     }
 
+    const { holder } = gate;
     const card = await getStudentOpenPayCard(holder.studentId);
     const issueFeeTon = card?.issueFeeTon ?? settings.issueFeeTon;
     const issueFee =

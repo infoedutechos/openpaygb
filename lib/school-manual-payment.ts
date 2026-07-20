@@ -39,42 +39,54 @@ export async function recordSchoolManualPayment(input: {
     where: { id: input.organizationId },
     select: { destinationWallet: true },
   });
-  const receiptNo = await nextSchoolReceiptNo(input.organizationId);
-
-  const payment = await prisma.payment.create({
-    data: {
-      organizationId: input.organizationId,
-      studentId: student.id,
-      programmeCode: student.programmeCode,
-      year: student.year,
-      semester: term,
-      tuitionUgx: input.amountUgx,
-      functionalFeesUgx: 0,
-      totalUgx: input.amountUgx,
-      ugxPerTonSnapshot: 0,
-      tonAmount: 0,
-      destinationWallet: org?.destinationWallet ?? "",
-      rail: PaymentRail.manual_cash,
-      paymentMode: input.paymentMode,
-      schoolReceiptNo: receiptNo,
-      status: PaymentStatus.confirmed,
-      confirmedAt: new Date(),
-      memo: input.notes?.trim() ?? "",
-      feeSelectionMode: "semester",
-    },
-  });
-
   const ctx = await loadSchoolOrgContext(input.organizationId);
-  await allocatePaymentToBillCharges({
-    organizationId: input.organizationId,
-    paymentId: payment.id,
-    studentId: student.id,
-    term,
-    amountUgx: payment.totalUgx,
-    sessionId: ctx?.sessionId,
+
+  const result = await prisma.$transaction(async (tx) => {
+    const receiptNo = await nextSchoolReceiptNo(input.organizationId, tx);
+
+    const payment = await tx.payment.create({
+      data: {
+        organizationId: input.organizationId,
+        studentId: student.id,
+        programmeCode: student.programmeCode,
+        year: student.year,
+        semester: term,
+        tuitionUgx: input.amountUgx,
+        functionalFeesUgx: 0,
+        totalUgx: input.amountUgx,
+        ugxPerTonSnapshot: 0,
+        tonAmount: 0,
+        destinationWallet: org?.destinationWallet ?? "",
+        rail: PaymentRail.manual_cash,
+        paymentMode: input.paymentMode,
+        schoolReceiptNo: receiptNo,
+        status: PaymentStatus.confirmed,
+        confirmedAt: new Date(),
+        memo: input.notes?.trim() ?? "",
+        feeSelectionMode: "semester",
+      },
+    });
+
+    await allocatePaymentToBillCharges(
+      {
+        organizationId: input.organizationId,
+        paymentId: payment.id,
+        studentId: student.id,
+        term,
+        amountUgx: payment.totalUgx,
+        sessionId: ctx?.sessionId,
+      },
+      tx,
+    );
+
+    return { payment, receiptNo };
   });
 
-  handleFirstTimeConfirmation(payment);
+  handleFirstTimeConfirmation(result.payment);
 
-  return { paymentId: payment.id, receiptNo, totalUgx: payment.totalUgx };
+  return {
+    paymentId: result.payment.id,
+    receiptNo: result.receiptNo,
+    totalUgx: result.payment.totalUgx,
+  };
 }

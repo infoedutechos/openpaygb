@@ -42,6 +42,69 @@ export async function getOrCreateConversation(opts: {
   );
 }
 
+/** Force a brand-new open conversation (previous open chats become closed). */
+export async function startNewConversation(opts: {
+  sessionKey: string;
+  hub: PlatformHub;
+}) {
+  await withPrismaRetry(() =>
+    prisma.chatConversation.updateMany({
+      where: { sessionKey: opts.sessionKey, status: "open" },
+      data: { status: "closed" },
+    }),
+  );
+  return getOrCreateConversation(opts);
+}
+
+export async function listSessionConversations(opts: {
+  sessionKey: string;
+  take?: number;
+}) {
+  const rows = await withPrismaRetry(() =>
+    prisma.chatConversation.findMany({
+      where: { sessionKey: opts.sessionKey },
+      orderBy: { updatedAt: "desc" },
+      take: opts.take ?? 30,
+      include: {
+        messages: {
+          where: { role: "user" },
+          orderBy: { createdAt: "asc" },
+          take: 1,
+        },
+      },
+    }),
+  );
+
+  return rows.map((r) => {
+    const firstUser = r.messages[0]?.content?.trim() ?? "";
+    const title =
+      firstUser.length > 0
+        ? firstUser.slice(0, 64) + (firstUser.length > 64 ? "…" : "")
+        : r.topic && r.topic !== "support"
+          ? r.topic.slice(0, 64)
+          : "New chat";
+    return {
+      id: r.id,
+      hub: r.hub,
+      status: r.status,
+      title,
+      updatedAt: r.updatedAt.toISOString(),
+    };
+  });
+}
+
+export async function getConversationForSession(opts: {
+  sessionKey: string;
+  conversationId: string;
+}) {
+  return withPrismaRetry(() =>
+    prisma.chatConversation.findFirst({
+      where: { id: opts.conversationId, sessionKey: opts.sessionKey },
+      include: { messages: { orderBy: { createdAt: "asc" }, take: 80 } },
+    }),
+  );
+}
+
 export async function appendChatTurn(opts: {
   conversationId: string;
   userMessage: string;
@@ -70,10 +133,15 @@ export async function appendChatTurn(opts: {
     }),
   );
 
+  const topic = opts.userMessage.trim().slice(0, 80);
   await withPrismaRetry(() =>
     prisma.chatConversation.update({
       where: { id: opts.conversationId },
-      data: { updatedAt: new Date() },
+      data: {
+        updatedAt: new Date(),
+        ...(topic ? { topic } : {}),
+        status: "open",
+      },
     }),
   );
 

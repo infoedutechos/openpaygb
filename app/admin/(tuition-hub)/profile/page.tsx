@@ -1,10 +1,14 @@
 "use client";
 
+import { Suspense } from "react";
+import Link from "next/link";
 import { EditableAdminProfileSection } from "@/components/profile/EditableAdminProfileSection";
 import { OpenPayCardPanel } from "@/components/student/OpenPayCardPanel";
-import Link from "next/link";
+import { useMasterOrgSlug } from "@/hooks/useMasterOrgSlug";
 
-export default function AdminProfilePage() {
+function AdminProfileInner() {
+  const { orgSlug, hrefWithOrgSlug } = useMasterOrgSlug();
+
   return (
     <div className="space-y-6">
       <header>
@@ -18,12 +22,27 @@ export default function AdminProfilePage() {
       <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-sm font-semibold text-violet-100">My OpenPayGB Card</h2>
-          <Link href="/admin/my-card" className="text-xs text-violet-300/90 hover:underline">
+          <Link
+            href={hrefWithOrgSlug("/admin/my-card")}
+            className="text-xs text-violet-300/90 hover:underline"
+          >
             Open full card page →
           </Link>
         </div>
-        <OpenPayCardPanel apiBase="/api/admin/openpay-card" showTuitionHint={false} />
+        <OpenPayCardPanel
+          apiBase="/api/admin/openpay-card"
+          showTuitionHint={false}
+          organizationSlug={orgSlug || null}
+        />
       </div>
     </div>
+  );
+}
+
+export default function AdminProfilePage() {
+  return (
+    <Suspense fallback={<p className="text-sm text-slate-500">Loading profile…</p>}>
+      <AdminProfileInner />
+    </Suspense>
   );
 }
