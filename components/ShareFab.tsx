@@ -15,6 +15,7 @@ const HIDE_PREFIXES = [
   "/my",
   "/dex",
   "/clicker",
+  "/help",
 ] as const;
 
 export function ShareFab() {

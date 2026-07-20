@@ -9,6 +9,7 @@
 
 import { validate as validateInitData } from '@tma.js/init-data-node';
 import { DEV_PREVIEW_TELEGRAM_ID } from '@/utils/dev-auth-constants';
+import { resolvedBotToken } from '@/lib/deployment-env-resolve';
 
 export { DEV_PREVIEW_TELEGRAM_ID } from '@/utils/dev-auth-constants';
 
@@ -48,7 +49,7 @@ export function isTelegramAuthBypassed(): boolean {
 }
 
 export function validateTelegramWebAppData(telegramInitData: string): ValidationResult {
-  const BOT_TOKEN = process.env.BOT_TOKEN;
+  const BOT_TOKEN = resolvedBotToken() || process.env.BOT_TOKEN?.trim() || process.env.TELEGRAM_BOT_TOKEN?.trim();
   const BYPASS_AUTH = isTelegramAuthBypassed();
 
   let validatedData: ValidatedData | null = null;
@@ -67,7 +68,7 @@ export function validateTelegramWebAppData(telegramInitData: string): Validation
     message = 'Authentication bypassed (dev or preview)';
   } else {
     if (!BOT_TOKEN) {
-      return { message: 'BOT_TOKEN is not set', validatedData: null, user: {} };
+      return { message: 'BOT_TOKEN / TELEGRAM_BOT_TOKEN is not set', validatedData: null, user: {} };
     }
 
     try {

@@ -88,7 +88,7 @@ export function OpenPayCardsRegistryPanel({
       className="rounded-xl border border-violet-500/25 bg-[var(--card)] p-5 space-y-5"
     >
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.22em] text-violet-400/90">Virtual cards</p>
+        <p className="text-xs font-bold uppercase tracking-[0.22em] text-violet-400/90">OpenPayGB Cards</p>
         <h2 className="mt-2 text-lg font-semibold text-white">{title}</h2>
         <p className="mt-2 max-w-3xl text-sm text-slate-400">{description}</p>
       </div>

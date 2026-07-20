@@ -1,8 +1,8 @@
 # App status audit (holistic scan)
 
-**Last reviewed:** 2026-07-16 · **Scope:** registration, approval, email verification, auth, pay, programmes, school ERP, OPGB/Dex, UI/docs sync, deployment.
+**Last reviewed:** 2026-07-19 · **Scope:** registration, approval, email verification, auth, pay, programmes, school ERP, OPGB/Dex, Help Center, hub hide/visitors, UI/docs sync, deployment.
 
-**Repo:** https://github.com/infoedutechos/ODELHUBPay · **Full holistic scan:** [HOLISTIC_APP_AUDIT.md](./HOLISTIC_APP_AUDIT.md) · **Backlog (canonical):** [BACKLOG.md](./BACKLOG.md) · **LivePay:** [LIVEPAY_INTEGRATION_ASSESSMENT.md](./LIVEPAY_INTEGRATION_ASSESSMENT.md)
+**Repo:** https://github.com/infoedutechos/ODELHUBPay · **Full holistic scan:** [HOLISTIC_APP_AUDIT.md](./HOLISTIC_APP_AUDIT.md) · **Deepest scan (2026-07-19):** [DEEP_SCAN_2026-07-19.md](./DEEP_SCAN_2026-07-19.md) · **Backlog (canonical):** [BACKLOG.md](./BACKLOG.md) · **LivePay:** [LIVEPAY_INTEGRATION_ASSESSMENT.md](./LIVEPAY_INTEGRATION_ASSESSMENT.md)
 
 ---
 
@@ -18,7 +18,10 @@
 | School ERP (12 modules: session, accounts, bills, defaulters, receipts, staff, outflow, inventory, reports) | **Implemented** — see [SCHOOL_FEES_PAYMENTS_REFERENCE.md](./SCHOOL_FEES_PAYMENTS_REFERENCE.md) |
 | Payment-to-bill allocation (`PaymentAllocation`) + online confirm hook | **Implemented** |
 | Production email delivery | **Requires** `RESEND_*` or `BREVO_API_KEY` + `NEXT_PUBLIC_APP_URL` |
-| Master Admin full platform customisation | **Implemented** — branding, auth/session policy, cron ops, hub maintenance (incl. Developers), demo logins |
+| Master Admin full platform customisation | **Implemented** — branding, auth/session, cron, hub maintenance + **hub hide**, demo logins, visitor analytics |
+| Help Center Ask-anything workspace | **Implemented** — `/help` ChatGPT-style shell |
+| OpenPayGB Card in school + higher admin sidebars | **Implemented** — My card + Cards registry |
+| Payment confirm idempotency (all MoMo rails + TON) | **Hardened 2026-07-19** — `updateMany` pending CAS |
 
 ---
 

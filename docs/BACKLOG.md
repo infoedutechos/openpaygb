@@ -1,6 +1,6 @@
 # Product & engineering backlog
 
-**Last updated:** 2026-07-16 · **Brand:** **OpenPayGB** · **Rails:** Mbiyo, LivePay, MoMo bridge · **Repo:** https://github.com/infoedutechos/ODELHUBPay
+**Last updated:** 2026-07-19 · **Brand:** **OpenPayGB** · **Rails:** Mbiyo, LivePay, MoMo bridge · **Repo:** https://github.com/infoedutechos/ODELHUBPay
 
 ---
 
@@ -17,6 +17,9 @@
 | B-SCH-07 | Accurate financial periods and inventory valuation | Inclusive date ranges for cash flow, P&L and expense reports; session/term salary scope; inventory unit cost and available-value reporting |
 | B-OPS-06 | Master OPGB ops | `/admin/master/opgb-ops` — resolve P2P disputes (release/refund); withdraw queue (mark paid / reject+restore); withdraw no longer auto-completes |
 | B-SCAN-01 | Deep scan 2026-07-16 | Cron truth, Mongo hot indexes, school ERP nav restore, Dex honesty, TMA multi-org + schools, demo P2P prod gate — [DEEP_SCAN_2026-07-16.md](./DEEP_SCAN_2026-07-16.md) |
+| B-SCAN-02 | Deep scan 2026-07-19 | Idempotent payment confirms, MoMo timing-safe secret, dex-settle cron auth, Telegram token resolve, Help chrome, OpenPayGB sidebar/labels — [DEEP_SCAN_2026-07-19.md](./DEEP_SCAN_2026-07-19.md) |
+| B-HELP-01 | Help Center Ask-anything workspace | `/help` → `HelpCenterWorkspace` (sidebar + Ready when you are) |
+| B-MAC-03 | Hub hide + visitor per-page/actions | `#hub-visibility`, SiteVisitPath*/Action* models, VisitBeacon actions |
 | B-MAC-01 | Master demo logins console | `/admin/master#demo-logins` + `GET/PATCH /api/master/demo-logins` + export + public `/api/public/demo-logins` — customise/publish/download all five demos; lobbies auto-update |
 | B-MAC-02 | Full platform customisation | Branding (`#platform-branding`), auth/session policy (`#auth-session-policy`), cron ops (`#cron-ops`), hub maintenance + Developers hub + shared message; consumers: SEO, hero, footer, theme accent, session TTLs, pending payment TTL, manual confirm |
 | B-SCH-08 | School terminology + SchoolPay-style School Code | Track labels **Day / Boarding** (was In-service / Regular), fee line labels **Fees / Other Requirements** (was tuition / functional) — display only, stored enums unchanged. `Organization.schoolPayCode` (6-digit, app-unique) + `GET /api/admin/school-pay-code` + `POST /api/public/school-code-lookup` + `/admin/students` code panel + `/pay` "Pay with School Code" quick lookup |

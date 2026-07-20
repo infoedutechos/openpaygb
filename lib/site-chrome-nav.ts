@@ -15,6 +15,7 @@ export const HIDE_SITE_CHROME_NAV_PREFIXES = [
   "/receipt",
   "/staff",
   "/login",
+  "/help",
   "/api",
 ] as const;
 

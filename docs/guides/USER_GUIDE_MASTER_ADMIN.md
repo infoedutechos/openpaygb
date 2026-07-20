@@ -22,6 +22,9 @@ The master shell navigation is defined in `components/admin/MasterManagerShell.t
 | Virtual cards | `/admin/master#openpay-cards-overview` | OpenPayGB card settings and card fleet visibility |
 | Chat & notifications | `/admin/master#platform-communications` | In-app comms and support experience |
 | Knowledge base | `/admin/master#knowledge-base` | KB articles and copilot content management |
+| Hub visibility (hide) | `/admin/master#hub-visibility` | Hide Tuition / Play / Dex / Developers from public UI |
+| Hub maintenance | `/admin/master#hub-maintenance` | Maintenance screens per hub |
+| Visitor analytics | `/admin/master#visitor-analytics` | Ecosystem totals + per-page visitors and actions |
 | Social & share | `/admin/master#platform-social` | Platform social links/icons and share defaults |
 | Backup | `/admin/master#system-backup` | Tuition backup export and recovery tooling |
 | Environment | `/admin/master#deployment-environment` | Deployment env audit, overrides, sync |

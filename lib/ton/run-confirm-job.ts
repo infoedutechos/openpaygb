@@ -30,17 +30,18 @@ type PendingPayment = {
 };
 
 async function confirmOne(paymentId: string, hash: string): Promise<boolean> {
-  const existing = await prisma.payment.findUnique({ where: { id: paymentId } });
-  if (!existing || existing.status === "confirmed") return false;
-
-  const updated = await prisma.payment.update({
-    where: { id: paymentId },
+  const claimed = await prisma.payment.updateMany({
+    where: { id: paymentId, status: "pending" },
     data: {
       status: "confirmed",
       confirmedAt: new Date(),
       txHash: hash,
     },
   });
+  if (claimed.count === 0) return false;
+
+  const updated = await prisma.payment.findUnique({ where: { id: paymentId } });
+  if (!updated) return false;
   handleFirstTimeConfirmation(updated);
   return true;
 }

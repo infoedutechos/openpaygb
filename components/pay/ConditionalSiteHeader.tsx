@@ -18,6 +18,7 @@ const HIDE_HEADER_PREFIXES = [
   "/OdelPayUniversities",
   "/OdelPaySchools",
   "/developers",
+  "/help",
 ] as const;
 
 function hidesGlobalHeader(pathname: string, standaloneAppId?: string | null): boolean {

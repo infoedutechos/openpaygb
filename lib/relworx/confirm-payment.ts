@@ -51,16 +51,20 @@ export async function confirmRelworxPaymentIfEligible(
   const customerRef =
     typeof input.customer_reference === "string" ? input.customer_reference.trim() : "";
 
-  await withPrismaRetry(() =>
-    prisma.payment.update({
-      where: { id: payment.id },
+  const momoReference = internalRef || payment.momoReference || customerRef || payment.id;
+  const claimed = await withPrismaRetry(() =>
+    prisma.payment.updateMany({
+      where: { id: payment.id, status: "pending" },
       data: {
         status: "confirmed",
         confirmedAt: new Date(),
-        momoReference: internalRef || payment.momoReference || customerRef || payment.id,
+        momoReference,
       },
     }),
   );
+  if (claimed.count === 0) {
+    return { ok: true, action: "already_confirmed", paymentId: payment.id };
+  }
 
   const full = await withPrismaRetry(() =>
     prisma.payment.findUniqueOrThrow({ where: { id: payment.id } }),

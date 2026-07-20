@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { timingSafeEqual } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { handleFirstTimeConfirmation } from "@/lib/on-payment-confirmed";
 import { findPaymentByMomoReference } from "@/lib/momo/find-payment";
@@ -12,6 +13,13 @@ const HeadersSchema = z.object({
   "x-momo-webhook-secret": z.string().optional(),
 });
 
+function secretsEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a);
+  const bb = Buffer.from(b);
+  if (ab.length !== bb.length) return false;
+  return timingSafeEqual(ab, bb);
+}
+
 function authorized(req: Request): { ok: true } | { ok: false; response: NextResponse } {
   const secretCheck = requireConfiguredSecret("MOMO_WEBHOOK_SECRET", process.env.MOMO_WEBHOOK_SECRET);
   if (!secretCheck.ok) return secretCheck;
@@ -22,7 +30,8 @@ function authorized(req: Request): { ok: true } | { ok: false; response: NextRes
   const headers = HeadersSchema.safeParse({
     "x-momo-webhook-secret": req.headers.get("x-momo-webhook-secret") ?? undefined,
   });
-  if (headers.success && headers.data["x-momo-webhook-secret"] === secret) {
+  const provided = headers.success ? headers.data["x-momo-webhook-secret"]?.trim() : undefined;
+  if (provided && secretsEqual(provided, secret)) {
     return { ok: true };
   }
   return { ok: false, response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };

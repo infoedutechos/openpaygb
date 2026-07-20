@@ -11,9 +11,10 @@ export function platformHubFromPathname(pathname: string): PlatformHub {
   return "all";
 }
 
-/** Clicker embeds its own header widgets; avoid duplicate floating chrome there. */
+/** Clicker embeds its own header widgets; Help Center has its own Ask-anything shell. */
 export function platformAssistVisibleOnPath(pathname: string): boolean {
   const p = pathname.split("?")[0] ?? "/";
   if (p.startsWith("/clicker")) return false;
+  if (p === "/help" || p.startsWith("/help/")) return false;
   return true;
 }

@@ -39,7 +39,7 @@ const NAV: { href: string; label: string }[] = [
   { href: "/student/balance", label: "Tuition balance" },
   { href: "/my/receipts", label: "Receipts & history" },
   { href: "/student/pay", label: "Pay tuition" },
-  { href: "/student/card", label: "Virtual card" },
+  { href: "/student/card", label: "OpenPayGB Card" },
   DEX_SIDEBAR_NAV,
   { href: "/student", label: "Student home" },
   { href: "/", label: "Lobby" },

@@ -186,8 +186,24 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
           subtitle={shellSubtitle}
           accent="cyan"
           panelId="tuition-admin-mobile-menu"
-          backHref={pathname === "/admin" || pathname === "/admin/" ? "/" : "/admin"}
-          backLabel={pathname === "/admin" || pathname === "/admin/" ? "Lobby" : "Admin home"}
+          backHref={
+            showSchoolErp
+              ? pathname === "/admin/school-dashboard" || pathname === "/school-admin/school-dashboard"
+                ? "/"
+                : hrefWithOrgSlug(`${base}/school-dashboard`)
+              : pathname === "/admin" || pathname === "/admin/" || pathname === "/school-admin"
+                ? "/"
+                : "/admin"
+          }
+          backLabel={
+            showSchoolErp
+              ? pathname.includes("school-dashboard")
+                ? "Lobby"
+                : "School dashboard"
+              : pathname === "/admin" || pathname === "/admin/" || pathname === "/school-admin"
+                ? "Lobby"
+                : "Admin home"
+          }
           items={mobileItems}
           secondarySections={[
             {

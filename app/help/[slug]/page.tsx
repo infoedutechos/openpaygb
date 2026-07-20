@@ -28,10 +28,10 @@ export default async function HelpArticlePage({ params }: Params) {
   return (
     <article className="mx-auto max-w-3xl px-4 py-8 pb-24">
       <Link
-        href="/help"
+        href="/help?view=library"
         className="text-sm font-medium text-sky-300 hover:text-sky-200 hover:underline"
       >
-        ← All help articles
+        ← Help library
       </Link>
 
       <header className="mt-6 border-b border-white/10 pb-6">

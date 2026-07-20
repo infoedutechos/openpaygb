@@ -14,8 +14,8 @@ The **OpenPayGB platform card** is a **closed-loop UGX ledger** on ODEL HUB Pay 
 |---------------|--------------|------------|
 | **Student** | Opt-in, activate, fund, pay tuition, view balance | `/student/card`, `/student/pay`, `/my/*`, TMA Card/Pay tabs |
 | **Guest payer** | Pay tuition from card **if** checkout session ties to a student with active card | `/pay/{orgSlug}` (OpenPayGB checkbox when eligible) |
-| **School admin** | No direct card UI — sees tuition payments on rail `openpay_card` in payment history | `/admin` payments |
-| **Master admin** | Enable platform card, issue fee, registry of all cards/balances | `/admin/master#openpay-card-settings`, `#openpay-cards-overview` |
+| **School admin** | View student OpenPayGB cards in workspace; personal admin card | Sidebar **OpenPayGB Cards** → `/admin/virtual-cards`; **My OpenPayGB Card** → `/admin/my-card` |
+| **Master admin** | Enable platform card, issue fee, registry of all cards/balances; personal card | `/admin/master#openpay-card-settings`, `#openpay-cards-overview`; `/admin/my-card` |
 | **Telegram (TMA)** | Card view, MoMo top-up, pay tuition from balance | `/tma` Card + Pay tabs |
 
 ---
