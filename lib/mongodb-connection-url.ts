@@ -1,9 +1,34 @@
+import { createRequire } from "node:module";
+import { join } from "node:path";
+
+/**
+ * When Node cannot querySrv (Windows DNS / firewall), expand mongodb+srv via system DNS.
+ * No-op when Node SRV works or fallback is disabled (`MONGODB_SRV_FALLBACK=0`).
+ */
+export function expandMongodbSrvIfNeeded(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed.toLowerCase().startsWith("mongodb+srv://")) return trimmed;
+  try {
+    const requireFromRoot = createRequire(join(process.cwd(), "package.json"));
+    const { ensureNonSrvDatabaseUrl } = requireFromRoot("./scripts/mongodb-srv-fallback.cjs") as {
+      ensureNonSrvDatabaseUrl: (
+        url: string,
+        opts?: { quiet?: boolean },
+      ) => { url: string; converted: boolean };
+    };
+    return ensureNonSrvDatabaseUrl(trimmed, { quiet: true }).url;
+  } catch {
+    return trimmed;
+  }
+}
+
 /**
  * Apply MongoDB driver pool/timeouts when missing from DATABASE_URL.
  * Keeps Atlas connections warm and avoids multi-minute hangs on cold Windows dev.
+ * Also expands broken mongodb+srv URLs on Windows so Prisma can connect.
  */
 export function tuneMongoDatabaseUrl(raw: string): string {
-  const trimmed = raw.trim();
+  const trimmed = expandMongodbSrvIfNeeded(raw.trim());
   if (!trimmed || !/^mongodb(\+srv)?:\/\//i.test(trimmed)) return trimmed;
 
   try {

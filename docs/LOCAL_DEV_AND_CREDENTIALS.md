@@ -13,6 +13,8 @@ npm run seed
 npm run dev
 ```
 
+**Windows / broken Node `querySrv`:** if `mongodb+srv` fails (`ECONNREFUSED`, socket `10013`) while `nslookup` works, `npm run db:push` and Prisma auto-expand SRV via system DNS (`scripts/mongodb-srv-fallback.cjs`). Opt out: `MONGODB_SRV_FALLBACK=0`. Force: `MONGODB_FORCE_NON_SRV=1`.
+
 Open **http://localhost:3000** after the terminal shows **Ready**.
 
 Seed wipes tuition data and recreates the **default** (university) tenant, a **school** demo tenant, programmes, and demo users. Full product-line and term-fee detail: **[PRODUCT_LINES_AND_SCHOOL_TERMS.md](./PRODUCT_LINES_AND_SCHOOL_TERMS.md)**.

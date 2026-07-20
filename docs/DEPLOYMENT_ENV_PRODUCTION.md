@@ -51,7 +51,7 @@ Values live in local `.env` and Master Admin overrides (never commit `.env`).
 
 | Gate | Action |
 |------|--------|
-| Schema | Production `npm run db:push` after hub-hide / visitor analytics schema lands |
+| Schema | Production `npm run db:push` after hub-hide / visitor analytics schema lands (Windows: auto SRV fallback if Node `querySrv` fails — see [LOCAL_DEV_AND_CREDENTIALS.md](./LOCAL_DEV_AND_CREDENTIALS.md)) |
 | PSP dashboards | Paste webhook secrets so they match Vercel (`npm run webhooks:alignment-check`) |
 | Email | Resend or Brevo API keys in Master Deployment Environment + Sync to Vercel |
 | Rate limits | Optional but recommended under load: `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` |
