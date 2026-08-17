@@ -37,6 +37,13 @@ const ACCENT: Record<
     btn: "bg-gradient-to-r from-emerald-500 to-teal-600 text-slate-950 hover:brightness-110",
     btnGhost: "border-emerald-400/45 bg-emerald-500/10 text-emerald-50 hover:border-emerald-300/55 hover:bg-emerald-500/20",
   },
+  assessmentverse_os: {
+    border: "border-teal-500/30",
+    bg: "bg-teal-950/20",
+    title: "text-teal-300/95",
+    btn: "bg-gradient-to-r from-teal-500 to-emerald-600 text-slate-950 hover:brightness-110",
+    btnGhost: "border-teal-400/45 bg-teal-500/10 text-teal-50 hover:border-teal-300/55 hover:bg-teal-500/20",
+  },
 };
 
 export async function ProductLineLanding({

@@ -28,7 +28,7 @@ export default async function HomePage() {
         <div className="relative grid gap-10 md:grid-cols-[1.15fr_0.85fr] md:items-center">
           <div className="space-y-6">
             <p className="inline-flex items-center gap-2 rounded-full border border-cyan-400/25 bg-cyan-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200">
-              {siteUi.platformDisplayName?.trim() || "ODEL HUB"} · OdelPay · OpenPayGB
+              {siteUi.platformDisplayName?.trim() || "ODEL HUB"} · OdelPay · OpenPayGB · AssessmentVerse OS
             </p>
             <h1 className="text-3xl font-semibold leading-[1.08] text-white sm:text-4xl md:text-5xl lg:text-[3.25rem]">
               {siteUi.homeHeroHeadline?.trim() ? (

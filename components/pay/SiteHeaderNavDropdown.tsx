@@ -11,6 +11,7 @@ const ACCENT_BTN: Record<SiteNavMenu["accent"], string> = {
   violet: "text-violet-200/95 hover:bg-violet-500/10",
   emerald: "text-emerald-200/95 hover:bg-emerald-500/10",
   amber: "text-amber-200/95 hover:bg-amber-500/10",
+  teal: "text-teal-200/95 hover:bg-teal-500/10",
 };
 
 const ACCENT_PANEL: Record<SiteNavMenu["accent"], string> = {
@@ -19,6 +20,7 @@ const ACCENT_PANEL: Record<SiteNavMenu["accent"], string> = {
   violet: "border-violet-500/25",
   emerald: "border-emerald-500/25",
   amber: "border-amber-500/25",
+  teal: "border-teal-500/25",
 };
 
 const PANEL_WIDTH_PX = 288; // 18rem

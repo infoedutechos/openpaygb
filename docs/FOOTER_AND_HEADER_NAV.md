@@ -50,7 +50,7 @@ Docs: see `lib/audience-guides.ts` for guide links included in many drawers.
 
 `lib/ecosystem/site-nav-menus.ts`
 
-- `SITE_HEADER_MENUS` — five product-line / hub dropdown buttons
+- `SITE_HEADER_MENUS` — product-line / hub dropdown buttons (Higher, Schools, AssessmentVerse OS, OPGB, Developers, Hubs)
 - `SITE_HEADER_UTILITY_LINKS` — flat links after the dropdowns
 - `SITE_FOOTER_COLUMNS` — footer columns matching the reference layout
 
@@ -62,13 +62,14 @@ Docs: see `lib/audience-guides.ts` for guide links included in many drawers.
 |------:|-------|------|--------------|
 | 1 | OdelPay — Higher Institutions | Dropdown | `/OdelPayUniversities` |
 | 2 | OdelPay — Schools | Dropdown | `/OdelPaySchools` |
-| 3 | OPGB | Dropdown | `/opgb` |
-| 4 | Developers | Dropdown | `/developers` |
-| 5 | Hubs | Dropdown | `/dex` |
-| 6 | Pay tuition | Link | `/pay` |
-| 7 | Register school | Link | `/admin/register` |
-| 8 | Student portal | Link | `/student/login` (→ **My dashboard** when signed in) |
-| 9 | Admin | Link | `/admin` |
+| 3 | AssessmentVerse OS | Dropdown | `/AssessmentVerseOS` |
+| 4 | OPGB | Dropdown | `/opgb` |
+| 5 | Developers | Dropdown | `/developers` |
+| 6 | Hubs | Dropdown | `/dex` |
+| 7 | Pay tuition | Link | `/pay` |
+| 8 | Register school | Link | `/admin/register` |
+| 9 | Student portal | Link | `/student/login` (→ **My dashboard** when signed in) |
+| 10 | Admin | Link | `/admin` |
 
 On desktop (fine pointer), **hover** opens the menu and leaving closes it after a short delay so you can move into the panel. **Click** still toggles. Menus render in a **body portal** (fixed position). Escape or outside click closes.
 
@@ -88,6 +89,7 @@ Below `lg`, product nav is **not** in the top bar. Reference: Atlantis Exchange 
 |--------|---------------------|
 | **OdelPay — Higher Institutions** | Pay, programmes, receipts, institution admin, register |
 | **OdelPay — Schools** | Term checkout, workspace request/status, school admin, demo |
+| **AssessmentVerse OS** | Lobby `/AssessmentVerseOS`, local Vite 5000, Flask 5001, sign-in, Schools, Higher |
 | **OPGB** | Dex Hub, buy / sell / convert, student wallet, OpenPayGB card |
 | **Developers** | Partner API, app registry, Dex integration FAQ |
 | **Hubs** | Dex Hub, Play Hub |
@@ -101,9 +103,10 @@ Below `lg`, product nav is **not** in the top bar. Reference: Atlantis Exchange 
 | 1 (brand) | ODEL HUB + intro blurb + community socials |
 | 2 | OdelPay — Higher |
 | 3 | OdelPay — Schools |
-| 4 | Services |
-| 5 | OpenPayGB & Dex |
-| 6 | Policies — `/policies/terms`, `/policies/privacy`, `/policies/risk-disclosure`, `/policies/payment-providers`, `/help` |
+| 4 | AssessmentVerse OS |
+| 5 | Services |
+| 6 | OpenPayGB & Dex |
+| 7 | Policies — `/policies/terms`, `/policies/privacy`, `/policies/risk-disclosure`, `/policies/payment-providers`, `/help` |
 
 On small screens columns stack; from `lg` upward they use a seven-column grid (brand spans two).
 

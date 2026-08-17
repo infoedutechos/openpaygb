@@ -9,10 +9,10 @@ export type SiteNavLink = {
 };
 
 export type SiteNavMenu = {
-  id: "odelpay_higher" | "odelpay_schools" | "openpaygb" | "developers" | "hubs";
+  id: "odelpay_higher" | "odelpay_schools" | "assessmentverse_os" | "openpaygb" | "developers" | "hubs";
   label: string;
   href: string;
-  accent: "cyan" | "sky" | "violet" | "emerald" | "amber";
+  accent: "cyan" | "sky" | "violet" | "emerald" | "amber" | "teal";
   items: SiteNavLink[];
 };
 
@@ -93,7 +93,22 @@ export const SITE_HEADER_MENUS: SiteNavMenu[] = [
       { label: "Staff guide (schools)", href: "/help/guide-staff-schools", description: "Staff ID portal & salary" },
       { label: "Admin guide (schools)", href: "/help/guide-admin-schools", description: "Sessions, bills & letterhead" },
     ],
-  },  {
+  },
+  {
+    id: "assessmentverse_os",
+    label: "AssessmentVerse OS",
+    href: "/AssessmentVerseOS",
+    accent: "teal",
+    items: [
+      { label: "AssessmentVerse lobby", href: "/AssessmentVerseOS", description: "Platform home on ODEL HUB" },
+      { label: "Open local 5000", href: "http://127.0.0.1:5000/", description: "Vite platform catalog" },
+      { label: "Open Flask 5001", href: "http://127.0.0.1:5001/", description: "API and print desk" },
+      { label: "Sign in", href: "http://127.0.0.1:5000/login", description: "Student, staff, admin" },
+      { label: "Schools", href: "http://127.0.0.1:5000/schools", description: "Nursery, Primary, Secondary" },
+      { label: "Higher", href: "http://127.0.0.1:5000/higher", description: "Independent tertiary line" },
+    ],
+  },
+  {
     id: "openpaygb",
     label: "OPGB",
     href: "/opgb",
@@ -164,6 +179,17 @@ export const SITE_FOOTER_COLUMNS: SiteFooterColumn[] = [
       { label: "Student guide (schools)", href: "/help/guide-student-schools" },
       { label: "Staff guide (schools)", href: "/help/guide-staff-schools" },
       { label: "Admin guide (schools)", href: "/help/guide-admin-schools" },
+    ],
+  },
+  {
+    heading: "AssessmentVerse OS",
+    links: [
+      { label: "AssessmentVerse lobby", href: "/AssessmentVerseOS" },
+      { label: "Open local 5000", href: "http://127.0.0.1:5000/" },
+      { label: "Open Flask 5001", href: "http://127.0.0.1:5001/" },
+      { label: "Sign in", href: "http://127.0.0.1:5000/login" },
+      { label: "Schools", href: "http://127.0.0.1:5000/schools" },
+      { label: "Higher", href: "http://127.0.0.1:5000/higher" },
     ],
   },
   {

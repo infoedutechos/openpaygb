@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { PRODUCT_LINE_ORDER, PRODUCT_LINES, type ProductLine, type ProductLineId } from "@/lib/ecosystem/product-lines";
 import type { HubKey } from "@/lib/ecosystem/hubs";
@@ -6,6 +7,7 @@ import type { HubKey } from "@/lib/ecosystem/hubs";
 const PRODUCT_LINE_HUB: Record<ProductLineId, HubKey> = {
   odelpay_higher: "tuition",
   odelpay_schools: "tuition",
+  assessmentverse_os: "tuition",
   openpaygb: "dex",
   developers: "developers",
 };
@@ -39,7 +41,38 @@ const ACCENT: Record<ProductLine["accent"], { border: string; bg: string; title:
     btn: "bg-gradient-to-r from-emerald-500 to-teal-600 text-slate-950 hover:brightness-110",
     btnGhost: "border-emerald-400/45 bg-emerald-500/10 text-emerald-50 hover:border-emerald-300/55 hover:bg-emerald-500/20",
   },
+  teal: {
+    border: "border-teal-500/30",
+    bg: "bg-teal-950/20",
+    title: "text-teal-300/95",
+    btn: "bg-gradient-to-r from-teal-500 to-emerald-600 text-slate-950 hover:brightness-110",
+    btnGhost: "border-teal-400/45 bg-teal-500/10 text-teal-50 hover:border-teal-300/55 hover:bg-teal-500/20",
+  },
 };
+
+function LineCta({
+  href,
+  className,
+  children,
+}: {
+  href: string;
+  className: string;
+  children: ReactNode;
+}) {
+  const external = /^https?:\/\//i.test(href);
+  if (external) {
+    return (
+      <a href={href} className={className} target="_blank" rel="noreferrer">
+        {children}
+      </a>
+    );
+  }
+  return (
+    <Link href={href} className={className}>
+      {children}
+    </Link>
+  );
+}
 
 function ProductLineCard({ line }: { line: ProductLine }) {
   const a = ACCENT[line.accent];
@@ -52,19 +85,19 @@ function ProductLineCard({ line }: { line: ProductLine }) {
         <span className="font-semibold text-slate-400">Audience:</span> {line.audience}
       </p>
       <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-        <Link
+        <LineCta
           href={line.primaryHref}
           className={`inline-flex justify-center rounded-xl px-5 py-2.5 text-sm font-semibold transition-[filter,colors] ${a.btn}`}
         >
           {line.primaryLabel}
-        </Link>
+        </LineCta>
         {line.secondaryHref && line.secondaryLabel ? (
-          <Link
+          <LineCta
             href={line.secondaryHref}
             className={`inline-flex justify-center rounded-xl border px-5 py-2.5 text-sm font-semibold transition-colors ${a.btnGhost}`}
           >
             {line.secondaryLabel}
-          </Link>
+          </LineCta>
         ) : null}
       </div>
     </article>
@@ -97,7 +130,7 @@ export function ProductLinesSection({
               its own sign-in.
             </p>
           </div>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {userLines.map((line) => (
               <ProductLineCard key={line.id} line={line} />
             ))}

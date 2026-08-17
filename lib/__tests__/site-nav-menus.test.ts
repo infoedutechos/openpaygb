@@ -3,7 +3,8 @@ import { SITE_FOOTER_COLUMNS, SITE_HEADER_MENUS, SITE_HEADER_UTILITY_LINKS } fro
 
 describe("site-nav-menus", () => {
   it("defines header product menus with lobby hrefs", () => {
-    expect(SITE_HEADER_MENUS).toHaveLength(5);
+    expect(SITE_HEADER_MENUS).toHaveLength(6);
+    expect(SITE_HEADER_MENUS.find((m) => m.id === "assessmentverse_os")?.href).toBe("/AssessmentVerseOS");
     expect(SITE_HEADER_MENUS.find((m) => m.id === "developers")?.href).toBe("/developers");
     expect(SITE_HEADER_MENUS.find((m) => m.id === "hubs")?.items.map((i) => i.label)).toEqual([
       "Dex Hub",
@@ -31,6 +32,7 @@ describe("site-nav-menus", () => {
 
   it("defines footer columns for product lines and ecosystem", () => {
     expect(SITE_FOOTER_COLUMNS.map((c) => c.heading)).toContain("OdelPay — Schools");
+    expect(SITE_FOOTER_COLUMNS.map((c) => c.heading)).toContain("AssessmentVerse OS");
     expect(SITE_FOOTER_COLUMNS.map((c) => c.heading)).toContain("Guides");
     expect(SITE_FOOTER_COLUMNS.map((c) => c.heading)).toContain("Policies");
     const guides = SITE_FOOTER_COLUMNS.find((c) => c.heading === "Guides");

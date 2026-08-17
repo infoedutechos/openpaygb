@@ -3,7 +3,12 @@
  * Shown independently on the home lobby — not merged into a single "Tuition Hub" card.
  */
 
-export type ProductLineId = "odelpay_higher" | "odelpay_schools" | "openpaygb" | "developers";
+export type ProductLineId =
+  | "odelpay_higher"
+  | "odelpay_schools"
+  | "assessmentverse_os"
+  | "openpaygb"
+  | "developers";
 
 export type ProductLine = {
   id: ProductLineId;
@@ -17,7 +22,7 @@ export type ProductLine = {
   primaryLabel: string;
   secondaryHref?: string;
   secondaryLabel?: string;
-  accent: "cyan" | "sky" | "violet" | "emerald";
+  accent: "cyan" | "sky" | "violet" | "emerald" | "teal";
 };
 
 export const PRODUCT_LINES: ProductLine[] = [
@@ -48,6 +53,20 @@ export const PRODUCT_LINES: ProductLine[] = [
     secondaryHref: "/admin/register?segment=schools",
     secondaryLabel: "Request workspace",
     accent: "sky",
+  },
+  {
+    id: "assessmentverse_os",
+    title: "AssessmentVerse OS",
+    subtitle: "Schools & Higher assessment platform",
+    description:
+      "Extensible assessment OS: report cards, class lists, grading, and auto-save editors. Independent of OdelPay tuition. Nursery, Primary, Secondary, and Higher stay on separate stages.",
+    audience: "Primary schools, secondary schools, higher institutions, school admins and teachers",
+    surface: "user",
+    primaryHref: "/AssessmentVerseOS",
+    primaryLabel: "Open AssessmentVerse OS",
+    secondaryHref: "http://127.0.0.1:5000/",
+    secondaryLabel: "Open local 5000",
+    accent: "teal",
   },
   {
     id: "openpaygb",
@@ -82,6 +101,7 @@ export const PRODUCT_LINES: ProductLine[] = [
 export const PRODUCT_LINE_ORDER: ProductLineId[] = [
   "odelpay_higher",
   "odelpay_schools",
+  "assessmentverse_os",
   "openpaygb",
   "developers",
 ];

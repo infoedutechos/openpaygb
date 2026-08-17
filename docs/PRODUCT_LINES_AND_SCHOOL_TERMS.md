@@ -22,15 +22,16 @@ Prerequisites: **`.env.local`** with `DATABASE_URL` (or `MONGODB_URI`). See **[L
 
 ## 1. Standalone product platforms
 
-Three independent product lines are exposed on the home lobby and as dedicated routes:
+Four independent product lines are exposed on the home lobby and as dedicated routes:
 
 | Platform | Route | Audience | What it does |
 |----------|-------|----------|--------------|
 | **OdelPay — Higher Institutions** | `/OdelPayUniversities` | Universities, polytechnics, tertiary | Lists active `institutionTier: university` tenants; links to `/pay/{slug}` |
 | **OdelPay — Schools** | `/OdelPaySchools` | Primary / secondary schools | Lists active `institutionTier: school` tenants; term-based checkout copy |
+| **AssessmentVerse OS** | `/AssessmentVerseOS` | Schools and Higher assessment | Independent assessment OS (report cards, class lists). Local Vite 5000 / Flask 5001; not OdelPay tuition |
 | **OpenPayGB** | `/opgb` | Students, parents, global consumers | Standalone Dex / OPGB entry — wallet, buy, P2P; links to `/dex` |
 
-**Config:** `lib/ecosystem/product-lines.ts` · **UI:** `components/ecosystem/ProductLineLanding.tsx` · **Pages:** `app/OdelPayUniversities/`, `app/OdelPaySchools/`, `app/opgb/`.
+**Config:** `lib/ecosystem/product-lines.ts` · **UI:** `components/ecosystem/ProductLinesSection.tsx` · **Pages:** `app/OdelPayUniversities/`, `app/OdelPaySchools/`, `app/AssessmentVerseOS/`, `app/opgb/`.
 
 Home cards (`components/ecosystem/ProductLinesSection.tsx`) use the same `primaryHref` values.
 

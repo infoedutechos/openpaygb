@@ -29,6 +29,7 @@ export const USER_FACING_PATH_PREFIXES = [
   "/receipt",
   "/OdelPayUniversities",
   "/OdelPaySchools",
+  "/AssessmentVerseOS",
   "/opgb",
   "/dex",
 ] as const;
@@ -80,6 +81,12 @@ export const OPERATOR_ALL_SIDES_LINKS: OperatorSideLink[] = [
     label: "Universities lobby",
     href: "/OdelPayUniversities",
     kind: "public",
+  },
+  {
+    label: "AssessmentVerse OS",
+    href: "/AssessmentVerseOS",
+    kind: "public",
+    description: "Assessment platform lobby",
   },
   {
     label: "OpenPayGB / Dex",
