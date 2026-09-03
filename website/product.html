@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Product surfaces — ODELHUB Pay</title>
+<meta name="odei-product-id" content="odelhub-pay"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&amp;family=Source+Sans+3:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/styles.css"/>
+</head>
+<body data-product="odelhub-pay" data-odei-beta="tuition-explorer">
+<header class="top">
+  <div class="top-inner">
+    <a class="brand" href="/"><span class="mark">ODELHUB Pay</span><span class="sub">Tuition &amp; school fees explorer beta</span></a>
+    <nav class="nav">
+      <a href="/app/">Explorer</a>
+      <a href="/about.html">About</a>
+      <a href="/product.html">Product</a>
+      <a href="/status.html">Status</a>
+    </nav>
+  </div>
+</header>
+<aside class="scope-banner scope-banner-sticky" role="note">
+  <strong>Scope</strong>
+  <span>Product map for local_sim explorer — not live settlement.</span>
+</aside>
+<div class="page-hero">
+  <p class="kicker">Product</p>
+  <h1>Product surfaces</h1>
+  <p class="prose">Primary shell: <strong>Tuition &amp; school fees explorer beta</strong>. Next.js full app and ODEI Pay merchant OS are separate.</p>
+</div>
+<section class="section">
+  <div class="grid-3">
+    <a class="tile" href="/app/"><h3>Pay explorer</h3><p>Demo schools + local_sim pay buttons.</p></a>
+    <a class="tile" href="/app/#student"><h3>Student flow</h3><p>Stub learner fee review path.</p></a>
+    <a class="tile" href="/app/#school"><h3>School workspace</h3><p>Stub operator surface — not production finance.</p></a>
+    <a class="tile" href="http://localhost:3000/" target="_blank" rel="noopener"><h3>Next.js app (:3000)</h3><p>Separate full app — start with npm run dev:odelhub-pay-next.</p></a>
+    <a class="tile" href="http://localhost:5221/#workspace" target="_blank" rel="noopener"><h3>Hub OS directory</h3><p>ODEL product map on :5221.</p></a>
+    <a class="tile" href="/#waitlist"><h3>Waitlist stub</h3><p>Browser-local interest only.</p></a>
+  </div>
+</section>
+<footer class="footer"><div class="footer-inner"><p class="legal">© 2026 ODELHUB Pay · local_sim</p></div></footer>
+<script src="/site.js"></script>
+</body>
+</html>

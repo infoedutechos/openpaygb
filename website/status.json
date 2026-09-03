@@ -1,0 +1,57 @@
+{
+  "product": "odelhub-pay",
+  "productName": "ODELHUB Pay",
+  "updated": "2026-08-06",
+  "overall": "tuition_explorer_beta_local_sim",
+  "launch": {
+    "public": "tuition-explorer-beta",
+    "label": "Tuition & school fees explorer beta",
+    "promise": "Browse demo school fee surfaces and honesty-labelled pay stubs. No live settlement.",
+    "exclusions": [
+      "production MoMo",
+      "card acquiring",
+      "live settlement / refunds",
+      "ODEI Pay merchant OS (:5215)",
+      "KYC / compliance production",
+      "Academy tuition as live rail"
+    ]
+  },
+  "honesty": {
+    "canonical": "Tuition & school fees explorer beta (local_sim). Not production MoMo/card. Not ODEI Pay merchant OS (:5215). Next.js full app is separate under ODEL Hub OS/ODELHUB-Pay (port 3000).",
+    "bannerFile": "honesty/honesty.json",
+    "website": "Static Academy-parity shell on :5230 — explorer stubs only.",
+    "nextApp": "Full Next.js app is separate — npm run dev:odelhub-pay-next → :3000.",
+    "hubOs": "Listed in ODEL Hub OS workspace :5221/#workspace."
+  },
+  "layers": [
+    {
+      "id": "odelhub-pay-website",
+      "name": "ODELHUB Pay website",
+      "path": "/",
+      "status": "local_sim",
+      "honesty": "Product marketing + explorer shell. Local HTTP 200 is not a public deployment."
+    },
+    {
+      "id": "odelhub-pay-explorer",
+      "name": "Pay explorer app",
+      "path": "/app/",
+      "status": "local_sim",
+      "honesty": "Demo schools + Pay tuition (local_sim) buttons show honesty notices — no real charges."
+    },
+    {
+      "id": "odelhub-pay-next",
+      "name": "ODELHUB Pay Next.js app",
+      "path": "http://localhost:3000/",
+      "status": "local_sim",
+      "honesty": "Separate codebase under ODEL Hub OS/ODELHUB-Pay."
+    }
+  ],
+  "ops": {
+    "tls": false,
+    "domainControl": false,
+    "monitoring": false,
+    "backups": false,
+    "realDeployUrl": false,
+    "registryHostIsNotProofOfDeploy": true
+  }
+}

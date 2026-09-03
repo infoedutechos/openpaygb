@@ -1,0 +1,517 @@
+openapi: 3.1.0
+info:
+  title: ODEL HUB TON Pay API
+  version: 0.1.0
+  description: |
+    **Partial OpenAPI** — tuition-core subset only (~15 paths). The full API surface (~300 routes) is in
+    `docs/API_INVENTORY.csv` (regenerate with `npm run docs:inventory`). This file does not list
+    `/api/master/*`, most `/api/public/checkout/*`, partner APIs, TMA, or URA game routes.
+
+    HTTP API for the ODEL HUB tuition payment platform (UGX fees, TON settlement, MongoDB persistence).
+    Deployed as **Next.js Route Handlers** on **Vercel**. Admin routes require JWT cookie (`odelhub_admin`) from `POST /api/auth/login`.
+
+    Optional ops env: **RESEND_API_KEY**, **RESEND_FROM** (receipt email); **BRIDGE_WEBHOOK_URL**, **BRIDGE_WEBHOOK_SECRET**, **EXCHANGE_SWAP_URL** (UGX→TON bridge after MoMo confirm).
+
+servers:
+  - url: https://{vercel-deployment}
+    variables:
+      vercel-deployment:
+        default: your-app.vercel.app
+
+tags:
+  - name: Health
+  - name: FX
+  - name: Auth
+  - name: Programmes
+  - name: Wallet
+  - name: Students
+  - name: Payments
+  - name: Receipts
+  - name: Admin
+  - name: Webhooks
+
+paths:
+  /api/health:
+    get:
+      tags: [Health]
+      summary: Liveness and Mongo connectivity
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  db: { type: string }
+        "503":
+          description: Database unavailable
+
+  /api/fx/rate:
+    get:
+      tags: [FX]
+      summary: Active UGX per 1 TON
+      responses:
+        "200":
+          description: Rate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FxRateResponse"
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Admin login (sets httpOnly cookie)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Logged in
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  admin:
+                    $ref: "#/components/schemas/AdminPublic"
+        "400": { description: Invalid body }
+        "401": { description: Invalid credentials }
+
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Clear admin cookie
+      responses:
+        "200":
+          description: OK
+
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: Current admin session
+      security:
+        - AdminCookie: []
+      responses:
+        "200":
+          description: Session
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  admin:
+                    oneOf:
+                      - $ref: "#/components/schemas/AdminPublic"
+                      - type: "null"
+        "401": { description: Not authenticated }
+
+  /api/programmes:
+    get:
+      tags: [Programmes]
+      summary: List programmes
+      responses:
+        "200":
+          description: List
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  programmes:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ProgrammeListItem"
+
+  /api/programmes/{code}/quote:
+    get:
+      tags: [Programmes]
+      summary: Fee quote for year/semester + TON estimate
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema: { type: string }
+        - name: year
+          in: query
+          required: true
+          schema: { type: integer, minimum: 1, maximum: 6 }
+        - name: semester
+          in: query
+          required: true
+          schema: { type: integer, minimum: 1, maximum: 2 }
+      responses:
+        "200":
+          description: Quote
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuoteResponse"
+        "400": { description: Missing query }
+        "404": { description: Programme or fee line not found }
+
+  /api/students:
+    post:
+      tags: [Students]
+      summary: Create student (public)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentCreate"
+      responses:
+        "201":
+          description: Created
+        "400": { description: Invalid body }
+    get:
+      tags: [Students]
+      summary: Search students (admin)
+      security:
+        - AdminCookie: []
+      parameters:
+        - name: q
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50, maximum: 200 }
+      responses:
+        "200":
+          description: List
+        "401": { description: Unauthorized }
+
+  /api/students/{id}:
+    get:
+      tags: [Students]
+      summary: Student detail + payments (admin)
+      security:
+        - AdminCookie: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+        "401": { description: Unauthorized }
+        "404": { description: Not found }
+
+  /api/payments:
+    post:
+      tags: [Payments]
+      summary: Create pending payment (admin cookie or Partner API key with payments:create)
+      security:
+        - AdminCookie: []
+        - PartnerApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentCreate"
+      responses:
+        "201": { description: Created }
+        "400": { description: Invalid body }
+        "404": { description: Student or programme not found }
+    get:
+      tags: [Payments]
+      summary: List payments (admin)
+      security:
+        - AdminCookie: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, confirmed, failed]
+        - name: studentId
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 100, maximum: 500 }
+        - name: rail
+          in: query
+          schema:
+            type: string
+            enum: [telegram, web, momo_bridge]
+          description: Filter by payment rail
+      responses:
+        "200": { description: OK }
+        "401": { description: Unauthorized }
+
+  /api/collect/momo:
+    post:
+      tags: [Payments]
+      summary: Create student + momo_bridge pending payment (public collect)
+      description: |
+        Rate limited (30/min per IP). Persists student, creates pending payment with `rail=momo_bridge` and sets `momoReference` to the payment id for MoMo webhook matching.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, programmeCode, year, semester]
+              properties:
+                name: { type: string, minLength: 2 }
+                email: { type: string, format: email, description: Optional; empty string allowed }
+                phone: { type: string }
+                programmeCode: { type: string, minLength: 2 }
+                year: { type: integer, minimum: 1, maximum: 6 }
+                semester: { type: integer, minimum: 1, maximum: 2 }
+      responses:
+        "201": { description: Created — payment and collect hints in body }
+        "400": { description: Invalid body }
+        "429": { description: Rate limited }
+
+  /api/payments/{id}:
+    get:
+      tags: [Payments]
+      summary: Payment detail (admin)
+      security:
+        - AdminCookie: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+        "401": { description: Unauthorized }
+        "404": { description: Not found }
+    patch:
+      tags: [Payments]
+      summary: Update payment status / tx hash (admin)
+      security:
+        - AdminCookie: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentPatch"
+      responses:
+        "200": { description: Updated }
+        "400": { description: Invalid body }
+        "401": { description: Unauthorized }
+        "404": { description: Not found }
+
+  /api/receipts/{paymentId}:
+    get:
+      tags: [Receipts]
+      summary: Receipt JSON (confirmed public; admin may preview)
+      parameters:
+        - name: paymentId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Receipt
+        "404": { description: Not found or not available }
+
+  /api/admin/summary:
+    get:
+      tags: [Admin]
+      summary: Dashboard aggregates
+      security:
+        - AdminCookie: []
+      responses:
+        "200":
+          description: Summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSummary"
+        "401": { description: Unauthorized }
+
+  /api/manifest/tonconnect:
+    get:
+      tags: [Wallet]
+      summary: TON Connect manifest (wallet app metadata)
+      responses:
+        "200":
+          description: Manifest JSON
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url: { type: string }
+                  name: { type: string }
+                  iconUrl: { type: string }
+
+  /api/payments/export:
+    get:
+      tags: [Payments]
+      summary: Export payments as CSV (admin)
+      security:
+        - AdminCookie: []
+      responses:
+        "200":
+          description: CSV file
+          content:
+            text/csv:
+              schema:
+                type: string
+        "401": { description: Unauthorized }
+
+  /api/webhooks/telegram:
+    post:
+      tags: [Webhooks]
+      summary: Telegram bot updates (BotFather webhook → processes commands & inline menus)
+      parameters:
+        - name: X-Telegram-Bot-Api-Secret-Token
+          in: header
+          schema: { type: string }
+          description: Matches TELEGRAM_WEBHOOK_SECRET when using secret_token on setWebhook
+      responses:
+        "200": { description: Accepted (or duplicate update) }
+        "401": { description: Invalid secret }
+        "429": { description: Rate limited }
+        "500": { description: Handler error; dedupe may be rolled back for retry }
+
+  /api/webhooks/momo:
+    get:
+      tags: [Webhooks]
+      summary: Provider URL verification (returns OK)
+      responses:
+        "200": { description: OK }
+    post:
+      tags: [Webhooks]
+      summary: Mobile money collect callback — confirms payment by reference / id
+      parameters:
+        - name: X-Momo-Webhook-Secret
+          in: header
+          schema: { type: string }
+      responses:
+        "200":
+          description: Processed (always 200 when authorized; body describes action)
+        "401": { description: Invalid secret }
+        "429": { description: Rate limited }
+
+components:
+  securitySchemes:
+    AdminCookie:
+      type: apiKey
+      in: cookie
+      name: odelhub_admin
+    PartnerApiKey:
+      type: http
+      scheme: bearer
+      bearerFormat: odelhub_live
+      description: Partner API key from Master Admin (scope payments:create required)
+
+  schemas:
+    FxRateResponse:
+      type: object
+      properties:
+        ugxPerTon: { type: number }
+        source: { type: string }
+        pair: { type: string, example: TON/UGX }
+
+    LoginBody:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8 }
+
+    AdminPublic:
+      type: object
+      properties:
+        id: { type: string }
+        email: { type: string }
+        name: { type: string }
+
+    ProgrammeListItem:
+      type: object
+      properties:
+        id: { type: string }
+        code: { type: string }
+        name: { type: string }
+        feeLines: { type: integer }
+
+    QuoteResponse:
+      type: object
+      properties:
+        programmeCode: { type: string }
+        programmeName: { type: string }
+        year: { type: integer }
+        semester: { type: integer }
+        tuitionUgx: { type: number }
+        functionalFeesUgx: { type: number }
+        totalUgx: { type: number }
+        ugxPerTon: { type: number }
+        rateSource: { type: string }
+        tonAmount: { type: number }
+        destinationWallet: { type: string }
+
+    StudentCreate:
+      type: object
+      required: [name, programmeCode, year, semester]
+      properties:
+        name: { type: string, minLength: 2 }
+        email: { type: string, format: email }
+        phone: { type: string }
+        telegramId: { type: string }
+        programmeCode: { type: string }
+        year: { type: integer, minimum: 1, maximum: 6 }
+        semester: { type: integer, minimum: 1, maximum: 2 }
+
+    PaymentCreate:
+      type: object
+      required: [studentId, programmeCode, year, semester, rail]
+      properties:
+        studentId: { type: string }
+        programmeCode: { type: string }
+        year: { type: integer }
+        semester: { type: integer }
+        rail:
+          type: string
+          enum: [telegram, web, momo_bridge]
+        memo: { type: string, maxLength: 200 }
+        momoReference:
+          type: string
+          maxLength: 200
+          description: External MoMo reference to match callbacks (or use payment id)
+
+    PaymentPatch:
+      type: object
+      description: At least one field required
+      properties:
+        status:
+          type: string
+          enum: [pending, confirmed, failed]
+        txHash: { type: string, maxLength: 220 }
+        momoReference: { type: string, maxLength: 200 }
+
+    AdminSummary:
+      type: object
+      properties:
+        totalCollectionsTon: { type: number }
+        totalPayments: { type: integer }
+        totalStudents: { type: integer }
+        monthlyTon:
+          type: array
+          items:
+            type: object
+            properties:
+              m: { type: string, description: "YYYY-MM" }
+              ton: { type: number }

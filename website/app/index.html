@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Pay explorer — ODELHUB Pay (local_sim)</title>
+<meta name="description" content="ODELHUB Pay local_sim explorer: demo schools and honesty-labelled tuition buttons — no real charges."/>
+<meta name="odei-product-id" content="odelhub-pay"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&amp;family=Source+Sans+3:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/styles.css"/>
+</head>
+<body data-product="odelhub-pay" data-odei-beta="tuition-explorer">
+<header class="top">
+  <div class="top-inner">
+    <a class="brand" href="/"><span class="mark">ODELHUB Pay</span><span class="sub">Pay explorer · local_sim</span></a>
+    <nav class="nav">
+      <a href="/">Home</a>
+      <a href="/app/">Explorer</a>
+      <a href="/status.html">Status</a>
+      <a href="http://localhost:5221/#workspace" target="_blank" rel="noopener">Hub OS</a>
+    </nav>
+  </div>
+</header>
+<aside class="scope-banner scope-banner-sticky" role="note">
+  <strong>local_sim</strong>
+  <span>Demo schools only. “Pay tuition” shows an honesty notice — no MoMo, no card, no settlement.</span>
+</aside>
+
+<div class="page-hero">
+  <p class="kicker">Explorer</p>
+  <h1>Tuition explorer</h1>
+  <p class="prose">Three labelled demo schools. Buttons are stubs for UX review — not live charges.</p>
+</div>
+
+<section class="section" id="schools" style="padding-top:12px">
+  <div class="grid-3">
+    <article class="school-card">
+      <h3>Lake Victoria Secondary</h3>
+      <p class="meta">Demo school · Term 2 tuition · UGX 450,000 (stub)</p>
+      <button type="button" class="btn btn-solid" data-pay-sim data-school="Lake View Secondary">Pay tuition (local_sim)</button>
+    </article>
+    <article class="school-card">
+      <h3>Horizon Technical College</h3>
+      <p class="meta">Demo school · Semester fees · UGX 1,200,000 (stub)</p>
+      <button type="button" class="btn btn-solid" data-pay-sim data-school="Horizon Technical College">Pay tuition (local_sim)</button>
+    </article>
+    <article class="school-card">
+      <h3>Nile Open Learning Centre</h3>
+      <p class="meta">Demo school · Modular fees · UGX 280,000 (stub)</p>
+      <button type="button" class="btn btn-solid" data-pay-sim data-school="Nile Open Learning Centre">Pay tuition (local_sim)</button>
+    </article>
+  </div>
+</section>
+
+<section class="section" id="student">
+  <p class="kicker">Student flow</p>
+  <h2>Student / parent stub</h2>
+  <p class="intro">Review fee lines, select a demo school, and press Pay tuition (local_sim). Expect an honesty notice — never a receipt of real funds.</p>
+  <a class="btn btn-ghost" href="#schools">Back to schools</a>
+</section>
+
+<section class="section band" id="school">
+  <div class="section" style="padding-top:0;padding-bottom:0">
+    <p class="kicker">School workspace</p>
+    <h2>School operator stub</h2>
+    <p class="intro">Placeholder for fee schedules and reconciliation UI. Not production finance, not ERP sync, not settlement ops.</p>
+    <ul class="feature-list">
+      <li><strong>Fee schedule (stub)</strong><span>Static demo amounts only.</span></li>
+      <li><strong>Reconciliation (planned)</strong><span>Not available in this shell.</span></li>
+      <li><strong>Payouts (not live)</strong><span>No MoMo or bank rails here.</span></li>
+    </ul>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <p class="legal">© 2026 ODELHUB Pay explorer · local_sim · <a href="/">Home</a> · <a href="/status.json">status.json</a></p>
+  </div>
+</footer>
+<script src="/site.js"></script>
+</body>
+</html>

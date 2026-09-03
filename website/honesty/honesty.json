@@ -1,0 +1,28 @@
+{
+  "productId": "odelhub-pay",
+  "productName": "ODELHUB Pay",
+  "maturity": "tuition_explorer_beta_local_sim",
+  "launch": {
+    "public": "tuition-explorer-beta",
+    "label": "Tuition & school fees explorer beta",
+    "promise": "Explore demo school fee surfaces. Pay buttons are honesty stubs — no live charges."
+  },
+  "banner": {
+    "level": "info",
+    "short": "ODELHUB Pay explorer beta (local_sim) — not production MoMo/card.",
+    "long": "ODELHUB Pay website on :5230 is an Academy-parity honesty shell for tuition and school fees discovery. It is not ODEI Pay merchant OS (:5215). The Next.js full app under ODEL Hub OS/ODELHUB-Pay is separate (port 3000 when started)."
+  },
+  "never_claim": [
+    "Production MoMo or card settlement",
+    "Live school ERP billing",
+    "ODEI Pay (:5215) merchant OS equivalence",
+    "Academy live tuition rails",
+    "Public deploy from registry host alone"
+  ],
+  "updated": "2026-08-06",
+  "related": [
+    "apps/odelhub-pay/status.json",
+    "apps/odel-hub/data/hub-products.json",
+    "http://localhost:5221/#workspace"
+  ]
+}

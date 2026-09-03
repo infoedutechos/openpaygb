@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Status — ODELHUB Pay</title>
+<meta name="description" content="Honesty status for ODELHUB Pay tuition explorer beta (local_sim)."/>
+<meta name="odei-product-id" content="odelhub-pay"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&amp;family=Source+Sans+3:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/styles.css"/>
+</head>
+<body data-product="odelhub-pay" data-odei-beta="tuition-explorer">
+<header class="top">
+  <div class="top-inner">
+    <a class="brand" href="/"><span class="mark">ODELHUB Pay</span><span class="sub">Tuition &amp; school fees explorer beta</span></a>
+    <nav class="nav">
+      <a href="/app/">Explorer</a>
+      <a href="/about.html">About</a>
+      <a href="/product.html">Product</a>
+      <a href="/status.html">Status</a>
+    </nav>
+  </div>
+</header>
+<aside class="scope-banner scope-banner-sticky" role="note">
+  <strong>Scope</strong>
+  <span>Tuition &amp; school fees explorer beta (local_sim). Not production MoMo/card. Not ODEI Pay (:5215).</span>
+</aside>
+<div class="page-hero">
+  <p class="kicker">Status</p>
+  <h1>Status &amp; honesty</h1>
+  <p class="prose"><strong>Public shell:</strong> Tuition &amp; school fees explorer beta on :5230. Local HTTP 200 is not a public deployment.</p>
+  <p class="prose"><strong>Canonical honesty:</strong> Not production MoMo/card. Not ODEI Pay merchant OS (:5215). Next.js full app is separate (:3000 when started).</p>
+  <p class="prose"><strong>Explorer:</strong> <a href="/app/">/app/</a> lists demo schools; pay buttons emit honesty notices only.</p>
+  <p class="prose"><strong>Machine layers:</strong> <a href="/status.json"><code>status.json</code></a> · <a href="/honesty/honesty.json"><code>honesty/honesty.json</code></a></p>
+  <p class="prose"><strong>Hub OS:</strong> <a href="http://localhost:5221/#workspace" target="_blank" rel="noopener">http://localhost:5221/#workspace</a></p>
+  <p class="prose"><strong>Ops flags:</strong> TLS / domain / monitoring / real deploy URL remain false until humans verify. Registry host ≠ deploy proof.</p>
+</div>
+<footer class="footer"><div class="footer-inner"><p class="legal">© 2026 ODELHUB Pay · See status.json</p></div></footer>
+<script src="/site.js"></script>
+</body>
+</html>

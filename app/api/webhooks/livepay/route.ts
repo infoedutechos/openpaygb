@@ -149,6 +149,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, action: topupResult.action, cardTopupId: ref });
     }
 
+    const { confirmMerchantChargeFromLivePay } = await import("@/lib/merchant-charge-momo");
+    const chargeResult = await confirmMerchantChargeFromLivePay(ref, {
+      status: payload.status,
+      amount: payload.amount,
+      currency: payload.currency,
+      internal_reference: payload.internal_reference,
+    });
+    if (
+      chargeResult.action === "charge_confirmed" ||
+      chargeResult.action === "already_confirmed" ||
+      chargeResult.action === "charge_failed"
+    ) {
+      return NextResponse.json({ ok: true, action: chargeResult.action, chargeId: ref });
+    }
+
     const payment = await withPrismaRetry(() =>
 
       prisma.payment.findFirst({

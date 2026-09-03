@@ -1,7 +1,9 @@
 # ODEL HUB Pay / OpenPayGB — User guides index
 
-**Last updated:** 2026-07-18  
-**Product:** Multi-tenant tuition payments (TON, mobile money, OpenPayGB virtual card) for schools and higher institutions in Uganda and East Africa.
+**Last updated:** 2026-09-03  
+**Product:** Multi-tenant tuition payments (TON, mobile money, OpenPayGB virtual card) for schools and higher institutions in Uganda and East Africa — plus **OpenPayGB as a payment provider** for third-party apps.
+
+**Platform update pack (commands + all login details):** [PLATFORM_UPDATE_2026-09](../platform/PLATFORM_UPDATE_2026-09.md) · [LOCAL_DEV_AND_CREDENTIALS](../platform/LOCAL_DEV_AND_CREDENTIALS.md)
 
 Download from **Master Admin → Docs & downloads** (`/admin/master#project-download`) — organised catalogue:
 
@@ -29,7 +31,9 @@ Each category supports a one-click category ZIP plus individual part downloads.
 | **Student / parent (schools)** | [USER_GUIDE_STUDENT_SCHOOLS.md](./USER_GUIDE_STUDENT_SCHOOLS.md) | `/student/login?segment=schools` · pay `/pay` (School Code) |
 | **Student (higher institutions)** | [USER_GUIDE_STUDENT_HIGHER.md](./USER_GUIDE_STUDENT_HIGHER.md) | `/student/login?segment=higher` · lobby `/OdelPayUniversities` |
 | **Guest payer** (no account) | [USER_GUIDE_GUEST_PAYER.md](./USER_GUIDE_GUEST_PAYER.md) | `/pay` or `/pay/<orgSlug>` |
-| **Partner / SIS integrator** | [USER_GUIDE_PARTNER_INTEGRATOR.md](./USER_GUIDE_PARTNER_INTEGRATOR.md) | API keys from Master Admin |
+| **Partner / SIS integrator** | [USER_GUIDE_PARTNER_INTEGRATOR.md](./USER_GUIDE_PARTNER_INTEGRATOR.md) | `/developers/register` · `/opgb` · API keys from dashboard or Master |
+| **Local credentials** | [LOCAL_DEV_AND_CREDENTIALS](../platform/LOCAL_DEV_AND_CREDENTIALS.md) | Seed emails/passwords for master, schools, Uwais, students |
+| **Sep 2026 update pack** | [PLATFORM_UPDATE_2026-09](../platform/PLATFORM_UPDATE_2026-09.md) | Commands, logins, OPGB + Uwais recipes |
 
 ### Deprecated generic guides (pointers only)
 
@@ -50,6 +54,10 @@ These files remain for download compatibility and old links. Prefer the tier-spe
 | Schools lobby | `/OdelPaySchools` |
 | Higher institutions lobby | `/OdelPayUniversities` |
 | OpenPayGB lobby | `/opgb` |
+| Developers | `/developers` · `/developers/dashboard` |
+| OPGB master console | `/admin/master/opgb-ops` |
+| Parent portal | `/parent` |
+| Uwais checkout | `/pay/uwais` |
 | Pay tuition (pick school) | `/pay` |
 | Pay tuition (one org) | `/pay/<orgSlug>` |
 | Receipt | `/receipt/<paymentId>` |
@@ -73,9 +81,14 @@ These files remain for download compatibility and old links. Prefer the tier-spe
 
 | Topic | Doc |
 |-------|-----|
-| Admission number customization | [../ADMISSION_NUMBER_FORMAT.md](../ADMISSION_NUMBER_FORMAT.md) |
-| Dual receipt branding | [../RECEIPT_BRANDING.md](../RECEIPT_BRANDING.md) |
-| Product lines & Term vs Semester | [../PRODUCT_LINES_AND_SCHOOL_TERMS.md](../PRODUCT_LINES_AND_SCHOOL_TERMS.md) |
+| Admission number customization | [../ADMISSION_NUMBER_FORMAT.md](../school/ADMISSION_NUMBER_FORMAT.md) |
+| Dual receipt branding | [RECEIPT_BRANDING](../school/RECEIPT_BRANDING.md) |
+| Product lines & Term vs Semester | [PRODUCT_LINES_AND_SCHOOL_TERMS](../platform/PRODUCT_LINES_AND_SCHOOL_TERMS.md) |
+| OpenPayGB payment provider | [OPENPAYGB_PAYMENT_PROVIDER](../platform/OPENPAYGB_PAYMENT_PROVIDER.md) |
+| Partner API | [PARTNER_API](../platform/PARTNER_API.md) |
+| Uwais SMIS roadmap | [UWAIS_SMIS_PRIORITY_ROADMAP](../platform/UWAIS_SMIS_PRIORITY_ROADMAP.md) |
+| Developer ecosystem | [DEVELOPER_ECOSYSTEM](../platform/DEVELOPER_ECOSYSTEM.md) |
+| Library map | [LIBRARY](../LIBRARY.md) |
 
 ---
 
@@ -86,4 +99,4 @@ These files remain for download compatibility and old links. Prefer the tier-spe
 - **Talk to an agent** — when configured (Telegram / support links in platform social settings).
 - **Receipt email** — after confirmed payment when Resend or Brevo is configured.
 
-For operators: see [../PROJECT_DESCRIPTION.md](../PROJECT_DESCRIPTION.md) and [../PRODUCTION_GO_LIVE.md](../PRODUCTION_GO_LIVE.md).
+For operators: see [../PROJECT_DESCRIPTION.md](../product/PROJECT_DESCRIPTION.md) and [../PRODUCTION_GO_LIVE.md](../deployment/PRODUCTION_GO_LIVE.md).

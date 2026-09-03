@@ -247,4 +247,4 @@ Receipts show **dual branding**: MAC / ODEL HUB platform letterhead plus your **
 3. Contact your **school bursar** for admission numbers, School Code, class placement, and portal passwords.
 4. Escalate unresolved paid-but-missing cases with payment reference + receipt URL to school admin, who can check `/admin/payments` and `/admin/receipts`.
 
-Related docs: [USER_GUIDE_INDEX.md](./USER_GUIDE_INDEX.md) · [USER_GUIDE_GUEST_PAYER.md](./USER_GUIDE_GUEST_PAYER.md) · [../RECEIPT_BRANDING.md](../RECEIPT_BRANDING.md)
+Related docs: [USER_GUIDE_INDEX.md](./USER_GUIDE_INDEX.md) · [USER_GUIDE_GUEST_PAYER.md](./USER_GUIDE_GUEST_PAYER.md) · [../RECEIPT_BRANDING.md](../school/RECEIPT_BRANDING.md)

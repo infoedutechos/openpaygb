@@ -1,6 +1,6 @@
 /**
  * Regenerates the MANIFEST array in docs/index.html from all docs under docs/.
- * Run: npm run docs:build-index
+ * Skips root stub redirects ("# Moved"). Run: npm run docs:build-index
  */
 import fs from "fs";
 import path from "path";
@@ -24,30 +24,37 @@ function slugify(relPath) {
 
 function inferCategory(relPath) {
   const norm = relPath.replace(/\\/g, "/").toLowerCase();
+  const top = norm.split("/")[0];
+  const folderCats = {
+    flows: "flows",
+    economics: "economics",
+    architecture: "architecture",
+    platform: "platform",
+    school: "school",
+    deployment: "deployment",
+    operations: "operations",
+    product: "product",
+    "api-reference": "api-reference",
+    guides: "guides",
+    "upstream-ura-pearl": "upstream-pearl",
+    "upstream-ura-game": "upstream-game",
+    "contract-build": "contracts",
+  };
+  if (folderCats[top]) return folderCats[top];
+
   if (norm.includes("upstream-ura-pearl/")) return "upstream-pearl";
   if (norm.includes("upstream-ura-game/")) return "upstream-game";
   if (norm.includes("contract-build/")) return "contracts";
   if (norm.endsWith("openapi.yaml") || norm.endsWith("openapi.yml")) return "api-reference";
   if (norm.endsWith(".csv") || norm.includes("api_inventory")) return "api-reference";
-  if (norm.includes("flow") || norm.includes("user_flow") || norm.includes("admin_flow")) {
-    return "flows";
-  }
+  if (norm.includes("flow")) return "flows";
   if (norm.includes("economics")) return "economics";
-  if (
-    norm.includes("security") ||
-    norm.includes("error_hardening") ||
-    norm.includes("integration_hardening") ||
-    norm.includes("backup")
-  ) {
+  if (norm.includes("security") || norm.includes("hardening") || norm.includes("backup")) {
     return "operations";
-  }
-  if (norm.includes("audit") || norm.includes("backlog") || norm.includes("user_stories")) {
-    return "product";
   }
   if (norm.includes("deploy") || norm.includes("vercel") || norm.includes("production")) {
     return "deployment";
   }
-  if (norm.includes("structure") || norm.includes("folder")) return "implementation";
   return "implementation";
 }
 
@@ -69,10 +76,18 @@ function keywordsFrom(relPath, title, category) {
   return `${title} ${category} ${base}`.toLowerCase().replace(/\s+/g, " ").trim();
 }
 
+function isStub(content, relPath) {
+  if (!relPath.includes("/") && (content.startsWith("# Moved\n") || content.startsWith("Moved to "))) {
+    return true;
+  }
+  return false;
+}
+
 function walk(dir, base = "") {
   const entries = [];
   for (const name of fs.readdirSync(dir).sort()) {
     if (SKIP_NAMES.has(name)) continue;
+    if (name.startsWith(".")) continue;
     const full = path.join(dir, name);
     const rel = base ? `${base}/${name}` : name;
     const stat = fs.statSync(full);
@@ -82,13 +97,20 @@ function walk(dir, base = "") {
     }
     const ext = path.extname(name).toLowerCase();
     if (!DOC_EXTENSIONS.has(ext)) continue;
-    const content = ext === ".md" || ext === ".txt" ? fs.readFileSync(full, "utf8") : "";
+    const content =
+      ext === ".md" || ext === ".txt" || ext === ".csv" || ext === ".yaml" || ext === ".yml"
+        ? fs.readFileSync(full, "utf8")
+        : "";
+    if (isStub(content, rel.replace(/\\/g, "/"))) continue;
+    const title = titleFromFile(rel, content);
+    const category = inferCategory(rel);
     entries.push({
       id: slugify(rel),
       file: rel.replace(/\\/g, "/"),
-      title: titleFromFile(rel, content),
-      category: inferCategory(rel),
-      keywords: keywordsFrom(rel, titleFromFile(rel, content), inferCategory(rel)),
+      title,
+      category,
+      keywords: keywordsFrom(rel, title, category),
+      bytes: stat.size,
     });
   }
   return entries;
@@ -96,21 +118,23 @@ function walk(dir, base = "") {
 
 function priority(a) {
   const order = {
-    flows: 0,
-    architecture: 1,
-    implementation: 2,
-    deployment: 3,
-    operations: 4,
-    economics: 5,
-    product: 6,
-    "api-reference": 7,
-    "upstream-pearl": 8,
-    "upstream-game": 9,
-    contracts: 10,
+    platform: 0,
+    guides: 1,
+    flows: 2,
+    school: 3,
+    architecture: 4,
+    deployment: 5,
+    operations: 6,
+    economics: 7,
+    product: 8,
+    "api-reference": 9,
+    implementation: 10,
+    "upstream-pearl": 11,
+    "upstream-game": 12,
+    contracts: 13,
   };
   const cat = order[a.category] ?? 50;
-  const root = a.file.includes("/") ? 1 : 0;
-  return [root, cat, a.title.toLowerCase()];
+  return [cat, a.title.toLowerCase()];
 }
 
 const manifest = walk(docsRoot).sort((a, b) => {
@@ -123,48 +147,107 @@ const manifest = walk(docsRoot).sort((a, b) => {
   return 0;
 });
 
-const manifestJson = JSON.stringify(manifest, null, 2);
+const totalBytes = manifest.reduce((s, d) => s + (d.bytes || 0), 0);
+const libraryStats = {
+  totalDocuments: manifest.length,
+  totalBytes,
+  totalKb: Math.round((totalBytes / 1024) * 10) / 10,
+  generatedAt: new Date().toISOString(),
+};
+
+const manifestForClient = manifest.map(({ bytes, ...rest }) => rest);
+const manifestJson = JSON.stringify(manifestForClient, null, 2);
+const statsJson = JSON.stringify(libraryStats, null, 2);
 
 let html = fs.readFileSync(indexPath, "utf8");
-const start = html.indexOf("const MANIFEST = [");
-if (start < 0) {
-  console.error("[docs:build-index] Could not find MANIFEST block in index.html");
-  process.exit(1);
+
+function replaceConst(htmlSrc, constName, json) {
+  const start = htmlSrc.indexOf(`const ${constName} =`);
+  if (start < 0) return null;
+  const after = htmlSrc.slice(start);
+  const eq = after.indexOf("=");
+  let i = eq + 1;
+  while (i < after.length && /\s/.test(after[i])) i++;
+  const open = after[i];
+  let endRel = -1;
+  if (open === "[") {
+    let depth = 0;
+    for (let j = i; j < after.length; j++) {
+      if (after[j] === "[") depth++;
+      if (after[j] === "]") {
+        depth--;
+        if (depth === 0) {
+          endRel = j;
+          break;
+        }
+      }
+    }
+  } else if (open === "{") {
+    let depth = 0;
+    for (let j = i; j < after.length; j++) {
+      if (after[j] === "{") depth++;
+      if (after[j] === "}") {
+        depth--;
+        if (depth === 0) {
+          endRel = j;
+          break;
+        }
+      }
+    }
+  }
+  if (endRel < 0) return null;
+  const absEnd = start + endRel;
+  // include trailing semicolon if present
+  let end = absEnd + 1;
+  if (htmlSrc[end] === ";") end++;
+  return (
+    htmlSrc.slice(0, start) + `const ${constName} = ${json};` + htmlSrc.slice(end)
+  );
 }
 
-const categoryStart = html.indexOf("const CATEGORY_LABEL = {", start);
-if (categoryStart < 0) {
-  console.error("[docs:build-index] Could not find CATEGORY_LABEL block in index.html");
+const withManifest = replaceConst(html, "MANIFEST", manifestJson);
+if (!withManifest) {
+  console.error("[docs:build-index] Could not replace MANIFEST");
   process.exit(1);
 }
-const end = html.lastIndexOf("]", categoryStart);
-if (end < start) {
-  console.error("[docs:build-index] Could not find MANIFEST end in index.html");
-  process.exit(1);
-}
-html = html.slice(0, start) + `const MANIFEST = ${manifestJson};` + html.slice(end + 1);
+html = withManifest;
 
 const categoryLabels = {
   all: "All",
+  platform: "Platform / OPGB",
+  guides: "User guides",
   flows: "Flows",
+  school: "Schools / tuition",
   architecture: "Architecture",
-  implementation: "Implementation",
   deployment: "Deployment",
   operations: "Operations",
   economics: "Economics",
   product: "Product",
   "api-reference": "API reference",
+  implementation: "Implementation",
   "upstream-pearl": "Upstream (Pearl)",
   "upstream-game": "Upstream (Game)",
   contracts: "Contracts",
 };
 
-const labelStart = html.indexOf("const CATEGORY_LABEL = {", start);
-const labelEnd = html.indexOf("};", labelStart);
-if (labelStart >= 0 && labelEnd >= 0) {
-  const labelJson = JSON.stringify(categoryLabels, null, 2);
-  html = html.slice(0, labelStart) + `const CATEGORY_LABEL = ${labelJson};` + html.slice(labelEnd + 2);
+let withLabels = replaceConst(html, "CATEGORY_LABEL", JSON.stringify(categoryLabels, null, 2));
+if (!withLabels) {
+  console.error("[docs:build-index] Could not replace CATEGORY_LABEL");
+  process.exit(1);
+}
+html = withLabels;
+
+if (html.includes("const LIBRARY_STATS =")) {
+  const withStats = replaceConst(html, "LIBRARY_STATS", statsJson);
+  if (withStats) html = withStats;
+} else {
+  html = html.replace(
+    "const MANIFEST =",
+    `const LIBRARY_STATS = ${statsJson};\n      const MANIFEST =`,
+  );
 }
 
 fs.writeFileSync(indexPath, html, "utf8");
-console.log(`[docs:build-index] Updated ${manifest.length} documents in docs/index.html`);
+console.log(
+  `[docs:build-index] Updated ${manifest.length} documents (${libraryStats.totalKb} KB) in docs/index.html`,
+);

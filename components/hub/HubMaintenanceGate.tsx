@@ -16,10 +16,17 @@ const HUB_ACCENT: Record<HubKey, string> = {
 export async function HubMaintenanceGate({
   hub,
   children,
+  allowWhenHidden = false,
 }: {
   hub: HubKey;
   children: React.ReactNode;
+  /** When true, keep the surface available even if the hub is hidden or under maintenance (OpenPayGB provider). */
+  allowWhenHidden?: boolean;
 }) {
+  if (allowWhenHidden) {
+    return <>{children}</>;
+  }
+
   /** Hide = hub disappears entirely (redirect home). Maintenance = hub stays listed but blocked. */
   if (await isHubHidden(hub)) {
     redirect("/");

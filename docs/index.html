@@ -7,9 +7,8 @@
     <title>ODEL HUB Pay — Documentation Library</title>
     <meta
       name="description"
-      content="Searchable, printable documentation hub for ODEL HUB TON Pay — flows, architecture, APIs, and implementation guides."
+      content="Fully accessible, searchable, printable documentation hub for ODEL HUB Pay / OpenPayGB — flows, platform, schools, APIs, and guides."
     />
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <style>
       .visually-hidden {
         position: absolute;
@@ -23,17 +22,18 @@
         border: 0;
       }
       :root {
-        --bg: #0a0f1a;
-        --surface: #111827;
-        --card: #151d2e;
-        --border: rgba(148, 163, 184, 0.2);
+        --bg: #070b14;
+        --surface: #0e1524;
+        --card: #121a2b;
+        --border: rgba(148, 163, 184, 0.22);
         --text: #e2e8f0;
         --muted: #94a3b8;
         --accent: #38bdf8;
         --accent2: #a78bfa;
+        --sidebar-w: 300px;
         --print-text: #111;
         --radius: 12px;
-        --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        --font: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
       }
       * {
         box-sizing: border-box;
@@ -45,8 +45,10 @@
         margin: 0;
         min-height: 100dvh;
         font-family: var(--font);
-        background: radial-gradient(1200px 600px at 10% -10%, rgba(56, 189, 248, 0.12), transparent),
-          radial-gradient(800px 400px at 90% 20%, rgba(167, 139, 250, 0.1), transparent), var(--bg);
+        background:
+          radial-gradient(1100px 520px at 8% -8%, rgba(56, 189, 248, 0.14), transparent),
+          radial-gradient(900px 480px at 92% 8%, rgba(167, 139, 250, 0.12), transparent),
+          var(--bg);
         color: var(--text);
         line-height: 1.6;
       }
@@ -54,64 +56,100 @@
         display: block;
       }
 
-      /* ——— App shell (hidden when printing) ——— */
       @media screen {
         .shell {
           display: flex;
           flex-direction: column;
           min-height: 100dvh;
-          max-width: 1400px;
+          max-width: 1480px;
           margin: 0 auto;
           padding: 0 1rem 2rem;
         }
-        .hero {
-          padding: 1.75rem 0 1rem;
+        .topbar {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 1rem 0 0.75rem;
           border-bottom: 1px solid var(--border);
-          margin-bottom: 1.25rem;
+          margin-bottom: 1rem;
         }
-        .hero h1 {
-          font-size: clamp(1.5rem, 4vw, 2rem);
+        .brand {
+          flex: 1;
+          min-width: 200px;
+        }
+        .brand h1 {
+          font-size: clamp(1.25rem, 3.5vw, 1.75rem);
           font-weight: 700;
-          margin: 0 0 0.35rem;
+          margin: 0 0 0.2rem;
           background: linear-gradient(120deg, #e0f2fe, var(--accent), var(--accent2));
           -webkit-background-clip: text;
           background-clip: text;
           color: transparent;
         }
-        .hero p.lead {
+        .brand p {
           margin: 0;
           color: var(--muted);
-          font-size: 0.95rem;
+          font-size: 0.85rem;
+        }
+        .topbar-actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+        }
+        .btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
+          min-height: 40px;
+          padding: 0.45rem 0.9rem;
+          border-radius: 10px;
+          border: 1px solid var(--border);
+          background: var(--surface);
+          color: var(--text);
+          font-size: 0.82rem;
+          font-weight: 600;
+          cursor: pointer;
+        }
+        .btn:hover,
+        .btn:focus-visible {
+          border-color: var(--accent);
+          outline: none;
+        }
+        .btn-accent {
+          border-color: rgba(56, 189, 248, 0.45);
+          background: rgba(56, 189, 248, 0.12);
+          color: #7dd3fc;
         }
         .stats {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-          gap: 0.75rem;
-          margin-top: 1.25rem;
+          grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+          gap: 0.65rem;
+          margin-bottom: 1rem;
         }
         .stat {
           background: var(--card);
           border: 1px solid var(--border);
           border-radius: var(--radius);
-          padding: 0.85rem 1rem;
+          padding: 0.75rem 0.9rem;
         }
         .stat .label {
-          font-size: 0.7rem;
+          font-size: 0.65rem;
           text-transform: uppercase;
-          letter-spacing: 0.06em;
+          letter-spacing: 0.07em;
           color: var(--muted);
         }
         .stat .value {
-          font-size: 1.15rem;
-          font-weight: 600;
-          margin-top: 0.2rem;
+          font-size: 1.05rem;
+          font-weight: 650;
+          margin-top: 0.15rem;
         }
         .toolbar {
           display: flex;
           flex-wrap: wrap;
-          gap: 0.75rem;
+          gap: 0.65rem;
           align-items: center;
-          margin-bottom: 1rem;
+          margin-bottom: 0.85rem;
         }
         .search-wrap {
           flex: 1;
@@ -120,7 +158,7 @@
         }
         .search-wrap input {
           width: 100%;
-          padding: 0.65rem 0.85rem 0.65rem 2.4rem;
+          padding: 0.65rem 0.85rem 0.65rem 2.35rem;
           border-radius: var(--radius);
           border: 1px solid var(--border);
           background: var(--surface);
@@ -133,30 +171,22 @@
           left: 0.65rem;
           top: 50%;
           transform: translateY(-50%);
-          font-size: 0.9rem;
-          opacity: 0.7;
+          opacity: 0.75;
           pointer-events: none;
         }
         .filters {
           display: flex;
           flex-wrap: wrap;
-          gap: 0.4rem;
+          gap: 0.35rem;
         }
         .filters button {
           border: 1px solid var(--border);
           background: var(--surface);
           color: var(--muted);
-          padding: 0.45rem 0.85rem;
+          padding: 0.4rem 0.75rem;
           border-radius: 999px;
-          font-size: 0.8rem;
+          font-size: 0.75rem;
           cursor: pointer;
-          transition: border-color 0.15s, color 0.15s, background 0.15s;
-        }
-        .filters button:hover,
-        .filters button:focus-visible {
-          color: var(--text);
-          border-color: var(--accent);
-          outline: none;
         }
         .filters button.active {
           background: rgba(56, 189, 248, 0.15);
@@ -165,24 +195,32 @@
         }
         .layout {
           display: grid;
-          grid-template-columns: minmax(260px, 320px) 1fr;
+          grid-template-columns: var(--sidebar-w) 1fr;
           gap: 1rem;
           align-items: start;
+          transition: grid-template-columns 0.2s ease;
         }
-        @media (max-width: 900px) {
-          .layout {
-            grid-template-columns: 1fr;
-          }
+        body.sidebar-collapsed .layout {
+          grid-template-columns: 0 1fr;
+        }
+        body.sidebar-collapsed .list-panel {
+          width: 0;
+          padding: 0;
+          border: none;
+          overflow: hidden;
+          opacity: 0;
+          pointer-events: none;
         }
         .list-panel {
           background: var(--card);
           border: 1px solid var(--border);
           border-radius: var(--radius);
-          max-height: min(70vh, 560px);
+          max-height: min(72vh, 640px);
           overflow: auto;
+          transition: opacity 0.15s ease, width 0.2s ease;
         }
         .list-panel h2 {
-          font-size: 0.75rem;
+          font-size: 0.72rem;
           text-transform: uppercase;
           letter-spacing: 0.08em;
           color: var(--muted);
@@ -191,6 +229,7 @@
           position: sticky;
           top: 0;
           background: var(--card);
+          z-index: 1;
         }
         .doc-list {
           list-style: none;
@@ -200,34 +239,34 @@
         .doc-list li button {
           width: 100%;
           text-align: left;
-          padding: 0.65rem 1rem;
+          padding: 0.6rem 1rem;
           border: none;
           background: transparent;
           color: var(--text);
           cursor: pointer;
-          font-size: 0.9rem;
+          font-size: 0.88rem;
           border-left: 3px solid transparent;
         }
         .doc-list li button:hover,
-        .doc-list li button:focus-visible {
-          background: rgba(56, 189, 248, 0.08);
+        .doc-list li button:focus-visible,
+        .doc-list li button.active {
+          background: rgba(56, 189, 248, 0.1);
           outline: none;
         }
         .doc-list li button.active {
           border-left-color: var(--accent);
-          background: rgba(56, 189, 248, 0.1);
         }
         .doc-list .meta {
           display: block;
-          font-size: 0.7rem;
+          font-size: 0.68rem;
           color: var(--muted);
-          margin-top: 0.15rem;
+          margin-top: 0.12rem;
         }
         .viewer-card {
           background: var(--card);
           border: 1px solid var(--border);
           border-radius: var(--radius);
-          min-height: 320px;
+          min-height: 360px;
           display: flex;
           flex-direction: column;
         }
@@ -236,90 +275,104 @@
           flex-wrap: wrap;
           align-items: center;
           justify-content: space-between;
-          gap: 0.75rem;
-          padding: 0.75rem 1rem;
+          gap: 0.65rem;
+          padding: 0.7rem 1rem;
           border-bottom: 1px solid var(--border);
-          background: rgba(0, 0, 0, 0.2);
+          background: rgba(0, 0, 0, 0.22);
         }
         .viewer-toolbar h3 {
           margin: 0;
-          font-size: 1rem;
-          font-weight: 600;
+          font-size: 0.98rem;
         }
         .btn-print {
           display: inline-flex;
           align-items: center;
-          gap: 0.4rem;
-          padding: 0.45rem 1rem;
-          border-radius: var(--radius);
+          gap: 0.35rem;
+          padding: 0.45rem 0.95rem;
+          border-radius: 10px;
           border: 1px solid var(--accent);
           background: rgba(56, 189, 248, 0.12);
           color: var(--accent);
           font-size: 0.85rem;
-          font-weight: 600;
+          font-weight: 650;
           cursor: pointer;
         }
-        .btn-print:hover {
-          background: rgba(56, 189, 248, 0.22);
+        .btn-print:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
         }
         .viewer-body {
-          padding: 1.25rem 1.35rem 2rem;
+          padding: 1.15rem 1.25rem 2rem;
           overflow: auto;
           flex: 1;
         }
         .empty-state {
           color: var(--muted);
           text-align: center;
-          padding: 3rem 1rem;
+          padding: 2.5rem 1rem;
         }
         .file-hint {
           font-size: 0.8rem;
           color: var(--muted);
-          padding: 0 1rem 1rem;
-          max-width: 720px;
-          line-height: 1.5;
+          margin: 0 0 1rem;
+          max-width: 900px;
         }
         .file-hint code {
           background: rgba(0, 0, 0, 0.35);
           padding: 0.1rem 0.35rem;
           border-radius: 4px;
         }
+        .folder-map {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.4rem;
+          margin: 0 0 1rem;
+        }
+        .folder-map span {
+          font-size: 0.7rem;
+          padding: 0.25rem 0.55rem;
+          border-radius: 999px;
+          border: 1px solid var(--border);
+          color: var(--muted);
+          background: rgba(0, 0, 0, 0.2);
+        }
+        @media (max-width: 900px) {
+          .layout {
+            grid-template-columns: 1fr;
+          }
+          body.sidebar-collapsed .layout {
+            grid-template-columns: 1fr;
+          }
+          body.sidebar-collapsed .list-panel {
+            display: none;
+          }
+          .list-panel {
+            max-height: 40vh;
+          }
+        }
       }
 
-      /* ——— Markdown content (screen) ——— */
       .md-content {
         font-size: 0.95rem;
         max-width: 52rem;
       }
       .md-content h1 {
-        font-size: 1.5rem;
+        font-size: 1.45rem;
         margin-top: 0;
-        padding-bottom: 0.5rem;
+        padding-bottom: 0.45rem;
         border-bottom: 1px solid var(--border);
       }
       .md-content h2 {
-        font-size: 1.15rem;
-        margin: 1.5rem 0 0.5rem;
-        color: #f1f5f9;
+        font-size: 1.12rem;
+        margin: 1.4rem 0 0.45rem;
       }
       .md-content h3 {
-        font-size: 1.05rem;
-        margin: 1.25rem 0 0.4rem;
-      }
-      .md-content p {
-        margin: 0.65rem 0;
-      }
-      .md-content ul,
-      .md-content ol {
-        margin: 0.5rem 0;
-        padding-left: 1.35rem;
-      }
-      .md-content li {
-        margin: 0.25rem 0;
+        font-size: 1.02rem;
+        margin: 1.15rem 0 0.35rem;
       }
       .md-content code {
         background: rgba(0, 0, 0, 0.35);
-        padding: 0.12rem 0.4rem;
+        padding: 0.1rem 0.35rem;
         border-radius: 4px;
         font-size: 0.88em;
       }
@@ -327,31 +380,24 @@
         background: #0d1320;
         border: 1px solid var(--border);
         border-radius: 8px;
-        padding: 1rem;
+        padding: 0.9rem;
         overflow: auto;
         font-size: 0.82rem;
-        line-height: 1.45;
       }
       .md-content pre code {
         background: none;
         padding: 0;
       }
-      .md-content blockquote {
-        border-left: 3px solid var(--accent);
-        margin: 1rem 0;
-        padding-left: 1rem;
-        color: var(--muted);
-      }
       .md-content table {
         border-collapse: collapse;
         width: 100%;
         margin: 1rem 0;
-        font-size: 0.88rem;
+        font-size: 0.86rem;
       }
       .md-content th,
       .md-content td {
         border: 1px solid var(--border);
-        padding: 0.45rem 0.65rem;
+        padding: 0.4rem 0.55rem;
         text-align: left;
       }
       .md-content th {
@@ -361,19 +407,14 @@
         color: var(--accent);
       }
       .md-content .mermaid {
-        margin: 1.25rem 0;
-        padding: 0.75rem;
+        margin: 1.1rem 0;
+        padding: 0.7rem;
         overflow-x: auto;
         background: rgba(0, 0, 0, 0.25);
         border: 1px solid var(--border);
         border-radius: 8px;
       }
-      .md-content .mermaid svg {
-        max-width: 100%;
-        height: auto;
-      }
 
-      /* ——— Print: professional, navigation stripped ——— */
       @media print {
         @page {
           margin: 1.2cm;
@@ -391,43 +432,22 @@
         #print-root .md-content-print {
           font-size: 11pt;
           line-height: 1.45;
-          max-width: 100%;
         }
         #print-root .md-content-print h1 {
           font-size: 18pt;
           color: #000;
           border-bottom: 1px solid #ccc;
         }
-        #print-root .md-content-print h2 {
-          font-size: 14pt;
-          color: #111;
-        }
-        #print-root .md-content-print h3 {
-          font-size: 12pt;
-        }
         #print-root .md-content-print a {
           color: #000;
           text-decoration: underline;
         }
-        #print-root .md-content-print code {
-          background: #f4f4f4;
+        #print-root .md-content-print code,
+        #print-root .md-content-print pre {
+          background: #f5f5f5;
           color: #111;
         }
-        #print-root .md-content-print pre {
-          background: #f8f8f8;
-          border: 1px solid #ddd;
-        }
-        #print-root .md-content-print .mermaid {
-          background: #fff;
-          border: 1px solid #ddd;
-          page-break-inside: avoid;
-        }
-        #print-root .md-content-print .mermaid svg {
-          max-width: 100% !important;
-          height: auto !important;
-        }
       }
-
       #print-root {
         display: none;
       }
@@ -435,76 +455,84 @@
   </head>
   <body>
     <div class="shell no-print">
-      <header class="hero">
-        <h1>📚 ODEL HUB Pay — Documentation Library</h1>
-        <p class="lead">
-          Interactive hub: search, filter by category, open any guide, and print with one click. Optimized for screens
-          and paper.
-        </p>
-        <div class="stats" id="stats" aria-live="polite">
-          <div class="stat">
-            <div class="label">Total documents</div>
-            <div class="value" id="stat-count">—</div>
-          </div>
-          <div class="stat">
-            <div class="label">Documentation size</div>
-            <div class="value" id="stat-kb">—</div>
-          </div>
-          <div class="stat">
-            <div class="label">Print capability</div>
-            <div class="value">100%</div>
-          </div>
-          <div class="stat">
-            <div class="label">Search</div>
-            <div class="value">Real-time</div>
-          </div>
-          <div class="stat">
-            <div class="label">Mobile</div>
-            <div class="value">Full</div>
-          </div>
-          <div class="stat">
-            <div class="label">Access</div>
-            <div class="value">24/7</div>
-          </div>
+      <header class="topbar">
+        <div class="brand">
+          <h1>📚 ODEL HUB Pay — Documentation Library</h1>
+          <p>Searchable · printable · categorized · hideable sidebar · mobile-ready · 24/7</p>
+        </div>
+        <div class="topbar-actions">
+          <button type="button" class="btn" id="btn-sidebar" aria-pressed="false" title="Hide or show document list">
+            Hide sidebar
+          </button>
+          <a class="btn btn-accent" href="LIBRARY.md">📁 Library map</a>
         </div>
       </header>
 
-      <p class="file-hint no-print">
-        <strong>Serving:</strong> Use a static server so documents load (e.g.
-        <code>npm run docs:serve</code> or <code>npx serve docs -p 8787</code>, then open the URL shown). Opening
-        <code>index.html</code> as a raw <code>file://</code> URL may block loading <code>.md</code> files in your
-        browser. <strong>Deep link:</strong> append <code>#doc=&lt;id&gt;</code> (e.g. <code>#doc=user-flow</code>) to
-        open a document directly; IDs match the hub manifest.
+      <div class="stats" id="stats" aria-live="polite">
+        <div class="stat">
+          <div class="label">Total documents</div>
+          <div class="value" id="stat-count">—</div>
+        </div>
+        <div class="stat">
+          <div class="label">Documentation size</div>
+          <div class="value" id="stat-kb">—</div>
+        </div>
+        <div class="stat">
+          <div class="label">Print capability</div>
+          <div class="value">100%</div>
+        </div>
+        <div class="stat">
+          <div class="label">Search</div>
+          <div class="value">Real-time</div>
+        </div>
+        <div class="stat">
+          <div class="label">Mobile</div>
+          <div class="value">Full</div>
+        </div>
+        <div class="stat">
+          <div class="label">Access</div>
+          <div class="value">24/7</div>
+        </div>
+      </div>
+
+      <p class="file-hint">
+        <strong>Access:</strong> <code>npm run docs:serve</code> → open
+        <code>http://localhost:8787</code>. Deep link any doc with
+        <code>#doc=&lt;id&gt;</code>. Category folders live under <code>docs/</code>
+        (<code>platform/</code>, <code>flows/</code>, <code>school/</code>, <code>guides/</code>, …).
+        Root stubs redirect older paths.
       </p>
+      <div class="folder-map" id="folder-map" aria-label="Documentation folders"></div>
 
       <div class="toolbar">
         <div class="search-wrap">
           <label for="q" class="visually-hidden">Search documentation</label>
-          <input type="search" id="q" placeholder="Search titles and keywords…" autocomplete="off" />
+          <input type="search" id="q" placeholder="Search titles, folders, keywords…" autocomplete="off" />
         </div>
         <div class="filters" id="filters" role="group" aria-label="Category filters"></div>
       </div>
 
       <div class="layout">
-        <aside class="list-panel no-print">
+        <aside class="list-panel" id="sidebar" aria-label="Document list">
           <h2>Browse</h2>
           <ul class="doc-list" id="doc-list"></ul>
         </aside>
         <section class="viewer-card" aria-live="polite">
-          <div class="viewer-toolbar no-print">
+          <div class="viewer-toolbar">
             <h3 id="viewer-title">Select a document</h3>
             <button type="button" class="btn-print" id="btn-print" title="Print this document" disabled>
               🖨 Print
             </button>
           </div>
           <div class="viewer-body" id="viewer-body">
-            <p class="empty-state">Choose a document from the list, or use search / filters to narrow down.</p>
+            <p class="empty-state">
+              Choose a document from the sidebar, filter by category, or search. Every document has one-click print.
+            </p>
           </div>
         </section>
       </div>
     </div>
 
-    <!-- Hidden print root: only visible when printing -->
     <div id="print-root" aria-hidden="true">
       <article class="md-content-print" id="print-article"></article>
     </div>
@@ -513,154 +541,593 @@
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js" crossorigin="anonymous"></script>
     <script>
-      /** @type {{ id: string, file: string, title: string, category: string, keywords: string }[]} */
+      const LIBRARY_STATS = {
+  "totalDocuments": 122,
+  "totalBytes": 719333,
+  "totalKb": 702.5,
+  "generatedAt": "2026-09-03T10:34:17.625Z"
+};
       const MANIFEST = [
   {
-    "id": "flows",
-    "file": "FLOWS.md",
+    "id": "platform-opgb-checkout-card",
+    "file": "platform/OPGB_CHECKOUT_CARD.md",
+    "title": "Checkout card vs OPGB Checkout Card",
+    "category": "platform",
+    "keywords": "checkout card vs opgb checkout card platform platform opgb checkout card"
+  },
+  {
+    "id": "platform-local-dev-and-credentials",
+    "file": "platform/LOCAL_DEV_AND_CREDENTIALS.md",
+    "title": "Local development — URLs and seed credentials",
+    "category": "platform",
+    "keywords": "local development — urls and seed credentials platform platform local dev and credentials"
+  },
+  {
+    "id": "platform-developer-ecosystem",
+    "file": "platform/DEVELOPER_ECOSYSTEM.md",
+    "title": "ODEL HUB Developer Ecosystem",
+    "category": "platform",
+    "keywords": "odel hub developer ecosystem platform platform developer ecosystem"
+  },
+  {
+    "id": "platform-opgb-token-ecosystem",
+    "file": "platform/OPGB_TOKEN_ECOSYSTEM.md",
+    "title": "OpenPay Global Token (OPGB) — ecosystem architecture",
+    "category": "platform",
+    "keywords": "openpay global token (opgb) — ecosystem architecture platform platform opgb token ecosystem"
+  },
+  {
+    "id": "platform-openpaygb-payment-provider",
+    "file": "platform/OPENPAYGB_PAYMENT_PROVIDER.md",
+    "title": "OpenPayGB as a payment provider",
+    "category": "platform",
+    "keywords": "openpaygb as a payment provider platform platform openpaygb payment provider"
+  },
+  {
+    "id": "platform-openpaygb-platform-card",
+    "file": "platform/OPENPAYGB_PLATFORM_CARD.md",
+    "title": "OpenPayGB platform virtual card — uses by user category",
+    "category": "platform",
+    "keywords": "openpaygb platform virtual card — uses by user category platform platform openpaygb platform card"
+  },
+  {
+    "id": "platform-partner-api",
+    "file": "platform/PARTNER_API.md",
+    "title": "Partner API (machine-to-machine)",
+    "category": "platform",
+    "keywords": "partner api (machine-to-machine) platform platform partner api"
+  },
+  {
+    "id": "platform-platform-update-2026-09",
+    "file": "platform/PLATFORM_UPDATE_2026-09.md",
+    "title": "Platform update pack — September 2026",
+    "category": "platform",
+    "keywords": "platform update pack — september 2026 platform platform platform update 2026 09"
+  },
+  {
+    "id": "platform-uwais-smis-priority-roadmap",
+    "file": "platform/UWAIS_SMIS_PRIORITY_ROADMAP.md",
+    "title": "Post-fees priority roadmap (Uwais → full SMIS)",
+    "category": "platform",
+    "keywords": "post-fees priority roadmap (uwais → full smis) platform platform uwais smis priority roadmap"
+  },
+  {
+    "id": "platform-product-lines-and-school-terms",
+    "file": "platform/PRODUCT_LINES_AND_SCHOOL_TERMS.md",
+    "title": "Product lines, standalone lobbies & school term fees",
+    "category": "platform",
+    "keywords": "product lines, standalone lobbies & school term fees platform platform product lines and school terms"
+  },
+  {
+    "id": "platform-sis-integration-cookbook",
+    "file": "platform/SIS_INTEGRATION_COOKBOOK.md",
+    "title": "SIS integration cookbook",
+    "category": "platform",
+    "keywords": "sis integration cookbook platform platform sis integration cookbook"
+  },
+  {
+    "id": "platform-standalone-apps",
+    "file": "platform/STANDALONE_APPS.md",
+    "title": "Standalone apps — OdelPay Universities, Schools, OpenPayGB, Dex Hub, Play, OdelHub Devs",
+    "category": "platform",
+    "keywords": "standalone apps — odelpay universities, schools, openpaygb, dex hub, play, odelhub devs platform platform standalone apps"
+  },
+  {
+    "id": "platform-virtual-card-investigation",
+    "file": "platform/VIRTUAL_CARD_INVESTIGATION.md",
+    "title": "Virtual card investigation (holistic)",
+    "category": "platform",
+    "keywords": "virtual card investigation (holistic) platform platform virtual card investigation"
+  },
+  {
+    "id": "guides-user-guide-index",
+    "file": "guides/USER_GUIDE_INDEX.md",
+    "title": "ODEL HUB Pay / OpenPayGB — User guides index",
+    "category": "guides",
+    "keywords": "odel hub pay / openpaygb — user guides index guides guides user guide index"
+  },
+  {
+    "id": "guides-user-guide-guest-payer",
+    "file": "guides/USER_GUIDE_GUEST_PAYER.md",
+    "title": "User Guide: Guest Payer (No Account Required)",
+    "category": "guides",
+    "keywords": "user guide: guest payer (no account required) guides guides user guide guest payer"
+  },
+  {
+    "id": "guides-user-guide-admin-higher",
+    "file": "guides/USER_GUIDE_ADMIN_HIGHER.md",
+    "title": "User Guide: Higher Institution Admin (`org_admin`)",
+    "category": "guides",
+    "keywords": "user guide: higher institution admin (`org_admin`) guides guides user guide admin higher"
+  },
+  {
+    "id": "guides-user-guide-partner-integrator",
+    "file": "guides/USER_GUIDE_PARTNER_INTEGRATOR.md",
+    "title": "User Guide: Partner Integrator (SIS / ERP / Finance Systems)",
+    "category": "guides",
+    "keywords": "user guide: partner integrator (sis / erp / finance systems) guides guides user guide partner integrator"
+  },
+  {
+    "id": "guides-user-guide-master-admin",
+    "file": "guides/USER_GUIDE_MASTER_ADMIN.md",
+    "title": "User Guide: Platform Master Admin",
+    "category": "guides",
+    "keywords": "user guide: platform master admin guides guides user guide master admin"
+  },
+  {
+    "id": "guides-user-guide-school-admin",
+    "file": "guides/USER_GUIDE_SCHOOL_ADMIN.md",
+    "title": "User Guide: School Admin (deprecated pointer)",
+    "category": "guides",
+    "keywords": "user guide: school admin (deprecated pointer) guides guides user guide school admin"
+  },
+  {
+    "id": "guides-user-guide-admin-schools",
+    "file": "guides/USER_GUIDE_ADMIN_SCHOOLS.md",
+    "title": "User Guide: School Admin (Primary–Secondary / K–12)",
+    "category": "guides",
+    "keywords": "user guide: school admin (primary–secondary / k–12) guides guides user guide admin schools"
+  },
+  {
+    "id": "guides-user-guide-staff-higher",
+    "file": "guides/USER_GUIDE_STAFF_HIGHER.md",
+    "title": "User Guide: Staff (Higher Institutions)",
+    "category": "guides",
+    "keywords": "user guide: staff (higher institutions) guides guides user guide staff higher"
+  },
+  {
+    "id": "guides-user-guide-staff-schools",
+    "file": "guides/USER_GUIDE_STAFF_SCHOOLS.md",
+    "title": "User Guide: Staff (Primary–Secondary / K–12 Schools)",
+    "category": "guides",
+    "keywords": "user guide: staff (primary–secondary / k–12 schools) guides guides user guide staff schools"
+  },
+  {
+    "id": "guides-user-guide-student",
+    "file": "guides/USER_GUIDE_STUDENT.md",
+    "title": "User Guide: Student Portal (deprecated pointer)",
+    "category": "guides",
+    "keywords": "user guide: student portal (deprecated pointer) guides guides user guide student"
+  },
+  {
+    "id": "guides-user-guide-student-schools",
+    "file": "guides/USER_GUIDE_STUDENT_SCHOOLS.md",
+    "title": "User Guide: Students & Parents (K–12 / Primary–Secondary Schools)",
+    "category": "guides",
+    "keywords": "user guide: students & parents (k–12 / primary–secondary schools) guides guides user guide student schools"
+  },
+  {
+    "id": "guides-user-guide-student-higher",
+    "file": "guides/USER_GUIDE_STUDENT_HIGHER.md",
+    "title": "User Guide: Students (Universities & Higher Institutions)",
+    "category": "guides",
+    "keywords": "user guide: students (universities & higher institutions) guides guides user guide student higher"
+  },
+  {
+    "id": "flows-flows",
+    "file": "flows/FLOWS.md",
     "title": "Flow documentation (index)",
     "category": "flows",
-    "keywords": "flow documentation (index) flows flows"
+    "keywords": "flow documentation (index) flows flows flows"
   },
   {
-    "id": "admin-flow",
-    "file": "ADMIN_FLOW.md",
+    "id": "flows-admin-flow",
+    "file": "flows/ADMIN_FLOW.md",
     "title": "Full Admin flow (org admin)",
     "category": "flows",
-    "keywords": "full admin flow (org admin) flows admin flow"
+    "keywords": "full admin flow (org admin) flows flows admin flow"
   },
   {
-    "id": "master-admin-flow",
-    "file": "MASTER_ADMIN_FLOW.md",
+    "id": "flows-master-admin-flow",
+    "file": "flows/MASTER_ADMIN_FLOW.md",
     "title": "Full Master Admin flow (platform operator)",
     "category": "flows",
-    "keywords": "full master admin flow (platform operator) flows master admin flow"
+    "keywords": "full master admin flow (platform operator) flows flows master admin flow"
   },
   {
-    "id": "multi-tenant-flow",
-    "file": "MULTI_TENANT_FLOW.md",
+    "id": "flows-multi-tenant-flow",
+    "file": "flows/MULTI_TENANT_FLOW.md",
     "title": "Full multi-tenant flow",
     "category": "flows",
-    "keywords": "full multi-tenant flow flows multi tenant flow"
+    "keywords": "full multi-tenant flow flows flows multi tenant flow"
   },
   {
-    "id": "user-flow",
-    "file": "USER_FLOW.md",
+    "id": "flows-user-flow",
+    "file": "flows/USER_FLOW.md",
     "title": "Full user flow (payer & public)",
     "category": "flows",
-    "keywords": "full user flow (payer & public) flows user flow"
+    "keywords": "full user flow (payer & public) flows flows user flow"
   },
   {
-    "id": "platform-flows",
-    "file": "PLATFORM_FLOWS.md",
+    "id": "flows-platform-flows",
+    "file": "flows/PLATFORM_FLOWS.md",
     "title": "Platform flows and multi-tenant operations",
     "category": "flows",
-    "keywords": "platform flows and multi-tenant operations flows platform flows"
+    "keywords": "platform flows and multi-tenant operations flows flows platform flows"
   },
   {
-    "id": "opgb-checkout-card",
-    "file": "OPGB_CHECKOUT_CARD.md",
-    "title": "Checkout card vs OPGB Checkout Card",
-    "category": "implementation",
-    "keywords": "checkout card vs opgb checkout card implementation opgb checkout card"
+    "id": "school-admission-number-format",
+    "file": "school/ADMISSION_NUMBER_FORMAT.md",
+    "title": "Admission / registration number format",
+    "category": "school",
+    "keywords": "admission / registration number format school school admission number format"
   },
   {
-    "id": "deep-scan-2026-07-16",
-    "file": "DEEP_SCAN_2026-07-16.md",
-    "title": "Deep holistic scan — 2026-07-16",
-    "category": "implementation",
-    "keywords": "deep holistic scan — 2026-07-16 implementation deep scan 2026 07 16"
-  },
-  {
-    "id": "dual-admin-auth",
-    "file": "DUAL_ADMIN_AUTH.md",
-    "title": "Dual admin authentication",
-    "category": "implementation",
-    "keywords": "dual admin authentication implementation dual admin auth"
-  },
-  {
-    "id": "ecosystem-test-report",
-    "file": "ECOSYSTEM_TEST_REPORT.md",
-    "title": "Ecosystem test report",
-    "category": "implementation",
-    "keywords": "ecosystem test report implementation ecosystem test report"
-  },
-  {
-    "id": "folder-tree-snapshot",
-    "file": "FOLDER_TREE_SNAPSHOT.txt",
-    "title": "FOLDER TREE SNAPSHOT",
-    "category": "implementation",
-    "keywords": "folder tree snapshot implementation folder tree snapshot"
-  },
-  {
-    "id": "footer-and-header-nav",
-    "file": "FOOTER_AND_HEADER_NAV.md",
-    "title": "Footer & header navigation layout",
-    "category": "implementation",
-    "keywords": "footer & header navigation layout implementation footer and header nav"
-  },
-  {
-    "id": "organization-registration",
-    "file": "ORGANIZATION_REGISTRATION.md",
+    "id": "school-organization-registration",
+    "file": "school/ORGANIZATION_REGISTRATION.md",
     "title": "How schools and organizations register and get a dashboard",
-    "category": "implementation",
-    "keywords": "how schools and organizations register and get a dashboard implementation organization registration"
+    "category": "school",
+    "keywords": "how schools and organizations register and get a dashboard school school organization registration"
   },
   {
-    "id": "ledger-receipts-and-school-units",
-    "file": "LEDGER_RECEIPTS_AND_SCHOOL_UNITS.md",
+    "id": "school-ledger-receipts-and-school-units",
+    "file": "school/LEDGER_RECEIPTS_AND_SCHOOL_UNITS.md",
     "title": "Ledger receipts, school unit registration & responsive master UI",
-    "category": "implementation",
-    "keywords": "ledger receipts, school unit registration & responsive master ui implementation ledger receipts and school units"
+    "category": "school",
+    "keywords": "ledger receipts, school unit registration & responsive master ui school school ledger receipts and school units"
   },
   {
-    "id": "livepay-integration-assessment",
-    "file": "LIVEPAY_INTEGRATION_ASSESSMENT.md",
-    "title": "LivePay integration assessment",
-    "category": "implementation",
-    "keywords": "livepay integration assessment implementation livepay integration assessment"
+    "id": "school-receipt-branding",
+    "file": "school/RECEIPT_BRANDING.md",
+    "title": "Receipt branding (dual letterhead)",
+    "category": "school",
+    "keywords": "receipt branding (dual letterhead) school school receipt branding"
   },
   {
-    "id": "local-dev-and-credentials",
-    "file": "LOCAL_DEV_AND_CREDENTIALS.md",
-    "title": "Local development — URLs and seed credentials",
-    "category": "implementation",
-    "keywords": "local development — urls and seed credentials implementation local dev and credentials"
+    "id": "school-school-admin-login",
+    "file": "school/SCHOOL_ADMIN_LOGIN.md",
+    "title": "School admin login and dashboard access",
+    "category": "school",
+    "keywords": "school admin login and dashboard access school school school admin login"
   },
   {
-    "id": "mbiyo-webhook-setup",
-    "file": "MBIYO_WEBHOOK_SETUP.md",
-    "title": "Mbiyo dashboard — Webhook & IP whitelisting",
-    "category": "implementation",
-    "keywords": "mbiyo dashboard — webhook & ip whitelisting implementation mbiyo webhook setup"
+    "id": "school-school-admin-programmes",
+    "file": "school/SCHOOL_ADMIN_PROGRAMMES.md",
+    "title": "School admin — programme customization",
+    "category": "school",
+    "keywords": "school admin — programme customization school school school admin programmes"
   },
   {
-    "id": "developer-ecosystem",
-    "file": "DEVELOPER_ECOSYSTEM.md",
-    "title": "ODEL HUB Developer Ecosystem",
-    "category": "implementation",
-    "keywords": "odel hub developer ecosystem implementation developer ecosystem"
+    "id": "school-school-fees-payments-reference",
+    "file": "school/SCHOOL_FEES_PAYMENTS_REFERENCE.md",
+    "title": "School Fees & Payments — deep scan (OdelPay Schools)",
+    "category": "school",
+    "keywords": "school fees & payments — deep scan (odelpay schools) school school school fees payments reference"
   },
   {
-    "id": "project-description",
-    "file": "PROJECT_DESCRIPTION.md",
-    "title": "ODEL HUB Pay / OpenPayGB Project Description",
-    "category": "implementation",
-    "keywords": "odel hub pay / openpaygb project description implementation project description"
+    "id": "school-school-workspace-self-register",
+    "file": "school/SCHOOL_WORKSPACE_SELF_REGISTER.md",
+    "title": "School workspace self-registration",
+    "category": "school",
+    "keywords": "school workspace self-registration school school school workspace self register"
   },
   {
-    "id": "folder-structure",
-    "file": "FOLDER_STRUCTURE.md",
+    "id": "architecture-access-surfaces",
+    "file": "architecture/ACCESS_SURFACES.md",
+    "title": "Access surfaces — user vs developer",
+    "category": "architecture",
+    "keywords": "access surfaces — user vs developer architecture architecture access surfaces"
+  },
+  {
+    "id": "architecture-deployment-architecture",
+    "file": "architecture/DEPLOYMENT_ARCHITECTURE.md",
+    "title": "Deployment architecture (MongoDB · Vercel · GitHub · Telegram)",
+    "category": "architecture",
+    "keywords": "deployment architecture (mongodb · vercel · github · telegram) architecture architecture deployment architecture"
+  },
+  {
+    "id": "architecture-folder-tree-snapshot",
+    "file": "architecture/FOLDER_TREE_SNAPSHOT.txt",
+    "title": "FOLDER TREE SNAPSHOT",
+    "category": "architecture",
+    "keywords": "folder tree snapshot architecture architecture folder tree snapshot"
+  },
+  {
+    "id": "architecture-footer-and-header-nav",
+    "file": "architecture/FOOTER_AND_HEADER_NAV.md",
+    "title": "Footer & header navigation layout",
+    "category": "architecture",
+    "keywords": "footer & header navigation layout architecture architecture footer and header nav"
+  },
+  {
+    "id": "architecture-folder-structure",
+    "file": "architecture/FOLDER_STRUCTURE.md",
     "title": "ODEL HUB Pay — full folder & project structure",
-    "category": "implementation",
-    "keywords": "odel hub pay — full folder & project structure implementation folder structure"
+    "category": "architecture",
+    "keywords": "odel hub pay — full folder & project structure architecture architecture folder structure"
   },
   {
-    "id": "telegram-mini-app",
-    "file": "TELEGRAM_MINI_APP.md",
+    "id": "architecture-structure-alignment-ura-pearl",
+    "file": "architecture/STRUCTURE_ALIGNMENT_URA_PEARL.md",
+    "title": "ODELHUB Pay ↔ [ura-pearl-data-center](https://github.com/urapearlug-sys/ura-pearl-data-center)",
+    "category": "architecture",
+    "keywords": "odelhub pay ↔ [ura-pearl-data-center](https://github.com/urapearlug-sys/ura-pearl-data-center) architecture architecture structure alignment ura pearl"
+  },
+  {
+    "id": "architecture-payment-system-architecture",
+    "file": "architecture/PAYMENT_SYSTEM_ARCHITECTURE.md",
+    "title": "Payment system architecture — OdelPay & OpenPayGB",
+    "category": "architecture",
+    "keywords": "payment system architecture — odelpay & openpaygb architecture architecture payment system architecture"
+  },
+  {
+    "id": "architecture-structure",
+    "file": "architecture/STRUCTURE.md",
+    "title": "Repository layout",
+    "category": "architecture",
+    "keywords": "repository layout architecture architecture structure"
+  },
+  {
+    "id": "architecture-ui-vs-codebase",
+    "file": "architecture/UI_VS_CODEBASE.md",
+    "title": "UI vs codebase",
+    "category": "architecture",
+    "keywords": "ui vs codebase architecture architecture ui vs codebase"
+  },
+  {
+    "id": "deployment-vercel-auto-deploy",
+    "file": "deployment/VERCEL_AUTO_DEPLOY.md",
+    "title": "Auto-deploy on Vercel (ODELHUB Pay)",
+    "category": "deployment",
+    "keywords": "auto-deploy on vercel (odelhub pay) deployment deployment vercel auto deploy"
+  },
+  {
+    "id": "deployment-vercel-connect-now",
+    "file": "deployment/VERCEL_CONNECT_NOW.md",
+    "title": "Connect ODELHUB Pay to Vercel (infoedutechos/ODELHUBPay)",
+    "category": "deployment",
+    "keywords": "connect odelhub pay to vercel (infoedutechos/odelhubpay) deployment deployment vercel connect now"
+  },
+  {
+    "id": "deployment-deployment-version",
+    "file": "deployment/DEPLOYMENT_VERSION.txt",
+    "title": "DEPLOYMENT VERSION",
+    "category": "deployment",
+    "keywords": "deployment version deployment deployment deployment version"
+  },
+  {
+    "id": "deployment-livepay-integration-assessment",
+    "file": "deployment/LIVEPAY_INTEGRATION_ASSESSMENT.md",
+    "title": "LivePay integration assessment",
+    "category": "deployment",
+    "keywords": "livepay integration assessment deployment deployment livepay integration assessment"
+  },
+  {
+    "id": "deployment-mbiyo-webhook-setup",
+    "file": "deployment/MBIYO_WEBHOOK_SETUP.md",
+    "title": "Mbiyo dashboard — Webhook & IP whitelisting",
+    "category": "deployment",
+    "keywords": "mbiyo dashboard — webhook & ip whitelisting deployment deployment mbiyo webhook setup"
+  },
+  {
+    "id": "deployment-vercel-odelhub-pay-deploy",
+    "file": "deployment/VERCEL_ODELHUB_PAY_DEPLOY.md",
+    "title": "Moved",
+    "category": "deployment",
+    "keywords": "moved deployment deployment vercel odelhub pay deploy"
+  },
+  {
+    "id": "deployment-telegram-mini-app",
+    "file": "deployment/TELEGRAM_MINI_APP.md",
     "title": "ODEL HUB Pay — Telegram Mini App",
+    "category": "deployment",
+    "keywords": "odel hub pay — telegram mini app deployment deployment telegram mini app"
+  },
+  {
+    "id": "deployment-prisma-commands",
+    "file": "deployment/PRISMA_COMMANDS.md",
+    "title": "Prisma commands used in this repository",
+    "category": "deployment",
+    "keywords": "prisma commands used in this repository deployment deployment prisma commands"
+  },
+  {
+    "id": "deployment-deployment-env-production",
+    "file": "deployment/DEPLOYMENT_ENV_PRODUCTION.md",
+    "title": "Production deployment — `odelpay.vercel.app`",
+    "category": "deployment",
+    "keywords": "production deployment — `odelpay.vercel.app` deployment deployment deployment env production"
+  },
+  {
+    "id": "deployment-production-go-live",
+    "file": "deployment/PRODUCTION_GO_LIVE.md",
+    "title": "Production go-live checklist (ODELHUB Pay)",
+    "category": "deployment",
+    "keywords": "production go-live checklist (odelhub pay) deployment deployment production go live"
+  },
+  {
+    "id": "deployment-relworx-investigation",
+    "file": "deployment/RELWORX_INVESTIGATION.md",
+    "title": "Relworx Payments API v2 — holistic investigation",
+    "category": "deployment",
+    "keywords": "relworx payments api v2 — holistic investigation deployment deployment relworx investigation"
+  },
+  {
+    "id": "deployment-telegram-bot-deployment",
+    "file": "deployment/TELEGRAM_BOT_DEPLOYMENT.md",
+    "title": "Telegram bot token — Master Admin & Vercel",
+    "category": "deployment",
+    "keywords": "telegram bot token — master admin & vercel deployment deployment telegram bot deployment"
+  },
+  {
+    "id": "deployment-vercel-build-failures",
+    "file": "deployment/VERCEL_BUILD_FAILURES.md",
+    "title": "Vercel build failures — investigation log",
+    "category": "deployment",
+    "keywords": "vercel build failures — investigation log deployment deployment vercel build failures"
+  },
+  {
+    "id": "deployment-vercel-odelpay-deploy",
+    "file": "deployment/VERCEL_ODELPAY_DEPLOY.md",
+    "title": "Vercel deploy — `odelpay.vercel.app`",
+    "category": "deployment",
+    "keywords": "vercel deploy — `odelpay.vercel.app` deployment deployment vercel odelpay deploy"
+  },
+  {
+    "id": "deployment-vercel-env-setup",
+    "file": "deployment/VERCEL_ENV_SETUP.md",
+    "title": "Vercel environment variables (ODELHUB Pay)",
+    "category": "deployment",
+    "keywords": "vercel environment variables (odelhub pay) deployment deployment vercel env setup"
+  },
+  {
+    "id": "deployment-vixonpay-virtual-card-and-dev",
+    "file": "deployment/VIXONPAY_VIRTUAL_CARD_AND_DEV.md",
+    "title": "VixonPay, virtual card, webhooks & local dev",
+    "category": "deployment",
+    "keywords": "vixonpay, virtual card, webhooks & local dev deployment deployment vixonpay virtual card and dev"
+  },
+  {
+    "id": "deployment-webhook-secrets-alignment",
+    "file": "deployment/WEBHOOK_SECRETS_ALIGNMENT.md",
+    "title": "Webhook secrets alignment (Mbiyo, MoMo, LivePay)",
+    "category": "deployment",
+    "keywords": "webhook secrets alignment (mbiyo, momo, livepay) deployment deployment webhook secrets alignment"
+  },
+  {
+    "id": "operations-backup-and-recovery",
+    "file": "operations/BACKUP_AND_RECOVERY.md",
+    "title": "Backup, disaster recovery & migration",
+    "category": "operations",
+    "keywords": "backup, disaster recovery & migration operations operations backup and recovery"
+  },
+  {
+    "id": "operations-dual-admin-auth",
+    "file": "operations/DUAL_ADMIN_AUTH.md",
+    "title": "Dual admin authentication",
+    "category": "operations",
+    "keywords": "dual admin authentication operations operations dual admin auth"
+  },
+  {
+    "id": "operations-error-hardening",
+    "file": "operations/ERROR_HARDENING.md",
+    "title": "Error hardening (2026-06-03, audited 2026-06-05)",
+    "category": "operations",
+    "keywords": "error hardening (2026-06-03, audited 2026-06-05) operations operations error hardening"
+  },
+  {
+    "id": "operations-integration-hardening",
+    "file": "operations/INTEGRATION_HARDENING.md",
+    "title": "Integration hardening audit",
+    "category": "operations",
+    "keywords": "integration hardening audit operations operations integration hardening"
+  },
+  {
+    "id": "operations-security-hardening",
+    "file": "operations/SECURITY_HARDENING.md",
+    "title": "Security hardening (2026-06-03)",
+    "category": "operations",
+    "keywords": "security hardening (2026-06-03) operations operations security hardening"
+  },
+  {
+    "id": "economics-economics",
+    "file": "economics/ECONOMICS.md",
+    "title": "Economics & settlement (UGX, TON, FX)",
+    "category": "economics",
+    "keywords": "economics & settlement (ugx, ton, fx) economics economics economics"
+  },
+  {
+    "id": "product-app-status-audit",
+    "file": "product/APP_STATUS_AUDIT.md",
+    "title": "App status audit (holistic scan)",
+    "category": "product",
+    "keywords": "app status audit (holistic scan) product product app status audit"
+  },
+  {
+    "id": "product-deep-scan-2026-07-16",
+    "file": "product/DEEP_SCAN_2026-07-16.md",
+    "title": "Deep holistic scan — 2026-07-16",
+    "category": "product",
+    "keywords": "deep holistic scan — 2026-07-16 product product deep scan 2026 07 16"
+  },
+  {
+    "id": "product-deep-scan-2026-07-19",
+    "file": "product/DEEP_SCAN_2026-07-19.md",
+    "title": "Deep holistic scan — 2026-07-19",
+    "category": "product",
+    "keywords": "deep holistic scan — 2026-07-19 product product deep scan 2026 07 19"
+  },
+  {
+    "id": "product-ecosystem-test-report",
+    "file": "product/ECOSYSTEM_TEST_REPORT.md",
+    "title": "Ecosystem test report",
+    "category": "product",
+    "keywords": "ecosystem test report product product ecosystem test report"
+  },
+  {
+    "id": "product-holistic-app-audit",
+    "file": "product/HOLISTIC_APP_AUDIT.md",
+    "title": "Holistic app audit (deep scan)",
+    "category": "product",
+    "keywords": "holistic app audit (deep scan) product product holistic app audit"
+  },
+  {
+    "id": "product-project-description",
+    "file": "product/PROJECT_DESCRIPTION.md",
+    "title": "ODEL HUB Pay / OpenPayGB Project Description",
+    "category": "product",
+    "keywords": "odel hub pay / openpaygb project description product product project description"
+  },
+  {
+    "id": "product-user-stories",
+    "file": "product/USER_STORIES.md",
+    "title": "ODEL HUB TON Pay — user stories",
+    "category": "product",
+    "keywords": "odel hub ton pay — user stories product product user stories"
+  },
+  {
+    "id": "product-backlog",
+    "file": "product/BACKLOG.md",
+    "title": "Product & engineering backlog",
+    "category": "product",
+    "keywords": "product & engineering backlog product product backlog"
+  },
+  {
+    "id": "api-reference-api-inventory",
+    "file": "api-reference/API_INVENTORY.csv",
+    "title": "API INVENTORY",
+    "category": "api-reference",
+    "keywords": "api inventory api-reference api reference api inventory"
+  },
+  {
+    "id": "api-reference-openapi",
+    "file": "api-reference/openapi.yaml",
+    "title": "Openapi",
+    "category": "api-reference",
+    "keywords": "openapi api-reference api reference openapi"
+  },
+  {
+    "id": "api-reference-ui-routes",
+    "file": "api-reference/UI_ROUTES.csv",
+    "title": "UI ROUTES",
+    "category": "api-reference",
+    "keywords": "ui routes api-reference api reference ui routes"
+  },
+  {
+    "id": "library",
+    "file": "LIBRARY.md",
+    "title": "Documentation library map",
     "category": "implementation",
-    "keywords": "odel hub pay — telegram mini app implementation telegram mini app"
+    "keywords": "documentation library map implementation library"
   },
   {
     "id": "readme",
@@ -668,342 +1135,6 @@
     "title": "ODEL HUB TON Pay",
     "category": "implementation",
     "keywords": "odel hub ton pay implementation readme"
-  },
-  {
-    "id": "structure-alignment-ura-pearl",
-    "file": "STRUCTURE_ALIGNMENT_URA_PEARL.md",
-    "title": "ODELHUB Pay ↔ [ura-pearl-data-center](https://github.com/urapearlug-sys/ura-pearl-data-center)",
-    "category": "implementation",
-    "keywords": "odelhub pay ↔ [ura-pearl-data-center](https://github.com/urapearlug-sys/ura-pearl-data-center) implementation structure alignment ura pearl"
-  },
-  {
-    "id": "opgb-token-ecosystem",
-    "file": "OPGB_TOKEN_ECOSYSTEM.md",
-    "title": "OpenPay Global Token (OPGB) — ecosystem architecture",
-    "category": "implementation",
-    "keywords": "openpay global token (opgb) — ecosystem architecture implementation opgb token ecosystem"
-  },
-  {
-    "id": "openpaygb-platform-card",
-    "file": "OPENPAYGB_PLATFORM_CARD.md",
-    "title": "OpenPayGB platform virtual card — uses by user category",
-    "category": "implementation",
-    "keywords": "openpaygb platform virtual card — uses by user category implementation openpaygb platform card"
-  },
-  {
-    "id": "partner-api",
-    "file": "PARTNER_API.md",
-    "title": "Partner API (machine-to-machine)",
-    "category": "implementation",
-    "keywords": "partner api (machine-to-machine) implementation partner api"
-  },
-  {
-    "id": "payment-system-architecture",
-    "file": "PAYMENT_SYSTEM_ARCHITECTURE.md",
-    "title": "Payment system architecture — OdelPay & OpenPayGB",
-    "category": "implementation",
-    "keywords": "payment system architecture — odelpay & openpaygb implementation payment system architecture"
-  },
-  {
-    "id": "prisma-commands",
-    "file": "PRISMA_COMMANDS.md",
-    "title": "Prisma commands used in this repository",
-    "category": "implementation",
-    "keywords": "prisma commands used in this repository implementation prisma commands"
-  },
-  {
-    "id": "product-lines-and-school-terms",
-    "file": "PRODUCT_LINES_AND_SCHOOL_TERMS.md",
-    "title": "Product lines, standalone lobbies & school term fees",
-    "category": "implementation",
-    "keywords": "product lines, standalone lobbies & school term fees implementation product lines and school terms"
-  },
-  {
-    "id": "relworx-investigation",
-    "file": "RELWORX_INVESTIGATION.md",
-    "title": "Relworx Payments API v2 — holistic investigation",
-    "category": "implementation",
-    "keywords": "relworx payments api v2 — holistic investigation implementation relworx investigation"
-  },
-  {
-    "id": "structure",
-    "file": "STRUCTURE.md",
-    "title": "Repository layout",
-    "category": "implementation",
-    "keywords": "repository layout implementation structure"
-  },
-  {
-    "id": "school-admin-login",
-    "file": "SCHOOL_ADMIN_LOGIN.md",
-    "title": "School admin login and dashboard access",
-    "category": "implementation",
-    "keywords": "school admin login and dashboard access implementation school admin login"
-  },
-  {
-    "id": "school-admin-programmes",
-    "file": "SCHOOL_ADMIN_PROGRAMMES.md",
-    "title": "School admin — programme customization",
-    "category": "implementation",
-    "keywords": "school admin — programme customization implementation school admin programmes"
-  },
-  {
-    "id": "school-fees-payments-reference",
-    "file": "SCHOOL_FEES_PAYMENTS_REFERENCE.md",
-    "title": "School Fees & Payments — deep scan (OdelPay Schools)",
-    "category": "implementation",
-    "keywords": "school fees & payments — deep scan (odelpay schools) implementation school fees payments reference"
-  },
-  {
-    "id": "school-workspace-self-register",
-    "file": "SCHOOL_WORKSPACE_SELF_REGISTER.md",
-    "title": "School workspace self-registration",
-    "category": "implementation",
-    "keywords": "school workspace self-registration implementation school workspace self register"
-  },
-  {
-    "id": "sis-integration-cookbook",
-    "file": "SIS_INTEGRATION_COOKBOOK.md",
-    "title": "SIS integration cookbook",
-    "category": "implementation",
-    "keywords": "sis integration cookbook implementation sis integration cookbook"
-  },
-  {
-    "id": "standalone-apps",
-    "file": "STANDALONE_APPS.md",
-    "title": "Standalone apps — OdelPay Universities, Schools, OpenPayGB, Dex Hub, Play, OdelHub Devs",
-    "category": "implementation",
-    "keywords": "standalone apps — odelpay universities, schools, openpaygb, dex hub, play, odelhub devs implementation standalone apps"
-  },
-  {
-    "id": "ui-vs-codebase",
-    "file": "UI_VS_CODEBASE.md",
-    "title": "UI vs codebase",
-    "category": "implementation",
-    "keywords": "ui vs codebase implementation ui vs codebase"
-  },
-  {
-    "id": "virtual-card-investigation",
-    "file": "VIRTUAL_CARD_INVESTIGATION.md",
-    "title": "Virtual card investigation (holistic)",
-    "category": "implementation",
-    "keywords": "virtual card investigation (holistic) implementation virtual card investigation"
-  },
-  {
-    "id": "vixonpay-virtual-card-and-dev",
-    "file": "VIXONPAY_VIRTUAL_CARD_AND_DEV.md",
-    "title": "VixonPay, virtual card, webhooks & local dev",
-    "category": "implementation",
-    "keywords": "vixonpay, virtual card, webhooks & local dev implementation vixonpay virtual card and dev"
-  },
-  {
-    "id": "webhook-secrets-alignment",
-    "file": "WEBHOOK_SECRETS_ALIGNMENT.md",
-    "title": "Webhook secrets alignment (Mbiyo, MoMo, LivePay)",
-    "category": "implementation",
-    "keywords": "webhook secrets alignment (mbiyo, momo, livepay) implementation webhook secrets alignment"
-  },
-  {
-    "id": "vercel-auto-deploy",
-    "file": "VERCEL_AUTO_DEPLOY.md",
-    "title": "Auto-deploy on Vercel (ODELHUB Pay)",
-    "category": "deployment",
-    "keywords": "auto-deploy on vercel (odelhub pay) deployment vercel auto deploy"
-  },
-  {
-    "id": "vercel-connect-now",
-    "file": "VERCEL_CONNECT_NOW.md",
-    "title": "Connect ODELHUB Pay to Vercel (infoedutechos/ODELHUBPay)",
-    "category": "deployment",
-    "keywords": "connect odelhub pay to vercel (infoedutechos/odelhubpay) deployment vercel connect now"
-  },
-  {
-    "id": "deployment-architecture",
-    "file": "DEPLOYMENT_ARCHITECTURE.md",
-    "title": "Deployment architecture (MongoDB · Vercel · GitHub · Telegram)",
-    "category": "deployment",
-    "keywords": "deployment architecture (mongodb · vercel · github · telegram) deployment deployment architecture"
-  },
-  {
-    "id": "deployment-version",
-    "file": "DEPLOYMENT_VERSION.txt",
-    "title": "DEPLOYMENT VERSION",
-    "category": "deployment",
-    "keywords": "deployment version deployment deployment version"
-  },
-  {
-    "id": "vercel-odelhub-pay-deploy",
-    "file": "VERCEL_ODELHUB_PAY_DEPLOY.md",
-    "title": "Moved",
-    "category": "deployment",
-    "keywords": "moved deployment vercel odelhub pay deploy"
-  },
-  {
-    "id": "deployment-env-production",
-    "file": "DEPLOYMENT_ENV_PRODUCTION.md",
-    "title": "Production deployment — `odelpay.vercel.app`",
-    "category": "deployment",
-    "keywords": "production deployment — `odelpay.vercel.app` deployment deployment env production"
-  },
-  {
-    "id": "production-go-live",
-    "file": "PRODUCTION_GO_LIVE.md",
-    "title": "Production go-live checklist (ODELHUB Pay)",
-    "category": "deployment",
-    "keywords": "production go-live checklist (odelhub pay) deployment production go live"
-  },
-  {
-    "id": "telegram-bot-deployment",
-    "file": "TELEGRAM_BOT_DEPLOYMENT.md",
-    "title": "Telegram bot token — Master Admin & Vercel",
-    "category": "deployment",
-    "keywords": "telegram bot token — master admin & vercel deployment telegram bot deployment"
-  },
-  {
-    "id": "vercel-build-failures",
-    "file": "VERCEL_BUILD_FAILURES.md",
-    "title": "Vercel build failures — investigation log",
-    "category": "deployment",
-    "keywords": "vercel build failures — investigation log deployment vercel build failures"
-  },
-  {
-    "id": "vercel-odelpay-deploy",
-    "file": "VERCEL_ODELPAY_DEPLOY.md",
-    "title": "Vercel deploy — `odelpay.vercel.app`",
-    "category": "deployment",
-    "keywords": "vercel deploy — `odelpay.vercel.app` deployment vercel odelpay deploy"
-  },
-  {
-    "id": "vercel-env-setup",
-    "file": "VERCEL_ENV_SETUP.md",
-    "title": "Vercel environment variables (ODELHUB Pay)",
-    "category": "deployment",
-    "keywords": "vercel environment variables (odelhub pay) deployment vercel env setup"
-  },
-  {
-    "id": "backup-and-recovery",
-    "file": "BACKUP_AND_RECOVERY.md",
-    "title": "Backup, disaster recovery & migration",
-    "category": "operations",
-    "keywords": "backup, disaster recovery & migration operations backup and recovery"
-  },
-  {
-    "id": "error-hardening",
-    "file": "ERROR_HARDENING.md",
-    "title": "Error hardening (2026-06-03, audited 2026-06-05)",
-    "category": "operations",
-    "keywords": "error hardening (2026-06-03, audited 2026-06-05) operations error hardening"
-  },
-  {
-    "id": "integration-hardening",
-    "file": "INTEGRATION_HARDENING.md",
-    "title": "Integration hardening audit",
-    "category": "operations",
-    "keywords": "integration hardening audit operations integration hardening"
-  },
-  {
-    "id": "security-hardening",
-    "file": "SECURITY_HARDENING.md",
-    "title": "Security hardening (2026-06-03)",
-    "category": "operations",
-    "keywords": "security hardening (2026-06-03) operations security hardening"
-  },
-  {
-    "id": "economics",
-    "file": "ECONOMICS.md",
-    "title": "Economics & settlement (UGX, TON, FX)",
-    "category": "economics",
-    "keywords": "economics & settlement (ugx, ton, fx) economics economics"
-  },
-  {
-    "id": "app-status-audit",
-    "file": "APP_STATUS_AUDIT.md",
-    "title": "App status audit (holistic scan)",
-    "category": "product",
-    "keywords": "app status audit (holistic scan) product app status audit"
-  },
-  {
-    "id": "holistic-app-audit",
-    "file": "HOLISTIC_APP_AUDIT.md",
-    "title": "Holistic app audit (deep scan)",
-    "category": "product",
-    "keywords": "holistic app audit (deep scan) product holistic app audit"
-  },
-  {
-    "id": "user-stories",
-    "file": "USER_STORIES.md",
-    "title": "ODEL HUB TON Pay — user stories",
-    "category": "product",
-    "keywords": "odel hub ton pay — user stories product user stories"
-  },
-  {
-    "id": "backlog",
-    "file": "BACKLOG.md",
-    "title": "Product & engineering backlog",
-    "category": "product",
-    "keywords": "product & engineering backlog product backlog"
-  },
-  {
-    "id": "api-inventory",
-    "file": "API_INVENTORY.csv",
-    "title": "API INVENTORY",
-    "category": "api-reference",
-    "keywords": "api inventory api-reference api inventory"
-  },
-  {
-    "id": "openapi",
-    "file": "openapi.yaml",
-    "title": "Openapi",
-    "category": "api-reference",
-    "keywords": "openapi api-reference openapi"
-  },
-  {
-    "id": "ui-routes",
-    "file": "UI_ROUTES.csv",
-    "title": "UI ROUTES",
-    "category": "api-reference",
-    "keywords": "ui routes api-reference ui routes"
-  },
-  {
-    "id": "guides-user-guide-index",
-    "file": "guides/USER_GUIDE_INDEX.md",
-    "title": "ODEL HUB Pay / OpenPayGB — User guides index",
-    "category": "implementation",
-    "keywords": "odel hub pay / openpaygb — user guides index implementation guides user guide index"
-  },
-  {
-    "id": "guides-user-guide-guest-payer",
-    "file": "guides/USER_GUIDE_GUEST_PAYER.md",
-    "title": "User Guide: Guest Payer (No Account Required)",
-    "category": "implementation",
-    "keywords": "user guide: guest payer (no account required) implementation guides user guide guest payer"
-  },
-  {
-    "id": "guides-user-guide-partner-integrator",
-    "file": "guides/USER_GUIDE_PARTNER_INTEGRATOR.md",
-    "title": "User Guide: Partner Integrator (SIS / ERP / Finance Systems)",
-    "category": "implementation",
-    "keywords": "user guide: partner integrator (sis / erp / finance systems) implementation guides user guide partner integrator"
-  },
-  {
-    "id": "guides-user-guide-master-admin",
-    "file": "guides/USER_GUIDE_MASTER_ADMIN.md",
-    "title": "User Guide: Platform Master Admin",
-    "category": "implementation",
-    "keywords": "user guide: platform master admin implementation guides user guide master admin"
-  },
-  {
-    "id": "guides-user-guide-school-admin",
-    "file": "guides/USER_GUIDE_SCHOOL_ADMIN.md",
-    "title": "User Guide: School Admin (`org_admin`)",
-    "category": "implementation",
-    "keywords": "user guide: school admin (`org_admin`) implementation guides user guide school admin"
-  },
-  {
-    "id": "guides-user-guide-student",
-    "file": "guides/USER_GUIDE_STUDENT.md",
-    "title": "User Guide: Student Portal",
-    "category": "implementation",
-    "keywords": "user guide: student portal implementation guides user guide student"
   },
   {
     "id": "upstream-ura-pearl-authenticate-and-push",
@@ -1271,55 +1402,70 @@
     "category": "contracts",
     "keywords": "tact compilation report contracts contract build tact nftitem"
   }
-];;;;;;;;
-
+];
       const CATEGORY_LABEL = {
   "all": "All",
+  "platform": "Platform / OPGB",
+  "guides": "User guides",
   "flows": "Flows",
+  "school": "Schools / tuition",
   "architecture": "Architecture",
-  "implementation": "Implementation",
   "deployment": "Deployment",
   "operations": "Operations",
   "economics": "Economics",
   "product": "Product",
   "api-reference": "API reference",
+  "implementation": "Implementation",
   "upstream-pearl": "Upstream (Pearl)",
   "upstream-game": "Upstream (Game)",
   "contracts": "Contracts"
-}
+};
 
       let activeCategory = "all";
       let searchQuery = "";
       let selectedId = null;
-      let rawYamlText = "";
 
       const elQ = document.getElementById("q");
-      const elList = document.getElementById("doc-list");
       const elFilters = document.getElementById("filters");
+      const elList = document.getElementById("doc-list");
       const elViewer = document.getElementById("viewer-body");
       const elTitle = document.getElementById("viewer-title");
       const elBtnPrint = document.getElementById("btn-print");
       const elPrintArticle = document.getElementById("print-article");
       const elStatCount = document.getElementById("stat-count");
       const elStatKb = document.getElementById("stat-kb");
+      const elSidebarBtn = document.getElementById("btn-sidebar");
+      const elFolderMap = document.getElementById("folder-map");
 
-      function fmtKb(bytes) {
-        return (bytes / 1024).toFixed(1) + " KB+";
+      function fmtKb(n) {
+        if (n >= 1024) return (n / 1024).toFixed(1) + " MB";
+        return Math.round(n) + " KB";
       }
 
-      async function computeStats() {
-        let total = 0;
-        for (const d of MANIFEST) {
-          try {
-            const r = await fetch(d.file, { cache: "no-store" });
-            const t = await r.text();
-            total += t.length;
-          } catch {
-            /* ignore */
-          }
-        }
-        elStatCount.textContent = String(MANIFEST.length);
-        elStatKb.textContent = total > 0 ? fmtKb(total) : "—";
+      function applyStats() {
+        const count = LIBRARY_STATS.totalDocuments || MANIFEST.length;
+        const kb = LIBRARY_STATS.totalKb || 0;
+        elStatCount.textContent = String(count);
+        elStatKb.textContent = kb > 0 ? fmtKb(kb) : "—";
+      }
+
+      function renderFolderMap() {
+        const folders = [
+          "platform",
+          "guides",
+          "flows",
+          "school",
+          "architecture",
+          "deployment",
+          "operations",
+          "economics",
+          "product",
+          "api-reference",
+          "upstream-ura-pearl",
+          "upstream-ura-game",
+          "contract-build",
+        ];
+        elFolderMap.innerHTML = folders.map((f) => `<span>📂 ${f}/</span>`).join("");
       }
 
       function matchesSearch(d) {
@@ -1328,7 +1474,8 @@
         return (
           d.title.toLowerCase().includes(q) ||
           d.keywords.toLowerCase().includes(q) ||
-          d.file.toLowerCase().includes(q)
+          d.file.toLowerCase().includes(q) ||
+          d.category.toLowerCase().includes(q)
         );
       }
 
@@ -1340,7 +1487,9 @@
       }
 
       function renderFilters() {
-        const cats = ["all", ...new Set(MANIFEST.map((m) => m.category))].filter((c, i, a) => a.indexOf(c) === i);
+        const order = Object.keys(CATEGORY_LABEL);
+        const present = new Set(MANIFEST.map((m) => m.category));
+        const cats = ["all", ...order.filter((c) => c !== "all" && present.has(c))];
         elFilters.innerHTML = cats
           .map((c) => {
             const label = CATEGORY_LABEL[c] || c;
@@ -1357,6 +1506,12 @@
         });
       }
 
+      function escapeHtml(s) {
+        const div = document.createElement("div");
+        div.textContent = s;
+        return div.innerHTML;
+      }
+
       function renderList() {
         const docs = visibleDocs();
         elList.innerHTML = docs.length
@@ -1365,7 +1520,7 @@
                 const active = d.id === selectedId;
                 const cat = CATEGORY_LABEL[d.category] || d.category;
                 return `<li><button type="button" class="${active ? "active" : ""}" data-id="${d.id}"><span>${escapeHtml(
-                  d.title
+                  d.title,
                 )}</span><span class="meta">${escapeHtml(cat)} · ${escapeHtml(d.file)}</span></button></li>`;
               })
               .join("")
@@ -1375,21 +1530,12 @@
         });
       }
 
-      function escapeHtml(s) {
-        const div = document.createElement("div");
-        div.textContent = s;
-        return div.innerHTML;
-      }
-
       function syncPrintFromViewer() {
         const md = elViewer.querySelector(".md-content");
         if (!md) return;
         elPrintArticle.innerHTML = `<div class="md-content-print">${md.innerHTML}</div>`;
       }
 
-      /**
-       * Turn ```mermaid fences into live diagrams (marked emits pre > code.language-mermaid).
-       */
       async function renderMermaidIn(container) {
         if (typeof mermaid === "undefined" || !container) return;
         const scope = container.querySelector(".md-content") || container;
@@ -1415,26 +1561,21 @@
         if (!d) return;
         selectedId = id;
         elTitle.textContent = d.title;
-        elViewer.innerHTML =
-          '<p class="empty-state" style="padding:2rem">Loading…</p>';
+        elViewer.innerHTML = '<p class="empty-state" style="padding:2rem">Loading…</p>';
         elBtnPrint.disabled = true;
         renderList();
 
         try {
           const r = await fetch(d.file, { cache: "no-store" });
           const text = await r.text();
-          if (d.file.endsWith(".yaml") || d.file.endsWith(".yml")) {
-            rawYamlText = text;
-            elViewer.innerHTML =
-              `<div class="md-content"><p><strong>OpenAPI YAML</strong> — displayed as source. For pretty API explorers, import this file into Swagger UI / Stoplight.</p><pre><code>${escapeHtml(
-                text
-              )}</code></pre></div>`;
-            elPrintArticle.innerHTML =
-              `<h1>${escapeHtml(d.title)}</h1><pre style="white-space:pre-wrap;font-size:9pt;">${escapeHtml(
-                text
-              )}</pre>`;
+          if (/\.(yaml|yml|csv|txt)$/i.test(d.file)) {
+            elViewer.innerHTML = `<div class="md-content"><p><strong>${escapeHtml(
+              d.file,
+            )}</strong></p><pre><code>${escapeHtml(text)}</code></pre></div>`;
+            elPrintArticle.innerHTML = `<h1>${escapeHtml(d.title)}</h1><pre style="white-space:pre-wrap;font-size:9pt;">${escapeHtml(
+              text,
+            )}</pre>`;
           } else {
-            rawYamlText = "";
             const parse = typeof marked.parse === "function" ? marked.parse : marked;
             const html = parse(text, { breaks: true, mangle: false, headerIds: true });
             const clean = DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
@@ -1448,9 +1589,31 @@
           elBtnPrint.disabled = false;
         } catch (e) {
           elViewer.innerHTML = `<div class="md-content"><p class="empty-state">Could not load <code>${escapeHtml(
-            d.file
-          )}</code>. Serve this folder over HTTP (see note above). ${escapeHtml(String(e))}</p></div>`;
+            d.file,
+          )}</code>. Serve this folder over HTTP (<code>npm run docs:serve</code>). ${escapeHtml(String(e))}</p></div>`;
         }
+      }
+
+      function toggleSidebar() {
+        const collapsed = document.body.classList.toggle("sidebar-collapsed");
+        elSidebarBtn.setAttribute("aria-pressed", collapsed ? "true" : "false");
+        elSidebarBtn.textContent = collapsed ? "Show sidebar" : "Hide sidebar";
+        try {
+          localStorage.setItem("odelhub-docs-sidebar-collapsed", collapsed ? "1" : "0");
+        } catch {
+          /* ignore */
+        }
+      }
+
+      elSidebarBtn.addEventListener("click", toggleSidebar);
+      try {
+        if (localStorage.getItem("odelhub-docs-sidebar-collapsed") === "1") {
+          document.body.classList.add("sidebar-collapsed");
+          elSidebarBtn.setAttribute("aria-pressed", "true");
+          elSidebarBtn.textContent = "Show sidebar";
+        }
+      } catch {
+        /* ignore */
       }
 
       elQ.addEventListener("input", () => {
@@ -1479,9 +1642,10 @@
         });
       }
 
+      applyStats();
+      renderFolderMap();
       renderFilters();
       renderList();
-      computeStats();
 
       const initialId = docIdFromHash();
       if (initialId) {

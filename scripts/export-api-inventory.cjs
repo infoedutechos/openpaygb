@@ -1,5 +1,6 @@
 /**
- * Writes docs/API_INVENTORY.csv, docs/UI_ROUTES.csv, and docs/UI_VS_CODEBASE.md
+ * Writes docs/api-reference/API_INVENTORY.csv, docs/api-reference/UI_ROUTES.csv,
+ * and docs/architecture/UI_VS_CODEBASE.md
  * Run: node scripts/export-api-inventory.cjs
  */
 
@@ -172,7 +173,10 @@ for (const file of routeFiles) {
     ].join(",")
   );
 }
-fs.writeFileSync(path.join(root, "docs", "API_INVENTORY.csv"), apiRows.join("\n") + "\n", "utf8");
+fs.mkdirSync(path.join(root, "docs", "api-reference"), { recursive: true });
+fs.mkdirSync(path.join(root, "docs", "architecture"), { recursive: true });
+fs.writeFileSync(path.join(root, "docs", "api-reference", "API_INVENTORY.csv"), apiRows.join("\n") + "\n", "utf8");
+fs.writeFileSync(path.join(root, "docs", "API_INVENTORY.csv"), "Moved to api-reference/API_INVENTORY.csv\n", "utf8");
 
 // --- UI pages CSV ---
 const pageFiles = walkFiles(appDir, (fp, n) => n === "page.tsx").sort((a, b) => relPosix(a).localeCompare(relPosix(b)));
@@ -180,7 +184,8 @@ const uiRows = [["ui_route", "relative_file"].map(csvEscape).join(",")];
 for (const file of pageFiles) {
   uiRows.push([csvEscape(pageFileToUiRoute(file)), csvEscape(relPosix(file))].join(","));
 }
-fs.writeFileSync(path.join(root, "docs", "UI_ROUTES.csv"), uiRows.join("\n") + "\n", "utf8");
+fs.writeFileSync(path.join(root, "docs", "api-reference", "UI_ROUTES.csv"), uiRows.join("\n") + "\n", "utf8");
+fs.writeFileSync(path.join(root, "docs", "UI_ROUTES.csv"), "Moved to api-reference/UI_ROUTES.csv\n", "utf8");
 
 // --- UI vs codebase markdown ---
 const apiUrlSet = new Set(routeFiles.map(routeFileToUrl));
@@ -193,16 +198,16 @@ lines.push("");
 lines.push("## Regenerate");
 lines.push("");
 lines.push("```bash");
-lines.push("npm run docs:tree:write   # optional: refresh ASCII tree → docs/FOLDER_TREE_SNAPSHOT.txt");
-lines.push("npm run docs:inventory   # writes API_INVENTORY.csv, UI_ROUTES.csv, and this file");
+lines.push("npm run docs:tree:write   # optional: refresh ASCII tree → docs/architecture/FOLDER_TREE_SNAPSHOT.txt");
+lines.push("npm run docs:inventory   # writes api-reference CSVs + architecture/UI_VS_CODEBASE.md");
 lines.push("```");
 lines.push("");
 lines.push("## Exported machine-readable inventories");
 lines.push("");
 lines.push("| File | Contents |");
 lines.push("|------|-----------|");
-lines.push("| [API_INVENTORY.csv](./API_INVENTORY.csv) | Every `app/api/**/route.ts` URL, file path, exported HTTP methods |");
-lines.push("| [UI_ROUTES.csv](./UI_ROUTES.csv) | Every `app/**/page.tsx` UI path and file path |");
+lines.push("| [API_INVENTORY.csv](../api-reference/API_INVENTORY.csv) | Every `app/api/**/route.ts` URL, file path, exported HTTP methods |");
+lines.push("| [UI_ROUTES.csv](../api-reference/UI_ROUTES.csv) | Every `app/**/page.tsx` UI path and file path |");
 lines.push("");
 lines.push("## Public / pay UI → typical APIs");
 lines.push("");
@@ -293,8 +298,13 @@ lines.push("| Master console `/admin/master` | **Yes** — `app/admin/master/`; 
 lines.push("");
 lines.push("*Align README or add routes so product and code match.*");
 
-fs.writeFileSync(path.join(root, "docs", "UI_VS_CODEBASE.md"), lines.join("\n") + "\n", "utf8");
+fs.writeFileSync(path.join(root, "docs", "architecture", "UI_VS_CODEBASE.md"), lines.join("\n") + "\n", "utf8");
+fs.writeFileSync(
+  path.join(root, "docs", "UI_VS_CODEBASE.md"),
+  "# Moved\n\n**New location:** [`architecture/UI_VS_CODEBASE.md`](./architecture/UI_VS_CODEBASE.md)\n",
+  "utf8",
+);
 
-console.log("Wrote docs/API_INVENTORY.csv");
-console.log("Wrote docs/UI_ROUTES.csv");
-console.log("Wrote docs/UI_VS_CODEBASE.md");
+console.log("Wrote docs/api-reference/API_INVENTORY.csv");
+console.log("Wrote docs/api-reference/UI_ROUTES.csv");
+console.log("Wrote docs/architecture/UI_VS_CODEBASE.md");

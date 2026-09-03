@@ -1,23 +1,47 @@
 # User Guide: Partner Integrator (SIS / ERP / Finance Systems)
 
+**Last updated:** 2026-09-03
+
 ## Scope
 
-This guide explains how to integrate with ODEL HUB Pay partner APIs and outbound webhooks using the patterns in `docs/PARTNER_API.md`.
+Integrate with ODEL HUB Pay / OpenPayGB using Partner APIs and signed webhooks.
 
-Integration surfaces:
+Surfaces:
 
-- Partner read APIs under `/api/partner/v1/*`
-- Partner key management by master admin in `/admin/master#partner-integrations`
-- Outbound signed webhook events (for example `payment.confirmed`)
+- Partner APIs under `/api/partner/v1/*`
+- Self-serve apps at `/developers/register` → `/developers/dashboard`
+- Provider lobby `/opgb`
+- Master keys/webhooks/cashouts at `/admin/master/opgb-ops` or `#partner-integrations`
 
-## 1) Obtain API credentials
+**Commands + logins:** [PLATFORM_UPDATE_2026-09.md](../platform/PLATFORM_UPDATE_2026-09.md) · [LOCAL_DEV_AND_CREDENTIALS.md](../platform/LOCAL_DEV_AND_CREDENTIALS.md)  
+**API reference:** [PARTNER_API.md](../platform/PARTNER_API.md) · [OPENPAYGB_PAYMENT_PROVIDER.md](../platform/OPENPAYGB_PAYMENT_PROVIDER.md) · [DEVELOPER_ECOSYSTEM.md](../platform/DEVELOPER_ECOSYSTEM.md)
 
-Platform master actions:
+---
 
-1. Open `/admin/master`.
-2. Go to Partner API section.
-3. Create key (name, scope, optional organization binding).
-4. Copy secret immediately (plaintext shown once).
+## 0) Local demo commands
+
+```bash
+npm run db:push
+npm run seed          # master login for ops console
+npm run dev
+# Browser: http://localhost:3000/developers/register
+```
+
+| Role | URL | Credentials |
+|------|-----|-------------|
+| Your app | `/developers/register` | `clientId` + `clientSecret` (shown once) |
+| Master | `/admin/login?master=1` | seed `master@odelhub.local` / `ChangeMe_Master123!` |
+
+---
+
+## 1) Obtain API credentials (preferred: developer dashboard)
+
+1. Open `/developers/register` and create an app.
+2. Sign in to `/developers/dashboard`.
+3. Create a Partner API key with scopes you need (at least `charges:create` + `charges:read` for accepting payments; add `payouts:*` for cashout).
+4. Copy `odelhub_live_…` immediately.
+
+Alternate: Master creates a platform/org key at `/admin/master/opgb-ops` → **Cashouts & partners**. Merchant **charges** require the key linked to a **Developer App**.
 
 Accepted auth headers:
 
@@ -31,21 +55,53 @@ or
 X-Api-Key: odelhub_live_<secret>
 ```
 
+---
+
 ## 2) Understand key scoping
 
 | Scope | Purpose |
 |---|---|
-| `payments:read` | Read payments list/detail |
+| `payments:read` | Read tuition payments list/detail |
 | `organizations:read` | Read active organizations |
-| `payments:create` | Future/extended create patterns (platform-dependent) |
+| `payments:create` | Extended create patterns (platform-dependent) |
 | `students:read` | Reserved/future |
+| `charges:create` | Create merchant hosted-checkout charges |
+| `charges:read` | List/get merchant charges |
+| `payouts:create` | Request merchant MoMo cashout |
+| `payouts:read` | Settlement summary + payout history |
+| `dex:quote:read` | Dex quotes |
+| `dex:intent:create` | Dex payment intents |
+| `opgb:balance:read` | OPGB wallet balances |
 
-Data visibility:
+---
 
-- Org-scoped key -> only that organization data.
-- Platform key (no org binding) -> cross-tenant access where endpoint allows it.
+## 3) Accept payments (OpenPayGB payment provider)
 
-## 3) Call partner APIs
+```http
+POST /api/partner/v1/charges
+Authorization: Bearer odelhub_live_…
+Content-Type: application/json
+
+{
+  "amountUgx": 25000,
+  "description": "Order #1042",
+  "redirectUrl": "https://your-app.example/orders/1042/paid",
+  "cancelUrl": "https://your-app.example/orders/1042",
+  "externalRef": "ord_1042",
+  "metadata": { "sku": "PRO-1" }
+}
+```
+
+1. Redirect payer to `charge.checkoutUrl` (`/opgb/checkout/{id}`).
+2. Configure fees/branding on `/developers/dashboard#fees` and `#branding`.
+3. On confirm, `merchantNetUgx` credits settlement; listen for `charge.confirmed`.
+4. Cash out via dashboard or `POST /api/partner/v1/payouts`.
+
+Sandbox: when `LIVEPAY_API_KEY` is unset in non-production (or `OPENPAYGB_CHARGES_SANDBOX=1`), checkout shows **Sandbox: mark as paid**.
+
+---
+
+## 4) Call tuition partner APIs
 
 ### List payments
 
@@ -68,46 +124,21 @@ GET /api/partner/v1/organizations
 Authorization: Bearer odelhub_live_...
 ```
 
-## 4) Typical payment object fields
-
-Expect fields similar to:
-
-- `id`
-- `organizationId`, `organizationSlug`
-- `studentId`
-- `programmeCode`, `year`, `semester`
-- `totalUgx`, `tonAmount`
-- `rail`, `status`
-- `confirmedAt`, `createdAt`
-
-Use `status = confirmed` for downstream posting to SIS/finance ledgers.
+---
 
 ## 5) Configure outbound webhooks
 
-Master admin configures webhook endpoints at:
+Developer dashboard **Webhooks** or Master partner section.
 
-- `/api/master/partner/webhooks`
+Events include:
 
-Each endpoint includes:
+- `payment.confirmed` / `payment.failed`
+- `charge.created` / `charge.confirmed` / `charge.failed`
 
-- destination URL,
-- event list,
-- shared signing secret,
-- enable/disable toggle.
+Headers:
 
-Current primary event:
-
-- `payment.confirmed`
-
-## 6) Verify webhook signatures
-
-Webhook request pattern:
-
-- Header `X-Odelhub-Event: payment.confirmed`
-- Header `X-Odelhub-Signature: <hex hmac sha256 raw body>`
-- JSON payload with event metadata and payment summary
-
-Verification (Node example):
+- `X-Odelhub-Event`
+- `X-Odelhub-Signature` (HMAC-SHA256 hex of raw body)
 
 ```js
 const crypto = require("crypto");
@@ -117,58 +148,42 @@ function verify(secret, rawBody, signatureHex) {
 }
 ```
 
-Integration rule:
+---
 
-- Reject unsigned or mismatched events.
-- Use idempotency keyed by event id/payment id to avoid duplicate processing.
+## 6) Recommended workflow
 
-## 7) Recommended integration workflow
+1. Register developer app; create key with least privilege.
+2. Set fee payer + payout MoMo number.
+3. Create a sandbox charge; confirm; verify webhook + settlement credit.
+4. Request a small cashout; master marks paid in OPGB console.
+5. Enable white-label only after reviewing activation + per-charge WL fees.
 
-1. Create sandbox/test key.
-2. Pull organizations and map target school slug(s).
-3. Pull confirmed payments in a backfill window.
-4. Store last-processed timestamp + payment id checkpoint.
-5. Configure webhook endpoint for near-real-time updates.
-6. On webhook failure, replay from API using `since` filters.
+---
 
-## 8) Error handling model
+## 7) Error handling
 
-Handle these classes cleanly:
+| Code | Meaning |
+|------|---------|
+| 401/403 | Invalid key, disabled, or missing scope |
+| 404 | Id not in key/app scope |
+| 429 | Back off |
+| 5xx | Retry with jitter |
 
-- `401/403` -> invalid key, disabled key, insufficient scope.
-- `404` -> payment id not visible in key scope.
-- `429` -> retry with exponential backoff.
-- `5xx` -> retry with jitter and dead-letter fallback.
+---
 
-## 9) Security requirements
+## 8) Checklist
 
-- Store keys and webhook secrets in a secure vault.
-- Rotate keys periodically and on personnel changes.
-- Enforce HTTPS for webhook endpoint.
-- Limit inbound webhook IP/rate where possible.
-- Log signature verification failures and alert on spikes.
-
-## 10) Operational troubleshooting
-
-| Issue | Diagnosis | Resolution |
-|---|---|---|
-| 401 unauthorized | Wrong/expired key or formatting error | Regenerate key, verify `Bearer` format |
-| Empty payments list | Org-scoped key on wrong org or filters too strict | Validate key org binding and query window |
-| Webhook not received | Endpoint disabled/unreachable | Check partner webhook settings and destination health |
-| Signature mismatch | Using parsed JSON instead of raw body | Verify against raw request body bytes |
-| Duplicate events | Retry behavior or delivery retries | Implement idempotency on event id/payment id |
-
-## 11) Integration checklist
-
-- [ ] Key created with least-privilege scope.
-- [ ] Secure secret storage configured.
-- [ ] API polling and pagination implemented.
-- [ ] Webhook endpoint online and signature-verified.
-- [ ] Idempotency and replay strategy implemented.
-- [ ] Monitoring/alerts for 401, 429, 5xx, and webhook signature failures.
+- [ ] App registered; client secret stored securely
+- [ ] Key scopes include charges (and payouts if needed)
+- [ ] Webhook signature verification + idempotency
+- [ ] Fee/branding settings reviewed
+- [ ] Sandbox charge → confirm → settlement → cashout tested
 
 ## Reference documents
 
-- `docs/PARTNER_API.md`
-- `docs/SIS_INTEGRATION_COOKBOOK.md`
-- `docs/INTEGRATION_HARDENING.md`
+- [PARTNER_API.md](../platform/PARTNER_API.md)
+- [OPENPAYGB_PAYMENT_PROVIDER.md](../platform/OPENPAYGB_PAYMENT_PROVIDER.md)
+- [DEVELOPER_ECOSYSTEM.md](../platform/DEVELOPER_ECOSYSTEM.md)
+- [PLATFORM_UPDATE_2026-09.md](../platform/PLATFORM_UPDATE_2026-09.md)
+- [SIS_INTEGRATION_COOKBOOK.md](../platform/SIS_INTEGRATION_COOKBOOK.md)
+- [INTEGRATION_HARDENING.md](../operations/INTEGRATION_HARDENING.md)

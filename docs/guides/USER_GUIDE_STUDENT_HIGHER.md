@@ -206,7 +206,7 @@ Use:
 - `/receipt/<paymentId>` for a single receipt page
 - PDF download via the UI (`/api/receipts/<paymentId>/pdf`)
 
-Confirmed payments show receipt links and downloadable proofs. Receipts include **platform + institution letterhead** when configured — see [../RECEIPT_BRANDING.md](../RECEIPT_BRANDING.md).
+Confirmed payments show receipt links and downloadable proofs. Receipts include **platform + institution letterhead** when configured — see [../RECEIPT_BRANDING.md](../school/RECEIPT_BRANDING.md).
 
 ---
 

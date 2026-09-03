@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
+  DEVELOPER_DEFAULT_SCOPES,
   developerAppPublicView,
   hashDeveloperClientSecret,
 } from "@/lib/developer-app";
@@ -18,7 +19,7 @@ export async function requireDeveloperSession(): Promise<
     };
   }
 
-  const row = await prisma.developerApp.findUnique({
+  let row = await prisma.developerApp.findUnique({
     where: { id: session.appId },
   });
 
@@ -27,6 +28,14 @@ export async function requireDeveloperSession(): Promise<
       ok: false,
       response: NextResponse.json({ error: "Invalid developer session" }, { status: 401 }),
     };
+  }
+
+  const missingScopes = DEVELOPER_DEFAULT_SCOPES.filter((s) => !row!.scopes.includes(s));
+  if (missingScopes.length > 0) {
+    row = await prisma.developerApp.update({
+      where: { id: row.id },
+      data: { scopes: [...row.scopes, ...missingScopes] },
+    });
   }
 
   return { ok: true, app: developerAppPublicView(row) };

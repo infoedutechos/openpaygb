@@ -23,12 +23,39 @@ type WebhookRow = {
   deliveriesLast7d: number;
 };
 
-const SCOPES = ["payments:read", "payments:create", "students:read", "organizations:read"] as const;
-const EVENTS = ["payment.confirmed", "payment.failed"] as const;
+const SCOPES = [
+  "payments:read",
+  "payments:create",
+  "students:read",
+  "organizations:read",
+  "charges:create",
+  "charges:read",
+  "payouts:create",
+  "payouts:read",
+  "dex:quote:read",
+  "dex:intent:create",
+  "opgb:balance:read",
+] as const;
+const EVENTS = ["payment.confirmed", "payment.failed", "charge.confirmed", "charge.failed", "charge.created"] as const;
+
+type PayoutRow = {
+  id: string;
+  amountUgx: number;
+  phone: string;
+  network: string;
+  status: string;
+  note: string;
+  createdAt: string;
+  appName: string;
+  appSlug: string;
+  contactEmail: string;
+  rejectionReason: string | null;
+};
 
 export function MasterPartnerIntegrations() {
   const [keys, setKeys] = useState<ApiKeyRow[]>([]);
   const [webhooks, setWebhooks] = useState<WebhookRow[]>([]);
+  const [payouts, setPayouts] = useState<PayoutRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [newKeyPlain, setNewKeyPlain] = useState<string | null>(null);
@@ -43,9 +70,10 @@ export function MasterPartnerIntegrations() {
 
   const load = useCallback(async () => {
     setError(null);
-    const [kr, wr] = await Promise.all([
+    const [kr, wr, pr] = await Promise.all([
       fetch("/api/master/partner/keys", { credentials: "include" }),
       fetch("/api/master/partner/webhooks", { credentials: "include" }),
+      fetch("/api/master/merchant-payouts", { credentials: "include" }),
     ]);
     const keysRes = await readJsonResponse<{ keys: ApiKeyRow[] }>(kr);
     const hooksRes = await readJsonResponse<{ endpoints: WebhookRow[] }>(wr);
@@ -53,6 +81,10 @@ export function MasterPartnerIntegrations() {
     if (!hooksRes.ok) throw new Error(hooksRes.error);
     setKeys(keysRes.data.keys);
     setWebhooks(hooksRes.data.endpoints);
+    if (pr.ok) {
+      const pd = await readJsonResponse<{ payouts: PayoutRow[] }>(pr);
+      if (pd.ok) setPayouts(pd.data.payouts ?? []);
+    }
   }, []);
 
   useEffect(() => {
@@ -136,6 +168,30 @@ export function MasterPartnerIntegrations() {
     setHookEvents((prev) => (prev.includes(ev) ? prev.filter((e) => e !== ev) : [...prev, ev]));
   }
 
+  async function actPayout(payoutId: string, action: "mark_paid" | "reject") {
+    setBusy(true);
+    setError(null);
+    try {
+      const r = await fetch("/api/master/merchant-payouts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          payoutId,
+          action,
+          reason: action === "reject" ? "Rejected by master ops" : undefined,
+        }),
+      });
+      const parsed = await readJsonResponse<{ payout: unknown }>(r);
+      if (!parsed.ok) throw new Error(parsed.error);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Payout action failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <section
       id="partner-integrations"
@@ -147,8 +203,8 @@ export function MasterPartnerIntegrations() {
         <code className="rounded bg-black/35 px-1 text-violet-200/90">/api/partner/v1/*</code>. Register HTTPS endpoints
         to receive <code className="rounded bg-black/30 px-1">payment.confirmed</code> events signed with{" "}
         <code className="rounded bg-black/30 px-1">X-Odelhub-Signature</code>. See{" "}
-        <code className="text-slate-500">docs/PARTNER_API.md</code> and{" "}
-        <code className="text-slate-500">docs/SIS_INTEGRATION_COOKBOOK.md</code>.
+        <code className="text-slate-500">docs/platform/PARTNER_API.md</code> and{" "}
+        <code className="text-slate-500">docs/platform/SIS_INTEGRATION_COOKBOOK.md</code>.
       </p>
 
       {error ? <p className="mt-3 text-sm text-rose-400">{error}</p> : null}
@@ -292,6 +348,71 @@ export function MasterPartnerIntegrations() {
             </button>
           </form>
         </div>
+      </div>
+
+      <div className="mt-8 border-t border-violet-500/20 pt-6">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Merchant cashouts (OpenPayGB settlement)
+        </h3>
+        <p className="mt-2 text-xs text-slate-400">
+          After you send MoMo to the merchant float, mark the request paid. Rejecting restores their settlement balance.
+        </p>
+        <ul className="mt-3 space-y-2 text-xs">
+          {payouts.filter((p) => p.status === "pending").length === 0 ? (
+            <li className="text-slate-600">No pending cashouts.</li>
+          ) : (
+            payouts
+              .filter((p) => p.status === "pending")
+              .map((p) => (
+                <li key={p.id} className="rounded-lg border border-cyan-500/20 bg-cyan-950/20 px-3 py-2">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <p className="font-medium text-white">
+                        UGX {p.amountUgx.toLocaleString()} · {p.appName}
+                      </p>
+                      <p className="mt-1 text-slate-400">
+                        {p.network} {p.phone} · {p.contactEmail}
+                      </p>
+                      <p className="mt-1 text-slate-600">{new Date(p.createdAt).toLocaleString()}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void actPayout(p.id, "mark_paid")}
+                        className="rounded bg-emerald-700 px-2 py-1 text-[10px] font-semibold text-white disabled:opacity-50"
+                      >
+                        Mark paid
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void actPayout(p.id, "reject")}
+                        className="rounded bg-rose-900/80 px-2 py-1 text-[10px] text-rose-100 disabled:opacity-50"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              ))
+          )}
+        </ul>
+        {payouts.filter((p) => p.status !== "pending").length > 0 ? (
+          <details className="mt-4">
+            <summary className="cursor-pointer text-[11px] text-slate-500">Recent settled / rejected</summary>
+            <ul className="mt-2 space-y-1 text-[11px] text-slate-500">
+              {payouts
+                .filter((p) => p.status !== "pending")
+                .slice(0, 20)
+                .map((p) => (
+                  <li key={p.id}>
+                    {p.status} · UGX {p.amountUgx.toLocaleString()} · {p.appName}
+                  </li>
+                ))}
+            </ul>
+          </details>
+        ) : null}
       </div>
     </section>
   );

@@ -1,5 +1,10 @@
 # Moved
 
-Use **[VERCEL_ODELPAY_DEPLOY.md](./VERCEL_ODELPAY_DEPLOY.md)**.
+This document was relocated into the documentation library category folders.
 
-Production URL: **`https://odelpay.vercel.app`**
+**New location:** [`deployment/VERCEL_ODELHUB_PAY_DEPLOY.md`](./deployment/VERCEL_ODELHUB_PAY_DEPLOY.md)
+
+Open the interactive hub: [`docs/index.html`](./index.html) (via `npm run docs:serve`) and search for the title, or open the new path directly.
+
+---
+*Stub kept so older links to `docs/VERCEL_ODELHUB_PAY_DEPLOY.md` still resolve.*

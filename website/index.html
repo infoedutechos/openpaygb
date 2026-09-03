@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>ODELHUB Pay — Tuition &amp; school fees explorer beta</title>
+<meta name="description" content="ODELHUB Pay tuition and school fees explorer beta (local_sim). Not production MoMo/card. Not ODEI Pay merchant OS. Next.js full app is separate on :3000."/>
+<meta name="odei-product-id" content="odelhub-pay"/>
+<meta name="odei-website" content="full"/>
+<meta name="odei-launch" content="tuition-explorer-beta"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&amp;family=Source+Sans+3:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/styles.css"/>
+</head>
+<body data-product="odelhub-pay" data-product-name="ODELHUB Pay" data-odei-beta="tuition-explorer">
+<header class="top">
+  <div class="top-inner">
+    <a class="brand" href="/">
+      <span class="mark">ODELHUB Pay</span>
+      <span class="sub">Tuition &amp; school fees explorer beta</span>
+    </a>
+    <nav class="nav" id="pay-nav">
+      <a href="/app/">Explorer</a>
+      <a href="/about.html">About</a>
+      <a href="/product.html">Product</a>
+      <a href="/status.html">Status</a>
+      <a href="http://localhost:5221/#workspace" target="_blank" rel="noopener">Hub OS</a>
+      <a href="http://localhost:5201/" target="_blank" rel="noopener">Academy</a>
+      <a class="cta" href="/app/">Open Pay explorer</a>
+    </nav>
+  </div>
+</header>
+
+<aside class="scope-banner scope-banner-sticky" role="note">
+  <strong>Scope</strong>
+  <span>Tuition &amp; school fees explorer beta (local_sim). Not production MoMo/card charges. Not ODEI Pay merchant OS (:5215). Next.js full app is separate under ODEL Hub OS/ODELHUB-Pay (:3000).</span>
+</aside>
+
+<section class="hero">
+  <div class="hero-inner">
+    <p class="eyebrow">local_sim · tuition explorer beta</p>
+    <h1>ODELHUB Pay</h1>
+    <p class="lede">Explore demo school fee surfaces and student / school workspace stubs. This website shell is honesty-first — no live settlement rails.</p>
+    <div class="cta-row">
+      <a class="btn btn-solid" href="/app/">Open Pay explorer</a>
+      <a class="btn btn-ghost" href="/app/#student">Student flow</a>
+      <a class="btn btn-ghost" href="/app/#school">School workspace</a>
+      <a class="btn btn-ghost" href="http://localhost:5221/#workspace" target="_blank" rel="noopener">Hub OS :5221</a>
+      <a class="btn btn-ghost" href="http://localhost:5201/" target="_blank" rel="noopener">Academy :5201</a>
+      <a class="btn btn-ghost" href="http://localhost:5180/" target="_blank" rel="noopener">Multi-Ecosystem :5180</a>
+    </div>
+    <p class="addr">localhost:5231 · Tuition &amp; school fees explorer beta · local_sim</p>
+  </div>
+</section>
+
+<section class="section" data-rise>
+  <p class="kicker">What you can do today</p>
+  <h2>Browse demo schools. Sample student and school stubs. Join a waitlist stub.</h2>
+  <p class="intro">The explorer lists labelled demo schools and shows honesty notices when you press pay. No money moves. No MoMo. No card capture.</p>
+  <div class="grid-3">
+    <a class="tile" href="/app/"><h3>Pay explorer</h3><p>Three demo schools with local_sim tuition buttons.</p></a>
+    <a class="tile" href="/app/#student"><h3>Student flow</h3><p>Stub path for learners reviewing fee lines.</p></a>
+    <a class="tile" href="/app/#school"><h3>School workspace</h3><p>Stub operator view — not production finance.</p></a>
+  </div>
+</section>
+
+<section class="section" data-rise>
+  <p class="kicker">Honest scope</p>
+  <h2>What this shell is — and is not</h2>
+  <ul class="feature-list">
+    <li><strong>Product website (local_sim)</strong><span>Academy-parity marketing + explorer shell served on :5231.</span></li>
+    <li><strong>Next.js full app (separate)</strong><span>Lives under <code>ODEL Hub OS/ODELHUB-Pay</code> — <code>npm run dev:odelhub-pay-next</code> → :3000.</span></li>
+    <li><strong>Hub OS directory</strong><span>ODEL Hub OS on :5221 maps this product; it does not process tuition.</span></li>
+  </ul>
+</section>
+
+<section class="band">
+  <div class="section" data-rise>
+    <p class="kicker">Explicitly not live</p>
+    <h2>Unavailable rails stay unavailable</h2>
+    <p class="intro">Production MoMo, card acquiring, settlement, refunds, KYC, ODEI Pay merchant OS (:5215), Wallet rewards, and live school ERP integrations are <strong>not</strong> launched here.</p>
+    <ul class="feature-list">
+      <li><strong>No real charges</strong><span>Pay buttons show honesty notices only.</span></li>
+      <li><strong>Not ODEI Pay (:5215)</strong><span>Different product — merchant OS remains separate.</span></li>
+      <li><strong>Not Academy tuition</strong><span>Academy Curriculum Explorer beta has no live payment rail.</span></li>
+    </ul>
+  </div>
+</section>
+
+<section class="section" data-rise id="waitlist">
+  <p class="kicker">Pilot</p>
+  <h2>Join waitlist stub</h2>
+  <p class="intro">Consented interest only. This form is a browser-local stub — submissions are not claimed as durable enrolment or billing setup.</p>
+  <form class="waitlist-form" id="pay-waitlist" novalidate>
+    <label>Email
+      <input type="email" name="email" required placeholder="you@school.example" autocomplete="email"/>
+    </label>
+    <label>Role
+      <select name="role">
+        <option value="student">Student / parent</option>
+        <option value="school">School admin</option>
+        <option value="partner">Partner</option>
+      </select>
+    </label>
+    <label class="check"><input type="checkbox" name="consent" required/> I understand this is a local_sim waitlist stub — not live billing.</label>
+    <button type="submit" class="btn btn-solid">Join waitlist stub</button>
+    <p class="form-note mono" id="waitlist-note" hidden></p>
+  </form>
+</section>
+
+<section class="section" data-rise>
+  <p class="kicker">Status</p>
+  <h2>Honesty layers</h2>
+  <p class="intro">Machine-readable status lives in <a href="/status.json">status.json</a>. Human summary on <a href="/status.html">status.html</a>.</p>
+  <div class="cta-row">
+    <a class="btn btn-solid" href="/status.html">Open status</a>
+    <a class="btn btn-ghost" href="/about.html">About</a>
+    <a class="btn btn-ghost" href="/product.html">Product surfaces</a>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-cols">
+      <div>
+        <h4>Explorer beta</h4>
+        <a href="/app/">Pay explorer</a>
+        <a href="/#waitlist">Waitlist stub</a>
+        <a href="/product.html">Product</a>
+      </div>
+      <div>
+        <h4>Honesty</h4>
+        <a href="/status.html">Status</a>
+        <a href="/status.json">status.json</a>
+        <a href="/honesty/honesty.json">honesty.json</a>
+      </div>
+      <div>
+        <h4>Ecosystem</h4>
+        <a href="http://localhost:5221/#workspace" target="_blank" rel="noopener">ODEL Hub OS</a>
+        <a href="http://localhost:5201/" target="_blank" rel="noopener">Academy</a>
+        <a href="http://localhost:5180/" target="_blank" rel="noopener">Multi-Ecosystem</a>
+      </div>
+    </div>
+    <p class="legal">© 2026 ODELHUB Pay · Tuition &amp; school fees explorer beta (local_sim) · Local http://localhost:5231/ · Not production MoMo/card · Not ODEI Pay (:5215)</p>
+  </div>
+</footer>
+<script src="/site.js"></script>
+</body>
+</html>

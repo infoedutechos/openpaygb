@@ -196,11 +196,11 @@ export async function getStudentTermOutstanding(input: {
 
     where: { organizationId: input.organizationId, studentId: input.studentId, term },
 
-    _sum: { amountUgx: true },
+    _sum: { amountUgx: true, discountUgx: true },
 
   });
 
-  const expected = charges._sum.amountUgx ?? 0;
+  const expected = Math.max(0, (charges._sum.amountUgx ?? 0) - (charges._sum.discountUgx ?? 0));
 
   if (expected <= 0) return 0;
 

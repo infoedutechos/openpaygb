@@ -2,9 +2,11 @@
 
 **Audience:** `org_admin` staff for a school workspace (`institutionTier: school`).  
 **Product line:** OdelPay — Schools  
-**Last updated:** 2026-07-18
+**Last updated:** 2026-09-03
 
-You manage sessions, classes/streams, students & bills, School Code checkout, admission format, receipt letterhead, and school reports. For universities, use [USER_GUIDE_ADMIN_HIGHER.md](./USER_GUIDE_ADMIN_HIGHER.md).
+You manage sessions, classes/streams, students & bills, **fee ledger**, School Code checkout, admission format, receipt letterhead, and school reports. For universities, use [USER_GUIDE_ADMIN_HIGHER.md](./USER_GUIDE_ADMIN_HIGHER.md).
+
+**Uwais pilot credentials:** after `npm run seed:uwais` → `uwais.admin@odelhub.local` / `ChangeMe_Admin123!` at `/admin/login?school=1`. Full matrix: [LOCAL_DEV_AND_CREDENTIALS.md](../platform/LOCAL_DEV_AND_CREDENTIALS.md).
 
 ---
 
@@ -32,7 +34,12 @@ Primary entry:
 | Class registration | `/admin/school-structure` |
 | Fee programmes | `/admin/programmes` |
 | Students / bills | `/admin/students` |
+| **Fee ledger** | `/admin/fee-ledger` |
+| **Fee structure** | `/admin/fee-structure` |
+| **Go-live checklist** | `/admin/school-golive` |
+| **Cashbook** | `/admin/school-cashbook` |
 | Defaulters | `/admin/defaulters` |
+| Parent portal (public) | `/parent` |
 | Receipt of payments | `/admin/receipts` |
 | Online payments | `/admin/payments` |
 | Payment requests | `/admin/payment-requests` |
@@ -85,7 +92,7 @@ Also: dashboard chat button; logout in shell.
 4. You are redirected to `/admin` (or a safe `next` route). School tenants typically use the ERP dashboard at `/admin/school-dashboard`.
 5. Verify the school name in the shell matches your institution.
 
-If newly registered: wait for workspace approval and admin account creation before first login. See [../ORGANIZATION_REGISTRATION.md](../ORGANIZATION_REGISTRATION.md).
+If newly registered: wait for workspace approval and admin account creation before first login. See [../ORGANIZATION_REGISTRATION.md](../school/ORGANIZATION_REGISTRATION.md).
 
 ---
 
@@ -94,7 +101,7 @@ If newly registered: wait for workspace approval and admin account creation befo
 ### Admission / registration number format
 
 **Path:** `/admin/settings#admission-number`  
-**Details:** [../ADMISSION_NUMBER_FORMAT.md](../ADMISSION_NUMBER_FORMAT.md)
+**Details:** [../ADMISSION_NUMBER_FORMAT.md](../school/ADMISSION_NUMBER_FORMAT.md)
 
 1. Open Settings → **Admission / registration number format**.
 2. Set prefix, separator, year source (calendar / academic / none), sequence digits, and start sequence.
@@ -106,7 +113,7 @@ On **Create student**, if format is not configured, use the **Configure admissio
 ### Receipt letterhead
 
 **Path:** `/admin/settings#receipt-letterhead`  
-**Details:** [../RECEIPT_BRANDING.md](../RECEIPT_BRANDING.md)
+**Details:** [../RECEIPT_BRANDING.md](../school/RECEIPT_BRANDING.md)
 
 1. Upload a letterhead logo (favicon is a temporary fallback).
 2. Enter phone, email, and address for the school block on receipts.
@@ -277,4 +284,4 @@ Master console: `/admin/master` (master role only).
 - Knowledge base copilot on the tuition hub
 - Talk to an agent when configured (platform social / Telegram links)
 
-Related: [USER_GUIDE_INDEX.md](./USER_GUIDE_INDEX.md) · [USER_GUIDE_STUDENT_SCHOOLS.md](./USER_GUIDE_STUDENT_SCHOOLS.md) · [../ADMISSION_NUMBER_FORMAT.md](../ADMISSION_NUMBER_FORMAT.md) · [../RECEIPT_BRANDING.md](../RECEIPT_BRANDING.md) · [../SCHOOL_FEES_PAYMENTS_REFERENCE.md](../SCHOOL_FEES_PAYMENTS_REFERENCE.md)
+Related: [USER_GUIDE_INDEX.md](./USER_GUIDE_INDEX.md) · [USER_GUIDE_STUDENT_SCHOOLS.md](./USER_GUIDE_STUDENT_SCHOOLS.md) · [../ADMISSION_NUMBER_FORMAT.md](../school/ADMISSION_NUMBER_FORMAT.md) · [../RECEIPT_BRANDING.md](../school/RECEIPT_BRANDING.md) · [../SCHOOL_FEES_PAYMENTS_REFERENCE.md](../school/SCHOOL_FEES_PAYMENTS_REFERENCE.md)

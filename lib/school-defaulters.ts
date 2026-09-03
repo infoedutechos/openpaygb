@@ -1,9 +1,8 @@
 import { PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { normalizeSchoolTerm } from "@/lib/school-term";
-import { getStudentBalanceSummary } from "@/lib/tuition-balance";
-import { getStudentTermPaidUgx } from "@/lib/school-account-balance";
-import { billChargeSessionWhere, schoolSessionWhere } from "@/lib/school-session-scope";
+import { listStudentFeeLedgers } from "@/lib/school-fee-ledger";
+import { schoolSessionWhere } from "@/lib/school-session-scope";
 
 export type DefaulterTab = "all_due" | "overdue" | "responding" | "non_defaulters";
 
@@ -26,10 +25,10 @@ function daysSince(date: Date | null | undefined): number | null {
   return Math.floor((Date.now() - date.getTime()) / (24 * 60 * 60 * 1000));
 }
 
-function receiptLabel(paymentId: string, index: number): string {
-  return `RP-${index + 1}`;
-}
-
+/**
+ * Defaulters use the same outstanding formula as the student fee ledger
+ * (fee required − discounts + previous balance − payments).
+ */
 export async function listSchoolDefaulters(input: {
   organizationId: string;
   term: number;
@@ -38,60 +37,40 @@ export async function listSchoolDefaulters(input: {
   schoolClassId?: string;
 }): Promise<{ rows: DefaulterRow[]; groups: { classCode: string; count: number; totalDebtUgx: number }[] }> {
   const term = normalizeSchoolTerm(input.term);
-  const students = await prisma.student.findMany({
+  const { rows: ledgerRows } = await listStudentFeeLedgers({
+    organizationId: input.organizationId,
+    term,
+    sessionId: input.sessionId,
+    schoolClassId: input.schoolClassId,
+  });
+
+  const paymentMeta = await prisma.student.findMany({
     where: {
       organizationId: input.organizationId,
+      id: { in: ledgerRows.map((r) => r.studentId) },
       ...schoolSessionWhere(input.sessionId),
-      ...(input.schoolClassId ? { schoolClassId: input.schoolClassId } : {}),
     },
-    include: {
-      schoolClass: { select: { code: true, name: true } },
+    select: {
+      id: true,
       payments: {
         where: { status: PaymentStatus.confirmed, semester: term },
         orderBy: { confirmedAt: "desc" },
-        select: { id: true, confirmedAt: true, semester: true, totalUgx: true, schoolReceiptNo: true },
-      },
-      billCharges: {
-        where: { term, ...billChargeSessionWhere(input.sessionId) },
-        select: { amountUgx: true },
+        take: 1,
+        select: { confirmedAt: true, schoolReceiptNo: true, id: true },
       },
     },
   });
+  const payByStudent = new Map(paymentMeta.map((s) => [s.id, s.payments[0] ?? null]));
 
   const rows: DefaulterRow[] = [];
 
-  for (const s of students) {
-    let expectedUgx = s.billCharges.reduce((sum, b) => sum + b.amountUgx, 0);
-    let paidUgx = 0;
-
-    if (expectedUgx <= 0) {
-      try {
-        const balance = await getStudentBalanceSummary({
-          studentId: s.id,
-          organizationId: input.organizationId,
-          programmeCode: s.programmeCode,
-          year: s.year,
-          semester: term,
-        });
-        const ctx = balance?.contexts.find((c) => c.semester === term) ?? balance?.contexts[0];
-        if (ctx) {
-          expectedUgx = ctx.expectedSubtotalUgx;
-          paidUgx = ctx.confirmedPaidSubtotalUgx;
-        }
-      } catch {
-        // student may lack programme — skip tuition inference
-      }
-    } else {
-      paidUgx = await getStudentTermPaidUgx({
-        organizationId: input.organizationId,
-        studentId: s.id,
-        term,
-      });
-    }
-    const debt = Math.max(0, expectedUgx - paidUgx);
-    const lastPay = s.payments[0]?.confirmedAt ?? null;
-    const days = daysSince(lastPay);
-    const hasPartial = paidUgx > 0 && debt > 0;
+  for (const ledger of ledgerRows) {
+    const debt = ledger.totalOutstandingUgx;
+    const lastPay = payByStudent.get(ledger.studentId);
+    const lastAt = lastPay?.confirmedAt ?? null;
+    const days = daysSince(lastAt);
+    const paid = ledger.previousBalancePaidUgx + ledger.currentTermPaidUgx;
+    const hasPartial = paid > 0 && debt > 0;
 
     let tab: DefaulterTab = "non_defaulters";
     if (debt > 0) {
@@ -103,16 +82,14 @@ export async function listSchoolDefaulters(input: {
     if (input.tab && input.tab !== tab) continue;
 
     rows.push({
-      studentId: s.id,
-      name: s.name,
-      admissionNo: s.admissionNo || s.programmeCode,
-      classCode: s.schoolClass?.code ?? null,
-      className: s.schoolClass?.name ?? null,
+      studentId: ledger.studentId,
+      name: ledger.studentName,
+      admissionNo: ledger.admissionNo || ledger.studentName,
+      classCode: ledger.classCode,
+      className: ledger.className,
       debtBalanceUgx: debt,
-      lastPaymentDate: lastPay ? lastPay.toISOString().slice(0, 10) : null,
-      lastReceiptNo: s.payments[0]
-        ? s.payments[0].schoolReceiptNo || receiptLabel(s.payments[0].id, 0)
-        : null,
+      lastPaymentDate: lastAt ? lastAt.toISOString().slice(0, 10) : null,
+      lastReceiptNo: lastPay?.schoolReceiptNo || ledger.latestReceiptNo || null,
       tab,
     });
   }

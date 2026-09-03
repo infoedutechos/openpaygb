@@ -13,8 +13,8 @@ Index of all roles: [USER_GUIDE_INDEX.md](./USER_GUIDE_INDEX.md) · Help: [/help
 
 Related settings docs:
 
-- [../ADMISSION_NUMBER_FORMAT.md](../ADMISSION_NUMBER_FORMAT.md)
-- [../RECEIPT_BRANDING.md](../RECEIPT_BRANDING.md)
+- [../ADMISSION_NUMBER_FORMAT.md](../school/ADMISSION_NUMBER_FORMAT.md)
+- [../RECEIPT_BRANDING.md](../school/RECEIPT_BRANDING.md)
 
 ---
 

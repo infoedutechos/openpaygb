@@ -1,9 +1,10 @@
-# Repository layout
+# Moved
 
-**Full tree, route map, layers, and npm scripts:** [FOLDER_STRUCTURE.md](./FOLDER_STRUCTURE.md)
+This document was relocated into the documentation library category folders.
 
-**How this repo maps to [ura-pearl-data-center](https://github.com/urapearlug-sys/ura-pearl-data-center):** [STRUCTURE_ALIGNMENT_URA_PEARL.md](./STRUCTURE_ALIGNMENT_URA_PEARL.md)
+**New location:** [`architecture/STRUCTURE.md`](./architecture/STRUCTURE.md)
 
-**Flows (user, tenant, admin, master):** [FLOWS.md](./FLOWS.md)
+Open the interactive hub: [`docs/index.html`](./index.html) (via `npm run docs:serve`) and search for the title, or open the new path directly.
 
-**Interactive doc hub** (search, print): open [index.html](./index.html) via `npm run docs:serve`.
+---
+*Stub kept so older links to `docs/STRUCTURE.md` still resolve.*

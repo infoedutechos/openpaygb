@@ -31,13 +31,22 @@ export async function allocatePaymentToBillCharges(
     },
     orderBy: { createdAt: "asc" },
     include: {
+      schoolAccount: { select: { name: true } },
       allocations: { select: { amountUgx: true } },
     },
   });
 
+  // Pay PREVIOUS BALANCE / arrears before current-term fee heads (spreadsheet PAID/DEBT then PAID/N.T).
+  const orderedCharges = [...charges].sort((a, b) => {
+    const aPrev = /previous balance|arrears|o\/blc|opening balance/i.test(a.schoolAccount.name) ? 0 : 1;
+    const bPrev = /previous balance|arrears|o\/blc|opening balance/i.test(b.schoolAccount.name) ? 0 : 1;
+    if (aPrev !== bPrev) return aPrev - bPrev;
+    return a.createdAt.getTime() - b.createdAt.getTime();
+  });
+
   const allocations: { billChargeId: string; amountUgx: number }[] = [];
 
-  for (const charge of charges) {
+  for (const charge of orderedCharges) {
     if (remaining <= 0) break;
     const paidOnCharge = charge.allocations.reduce((s, a) => s + a.amountUgx, 0);
     const due = Math.max(0, charge.amountUgx - paidOnCharge);

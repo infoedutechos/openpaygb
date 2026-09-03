@@ -19,7 +19,8 @@ The master shell navigation is defined in `components/admin/MasterManagerShell.t
 | Organizations | `/admin/master/organizations` | Tenant lifecycle, favicons, school-level fee policies |
 | Programmes | `/admin/master/programmes` | Duration/semester governance across schools |
 | Tuition balance | `/admin/master/tuition-balance` | Cross-tenant outstanding and progress view |
-| Virtual cards | `/admin/master#openpay-cards-overview` | OpenPayGB card settings and card fleet visibility |
+| **OPGB console** | `/admin/master/opgb-ops` | **Multi-tab:** overview, charges, fees/white-label, cards, cashouts, withdraws/disputes |
+| Virtual cards | `/admin/master#openpay-cards-overview` | OpenPayGB card settings and card fleet visibility (also in OPGB console) |
 | Chat & notifications | `/admin/master#platform-communications` | In-app comms and support experience |
 | Knowledge base | `/admin/master#knowledge-base` | KB articles and copilot content management |
 | Hub visibility (hide) | `/admin/master#hub-visibility` | Hide Tuition / Play / Dex / Developers from public UI |
@@ -29,8 +30,12 @@ The master shell navigation is defined in `components/admin/MasterManagerShell.t
 | Backup | `/admin/master#system-backup` | Tuition backup export and recovery tooling |
 | Environment | `/admin/master#deployment-environment` | Deployment env audit, overrides, sync |
 | Mobile money | `/admin/master#mobile-money-providers` | Provider templates, webhook auth mapping |
-| Partner API | `/admin/master#partner-integrations` | API keys, outbound webhook destinations |
+| Partner API | `/admin/master#partner-integrations` | API keys, outbound webhooks, merchant cashouts (also OPGB console) |
+| Demo logins | `/admin/master#demo-logins` | Live credential directory + downloads |
 | Documentation | `/docs` | Documentation library |
+
+**Seed master login (local):** `master@odelhub.local` / `ChangeMe_Master123!` at `/admin/login?master=1`.  
+See [LOCAL_DEV_AND_CREDENTIALS.md](../platform/LOCAL_DEV_AND_CREDENTIALS.md) · [PLATFORM_UPDATE_2026-09.md](../platform/PLATFORM_UPDATE_2026-09.md).
 
 ## Login and session basics
 
@@ -106,13 +111,23 @@ Data source:
 
 - `GET /api/admin/tuition-balances` (master mode supports `organizationSlug` filter)
 
-## 5) Configure OpenPayGB virtual card platform behavior
+## 5) Configure OpenPayGB platform (cards + payment provider)
 
-1. Open `/admin/master` and scroll to virtual card settings.
-2. Toggle card enable/disable for platform.
-3. Set issue fee in TON.
-4. Review active cards and aggregate card balances in the overview section.
-5. Validate student card UX at `/student/card`.
+### Virtual cards
+
+1. Prefer **`/admin/master/opgb-ops`** → **Card settings** / **Cards registry** (or overview anchors on `/admin/master`).
+2. Toggle card enable/disable; set issue fee in TON.
+3. Validate student card UX at `/student/card`.
+
+### Merchant payment provider (third-party apps)
+
+1. Open **`/admin/master/opgb-ops`**.
+2. **Fees & white-label** — set default merchant platform fee (default 2.5%) and white-label pricing.
+3. **Charges** — monitor cross-app merchant charges.
+4. **Cashouts & partners** — approve/reject merchant MoMo cashouts; manage API keys/webhooks.
+5. **Withdraws & disputes** — custodial queues.
+
+Developer self-serve: `/developers` · Provider lobby: `/opgb` · Docs: [OPENPAYGB_PAYMENT_PROVIDER.md](../platform/OPENPAYGB_PAYMENT_PROVIDER.md).
 
 ## 6) Manage mobile money providers
 
@@ -124,19 +139,21 @@ Data source:
    - dedicated: `/api/webhooks/livepay`, `/api/webhooks/mbiyo`, `/api/webhooks/relworx`, `/api/webhooks/vixonpay`
 5. Test a small transaction and confirm status transitions.
 
-## 7) Manage Partner API integration
+## 7) Manage Partner API + merchant charges
 
-1. Open partner integration section.
-2. Create API keys with least-privilege scopes.
+1. Open **`/admin/master/opgb-ops` → Cashouts & partners** or `/admin/master#partner-integrations`.
+2. Create API keys with least-privilege scopes (`charges:*`, `payouts:*`, `payments:read`, …).
 3. Save plaintext secret immediately (shown once).
-4. Register outbound webhook endpoints with signing secret.
-5. Validate partner receives `payment.confirmed`.
+4. Register outbound webhook endpoints (`charge.confirmed`, `payment.confirmed`, …).
+5. Prefer developers registering their own apps at `/developers/register` for merchant charges (keys linked to Developer App).
 
 Partner endpoints:
 
 - `/api/partner/v1/payments`
 - `/api/partner/v1/payments/[id]`
 - `/api/partner/v1/organizations`
+- `/api/partner/v1/charges` · `/api/partner/v1/charges/[id]`
+- `/api/partner/v1/payouts`
 
 ## 8) Environment management and secret hygiene
 

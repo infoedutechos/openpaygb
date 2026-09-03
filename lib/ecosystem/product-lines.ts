@@ -71,15 +71,15 @@ export const PRODUCT_LINES: ProductLine[] = [
   {
     id: "openpaygb",
     title: "OpenPayGB",
-    subtitle: "Global payments layer",
+    subtitle: "Payment provider & global rails",
     description:
-      "Closed-loop UGX card, OPGB wallet, Dex buy/swap/P2P, MoMo and TON rails — the settlement brand under OdelPay and standalone consumer flows.",
-    audience: "Students, parents, global consumers & partners",
+      "Accept payments in your own apps via Partner API + hosted checkout. Closed-loop UGX card, OPGB wallet, Dex, MoMo and TON — for consumers and integrators.",
+    audience: "Merchants, product builders, students, parents & partners",
     surface: "user",
     primaryHref: "/opgb",
     primaryLabel: "Open OpenPayGB",
-    secondaryHref: "/student/login",
-    secondaryLabel: "Student wallet",
+    secondaryHref: "/developers",
+    secondaryLabel: "Get API keys",
     accent: "violet",
   },
   {

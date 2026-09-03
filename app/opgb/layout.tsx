@@ -1,10 +1,6 @@
-import { HubMaintenanceGate } from "@/components/hub/HubMaintenanceGate";
-import DexHubShell from "@/app/dex/DexHubShell";
+import type { ReactNode } from "react";
 
-export default function OpgbLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <HubMaintenanceGate hub="dex">
-      <DexHubShell>{children}</DexHubShell>
-    </HubMaintenanceGate>
-  );
+/** Passthrough — lobby chrome is on the page; checkout uses its own layout (no Dex gate). */
+export default function OpgbRootLayout({ children }: { children: ReactNode }) {
+  return <>{children}</>;
 }

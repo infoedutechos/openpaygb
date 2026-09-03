@@ -31,6 +31,16 @@ export default function DevelopersHubPage() {
           </p>
         </Link>
         <Link
+          href="/opgb"
+          className="rounded-2xl border border-violet-500/30 bg-violet-950/20 p-6 transition hover:border-violet-400/50 sm:col-span-2"
+        >
+          <h2 className="text-lg font-semibold text-violet-100">OpenPayGB payment provider</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Accept payments in other products — <code className="text-violet-200">POST /api/partner/v1/charges</code>,
+            hosted checkout at <code className="text-cyan-200">/opgb/checkout/…</code>, and charge webhooks.
+          </p>
+        </Link>
+        <Link
           href="/help?hub=dex"
           className="rounded-2xl border border-violet-500/25 bg-violet-950/15 p-6 sm:col-span-2"
         >

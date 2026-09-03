@@ -77,7 +77,7 @@ Also available: Dex hub link for university tenants; dashboard chat; logout.
 4. Redirect to `/admin` (or validated `next`).
 5. Verify the institution name in the shell.
 
-New workspaces need approval and admin account creation before first login — [../ORGANIZATION_REGISTRATION.md](../ORGANIZATION_REGISTRATION.md).
+New workspaces need approval and admin account creation before first login — [../ORGANIZATION_REGISTRATION.md](../school/ORGANIZATION_REGISTRATION.md).
 
 ---
 
@@ -86,7 +86,7 @@ New workspaces need approval and admin account creation before first login — [
 ### Admission / registration number format
 
 **Path:** `/admin/settings#admission-number`  
-**Full doc:** [../ADMISSION_NUMBER_FORMAT.md](../ADMISSION_NUMBER_FORMAT.md)
+**Full doc:** [../ADMISSION_NUMBER_FORMAT.md](../school/ADMISSION_NUMBER_FORMAT.md)
 
 1. Configure prefix, separator, year token (calendar / academic label / none), sequence digits, start value.
 2. Save and confirm the preview example.
@@ -96,7 +96,7 @@ New workspaces need approval and admin account creation before first login — [
 ### Receipt letterhead
 
 **Path:** `/admin/settings#receipt-letterhead`  
-**Full doc:** [../RECEIPT_BRANDING.md](../RECEIPT_BRANDING.md)
+**Full doc:** [../RECEIPT_BRANDING.md](../school/RECEIPT_BRANDING.md)
 
 1. Upload institution letterhead logo.
 2. Set phone, email, address.
@@ -265,4 +265,4 @@ Master console: `/admin/master`.
 - Knowledge base copilot on the tuition hub
 - Talk to an agent when configured
 
-Related: [USER_GUIDE_INDEX.md](./USER_GUIDE_INDEX.md) · [USER_GUIDE_STUDENT_HIGHER.md](./USER_GUIDE_STUDENT_HIGHER.md) · [../ADMISSION_NUMBER_FORMAT.md](../ADMISSION_NUMBER_FORMAT.md) · [../RECEIPT_BRANDING.md](../RECEIPT_BRANDING.md) · [../SCHOOL_ADMIN_PROGRAMMES.md](../SCHOOL_ADMIN_PROGRAMMES.md)
+Related: [USER_GUIDE_INDEX.md](./USER_GUIDE_INDEX.md) · [USER_GUIDE_STUDENT_HIGHER.md](./USER_GUIDE_STUDENT_HIGHER.md) · [../ADMISSION_NUMBER_FORMAT.md](../school/ADMISSION_NUMBER_FORMAT.md) · [../RECEIPT_BRANDING.md](../school/RECEIPT_BRANDING.md) · [../SCHOOL_ADMIN_PROGRAMMES.md](../school/SCHOOL_ADMIN_PROGRAMMES.md)

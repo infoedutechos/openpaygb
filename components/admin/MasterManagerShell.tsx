@@ -31,8 +31,8 @@ const nav: { href: string; label: string; desc?: string }[] = [
   },
   {
     href: "/admin/master/opgb-ops",
-    label: "OPGB ops",
-    desc: "P2P disputes & withdraw queue",
+    label: "OPGB console",
+    desc: "Fees, cards, charges, cashouts, ops",
   },
   {
     href: "/admin/master#project-download",

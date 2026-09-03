@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
+import { CopyTextButton } from "@/components/ui/CopyTextButton";
 
 function RegisterForm() {
   const router = useRouter();
@@ -96,9 +97,40 @@ function RegisterForm() {
 
       {credentials ? (
         <div className="mt-6 rounded-xl border border-amber-400/40 bg-amber-950/25 p-4 text-sm">
-          <p className="font-semibold text-amber-200">Save these credentials now</p>
-          <p className="mt-2 font-mono text-xs text-white break-all">client_id: {credentials.clientId}</p>
-          <p className="mt-1 font-mono text-xs text-white break-all">client_secret: {credentials.clientSecret}</p>
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <p className="font-semibold text-amber-200">Save these credentials now</p>
+            <div className="flex flex-wrap gap-2">
+              <CopyTextButton
+                text={credentials.clientId}
+                label="Copy client_id"
+              />
+              <CopyTextButton
+                text={credentials.clientSecret}
+                label="Copy client_secret"
+              />
+              <CopyTextButton
+                text={`client_id: ${credentials.clientId}\nclient_secret: ${credentials.clientSecret}`}
+                label="Copy both"
+              />
+            </div>
+          </div>
+          <div className="mt-3 space-y-2">
+            <div className="flex items-start justify-between gap-2 rounded-lg border border-white/10 bg-black/20 px-3 py-2">
+              <p className="font-mono text-xs text-white break-all">
+                <span className="text-slate-500">client_id:</span> {credentials.clientId}
+              </p>
+              <CopyTextButton text={credentials.clientId} label="Copy" className="shrink-0 rounded-md border border-white/20 px-2 py-0.5 text-[10px] text-slate-200 hover:bg-white/10" />
+            </div>
+            <div className="flex items-start justify-between gap-2 rounded-lg border border-white/10 bg-black/20 px-3 py-2">
+              <p className="font-mono text-xs text-white break-all">
+                <span className="text-slate-500">client_secret:</span> {credentials.clientSecret}
+              </p>
+              <CopyTextButton text={credentials.clientSecret} label="Copy" className="shrink-0 rounded-md border border-white/20 px-2 py-0.5 text-[10px] text-slate-200 hover:bg-white/10" />
+            </div>
+          </div>
+          <p className="mt-2 text-[11px] text-amber-200/80">
+            The client secret is shown once. Copy it before you leave this page.
+          </p>
         </div>
       ) : null}
 

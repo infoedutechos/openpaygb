@@ -7,6 +7,10 @@ export const DEVELOPER_DEFAULT_SCOPES = [
   "opgb:balance:read",
   "payments:read",
   "organizations:read",
+  "charges:create",
+  "charges:read",
+  "payouts:create",
+  "payouts:read",
 ] as const;
 
 export const PARTNER_WEBHOOK_EVENTS = [
@@ -14,6 +18,9 @@ export const PARTNER_WEBHOOK_EVENTS = [
   "payment.failed",
   "dex.intent.created",
   "dex.intent.completed",
+  "charge.created",
+  "charge.confirmed",
+  "charge.failed",
 ] as const;
 
 export type PartnerWebhookEvent = (typeof PARTNER_WEBHOOK_EVENTS)[number];
@@ -63,6 +70,22 @@ export function developerAppPublicView(app: {
   redirectUris: string[];
   brandingName: string;
   brandingLogoUrl: string;
+  brandingPrimaryColor?: string;
+  brandingAccentColor?: string;
+  whiteLabelMode?: boolean;
+  whiteLabelActivatedAt?: Date | null;
+  whiteLabelActivationPaidUgx?: number;
+  supportEmail?: string;
+  supportUrl?: string;
+  settlementBalanceUgx?: number;
+  platformFeePayer?: string;
+  merchantSurchargePercent?: number;
+  merchantSurchargeFixedUgx?: number;
+  platformFeeOverrideKind?: string;
+  platformFeeOverrideUgx?: number;
+  platformFeeOverridePercent?: number;
+  payoutPhone?: string;
+  payoutNetwork?: string;
   scopes: string[];
   enabled: boolean;
   organizationId: string | null;
@@ -77,6 +100,22 @@ export function developerAppPublicView(app: {
     redirectUris: app.redirectUris,
     brandingName: app.brandingName || app.name,
     brandingLogoUrl: app.brandingLogoUrl,
+    brandingPrimaryColor: app.brandingPrimaryColor ?? "",
+    brandingAccentColor: app.brandingAccentColor ?? "",
+    whiteLabelMode: Boolean(app.whiteLabelMode),
+    whiteLabelActivatedAt: app.whiteLabelActivatedAt?.toISOString() ?? null,
+    whiteLabelActivationPaidUgx: app.whiteLabelActivationPaidUgx ?? 0,
+    supportEmail: app.supportEmail ?? "",
+    supportUrl: app.supportUrl ?? "",
+    settlementBalanceUgx: app.settlementBalanceUgx ?? 0,
+    platformFeePayer: app.platformFeePayer ?? "pass_through",
+    merchantSurchargePercent: app.merchantSurchargePercent ?? 0,
+    merchantSurchargeFixedUgx: app.merchantSurchargeFixedUgx ?? 0,
+    platformFeeOverrideKind: app.platformFeeOverrideKind ?? "inherit",
+    platformFeeOverrideUgx: app.platformFeeOverrideUgx ?? -1,
+    platformFeeOverridePercent: app.platformFeeOverridePercent ?? 0,
+    payoutPhone: app.payoutPhone ?? "",
+    payoutNetwork: app.payoutNetwork ?? "",
     scopes: app.scopes,
     enabled: app.enabled,
     organizationId: app.organizationId,

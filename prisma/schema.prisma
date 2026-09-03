@@ -359,6 +359,36 @@ model DeveloperApp {
   redirectUris     String[]                 @default([])
   brandingName     String                   @default("")
   brandingLogoUrl  String                   @default("")
+  /** Hex primary color for hosted checkout (e.g. #7c3aed). */
+  brandingPrimaryColor String               @default("")
+  brandingAccentColor  String               @default("")
+  /** When true, checkout hides OpenPayGB marketing chrome (keeps small “Powered by” unless fully muted). */
+  whiteLabelMode   Boolean                  @default(false)
+  /** Set when white-label was first successfully activated (activation fee paid or waived). */
+  whiteLabelActivatedAt DateTime?
+  whiteLabelActivationPaidUgx Int           @default(0)
+  supportEmail     String                   @default("")
+  supportUrl       String                   @default("")
+  /**
+   * Who pays the OPGB platform fee: pass_through = added on top of order for customer;
+   * absorb = deducted from merchant net (customer pays order only).
+   */
+  platformFeePayer String                   @default("pass_through")
+  /** Optional merchant surcharge on top of order (customer-facing). */
+  merchantSurchargePercent Float            @default(0)
+  merchantSurchargeFixedUgx Int             @default(0)
+  /**
+   * Override platform fee for this app: inherit | fixed_ugx | percent | none.
+   * inherit = SiteUiSettings merchantChargePlatformFee* defaults.
+   */
+  platformFeeOverrideKind    String         @default("inherit")
+  platformFeeOverrideUgx     Int            @default(-1)
+  platformFeeOverridePercent Float          @default(0)
+  /** Settled UGX available to cash out (credited when charges confirm). */
+  settlementBalanceUgx Int                  @default(0)
+  payoutPhone          String               @default("")
+  /** MTN | AIRTEL | "" */
+  payoutNetwork        String               @default("")
   scopes           String[]                 @default(["dex:quote:read", "opgb:balance:read", "payments:read"])
   enabled          Boolean                  @default(true)
   organizationId   String?                  @db.ObjectId
@@ -367,6 +397,8 @@ model DeveloperApp {
   webhooks         PartnerWebhookEndpoint[]
   oauthCodes       OAuthAuthorizationCode[]
   dexIntents       DexPaymentIntent[]
+  merchantCharges  MerchantCharge[]
+  merchantPayouts  MerchantPayout[]
   createdAt        DateTime                 @default(now())
   updatedAt        DateTime                 @updatedAt
 
@@ -415,6 +447,77 @@ model DexPaymentIntent {
   @@index([developerAppId, status, createdAt])
   @@index([status, expiresAt])
   @@map("dex_payment_intents")
+}
+
+/**
+ * Generic merchant charge for third-party apps using OpenPayGB as a payment provider.
+ * Hosted checkout: /opgb/checkout/{id}. Not tied to tuition students/programmes.
+ */
+model MerchantCharge {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  developerAppId String       @db.ObjectId
+  developerApp   DeveloperApp @relation(fields: [developerAppId], references: [id], onDelete: Cascade)
+  apiKeyId       String?      @db.ObjectId
+  organizationId String?      @db.ObjectId
+  /** Merchant order / product amount (before fees). */
+  orderAmountUgx Int          @default(0)
+  /** Total charged to the customer (order + pass-through fees + surcharge). */
+  amountUgx      Int
+  /** OpenPayGB platform fee retained from this charge. */
+  platformFeeUgx Int          @default(0)
+  /** Optional merchant surcharge charged to customer. */
+  merchantFeeUgx Int          @default(0)
+  /** Amount credited to merchant settlement balance on confirm. */
+  merchantNetUgx Int          @default(0)
+  feeBreakdownJson String     @default("{}")
+  currency       String       @default("UGX")
+  description    String       @default("")
+  metadataJson   String       @default("{}")
+  customerEmail  String       @default("")
+  customerPhone  String       @default("")
+  customerName   String       @default("")
+  redirectUrl    String       @default("")
+  cancelUrl      String       @default("")
+  /** Partner idempotency / order id (unique per developer app when non-empty). */
+  externalRef    String       @default("")
+  /** pending | collecting | confirmed | failed | expired | cancelled */
+  status         String       @default("pending")
+  rail           String       @default("")
+  momoReference  String       @default("")
+  /** True after merchantNetUgx was added to DeveloperApp.settlementBalanceUgx. */
+  settledToMerchant Boolean   @default(false)
+  paidAt         DateTime?
+  expiresAt      DateTime
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([developerAppId, status, createdAt])
+  @@index([developerAppId, externalRef])
+  @@index([momoReference])
+  @@index([status, expiresAt])
+  @@map("merchant_charges")
+}
+
+/** Merchant cashout from settlement balance (MoMo payout queue). */
+model MerchantPayout {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  developerAppId String       @db.ObjectId
+  developerApp   DeveloperApp @relation(fields: [developerAppId], references: [id], onDelete: Cascade)
+  amountUgx      Int
+  phone          String       @default("")
+  /** MTN | AIRTEL */
+  network        String       @default("")
+  /** pending | paid | rejected | cancelled */
+  status         String       @default("pending")
+  note           String       @default("")
+  rejectionReason String      @default("")
+  paidAt         DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([developerAppId, status, createdAt])
+  @@index([status, createdAt])
+  @@map("merchant_payouts")
 }
 
 model AdminUser {
@@ -584,6 +687,11 @@ model StudentBillCharge {
   session        SchoolSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
   term           Int
   amountUgx      Int
+  /** Reduction applied to this bill line (UGX). */
+  discountUgx    Int           @default(0)
+  /** discount | scholarship | waiver | "" */
+  adjustmentKind String        @default("")
+  adjustmentNote String        @default("")
   notes          String        @default("")
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
@@ -1138,6 +1246,25 @@ model SiteUiSettings {
   checkoutPlatformFeeDefaultUgx     Int    @default(-1)
   /** When kind is **percent**, e.g. 3 = 3% of tuition subtotal. */
   checkoutPlatformFeeDefaultPercent Float  @default(0)
+  /**
+   * Default OpenPayGB fee on merchant charges (Partner API / hosted checkout).
+   * kind: fixed_ugx | percent | none
+   */
+  merchantChargePlatformFeeKind     String @default("percent")
+  merchantChargePlatformFeeUgx      Int    @default(0)
+  /** e.g. 2.5 = 2.5% of order amount */
+  merchantChargePlatformFeePercent  Float  @default(2.5)
+  /** Minimum platform fee in UGX when using percent (0 = no floor). */
+  merchantChargePlatformFeeMinUgx   Int    @default(500)
+  /**
+   * Extra OpenPayGB fee while a merchant app has whiteLabelMode enabled
+   * (on top of merchantChargePlatformFee*). kind: none | fixed_ugx | percent
+   */
+  whiteLabelFeeKind                 String @default("percent")
+  whiteLabelFeeUgx                  Int    @default(0)
+  whiteLabelFeePercent              Float  @default(1)
+  /** One-time UGX debit from settlement when white-label is first enabled (0 = free). */
+  whiteLabelActivationFeeUgx        Int    @default(0)
   /**
    * Platform-wide TON/UGX override for checkout. **none** = live market median;
    * **fixed** = `fxOverrideUgxPerTon`; **buffer_pct** = live median + `fxOverrideBufferPct` %.
