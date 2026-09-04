@@ -145,7 +145,7 @@ export async function PATCH(req: Request) {
       ...result,
       status,
       autonomousNote:
-        "Registry scan runs on load; Vercel sync runs in the background after save when VERCEL_ACCESS_TOKEN and VERCEL_PROJECT_ID are set.",
+        "Saved to Mongo overrides — payment providers use them at runtime (no redeploy). Optional Vercel backup sync runs in the background when VERCEL_ACCESS_TOKEN + VERCEL_PROJECT_ID are set.",
     });
 
   } catch (e) {

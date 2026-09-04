@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
+import { deploymentEnv, warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 import {
   isLivePayConfigured,
   isLivePayWebhookSuccess,
@@ -18,8 +19,9 @@ import {
 import { dispatchMerchantChargeWebhook } from "@/lib/merchant-charge-webhooks";
 
 export function merchantChargesSandboxEnabled(): boolean {
-  if (process.env.OPENPAYGB_CHARGES_SANDBOX === "1") return true;
-  if (process.env.OPENPAYGB_CHARGES_SANDBOX === "0") return false;
+  const flag = deploymentEnv("OPENPAYGB_CHARGES_SANDBOX");
+  if (flag === "1") return true;
+  if (flag === "0") return false;
   return process.env.NODE_ENV !== "production" && !isLivePayConfigured();
 }
 
@@ -28,6 +30,7 @@ export async function startMerchantChargeLivePayCollect(opts: {
   phone: string;
   network?: LivePayNetwork;
 }): Promise<{ message: string; reference: string; sandbox?: boolean }> {
+  await warmDeploymentEnvCache();
   const charge = await prisma.merchantCharge.findUnique({ where: { id: opts.chargeId } });
   if (!charge) throw new Error("Charge not found");
   if (charge.status === "confirmed") throw new Error("Charge already paid");

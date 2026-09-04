@@ -23,6 +23,7 @@ import {
 } from "@/lib/vixonpay/transaction-status";
 import { isVixonPayConfigured, vixonPayMerchantReference } from "@/lib/vixonpay/client";
 import { withPrismaRetry } from "@/lib/prisma-retry";
+import { warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 
 /** Public payment status for UX polling (no auth). Use payment `id` from the checkout response. */
 export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }) {
@@ -30,6 +31,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
   if (!isValidObjectId(id)) {
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
   }
+
+  await warmDeploymentEnvCache();
 
   if (paymentPublicPollRateLimited(req, id)) {
     return NextResponse.json(

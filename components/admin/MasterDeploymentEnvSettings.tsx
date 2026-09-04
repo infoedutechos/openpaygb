@@ -262,7 +262,9 @@ export function MasterDeploymentEnvSettings() {
       });
       const saved = parsed.data.saved?.length ?? 0;
       const cleared = parsed.data.cleared?.length ?? 0;
-      setSuccess(`Saved ${group.title}: ${saved} updated${cleared ? `, ${cleared} cleared` : ""}.`);
+      setSuccess(
+        `Saved ${group.title}: ${saved} updated${cleared ? `, ${cleared} cleared` : ""}. Live within ~30s — no redeploy.`,
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Save failed");
     } finally {
@@ -367,14 +369,14 @@ export function MasterDeploymentEnvSettings() {
           <h2 className="text-sm font-semibold text-indigo-100">Deployment environment</h2>
           <p className="mt-2 max-w-3xl text-xs leading-relaxed text-slate-400">
             Save platform credentials here for <strong className="font-medium text-slate-300">local dev and Vercel production</strong> — values are{" "}
-            <strong className="font-medium text-slate-300">encrypted in MongoDB</strong> and override server / Vercel env at runtime on every
-            deployment. Dashboard values take precedence over <code className="rounded bg-black/35 px-1">.env.local</code>. Leave a field blank and save to clear a dashboard
+            <strong className="font-medium text-slate-300">encrypted in MongoDB</strong> and override server / Vercel env at{" "}
+            <strong className="font-medium text-emerald-200/90">runtime without redeploy</strong> (payment rails refresh within ~30s).
+            Dashboard values take precedence over <code className="rounded bg-black/35 px-1">.env.local</code>. Leave a field blank and save to clear a dashboard
             override. Secrets are never shown in full after save. Use <strong className="text-slate-300">Add custom variable</strong>{" "}
-            below to register new env names (e.g. integration keys not yet in the built-in list). The registry{" "}
-            <strong className="font-medium text-slate-300">auto-updates from the codebase</strong> on each load; set{" "}
-            <code className="rounded bg-black/35 px-1">VERCEL_ACCESS_TOKEN</code> +{" "}
-            <code className="rounded bg-black/35 px-1">VERCEL_PROJECT_ID</code> to{" "}
-            <strong className="font-medium text-slate-300">push values to Vercel automatically</strong>.
+            below to register new env names. <strong className="font-medium text-slate-300">Sync to Vercel</strong> is an optional backup for
+            process.env / tooling — not required for LivePay, Relworx, VixonPay, Mbiyo, or MoMo to work after a MAC save.
+            Set <code className="rounded bg-black/35 px-1">VERCEL_ACCESS_TOKEN</code> +{" "}
+            <code className="rounded bg-black/35 px-1">VERCEL_PROJECT_ID</code> only if you want automatic backup sync.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

@@ -3,7 +3,7 @@
  * Auto-live when LivePay/Relworx collect/send credentials exist; set OPENPAYGB_CASHOUT_LIVE=0 to queue-only.
  */
 
-import { deploymentEnv } from "@/lib/deployment-env-resolve";
+import { deploymentEnv, warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 import { isLivePayConfigured, livePaySendMoney, livePayUserMessage } from "@/lib/livepay/client";
 import { isRelworxConfigured, relworxSendPayment, relworxUserMessage } from "@/lib/relworx/client";
 
@@ -37,6 +37,7 @@ export function resolveCashoutRail(): "livepay" | "relworx" | null {
 }
 
 export async function disburseToMomo(input: MomoDisburseInput): Promise<MomoDisburseResult> {
+  await warmDeploymentEnvCache();
   if (!momoCashoutLiveEnabled()) {
     return {
       ok: false,

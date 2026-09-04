@@ -41,16 +41,25 @@ export async function listDeploymentEnvOverrideNames(): Promise<DeploymentEnvOve
 }
 
 export async function loadDeploymentEnvOverrideMap(): Promise<Map<string, string>> {
-  const rows = await withPrismaRetry(() => deploymentEnvOverrideClient().findMany());
-  const map = new Map<string, string>();
-  for (const row of rows) {
-    try {
-      map.set(row.name, decryptDeploymentEnvValue(row.valueEnc));
-    } catch (e) {
-      console.error(`[deployment-env] Failed to decrypt ${row.name}:`, e);
+  try {
+    const rows = await withPrismaRetry(() => deploymentEnvOverrideClient().findMany());
+    const map = new Map<string, string>();
+    for (const row of rows) {
+      try {
+        map.set(row.name, decryptDeploymentEnvValue(row.valueEnc));
+      } catch (e) {
+        console.error(`[deployment-env] Failed to decrypt ${row.name}:`, e);
+      }
     }
+    return map;
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (msg.includes("DeploymentEnvOverride") || msg.includes("Prisma")) {
+      console.warn("[deployment-env] override load skipped — using process.env only", msg);
+      return new Map();
+    }
+    throw e;
   }
-  return map;
 }
 
 export type PatchDeploymentEnvInput = {

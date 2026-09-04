@@ -297,10 +297,10 @@ export default function MasterManagerOverviewPage() {
           OpenPayGB Cards
         </Link>
         <Link
-          href="/admin/master#mobile-money-providers"
+          href="/admin/master#ug-momo-credentials"
           className="rounded-xl border border-teal-500/35 bg-teal-950/25 px-5 py-2.5 text-sm font-medium text-teal-100 hover:border-teal-400/55"
         >
-          Mobile money
+          Payment provider keys
         </Link>
         <Link
           href="/admin/master#partner-integrations"

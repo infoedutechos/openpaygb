@@ -6,16 +6,38 @@ import { PasswordRevealInput } from "@/components/PasswordRevealInput";
 import { fetchJson } from "@/utils/fetch-json";
 import { readJsonResponse } from "@/utils/read-json-response";
 
+type RailId = "livepay" | "relworx" | "vixonpay" | "mbiyo" | "momo";
+
 type RailStatus = {
-  id: "livepay" | "relworx" | "vixonpay";
+  id: RailId;
   title: string;
   configured: boolean;
   vars: { name: string; label: string; sensitive: boolean; set: boolean; maskedPreview: string | null }[];
 };
 
+const RAIL_ORDER: RailId[] = ["livepay", "relworx", "vixonpay", "mbiyo", "momo"];
+
+function isRailConfigured(id: RailId, vars: RailStatus["vars"]): boolean {
+  const set = (name: string) => Boolean(vars.find((v) => v.name === name)?.set);
+  switch (id) {
+    case "livepay":
+      return set("LIVEPAY_API_KEY") && set("LIVEPAY_ACCOUNT_NUMBER");
+    case "relworx":
+      return set("RELWORX_API_KEY") && set("RELWORX_ACCOUNT_NO");
+    case "vixonpay":
+      return set("VIXONPAY_API_KEY");
+    case "mbiyo":
+      return set("MBIYO_SECRET_KEY");
+    case "momo":
+      return set("MOMO_WEBHOOK_SECRET") || set("MOMO_SUBSCRIPTION_KEY") || set("MOMO_COLLECTION_URL");
+    default:
+      return false;
+  }
+}
+
 /**
- * Master Admin: set LivePay / Relworx / VixonPay collect keys.
- * Any one configured rail makes OpenPayGB card MoMo (and UG checkout) fully live.
+ * Master Admin: configure all payment provider credentials in Mongo (encrypted).
+ * Takes effect at runtime — no Vercel redeploy required for server-side rails.
  */
 export function MasterUgMomoCredentials() {
   const [rails, setRails] = useState<RailStatus[]>([]);
@@ -29,7 +51,7 @@ export function MasterUgMomoCredentials() {
     setLoading(true);
     setError(null);
     try {
-      const r = await fetchJson("/api/master/deployment-env", { credentials: "include" });
+      const r = await fetchJson("/api/master/deployment-env?skipAutonomous=1", { credentials: "include" });
       const parsed = await readJsonResponse<{
         groups: {
           id: string;
@@ -45,44 +67,27 @@ export function MasterUgMomoCredentials() {
         }[];
       }>(r);
       if (!parsed.ok) throw new Error(parsed.error);
-      const wanted = ["livepay", "relworx", "vixonpay"] as const;
       const next: RailStatus[] = [];
-      for (const id of wanted) {
+      for (const id of RAIL_ORDER) {
         const g = parsed.data.groups.find((x) => x.id === id);
         if (!g) continue;
+        const vars = g.vars.map((v) => ({
+          name: v.name,
+          label: v.label,
+          sensitive: v.sensitive,
+          set: v.set,
+          maskedPreview: v.maskedPreview,
+        }));
         next.push({
           id,
           title: g.title,
-          configured:
-            id === "livepay"
-              ? Boolean(
-                  g.vars.find((v) => v.name === "LIVEPAY_API_KEY")?.set &&
-                    g.vars.find((v) => v.name === "LIVEPAY_ACCOUNT_NUMBER")?.set,
-                )
-              : id === "relworx"
-                ? Boolean(
-                    g.vars.find((v) => v.name === "RELWORX_API_KEY")?.set &&
-                      g.vars.find((v) => v.name === "RELWORX_ACCOUNT_NO")?.set,
-                  )
-                : Boolean(g.vars.find((v) => v.name === "VIXONPAY_API_KEY")?.set),
-          vars: g.vars
-            .filter((v) =>
-              /API_KEY|ACCOUNT_NUMBER|ACCOUNT_NO|KEY_ID|WEBHOOK_SECRET|WEBHOOK_KEY|RELWORX_ENABLED|RELWORX_CURRENCY/i.test(
-                v.name,
-              ),
-            )
-            .map((v) => ({
-              name: v.name,
-              label: v.label,
-              sensitive: v.sensitive,
-              set: v.set,
-              maskedPreview: v.maskedPreview,
-            })),
+          configured: isRailConfigured(id, vars),
+          vars,
         });
       }
       setRails(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not load MoMo credentials");
+      setError(e instanceof Error ? e.message : "Could not load payment provider credentials");
     } finally {
       setLoading(false);
     }
@@ -124,7 +129,7 @@ export function MasterUgMomoCredentials() {
         return next;
       });
       setSuccess(
-        `${rail.title} saved. Any one configured UG MoMo rail makes OpenPayGB card activate/fund fully live.`,
+        `${rail.title} saved to Master overrides — live within ~30s on all servers (no redeploy). Optional Vercel sync is backup only.`,
       );
       await load();
     } catch (e) {
@@ -134,32 +139,36 @@ export function MasterUgMomoCredentials() {
     }
   }
 
-  const anyLive = rails.some((r) => r.configured);
+  const anyLive = rails.some((r) => r.configured && r.id !== "momo");
 
   return (
     <section
       id="ug-momo-credentials"
       className="rounded-xl border border-emerald-500/30 bg-emerald-950/15 p-5 shadow-[0_0_0_1px_rgba(16,185,129,0.06)]"
     >
-      <h2 className="text-sm font-semibold text-emerald-100">Uganda MoMo API keys (MTN / Airtel)</h2>
+      <h2 className="text-sm font-semibold text-emerald-100">Payment provider credentials (MAC live)</h2>
       <p className="mt-2 max-w-3xl text-xs leading-relaxed text-slate-400">
-        Set <strong className="text-slate-300">any one</strong> of LivePay, Relworx, or VixonPay collect credentials
-        here (or under{" "}
+        Configure <strong className="text-slate-300">LivePay, Relworx, VixonPay, Mbiyo, and MoMo bridge</strong> fully
+        here. Values are encrypted in MongoDB and override Vercel /{" "}
+        <code className="text-slate-500">.env</code> at <strong className="text-slate-300">runtime</strong> —{" "}
+        <strong className="text-emerald-200/90">no redeploy required</strong>. Also editable under{" "}
         <Link href="#deployment-environment" className="text-cyan-300 underline hover:text-cyan-200">
           Deployment environment
         </Link>
-        ). OpenPayGB platform card activation/funding and UG checkout then use real USSD prompts. Values are encrypted
-        in MongoDB and override <code className="text-slate-500">.env.local</code>.
+        . Enable/disable rails for checkout in{" "}
+        <Link href="#payment-providers" className="text-cyan-300 underline hover:text-cyan-200">
+          Payment providers
+        </Link>
+        .
       </p>
 
       {anyLive ? (
         <p className="mt-3 rounded-lg border border-emerald-500/30 bg-emerald-950/40 px-3 py-2 text-xs text-emerald-100">
-          Live MoMo ready — at least one UG rail is configured.
+          At least one collect rail is configured — UG checkout / OPGB card MoMo can go live (subject to policy toggles).
         </p>
       ) : (
         <p className="mt-3 rounded-lg border border-amber-500/30 bg-amber-950/30 px-3 py-2 text-xs text-amber-100">
-          No UG collect API keys yet. Card MoMo uses sandbox in development until you save LivePay, Relworx, or
-          VixonPay below.
+          No collect API keys yet. Save LivePay, Relworx, VixonPay, or Mbiyo below to go live without redeploying.
         </p>
       )}
 

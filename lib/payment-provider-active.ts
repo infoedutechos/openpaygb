@@ -1,5 +1,6 @@
 import "server-only";
 
+import { warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 import { isMbiyoConfigured } from "@/lib/mbiyo/config";
 import { isLivePayConfigured } from "@/lib/livepay/client";
 import { isRelworxConfigured } from "@/lib/relworx/client";
@@ -10,33 +11,48 @@ import {
   isPaymentProviderEnabledByMaster,
 } from "@/lib/payment-provider-policy";
 
+async function withWarm<T>(fn: () => T | Promise<T>): Promise<T> {
+  await warmDeploymentEnvCache();
+  return fn();
+}
+
 export async function isLivePayActiveForCheckout(): Promise<boolean> {
-  const policy = await getPaymentProviderPolicy();
-  return isLivePayConfigured() && isPaymentProviderEnabledByMaster("livepay", policy);
+  return withWarm(async () => {
+    const policy = await getPaymentProviderPolicy();
+    return isLivePayConfigured() && isPaymentProviderEnabledByMaster("livepay", policy);
+  });
 }
 
 export async function isRelworxActiveForCheckout(): Promise<boolean> {
-  const policy = await getPaymentProviderPolicy();
-  return isRelworxConfigured() && isPaymentProviderEnabledByMaster("relworx", policy);
+  return withWarm(async () => {
+    const policy = await getPaymentProviderPolicy();
+    return isRelworxConfigured() && isPaymentProviderEnabledByMaster("relworx", policy);
+  });
 }
 
 export async function isVixonPayActiveForCheckout(): Promise<boolean> {
-  const policy = await getPaymentProviderPolicy();
-  return isVixonPayConfigured() && isPaymentProviderEnabledByMaster("vixonpay", policy);
+  return withWarm(async () => {
+    const policy = await getPaymentProviderPolicy();
+    return isVixonPayConfigured() && isPaymentProviderEnabledByMaster("vixonpay", policy);
+  });
 }
 
 export async function isMbiyoActiveForCheckout(): Promise<boolean> {
-  const policy = await getPaymentProviderPolicy();
-  return isMbiyoConfigured() && isPaymentProviderEnabledByMaster("mbiyo", policy);
+  return withWarm(async () => {
+    const policy = await getPaymentProviderPolicy();
+    return isMbiyoConfigured() && isPaymentProviderEnabledByMaster("mbiyo", policy);
+  });
 }
 
 export async function isTonActiveForCheckout(): Promise<boolean> {
-  const { deploymentEnv } = await import("@/lib/deployment-env-resolve");
-  const policy = await getPaymentProviderPolicy();
-  return (
-    Boolean(deploymentEnv("ODELHUB_TON_WALLET_ADDRESS")) &&
-    isPaymentProviderEnabledByMaster("ton", policy)
-  );
+  return withWarm(async () => {
+    const { deploymentEnv } = await import("@/lib/deployment-env-resolve");
+    const policy = await getPaymentProviderPolicy();
+    return (
+      Boolean(deploymentEnv("ODELHUB_TON_WALLET_ADDRESS")) &&
+      isPaymentProviderEnabledByMaster("ton", policy)
+    );
+  });
 }
 
 export async function isOpenPayCardActiveForCheckout(): Promise<boolean> {

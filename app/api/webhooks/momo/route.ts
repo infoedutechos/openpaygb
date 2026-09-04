@@ -8,6 +8,7 @@ import { extractMomoAmountUgx, extractMomoReference, isMomoSuccessStatus } from 
 import { webhookAmountMatchesPayment } from "@/lib/webhook-payment-confirm";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
 import { requireConfiguredSecret } from "@/lib/production-secrets";
+import { deploymentEnv, warmDeploymentEnvCache } from "@/lib/deployment-env-resolve";
 
 const HeadersSchema = z.object({
   "x-momo-webhook-secret": z.string().optional(),
@@ -20,11 +21,12 @@ function secretsEqual(a: string, b: string): boolean {
   return timingSafeEqual(ab, bb);
 }
 
-function authorized(req: Request): { ok: true } | { ok: false; response: NextResponse } {
-  const secretCheck = requireConfiguredSecret("MOMO_WEBHOOK_SECRET", process.env.MOMO_WEBHOOK_SECRET);
+async function authorized(req: Request): Promise<{ ok: true } | { ok: false; response: NextResponse }> {
+  await warmDeploymentEnvCache();
+  const secret = deploymentEnv("MOMO_WEBHOOK_SECRET");
+  const secretCheck = requireConfiguredSecret("MOMO_WEBHOOK_SECRET", secret);
   if (!secretCheck.ok) return secretCheck;
 
-  const secret = process.env.MOMO_WEBHOOK_SECRET?.trim();
   if (!secret) return { ok: true };
 
   const headers = HeadersSchema.safeParse({
@@ -48,7 +50,7 @@ export function GET() {
  * and queues the UGX→TON bridge hook for `momo_bridge` rails.
  */
 export async function POST(req: Request) {
-  const auth = authorized(req);
+  const auth = await authorized(req);
   if (!auth.ok) return auth.response;
   if (rateLimitHit(`momo-hook:${clientIp(req)}`, 120, 60_000)) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });

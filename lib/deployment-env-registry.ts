@@ -224,6 +224,13 @@ export const DEPLOYMENT_ENV_GROUPS: EnvGroupDefinition[] = [
         requirement: "production",
       },
       {
+        name: "RELWORX_WEBHOOK_SECRET",
+        label: "Webhook secret (alias)",
+        description: "Optional alias accepted alongside RELWORX_WEBHOOK_KEY.",
+        sensitive: true,
+        requirement: "optional",
+      },
+      {
         name: "RELWORX_WEBHOOK_URL",
         label: "Webhook URL override",
         description: "Full webhook URL if dashboard differs from NEXT_PUBLIC_APP_URL.",
@@ -250,7 +257,7 @@ export const DEPLOYMENT_ENV_GROUPS: EnvGroupDefinition[] = [
     id: "mbiyo",
     title: "Mbiyo (OpenPayGB)",
     description: "Multi-country MoMo via MbiyoPay merchant API.",
-    masterUiAnchor: "mobile-money-providers",
+    masterUiAnchor: "ug-momo-credentials",
     docsPath: "docs/MBIYO_WEBHOOK_SETUP.md",
     vars: [
       {
@@ -287,7 +294,7 @@ export const DEPLOYMENT_ENV_GROUPS: EnvGroupDefinition[] = [
     id: "momo",
     title: "MoMo bridge",
     description: "Legacy MTN/Airtel bridge webhook and collection URL.",
-    masterUiAnchor: "mobile-money-providers",
+    masterUiAnchor: "ug-momo-credentials",
     vars: [
       {
         name: "MOMO_WEBHOOK_SECRET",
@@ -612,6 +619,13 @@ export const DEPLOYMENT_ENV_GROUPS: EnvGroupDefinition[] = [
         name: "OPENPAYGB_CASHOUT_RAIL",
         label: "Preferred cashout rail",
         description: "livepay | relworx (default: first configured).",
+        sensitive: false,
+        requirement: "optional",
+      },
+      {
+        name: "OPENPAYGB_CHARGES_SANDBOX",
+        label: "Merchant charges sandbox",
+        description: "1 = force sandbox merchant MoMo charges; 0 = force live; omit = auto.",
         sensitive: false,
         requirement: "optional",
       },
