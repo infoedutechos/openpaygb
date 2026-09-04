@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { getStudentFromCookies } from "@/lib/student-auth";
 import { listOpenPayCardActivity } from "@/lib/openpay-card-activity";
 import { getStudentOpenPayCard } from "@/lib/openpay-card";
