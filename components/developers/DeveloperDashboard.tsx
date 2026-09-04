@@ -276,6 +276,11 @@ export function DeveloperDashboard() {
     setNewKeyPlain(typeof data.apiKey === "string" ? data.apiKey : null);
     setMessage("API key created — copy it now.");
     void load();
+    if (typeof window !== "undefined") {
+      window.requestAnimationFrame(() => {
+        document.getElementById("api-keys")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
   }
 
   async function createWebhook() {
@@ -511,6 +516,12 @@ export function DeveloperDashboard() {
           </a>
           <a href="#transactions" className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-200 hover:border-emerald-400/40">
             Transactions
+          </a>
+          <a href="#api-keys" className="rounded-lg border border-emerald-500/40 bg-emerald-950/40 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:border-emerald-400/60">
+            Partner API keys
+          </a>
+          <a href="#webhooks" className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-200 hover:border-emerald-400/40">
+            Webhooks
           </a>
           <Link href="/opgb#integrate" className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-200 hover:border-emerald-400/40">
             Integration guide
