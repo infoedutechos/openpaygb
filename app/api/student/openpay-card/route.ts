@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getStudentFromCookies } from "@/lib/student-auth";
 import { prisma } from "@/lib/prisma";
 import { getOpenPayCardPlatformSettings } from "@/lib/openpay-card-settings";
-import { getStudentOpenPayCard } from "@/lib/openpay-card";
+import { getStudentOpenPayCard, serializeOpenPayCardPublic } from "@/lib/openpay-card";
 import { openPayCardIssueFeeUgx } from "@/lib/openpay-card-issue-fee";
 import { apiErrorResponse } from "@/lib/api-error";
 
@@ -18,7 +18,7 @@ export async function GET() {
       getStudentOpenPayCard(session.sub),
       prisma.student.findUnique({
         where: { id: session.sub },
-        select: { organizationId: true },
+        select: { organizationId: true, name: true, email: true },
       }),
     ]);
 
@@ -37,18 +37,10 @@ export async function GET() {
         ...settings,
         issueFeeUgx: issueFee?.amountUgx ?? null,
       },
-      card: card
-        ? {
-            id: card.id,
-            status: card.status,
-            balanceUgx: card.balanceUgx,
-            maskedPan: card.maskedPan,
-            issuedAt: card.issuedAt?.toISOString() ?? null,
-            issueFeeTon: card.issueFeeTon,
-          }
-        : null,
+      card: card ? serializeOpenPayCardPublic(card, student) : null,
       hasCard: Boolean(card),
-      canPayTuition: Boolean(card?.status === "active" && card.balanceUgx > 0),
+      canPayTuition: Boolean(card?.status === "active" && !card.blocked && card.balanceUgx > 0),
+      holder: { name: student.name, email: student.email },
     });
   } catch (e) {
     return apiErrorResponse(e, { route: "GET /api/student/openpay-card" });

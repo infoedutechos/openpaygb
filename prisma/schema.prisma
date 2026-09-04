@@ -975,6 +975,8 @@ model OpenPayCard {
   organizationId   String    @db.ObjectId
   /** pending_issue | active */
   status           String    @default("pending_issue")
+  /** When true, card cannot spend / top-up until unblocked. */
+  blocked          Boolean   @default(false)
   balanceUgx       Int       @default(0)
   maskedPan        String    @default("")
   issueFeeTon      Float?

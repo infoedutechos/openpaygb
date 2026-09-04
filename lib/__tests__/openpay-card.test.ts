@@ -22,7 +22,7 @@ describe("openpay-card memos", () => {
 });
 
 describe("maskedPanForStudent", () => {
-  it("uses last hex chars of student id", () => {
-    expect(maskedPanForStudent("507f1f77bcf86cd799439011")).toMatch(/^OPGB •••• [0-9A-F]{4}$/);
+  it("uses hex chars of student id in closed-loop display PAN", () => {
+    expect(maskedPanForStudent("507f1f77bcf86cd799439011")).toMatch(/^6271 [0-9A-F]{2}XX XXXX [0-9A-F]{4}$/);
   });
 });

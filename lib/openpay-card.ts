@@ -23,8 +23,60 @@ export function openPayCardFundMemo(cardId: string, fundId: string): string {
 }
 
 export function maskedPanForStudent(studentId: string): string {
-  const tail = studentId.replace(/[^a-f0-9]/gi, "").slice(-4).toUpperCase() || "0000";
-  return `OPGB •••• ${tail}`;
+  const hex = studentId.replace(/[^a-f0-9]/gi, "").toUpperCase();
+  const mid = (hex.slice(0, 2) || "04").padEnd(2, "0");
+  const tail = (hex.slice(-4) || "0000").padStart(4, "0");
+  /** Closed-loop display PAN — not a network BIN; OPGB house range look. */
+  return `6271 ${mid}XX XXXX ${tail}`;
+}
+
+export function openPayCardValidThru(issuedAt: Date | null | undefined): string {
+  if (!issuedAt) return "**/**";
+  const d = new Date(issuedAt);
+  d.setFullYear(d.getFullYear() + 3);
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yy = String(d.getFullYear()).slice(-2);
+  return `${mm}/${yy}`;
+}
+
+export function maskHolderName(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "OPGB HOLDER";
+  return parts
+    .map((p) => {
+      if (p.length <= 2) return `${p[0]}*`;
+      return `${p.slice(0, 2)}*${"*".repeat(Math.min(5, p.length - 2))}`;
+    })
+    .join(" ")
+    .toUpperCase();
+}
+
+export function serializeOpenPayCardPublic(
+  card: {
+    id: string;
+    status: string;
+    balanceUgx: number;
+    maskedPan: string;
+    issuedAt: Date | null;
+    issueFeeTon: number | null;
+    blocked?: boolean;
+  },
+  holder?: { name?: string; email?: string } | null,
+) {
+  const name = holder?.name?.trim() || holder?.email?.split("@")[0] || "Card holder";
+  return {
+    id: card.id,
+    status: card.status,
+    blocked: Boolean(card.blocked),
+    balanceUgx: card.balanceUgx,
+    maskedPan: card.maskedPan || maskedPanForStudent(card.id),
+    issuedAt: card.issuedAt?.toISOString() ?? null,
+    issueFeeTon: card.issueFeeTon,
+    validThru: openPayCardValidThru(card.issuedAt),
+    holderName: name,
+    holderNameMasked: maskHolderName(name),
+    networkLabel: "OPGB",
+  };
 }
 
 export async function getStudentOpenPayCard(studentId: string) {
@@ -193,6 +245,9 @@ export async function payTuitionFromOpenPayCard(opts: {
   const card = await getStudentOpenPayCard(opts.studentId);
   if (!card || card.status !== "active") {
     throw new Error("Activate your OpenPayGB card before paying with it.");
+  }
+  if (card.blocked) {
+    throw new Error("Your OpenPayGB card is blocked. Unblock it in card settings first.");
   }
 
   const pending = await createPendingPayment({

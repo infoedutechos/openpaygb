@@ -14,10 +14,9 @@ function AdminMyOpenPayCardInner() {
       <PageBackLink href={hrefWithOrgSlug("/admin")} label="Admin home" className="hidden md:inline-flex" />
       <header>
         <p className="text-xs uppercase tracking-wider text-violet-400/80">{OPEN_PAY_BRAND}</p>
-        <h1 className="text-2xl font-semibold text-white">My OpenPayGB Card</h1>
+        <h1 className="text-2xl font-semibold text-white">OpenPayGB Global Pay Card</h1>
         <p className="mt-2 text-sm text-slate-400">
-          Reserve, activate with Mobile Money or TON, and fund your personal card for this workspace. Student cards for
-          your school are listed under OpenPayGB Cards.
+          Virtual OPGB card — top up with MoMo or TON, send to Mobile Money, block, and track activity.
         </p>
       </header>
       <OpenPayCardPanel

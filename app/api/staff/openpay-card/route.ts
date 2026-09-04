@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireStaffOpenPayHolder } from "@/lib/staff-openpay-api";
-import { getStudentOpenPayCard } from "@/lib/openpay-card";
+import { getStudentOpenPayCard, serializeOpenPayCardPublic } from "@/lib/openpay-card";
 import { getOpenPayCardPlatformSettings } from "@/lib/openpay-card-settings";
 import { openPayCardIssueFeeUgx } from "@/lib/openpay-card-issue-fee";
 import { apiErrorResponse } from "@/lib/api-error";
@@ -37,16 +37,7 @@ export async function GET() {
         ...settings,
         issueFeeUgx: issueFee?.amountUgx ?? null,
       },
-      card: card
-        ? {
-            id: card.id,
-            status: card.status,
-            balanceUgx: card.balanceUgx,
-            maskedPan: card.maskedPan,
-            issuedAt: card.issuedAt?.toISOString() ?? null,
-            issueFeeTon: card.issueFeeTon,
-          }
-        : null,
+      card: card ? serializeOpenPayCardPublic(card, holder) : null,
       hasCard: Boolean(card),
       canPayTuition: false,
       holderReady: true,
