@@ -67,7 +67,7 @@ export function MasterUgMomoCredentials() {
                 : Boolean(g.vars.find((v) => v.name === "VIXONPAY_API_KEY")?.set),
           vars: g.vars
             .filter((v) =>
-              /API_KEY|ACCOUNT_NUMBER|ACCOUNT_NO|WEBHOOK_SECRET|WEBHOOK_KEY|RELWORX_ENABLED|RELWORX_CURRENCY/i.test(
+              /API_KEY|ACCOUNT_NUMBER|ACCOUNT_NO|KEY_ID|WEBHOOK_SECRET|WEBHOOK_KEY|RELWORX_ENABLED|RELWORX_CURRENCY/i.test(
                 v.name,
               ),
             )

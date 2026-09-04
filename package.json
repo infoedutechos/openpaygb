@@ -71,6 +71,7 @@
     "telegram:smoke-cron": "node --require ./scripts/stub-server-only.cjs ./node_modules/tsx/dist/cli.mjs scripts/smoke-telegram-cron.ts",
     "deployment:provision-sync": "node scripts/provision-and-sync-deployment-env.cjs",
     "deployment:sync-vercel": "node scripts/provision-and-sync-deployment-env.cjs --sync-only",
+    "deployment:set-livepay": "node scripts/set-livepay-credentials.cjs",
     "webhooks:alignment-check": "node scripts/print-webhook-alignment.cjs",
     "telegram:alignment-check": "node scripts/print-telegram-alignment.cjs",
     "telegram:sync-deployment": "node scripts/sync-telegram-deployment-env.cjs",

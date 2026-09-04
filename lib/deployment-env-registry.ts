@@ -122,14 +122,21 @@ export const DEPLOYMENT_ENV_GROUPS: EnvGroupDefinition[] = [
       {
         name: "LIVEPAY_API_KEY",
         label: "API key",
-        description: "Bearer token for collect-money and status APIs.",
+        description: "Bearer token for collect-money and status APIs (full key: keyId.secret).",
         sensitive: true,
         requirement: "optional",
       },
       {
         name: "LIVEPAY_ACCOUNT_NUMBER",
         label: "Account number",
-        description: "Business account sent as accountNumber on collect.",
+        description: "Business account sent as accountNumber on collect (e.g. LP…).",
+        sensitive: false,
+        requirement: "optional",
+      },
+      {
+        name: "LIVEPAY_KEY_ID",
+        label: "Key ID (dashboard)",
+        description: "LivePay dashboard Key ID / prefix — informational only; API uses LIVEPAY_API_KEY.",
         sensitive: false,
         requirement: "optional",
       },
