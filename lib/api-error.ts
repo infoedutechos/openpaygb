@@ -16,14 +16,14 @@ const SAFE_STATUS_RULES: Array<{ test: (m: string) => boolean; status: number }>
   { test: (m) => /already in use|duplicate/i.test(m), status: 409 },
   { test: (m) => /not found|unknown organization|unknown payment|student not found/i.test(m), status: 404 },
   { test: (m) => /not active|not available|pending master approval/i.test(m), status: 404 },
-  { test: (m) => /forbidden|outside your organization|not authorized|does not match/i.test(m), status: 403 },
   {
     test: (m) =>
       /IP\s+[\d.]+\s+not allowed|not on your allowlist|Invalid API key|Account number does not match|API access is currently disabled|pending approval|account suspended|account deactivated/i.test(
         m,
       ),
-    status: 403,
+    status: 502,
   },
+  { test: (m) => /forbidden|outside your organization|not authorized|does not match/i.test(m), status: 403 },
   { test: (m) => /too many requests|rate limit/i.test(m), status: 429 },
   {
     test: (m) =>

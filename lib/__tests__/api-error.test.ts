@@ -40,9 +40,9 @@ describe("api-error", () => {
     expect(r.shouldLog).toBe(true);
   });
 
-  it("maps LivePay IP allowlist to 403", () => {
+  it("maps LivePay IP allowlist to 502", () => {
     const r = resolveApiError(new Error("IP 41.75.191.198 not allowed"), { route: "test" });
-    expect(r.status).toBe(403);
+    expect(r.status).toBe(502);
   });
 
   it("maps transient Mongo to 503", () => {
