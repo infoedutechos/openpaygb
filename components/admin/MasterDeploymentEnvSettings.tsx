@@ -528,7 +528,8 @@ export function MasterDeploymentEnvSettings() {
               return (
                 <div
                   key={group.id}
-                  className="overflow-hidden rounded-lg border border-indigo-500/15 bg-black/20"
+                  id={`deployment-env-${group.id}`}
+                  className="overflow-hidden rounded-lg border border-indigo-500/15 bg-black/20 scroll-mt-24"
                 >
                   <button
                     type="button"

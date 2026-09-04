@@ -10,6 +10,8 @@ import { MasterProjectDownloadPanel } from "@/components/admin/MasterProjectDown
 import { MasterPlatformSocialSettings } from "@/components/admin/MasterPlatformSocialSettings";
 import { MasterPartnerIntegrations } from "@/components/admin/MasterPartnerIntegrations";
 import { MasterMobileMoneyProviders } from "@/components/admin/MasterMobileMoneyProviders";
+import { MasterUgMomoCredentials } from "@/components/admin/MasterUgMomoCredentials";
+import { MasterCardNetworkPanel } from "@/components/admin/MasterCardNetworkPanel";
 import { MasterSchoolWorkspaceRegistrationSettings } from "@/components/admin/MasterSchoolWorkspaceRegistrationSettings";
 import { MasterPlatformCheckoutFeeSettings } from "@/components/admin/MasterPlatformCheckoutFeeSettings";
 import { MasterOpenPayCardSettings } from "@/components/admin/MasterOpenPayCardSettings";
@@ -348,6 +350,10 @@ export default function MasterManagerOverviewPage() {
       <MasterSchoolWorkspaceRegistrationSettings />
 
       <MasterFxSettings />
+
+      <MasterUgMomoCredentials />
+
+      <MasterCardNetworkPanel />
 
       <MasterPaymentProviders />
 

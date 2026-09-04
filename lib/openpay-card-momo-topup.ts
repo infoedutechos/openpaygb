@@ -25,42 +25,96 @@ import {
 } from "@/lib/vixonpay/client";
 import { finalizeOpenPayCardMomoTopup } from "@/lib/openpay-card";
 import { webhookAmountMatchesPayment } from "@/lib/webhook-payment-confirm";
+import {
+  openPayCardMomoSandboxEnabled,
+  resolveOpenPayCardMomoRail,
+  type OpenPayCardMomoRail,
+} from "@/lib/openpay-card-momo-ready";
 
-export type CardMomoRail = "livepay" | "relworx" | "vixonpay";
+export type CardMomoRail = OpenPayCardMomoRail;
 export type CardMomoPurpose = "fund" | "issue";
+
+function isLiveRailReady(rail: OpenPayCardMomoRail): boolean {
+  if (rail === "sandbox") return false;
+  if (rail === "livepay") return isLivePayConfigured();
+  if (rail === "relworx") return isRelworxConfigured();
+  return isVixonPayConfigured();
+}
 
 export async function startOpenPayCardMomoTopup(opts: {
   cardId: string;
   amountUgx: number;
-  rail: CardMomoRail;
+  rail: CardMomoRail | string;
   phone: string;
   network?: LivePayNetwork;
   customerEmail?: string;
   customerName?: string;
   purpose?: CardMomoPurpose;
-}): Promise<{ topupId: string; message: string; reference: string }> {
+}): Promise<{
+  topupId: string;
+  message: string;
+  reference: string;
+  rail: CardMomoRail;
+  sandbox?: boolean;
+}> {
+  const { warmOpenPayCardMomoEnv } = await import("@/lib/openpay-card-momo-ready");
+  await warmOpenPayCardMomoEnv();
+
+  const resolved = resolveOpenPayCardMomoRail(opts.rail);
+  if (!resolved) {
+    throw new Error(
+      "Mobile money is not available. Set LIVEPAY_API_KEY + LIVEPAY_ACCOUNT_NUMBER (or Relworx/VixonPay), or enable OPENPAYGB_CARD_MOMO_SANDBOX=1 for local testing.",
+    );
+  }
+
   const topup = await prisma.openPayCardTopup.create({
     data: {
       cardId: opts.cardId,
       amountUgx: opts.amountUgx,
       tonAmount: 0,
-      fundingRail: opts.rail,
+      fundingRail: resolved,
       memo: `pending-${opts.cardId}-${Date.now()}`,
       status: "pending",
     },
   });
 
+  const memoPrefix = opts.purpose === "issue" ? "opcardissuemomo" : "opcardmomo";
+  await prisma.openPayCardTopup.update({
+    where: { id: topup.id },
+    data: { memo: `${memoPrefix}:${topup.id}` },
+  });
+
+  if (resolved === "sandbox" || (openPayCardMomoSandboxEnabled() && !isLiveRailReady(resolved))) {
+    const reference = `sandbox_${topup.id.slice(-12)}`;
+    await prisma.openPayCardTopup.update({
+      where: { id: topup.id },
+      data: { fundingRail: "sandbox", momoReference: reference },
+    });
+    const finalized = await finalizeOpenPayCardMomoTopup(topup.id, reference);
+    const purposeLabel = opts.purpose === "issue" ? "Card activated" : "Balance credited";
+    return {
+      topupId: topup.id,
+      reference,
+      rail: "sandbox",
+      sandbox: true,
+      message:
+        finalized.action === "card_issue_confirmed" || finalized.action === "card_topup_confirmed"
+          ? `Sandbox MoMo confirmed — ${purposeLabel.toLowerCase()} (UGX ${opts.amountUgx.toLocaleString()}). Set LivePay/Relworx/VixonPay API keys for real MTN/Airtel prompts.`
+          : `Sandbox MoMo finished (${finalized.action}).`,
+    };
+  }
+
   const reference =
-    opts.rail === "livepay"
+    resolved === "livepay"
       ? livePayCustomerReference(topup.id)
-      : opts.rail === "vixonpay"
+      : resolved === "vixonpay"
         ? vixonPayMerchantReference(topup.id)
         : relworxCustomerReference(topup.id);
 
   let message: string;
   let momoReference = reference;
 
-  if (opts.rail === "livepay") {
+  if (resolved === "livepay") {
     if (!isLivePayConfigured()) throw new Error(livePayNotConfiguredMessage());
     const collect = await livePayCollectMoney({
       phoneNumber: opts.phone,
@@ -74,7 +128,7 @@ export async function startOpenPayCardMomoTopup(opts: {
     });
     message = collect.message;
     momoReference = collect.internal_reference?.trim() || reference;
-  } else if (opts.rail === "vixonpay") {
+  } else if (resolved === "vixonpay") {
     if (!isVixonPayConfigured()) throw new Error(vixonPayNotConfiguredMessage());
     const collect = await vixonPayCollectMoney({
       phone: opts.phone,
@@ -104,16 +158,12 @@ export async function startOpenPayCardMomoTopup(opts: {
     momoReference = collect.internal_reference?.trim() || reference;
   }
 
-  const memoPrefix = opts.purpose === "issue" ? "opcardissuemomo" : "opcardmomo";
   await prisma.openPayCardTopup.update({
     where: { id: topup.id },
-    data: {
-      memo: `${memoPrefix}:${topup.id}`,
-      momoReference,
-    },
+    data: { momoReference },
   });
 
-  return { topupId: topup.id, message, reference };
+  return { topupId: topup.id, message, reference, rail: resolved };
 }
 
 export async function confirmOpenPayCardTopupFromLivePay(

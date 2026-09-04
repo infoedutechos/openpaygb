@@ -68,13 +68,25 @@ export function MasterOpenPayCardSettings() {
   }
 
   return (
-    <section className="rounded-xl border border-violet-500/25 bg-[var(--card)] p-5">
+    <section id="openpay-card-settings" className="scroll-mt-24 rounded-xl border border-violet-500/25 bg-[var(--card)] p-5">
       <p className="text-xs font-bold uppercase tracking-[0.22em] text-violet-400/90">Platform card</p>
       <h2 className="mt-2 text-lg font-semibold text-white">{OPEN_PAY_BRAND} virtual card</h2>
       <p className="mt-2 max-w-2xl text-sm text-slate-400">
         Students may opt in to a closed-loop platform card (UGX balance). Issuance is paid in TON or MoMo; tuition can be
         paid from the card balance when enabled. See <code className="text-slate-500">docs/OPENPAYGB_PLATFORM_CARD.md</code>{" "}
         for all user-category benefits.
+      </p>
+      <p className="mt-3 rounded-lg border border-emerald-500/25 bg-emerald-950/20 px-3 py-2 text-xs text-slate-300">
+        Real MTN/Airtel USSD for card activate/fund: set{" "}
+        <strong className="text-emerald-100">any one</strong> of LivePay / Relworx / VixonPay under{" "}
+        <a href="#ug-momo-credentials" className="text-cyan-300 underline hover:text-cyan-200">
+          Uganda MoMo API keys
+        </a>{" "}
+        (or{" "}
+        <a href="#deployment-environment" className="text-cyan-300 underline hover:text-cyan-200">
+          Deployment environment
+        </a>
+        ).
       </p>
 
       <form onSubmit={(e) => void save(e)} className="mt-6 space-y-4">

@@ -1,6 +1,32 @@
 import { inspect } from "util";
+import dns from "node:dns";
 import { PrismaClient } from "@prisma/client";
 import { tuneMongoDatabaseUrl } from "@/lib/mongodb-connection-url";
+
+/** Prefer public DNS + IPv4 on Windows so Atlas A-records resolve when hotspot DNS returns 10051. */
+function installDevDnsPreferences(): void {
+  if (process.env.MONGODB_PUBLIC_DNS === "0") return;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fb = require(/* webpackIgnore: true */ "../scripts/mongodb-srv-fallback.cjs") as {
+      preferPublicDnsForNode?: () => boolean;
+    };
+    if (typeof fb.preferPublicDnsForNode === "function") {
+      fb.preferPublicDnsForNode();
+      return;
+    }
+  } catch {
+    /* fall through */
+  }
+  try {
+    dns.setServers(["8.8.8.8", "1.1.1.1"]);
+    dns.setDefaultResultOrder("ipv4first");
+  } catch {
+    /* ignore */
+  }
+}
+
+installDevDnsPreferences();
 
 const dbUrl = process.env.DATABASE_URL?.trim() || process.env.MONGODB_URI?.trim();
 if (dbUrl) {
@@ -36,7 +62,7 @@ function installDevAtlasConsoleFilter(): void {
       /prisma:error|Invalid[\s`]+prisma\.|PrismaClientKnownRequestError|\bP2010\b/i.test(text) ||
       (/Invalid/i.test(text) && /prisma\.\w+\(/i.test(text));
     const atlasTopology =
-      /Server selection timeout|ReplicaSetNoPrimary|No available servers|received fatal alert:\s*InternalError|Raw query failed|zimtvpl\.mongodb|ac-[a-z0-9]+-shard/i.test(
+      /Server selection timeout|ReplicaSetNoPrimary|No available servers|received fatal alert:\s*InternalError|Raw query failed|zimtvpl\.mongodb|ac-[a-z0-9]+-shard|DNS resolution|unreachable network|os error 10051|os error 10013/i.test(
         text,
       );
     if (prismaTagged && atlasTopology) return;

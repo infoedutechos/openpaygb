@@ -5,6 +5,13 @@ import { isMbiyoConfigured } from "@/lib/mbiyo/config";
 import { isLivePayConfigured } from "@/lib/livepay/client";
 import { isRelworxConfigured } from "@/lib/relworx/client";
 import { isVixonPayConfigured } from "@/lib/vixonpay/client";
+import { isCardAcquiringConfigured, cardAcquiringProvider } from "@/lib/card-acquiring";
+import { isCardIssuingConfigured } from "@/lib/card-issuing/types";
+import {
+  getFlutterwaveWebhookUrl,
+  getPaystackWebhookUrl,
+  getVisaIssuingWebhookUrl,
+} from "@/lib/webhook-public-urls";
 import { getOpenPayCardPlatformSettings } from "@/lib/openpay-card-settings";
 import {
   PAYMENT_PROVIDER_CATALOG,
@@ -44,6 +51,10 @@ function isProviderConfigured(code: string): boolean {
       return Boolean(deploymentEnv("ODELHUB_TON_WALLET_ADDRESS"));
     case "openpay_card":
       return true;
+    case "card":
+      return isCardAcquiringConfigured();
+    case "card_issuing":
+      return isCardIssuingConfigured();
     case "telegram":
       return Boolean(deploymentEnv("TELEGRAM_BOT_TOKEN") || deploymentEnv("BOT_TOKEN"));
     default:
@@ -67,6 +78,14 @@ function webhookUrlFor(code: string): string | null {
       return `${base}/api/webhooks/vixonpay`;
     case "telegram":
       return `${base}/api/webhooks/telegram`;
+    case "card": {
+      const p = cardAcquiringProvider();
+      if (p === "flutterwave") return getFlutterwaveWebhookUrl();
+      if (p === "paystack") return getPaystackWebhookUrl();
+      return `${base}/api/webhooks/flutterwave`;
+    }
+    case "card_issuing":
+      return getVisaIssuingWebhookUrl();
     default:
       return null;
   }
@@ -87,6 +106,9 @@ export async function getMasterPaymentProviderRows(): Promise<{
   policy: PaymentProviderPolicy;
   appUrl: string;
 }> {
+  const { warmDeploymentEnvCache } = await import("@/lib/deployment-env-resolve");
+  await warmDeploymentEnvCache();
+
   const [policy, openPaySettings] = await Promise.all([
     getPaymentProviderPolicy(),
     getOpenPayCardPlatformSettings(),
@@ -117,9 +139,13 @@ export async function getMasterPaymentProviderRows(): Promise<{
       credentialsAnchor:
         entry.code === "openpay_card"
           ? "#openpay-card-settings"
-          : entry.envVars.length > 0
-            ? "#deployment-environment"
-            : "#payment-providers",
+          : entry.code === "livepay" || entry.code === "relworx" || entry.code === "vixonpay"
+            ? "#ug-momo-credentials"
+            : entry.code === "card" || entry.code === "card_issuing"
+              ? "#card-network"
+              : entry.envVars.length > 0
+                ? "#deployment-environment"
+                : "#payment-providers",
     };
   });
 

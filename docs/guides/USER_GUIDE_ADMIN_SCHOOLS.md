@@ -45,6 +45,7 @@ Primary entry:
 | Payment requests | `/admin/payment-requests` |
 | Staff | `/admin/school-staff` |
 | Outflow | `/admin/school-outflow` |
+| OPGB settlement | `/admin/school-settlement` |
 | Inventory | `/admin/school-inventory` |
 | Reports | `/admin/school-reports` |
 | Users | `/admin/users` |
@@ -74,6 +75,7 @@ Defined in `components/admin/TuitionAdminShell.tsx` (`SCHOOL_ERP_SEGMENTS`). Use
 | Payment requests | `/admin/payment-requests` | Incoming payment requests |
 | Staff | `/admin/school-staff` | Staff records |
 | Outflow | `/admin/school-outflow` | Vouchers / salary outflow |
+| OPGB settlement | `/admin/school-settlement` | Merchant charge float + MoMo cashout |
 | Inventory | `/admin/school-inventory` | Stock |
 | Reports | `/admin/school-reports` | Financial & records statements |
 | Online payments | `/admin/payments` | Rail payments, reconciliation |
@@ -248,9 +250,11 @@ When someone says “I paid but cannot see it”:
 
 ---
 
-## School funds, accounts, and outflow (not a personal crypto wallet)
+## School funds, accounts, outflow, and OPGB settlement
 
-School admins do **not** have a personal OPGB org wallet on the Tuition Hub dashboard. School money is tracked in the ERP:
+School money has **two** tracks:
+
+### A. Tuition ERP (bills / cashbook)
 
 | View | URL | What you see |
 |------|-----|--------------|
@@ -258,9 +262,19 @@ School admins do **not** have a personal OPGB org wallet on the Tuition Hub dash
 | Accounts | `/admin/school-accounts` | Income & expenditure accounts and balances |
 | Outflow | `/admin/school-outflow` | Vouchers, salary payments, fund-guarded cash out |
 
-To pay suppliers or salary: use **Outflow** after funds are appropriated. Crypto/MoMo custodial withdraw queues for students live under Dex (`/dex/offramp`); platform masters clear withdraw ops at `/admin/master/opgb-ops`.
+To pay suppliers or salary: use **Outflow** after funds are appropriated.
 
-Virtual OpenPayGB **student** cards are a higher-institution feature (`/admin/virtual-cards`); school ERP focuses on bills and accounts instead.
+### B. OpenPayGB merchant settlement (school as merchant)
+
+| View | URL | What you see |
+|------|-----|--------------|
+| OPGB settlement | `/admin/school-settlement` | Available float, cashout to MoMo, merchant charge history |
+
+When a school accepts payments via Partner API / hosted OPGB checkout (`MerchantCharge`), confirmed net amounts credit the school-linked `DeveloperApp` settlement balance. Cashouts queue as `MerchantPayout` for Master to mark paid at `/admin/master/opgb-ops`. Opening **OPGB settlement** auto-provisions a merchant app for the school if one is missing.
+
+Crypto/MoMo custodial withdraw queues for students live under Dex (`/dex/offramp`); platform masters clear those at `/admin/master/opgb-ops` too.
+
+Virtual OpenPayGB **student** cards are a higher-institution feature (`/admin/virtual-cards`); school ERP focuses on bills, accounts, and optional merchant settlement.
 
 ---
 

@@ -1,21 +1,26 @@
 /**
- * When Node's c-ares resolver cannot querySrv (Windows ECONNREFUSED / 10013 / timeout),
- * expand mongodb+srv:// to a standard mongodb:// host list using the OS DNS tool
- * (nslookup / dig) — the same path that works in a normal terminal.
+ * When Node's c-ares resolver cannot querySrv / resolve A (Windows ECONNREFUSED /
+ * 10013 / 10051 unreachable network / hotspot DNS), expand mongodb+srv:// to a
+ * standard mongodb:// host list using OS DNS — preferring public resolvers
+ * (8.8.8.8 / 1.1.1.1) so flaky router DNS does not block Atlas.
  *
  * Default: auto on Windows only (Vercel/Linux keep mongodb+srv).
  * Opt out: MONGODB_SRV_FALLBACK=0
  * Force expand: MONGODB_FORCE_NON_SRV=1
  * Force enable on non-Windows: MONGODB_SRV_FALLBACK=1
+ * Prefer public DNS only: MONGODB_PUBLIC_DNS=0 to use system resolver alone
  */
 "use strict";
 
 const { spawnSync } = require("child_process");
+const dns = require("dns");
 
 const g = globalThis;
 if (!g.__odelhubMongodbSrvFallbackCache) {
   g.__odelhubMongodbSrvFallbackCache = Object.create(null);
 }
+
+const PUBLIC_DNS = ["8.8.8.8", "1.1.1.1"];
 
 function parseSrvUrl(url) {
   const m = String(url).match(/^mongodb\+srv:\/\/([^@]+)@([^/?]+)(\/[^?]*)?(\?.*)?$/i);
@@ -28,6 +33,21 @@ function parseSrvUrl(url) {
   };
 }
 
+/** Point Node's DNS at public resolvers (helps Prisma A-record lookups after non-SRV expand). */
+function preferPublicDnsForNode() {
+  if (process.env.MONGODB_PUBLIC_DNS === "0") return false;
+  if (process.env.VITEST) return false;
+  try {
+    dns.setServers(PUBLIC_DNS);
+    if (typeof dns.setDefaultResultOrder === "function") {
+      dns.setDefaultResultOrder("ipv4first");
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Probe Node dns.resolveSrv in a short-lived child (avoids hanging the parent). */
 function nodeQuerySrvOk(hostname, timeoutMs = 2000) {
   const cache = g.__odelhubMongodbSrvFallbackCache;
@@ -36,6 +56,7 @@ function nodeQuerySrvOk(hostname, timeoutMs = 2000) {
 
   const script = `
     const dns = require("dns");
+    try { dns.setServers(${JSON.stringify(PUBLIC_DNS)}); } catch (_) {}
     const host = ${JSON.stringify(hostname)};
     const t = setTimeout(() => process.exit(2), ${timeoutMs});
     dns.resolveSrv("_mongodb._tcp." + host, (err, addrs) => {
@@ -56,9 +77,21 @@ function nodeQuerySrvOk(hostname, timeoutMs = 2000) {
 
 function runDnsLookup(type, name) {
   const attempts = [];
+  const usePublic = process.env.MONGODB_PUBLIC_DNS !== "0";
+
   if (process.platform === "win32") {
+    if (usePublic) {
+      for (const server of PUBLIC_DNS) {
+        attempts.push({ cmd: "nslookup", args: [`-type=${type}`, name, server] });
+      }
+    }
     attempts.push({ cmd: "nslookup", args: [`-type=${type}`, name] });
   } else {
+    if (usePublic) {
+      for (const server of PUBLIC_DNS) {
+        attempts.push({ cmd: "dig", args: [`@${server}`, "+short", "+time=2", "+tries=1", type, name] });
+      }
+    }
     attempts.push({ cmd: "dig", args: ["+short", type, name] });
     attempts.push({ cmd: "nslookup", args: [`-type=${type}`, name] });
   }
@@ -67,12 +100,16 @@ function runDnsLookup(type, name) {
     const r = spawnSync(a.cmd, a.args, {
       encoding: "utf8",
       windowsHide: true,
-      timeout: 12000,
+      timeout: 8000,
       shell: process.platform === "win32",
       killSignal: "SIGKILL",
     });
     const text = `${r.stdout || ""}\n${r.stderr || ""}`;
     if (r.error && r.error.code === "ENOENT") continue;
+    // Prefer answers that actually contain SRV/TXT payload (skip empty / timeout-only)
+    if (type === "SRV" && !/SRV service location:|^\S+\s+\d+\s+\d+\s+\d+\s+\S+/im.test(text) && !/port\s*=/i.test(text)) {
+      continue;
+    }
     if (text.trim()) return { tool: a.cmd, text };
   }
   return null;
@@ -87,6 +124,8 @@ function parseSrvRecords(text, tool) {
         const port = parts[2];
         const host = parts[3].replace(/\.$/, "");
         if (host) hosts.push(`${host}:${port}`);
+      } else if (parts.length === 1 && /^\S+$/.test(parts[0]) && parts[0].includes(".")) {
+        // dig +short sometimes returns host only for weird configs — skip
       }
     }
     return hosts;
@@ -134,7 +173,6 @@ function expandMongodbSrvUrl(url) {
   const cache = g.__odelhubMongodbSrvFallbackCache;
   const cacheKey = `expand:${parsed.hostname}`;
   if (cache[cacheKey]) {
-    // Re-apply credentials/db/query from this URL onto cached host list + txt opts
     const { hosts, txtOpts } = cache[cacheKey];
     return buildNonSrvUrl(parsed, hosts, txtOpts);
   }
@@ -163,9 +201,7 @@ function shouldAttemptFallback(force) {
   if (process.env.MONGODB_SRV_FALLBACK === "0") return false;
   if (force || process.env.MONGODB_FORCE_NON_SRV === "1") return true;
   if (process.env.MONGODB_SRV_FALLBACK === "1") return true;
-  // Vitest: never touch live DNS from pool-tuning helpers
   if (process.env.VITEST) return false;
-  // Auto only on Windows where Node querySrv commonly breaks
   return process.platform === "win32";
 }
 
@@ -192,13 +228,23 @@ function ensureNonSrvDatabaseUrl(url, opts = {}) {
   const parsed = parseSrvUrl(trimmed);
   if (!parsed) return { url: trimmed, converted: false, reason: "unparsed" };
 
-  // Only expand real Atlas (or forced) — avoid nslookup on fake test hosts
   const isAtlas = /\.mongodb\.net$/i.test(parsed.hostname);
   if (!force && !isAtlas) {
     return { url: trimmed, converted: false, reason: "non-atlas" };
   }
 
-  if (!force && nodeQuerySrvOk(parsed.hostname)) {
+  /**
+   * Windows + Atlas: always expand when public/system DNS can resolve SRV.
+   * Leaving mongodb+srv uses Node c-ares, which often fails with os error 10051
+   * on hotspot/router DNS even when nslookup @8.8.8.8 works.
+   */
+  const preferNonSrv =
+    force ||
+    process.platform === "win32" ||
+    process.env.MONGODB_PREFER_NON_SRV === "1" ||
+    !nodeQuerySrvOk(parsed.hostname);
+
+  if (!preferNonSrv) {
     return { url: trimmed, converted: false, reason: "node-ok" };
   }
 
@@ -206,18 +252,25 @@ function ensureNonSrvDatabaseUrl(url, opts = {}) {
   if (!expanded) {
     if (!opts.quiet) {
       console.warn(
-        "[mongodb-srv-fallback] Node querySrv failed and system DNS could not expand SRV; leaving mongodb+srv URL.",
+        "[mongodb-srv-fallback] Could not expand SRV via public/system DNS; leaving mongodb+srv URL. " +
+          "Check internet / try MONGODB_FORCE_NON_SRV=1 after fixing DNS.",
       );
     }
     return { url: trimmed, converted: false, reason: "expand-failed" };
   }
 
+  preferPublicDnsForNode();
+
   if (!opts.quiet) {
     console.warn(
-      "[mongodb-srv-fallback] Node querySrv unavailable; using host list from system DNS (nslookup/dig).",
+      "[mongodb-srv-fallback] Using non-SRV Atlas host list (public DNS preferred) to avoid Windows querySrv/10051 failures.",
     );
   }
-  return { url: expanded, converted: true, reason: force ? "forced" : "node-failed" };
+  return {
+    url: expanded,
+    converted: true,
+    reason: force ? "forced" : process.platform === "win32" ? "win32-prefer-non-srv" : "node-failed",
+  };
 }
 
 module.exports = {
@@ -225,4 +278,6 @@ module.exports = {
   expandMongodbSrvUrl,
   nodeQuerySrvOk,
   parseSrvUrl,
+  preferPublicDnsForNode,
+  PUBLIC_DNS,
 };

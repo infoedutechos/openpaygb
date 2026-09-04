@@ -20,9 +20,13 @@ export const PAYMENT_RAIL_RELWORX = "Relworx";
 export const PAYMENT_RAIL_VIXONPAY = "VixonPay";
 /** Ledger rail `openpay_card` — closed-loop platform virtual card (UGX balance) */
 export const PAYMENT_RAIL_OPENPAY_CARD = "OpenPayGB card";
+/** Ledger rail `card` — hosted Visa/MC acquiring (Flutterwave / Paystack) */
+export const PAYMENT_RAIL_CARD = "Bank card";
 
 /** Checkout UI section for platform card rail */
 export const openPayCardRailSectionLabel = `${PAYMENT_RAIL_OPENPAY_CARD} (${OPEN_PAY_BRAND})`;
+/** Checkout UI section for bank-card acquiring */
+export const cardAcquiringRailSectionLabel = `${PAYMENT_RAIL_CARD} (${OPEN_PAY_BRAND})`;
 
 /** Provider name (ops/docs); not the payer-facing brand */
 export const MBIYO_PAY_INFRA_NAME = "MbiyoPay";

@@ -110,6 +110,16 @@ const nav: { href: string; label: string; desc?: string }[] = [
     desc: "Scheduled jobs · run now",
   },
   {
+    href: "/admin/master#ug-momo-credentials",
+    label: "UG MoMo keys",
+    desc: "LivePay · Relworx · VixonPay",
+  },
+  {
+    href: "/admin/master#card-network",
+    label: "Card network",
+    desc: "Acquiring + Visa issuing",
+  },
+  {
     href: "/admin/master#payment-providers",
     label: "Payment providers",
     desc: "PSP APIs & toggles",

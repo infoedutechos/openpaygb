@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { TmaMePayload } from "@/lib/tma-types";
-import { OPEN_PAY_BRAND } from "@/lib/open-pay-brand";
+import { OPEN_PAY_BRAND, PAYMENT_RAIL_CARD } from "@/lib/open-pay-brand";
 import { readJsonResponse } from "@/utils/read-json-response";
 
-type PayMethod = "openpay_card" | "mobile_money" | "ton_wallet";
+type PayMethod = "openpay_card" | "mobile_money" | "bank_card" | "ton_wallet";
 
 type FeeQuote =
   | { kind: "semester"; label: string; amountUgx: number }
@@ -57,7 +57,6 @@ export function TmaPayFlow({ data, onSuccess }: Props) {
       });
       return list;
     }
-    // Full-period checkout charges the catalogue total — only when unpaid (not a custom partial).
     if (
       b &&
       !b.partialWithoutInstallment &&
@@ -83,6 +82,14 @@ export function TmaPayFlow({ data, onSuccess }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<{ paymentId: string; message: string } | null>(null);
+  const [bankCardEnabled, setBankCardEnabled] = useState(false);
+
+  useEffect(() => {
+    void fetch("/api/public/card-acquiring-config")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { enabled?: boolean } | null) => setBankCardEnabled(Boolean(j?.enabled)))
+      .catch(() => setBankCardEnabled(false));
+  }, []);
 
   if (!student) return null;
 
@@ -169,11 +176,45 @@ export function TmaPayFlow({ data, onSuccess }: Props) {
             phone: phone.trim(),
           }),
         });
-        const parsed = await readJsonResponse<{ paymentId?: string; message?: string; error?: string }>(r);
+        const parsed = await readJsonResponse<{
+          payment?: { id?: string };
+          paymentId?: string;
+          message?: string;
+          livepay?: { message?: string };
+          error?: string;
+        }>(r);
         if (!parsed.ok) throw new Error(parsed.error);
+        const paymentId = parsed.data.payment?.id ?? parsed.data.paymentId ?? "";
+        setSuccess({
+          paymentId,
+          message:
+            parsed.data.livepay?.message ??
+            parsed.data.message ??
+            "Check your phone to approve the mobile money prompt.",
+        });
+      } else if (method === "bank_card") {
+        const email = student.email?.trim();
+        if (!email) throw new Error("Your profile needs an email for bank-card checkout.");
+        const r = await fetch("/api/public/checkout/card-start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ ...body, email }),
+        });
+        const parsed = await readJsonResponse<{
+          paymentId?: string;
+          authorizationUrl?: string;
+          error?: string;
+        }>(r);
+        if (!parsed.ok) throw new Error(parsed.error);
+        if (!parsed.data.authorizationUrl) throw new Error("Card checkout URL missing");
+        const tg = (window as Window & { Telegram?: { WebApp?: { openLink?: (u: string) => void } } })
+          .Telegram?.WebApp;
+        if (tg?.openLink) tg.openLink(parsed.data.authorizationUrl);
+        else window.location.assign(parsed.data.authorizationUrl);
         setSuccess({
           paymentId: parsed.data.paymentId ?? "",
-          message: parsed.data.message ?? "Check your phone to approve the mobile money prompt.",
+          message: `Complete ${PAYMENT_RAIL_CARD} payment on the secure page, then return here.`,
         });
       } else if (method === "ton_wallet") {
         const payUrl = `/pay/${encodeURIComponent(student.organizationSlug)}`;
@@ -217,28 +258,8 @@ export function TmaPayFlow({ data, onSuccess }: Props) {
         <p className="opacity-60">Outstanding</p>
         <p className="text-xl font-semibold">{fmtUgx(b?.outstandingUgx ?? 0)}</p>
       </div>
-      {b?.partialWithoutInstallment && quotes.length === 0 ? (
-        <p className="rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
-          Partial balance remaining. Use the full web checkout (TON) or ask your school desk — Mini App
-          pays full period or installment plan amounts only.
-        </p>
-      ) : null}
-      {quotes.length > 0 ? (
-        <div className="flex flex-wrap gap-2">
-          {quotes.map((q) => (
-            <button
-              key={`${q.kind}-${q.amountUgx}`}
-              type="button"
-              className="rounded-lg border border-white/20 px-3 py-1.5 text-xs hover:bg-white/10"
-              onClick={() => setAmount(String(q.amountUgx))}
-            >
-              {q.kind === "semester" ? "Pay outstanding" : "Pay installment"} · {fmtUgx(q.amountUgx)}
-            </button>
-          ))}
-        </div>
-      ) : null}
       <label className="block">
-        <span className="opacity-60">Amount (UGX) — must match a fee option above</span>
+        <span className="opacity-60">Amount (UGX)</span>
         <input
           type="text"
           inputMode="numeric"
@@ -258,6 +279,7 @@ export function TmaPayFlow({ data, onSuccess }: Props) {
           [
             { id: "openpay_card" as const, label: `${OPEN_PAY_BRAND} Card`, disabled: !data.card },
             { id: "mobile_money" as const, label: "Mobile Money", disabled: false },
+            { id: "bank_card" as const, label: PAYMENT_RAIL_CARD, disabled: !bankCardEnabled },
             { id: "ton_wallet" as const, label: "TON Wallet", disabled: false },
           ] as const
         ).map((m) => (
@@ -284,6 +306,9 @@ export function TmaPayFlow({ data, onSuccess }: Props) {
             className="mt-1 w-full rounded-lg border border-white/15 bg-black/20 px-3 py-2.5"
           />
         </label>
+      ) : null}
+      {method === "bank_card" && !student.email?.trim() ? (
+        <p className="text-xs text-amber-300/90">Add an email on your student profile for card checkout.</p>
       ) : null}
       {error ? <p className="text-sm text-rose-300">{error}</p> : null}
       <button type="button" className="tma-btn" disabled={busy} onClick={() => void handleContinue()}>

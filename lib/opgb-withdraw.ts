@@ -120,17 +120,44 @@ export async function listOpgbWithdrawQueue(opts?: { status?: string; limit?: nu
   });
 }
 
-/** Mark payout sent externally (MoMo/bank/TON). Does not move ledger — debit already applied. */
+/** Mark payout sent externally (MoMo/bank/TON). Does not move ledger — debit already applied.
+ * When rail is momo and OPENPAYGB_CASHOUT_LIVE=1, attempts LivePay/Relworx send-money first.
+ */
 export async function completeOpgbWithdraw(opts: {
   requestId: string;
   note?: string;
+  /** Phone digits for MoMo auto-disburse when destination is on the request. */
+  phone?: string;
+  network?: string;
+  amountUgx?: number;
 }): Promise<WithdrawResult> {
   const row = await prisma.opgbWithdrawRequest.findUnique({ where: { id: opts.requestId } });
   if (!row || !["pending", "processing"].includes(row.status)) {
     return { ok: false, error: "Withdraw not actionable", status: 404 };
   }
 
-  const note = opts.note?.trim().slice(0, 500) ?? "";
+  let note = opts.note?.trim().slice(0, 500) ?? "";
+  const rail = (row.rail || "").toLowerCase();
+  const phone = (opts.phone || row.destination || "").replace(/\D/g, "");
+  const amountUgx = opts.amountUgx ?? row.amountUgx;
+  if (rail === "momo" && phone && amountUgx > 0) {
+    const { disburseToMomo } = await import("@/lib/momo-disburse");
+    const sent = await disburseToMomo({
+      phoneDigits: phone,
+      network: opts.network || "MTN",
+      amountUgx,
+      reference: `wd${row.id}`,
+      description: `OpenPayGB withdraw ${row.referenceKey}`,
+    });
+    if (sent.ok) {
+      note = [note, `${sent.rail}:${sent.railReference}`].filter(Boolean).join(" | ");
+    } else if (!sent.queued) {
+      return { ok: false, error: sent.reason, status: 502 };
+    } else {
+      note = [note, sent.reason].filter(Boolean).join(" | ");
+    }
+  }
+
   const updated = await prisma.opgbWithdrawRequest.update({
     where: { id: row.id },
     data: {

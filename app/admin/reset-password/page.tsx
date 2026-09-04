@@ -42,7 +42,7 @@ function ResetPasswordForm() {
       const j = (await r.json()) as { error?: string };
       if (!r.ok) throw new Error(j.error ?? "Reset failed");
       setDone(true);
-      setTimeout(() => router.replace("/admin/login"), 1800);
+      setTimeout(() => router.replace("/admin/login?school=1"), 1800);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Reset failed");
     } finally {
@@ -115,7 +115,7 @@ function ResetPasswordForm() {
                 {busy ? "Saving…" : "Update password"}
               </button>
               <p className="text-center text-sm">
-                <Link href="/admin/login" className="text-sky-400 hover:text-sky-300">
+                <Link href="/admin/login?school=1" className="text-sky-400 hover:text-sky-300">
                   Back to sign in
                 </Link>
               </p>

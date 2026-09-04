@@ -44,7 +44,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const host = headersList.get("host") || "";
   const cookieStore = await cookies();
 
-  const isLoginPage = pathname === "/admin/login";
+  const isLoginPage =
+    pathname === "/admin/login" ||
+    pathname === "/school/login" ||
+    pathname.startsWith("/admin/login/");
   const isResetPasswordPage =
     pathname === "/admin/reset-password" || pathname.startsWith("/admin/reset-password/");
   const isRegisterPage = pathname === "/admin/register" || pathname.startsWith("/admin/register/");

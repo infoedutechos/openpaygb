@@ -190,7 +190,8 @@ export function DeveloperDashboard() {
         fetch("/api/developers/merchant-settings", { cache: "no-store" }),
       ]);
       if (meRes.status === 401) {
-        window.location.href = "/developers/register?next=/developers/dashboard";
+        const hash = typeof window !== "undefined" ? window.location.hash : "";
+        window.location.href = `/developers/register?next=${encodeURIComponent(`/developers/dashboard${hash}`)}`;
         return;
       }
       if (!meRes.ok) throw new Error("Could not load app");
@@ -239,6 +240,25 @@ export function DeveloperDashboard() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  /** Deep links like #settlement fail while the page is still "Loading…" — scroll after content mounts. */
+  useEffect(() => {
+    if (loading || !app) return;
+
+    const scrollToHash = () => {
+      const hash = typeof window !== "undefined" ? window.location.hash.replace(/^#/, "") : "";
+      if (!hash) return;
+      const el = document.getElementById(hash);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+
+    const t = window.setTimeout(scrollToHash, 50);
+    window.addEventListener("hashchange", scrollToHash);
+    return () => {
+      window.clearTimeout(t);
+      window.removeEventListener("hashchange", scrollToHash);
+    };
+  }, [loading, app]);
 
   async function createKey() {
     setMessage(null);
@@ -350,19 +370,47 @@ export function DeveloperDashboard() {
     setMessage(null);
     setError(null);
     try {
-      const amountUgx = Math.round(Number(cashoutAmount));
+      const amountUgx = Math.round(Number(String(cashoutAmount).replace(/,/g, "")));
       if (!Number.isFinite(amountUgx) || amountUgx < 1000) {
         throw new Error("Minimum cashout is 1,000 UGX");
       }
+      const available = settlement?.availableBalanceUgx ?? app?.settlementBalanceUgx ?? 0;
+      if (amountUgx > available) {
+        throw new Error(`Insufficient balance (${available.toLocaleString()} UGX available)`);
+      }
+      const phone = payoutPhone.trim();
+      if (!phone) {
+        throw new Error("Set a payout Mobile Money number first");
+      }
+      const network = payoutNetwork === "AIRTEL" ? "AIRTEL" : "MTN";
       const res = await fetch("/api/developers/payouts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amountUgx, note: cashoutNote || undefined }),
+        body: JSON.stringify({
+          amountUgx,
+          note: cashoutNote || undefined,
+          phone,
+          network,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(typeof data.error === "string" ? data.error : "Cashout failed");
       setCashoutAmount("");
       setCashoutNote("");
+      if (data.summary) setSettlement(data.summary as Settlement);
+      if (data.payout) setPayouts((prev) => [data.payout as PayoutRow, ...prev]);
+      setApp((prev) =>
+        prev
+          ? {
+              ...prev,
+              payoutPhone: phone,
+              payoutNetwork: network,
+              settlementBalanceUgx:
+                (data.summary as Settlement | undefined)?.availableBalanceUgx ??
+                Math.max(0, (prev.settlementBalanceUgx ?? 0) - amountUgx),
+            }
+          : prev,
+      );
       setMessage(`Cashout of ${formatUgx(amountUgx)} queued. Ops will send MoMo and mark it paid.`);
       void load();
     } catch (e) {
@@ -483,11 +531,16 @@ export function DeveloperDashboard() {
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
           <div className="rounded-lg border border-white/10 p-3">
             <p className="text-[10px] uppercase text-slate-500">Available</p>
-            <p className="font-semibold text-white">{formatUgx(settlement?.availableBalanceUgx ?? 0)}</p>
+            <p className="font-semibold text-white">
+              {formatUgx(settlement?.availableBalanceUgx ?? app.settlementBalanceUgx ?? 0)}
+            </p>
           </div>
           <div className="rounded-lg border border-white/10 p-3">
             <p className="text-[10px] uppercase text-slate-500">Pending cashouts</p>
             <p className="font-semibold text-white">{formatUgx(settlement?.pendingPayoutUgx ?? 0)}</p>
+            {(settlement?.pendingPayoutCount ?? 0) > 0 ? (
+              <p className="mt-0.5 text-[10px] text-amber-300/90">{settlement?.pendingPayoutCount} request(s)</p>
+            ) : null}
           </div>
           <div className="rounded-lg border border-white/10 p-3">
             <p className="text-[10px] uppercase text-slate-500">Paid out</p>
@@ -498,52 +551,133 @@ export function DeveloperDashboard() {
             <p className="font-semibold text-white">{formatUgx(settlement?.lifetimeMerchantNetUgx ?? 0)}</p>
           </div>
         </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <label className="block text-xs text-slate-400">
-            Amount (UGX)
+            Cashout MoMo phone
             <input
-              value={cashoutAmount}
-              onChange={(e) => setCashoutAmount(e.target.value)}
-              placeholder="10000"
+              value={payoutPhone}
+              onChange={(e) => setPayoutPhone(e.target.value)}
+              placeholder="07… or 2567…"
               className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950 px-3 py-2 text-sm text-white"
             />
+          </label>
+          <label className="block text-xs text-slate-400">
+            Network
+            <select
+              value={payoutNetwork || "MTN"}
+              onChange={(e) => setPayoutNetwork(e.target.value as "MTN" | "AIRTEL" | "")}
+              className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950 px-3 py-2 text-sm text-white"
+            >
+              <option value="MTN">MTN</option>
+              <option value="AIRTEL">Airtel</option>
+            </select>
+          </label>
+        </div>
+
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          <label className="block text-xs text-slate-400">
+            Amount (UGX)
+            <div className="mt-1 flex gap-2">
+              <input
+                value={cashoutAmount}
+                onChange={(e) => setCashoutAmount(e.target.value)}
+                placeholder="10000"
+                inputMode="numeric"
+                className="w-full rounded-lg border border-white/15 bg-slate-950 px-3 py-2 text-sm text-white"
+              />
+              <button
+                type="button"
+                disabled={(settlement?.availableBalanceUgx ?? 0) < 1000}
+                onClick={() =>
+                  setCashoutAmount(String(settlement?.availableBalanceUgx ?? app.settlementBalanceUgx ?? 0))
+                }
+                className="shrink-0 rounded-lg border border-cyan-400/30 px-2.5 text-[11px] text-cyan-200 hover:bg-cyan-500/10 disabled:opacity-40"
+              >
+                Max
+              </button>
+            </div>
           </label>
           <label className="block text-xs text-slate-400 sm:col-span-2">
             Note (optional)
             <input
               value={cashoutNote}
               onChange={(e) => setCashoutNote(e.target.value)}
+              placeholder="Invoice # / reason"
               className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950 px-3 py-2 text-sm text-white"
             />
           </label>
         </div>
-        <p className="mt-2 text-xs text-slate-500">
-          Payout number: {payoutPhone || "not set"} {payoutNetwork ? `(${payoutNetwork})` : ""} — set under Fees.
-        </p>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => void requestCashout()}
-          className="mt-4 rounded-lg bg-gradient-to-r from-cyan-500 to-teal-600 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50"
-        >
-          Request cashout
-        </button>
+
+        {(settlement?.availableBalanceUgx ?? app.settlementBalanceUgx ?? 0) < 1000 ? (
+          <p className="mt-3 text-xs text-amber-200/90">
+            Available balance is below the 1,000 UGX minimum. Confirmed merchant charges will credit this balance
+            automatically.
+          </p>
+        ) : null}
+
+        {error ? <p className="mt-3 text-sm text-rose-300">{error}</p> : null}
+        {message ? <p className="mt-3 text-sm text-emerald-200">{message}</p> : null}
+
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            disabled={
+              busy ||
+              (settlement?.availableBalanceUgx ?? app.settlementBalanceUgx ?? 0) < 1000 ||
+              !payoutPhone.trim()
+            }
+            onClick={() => void requestCashout()}
+            className="rounded-lg bg-gradient-to-r from-cyan-500 to-teal-600 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50"
+          >
+            {busy ? "Requesting…" : "Request cashout"}
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void load()}
+            className="rounded-lg border border-white/15 px-3 py-2 text-xs text-slate-300 hover:bg-white/5"
+          >
+            Refresh
+          </button>
+          {!payoutPhone.trim() ? (
+            <span className="text-xs text-rose-300">Enter a MoMo number to enable cashout.</span>
+          ) : null}
+        </div>
+
         <ul className="mt-6 space-y-2">
           {payouts.length === 0 ? (
             <li className="text-sm text-slate-500">No cashout requests yet.</li>
           ) : (
-            payouts.map((p) => (
-              <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm">
-                <span className="font-medium text-white">{formatUgx(p.amountUgx)}</span>
-                <span className="text-xs text-slate-400">
-                  {p.network} {p.phone}
-                </span>
-                <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] uppercase text-slate-300">
-                  {p.status}
-                </span>
-                <span className="text-xs text-slate-500">{new Date(p.createdAt).toLocaleString()}</span>
-              </li>
-            ))
+            payouts.map((p) => {
+              const statusClass =
+                p.status === "paid"
+                  ? "border-emerald-400/30 text-emerald-200"
+                  : p.status === "rejected"
+                    ? "border-rose-400/30 text-rose-200"
+                    : p.status === "cancelled"
+                      ? "border-slate-500/40 text-slate-400"
+                      : "border-amber-400/30 text-amber-100";
+              return (
+                <li
+                  key={p.id}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm"
+                >
+                  <span className="font-medium text-white">{formatUgx(p.amountUgx)}</span>
+                  <span className="text-xs text-slate-400">
+                    {p.network} {p.phone}
+                  </span>
+                  <span className={`rounded-full border px-2 py-0.5 text-[10px] uppercase ${statusClass}`}>
+                    {p.status}
+                  </span>
+                  <span className="text-xs text-slate-500">{new Date(p.createdAt).toLocaleString()}</span>
+                  {p.rejectionReason ? (
+                    <span className="w-full text-xs text-rose-300/90">Rejected: {p.rejectionReason}</span>
+                  ) : null}
+                  {p.note ? <span className="w-full text-[11px] text-slate-500">Note: {p.note}</span> : null}
+                </li>
+              );
+            })
           )}
         </ul>
       </section>

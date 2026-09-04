@@ -1,6 +1,6 @@
 # Platform update pack — September 2026
 
-**Last updated:** 2026-09-03  
+**Last updated:** 2026-09-04  
 **Purpose:** Single no-omission reference for everything shipped in the Uwais SMIS + OpenPayGB payment-provider workstream, including **commands**, **login details**, **URLs**, and **previous vs current** behaviour.
 
 Related deep-dives:
@@ -9,10 +9,13 @@ Related deep-dives:
 |-----|--------|
 | [LOCAL_DEV_AND_CREDENTIALS.md](./LOCAL_DEV_AND_CREDENTIALS.md) | All seed logins & local URLs |
 | [OPENPAYGB_PAYMENT_PROVIDER.md](./OPENPAYGB_PAYMENT_PROVIDER.md) | Merchant charges, fees, white-label, cashout |
+| [OPENPAYGB_PLATFORM_CARD.md](./OPENPAYGB_PLATFORM_CARD.md) | Closed-loop wallet card (MoMo/TON activate & fund) |
+| [OPENPAYGB_GATEWAY_MATURITY.md](./OPENPAYGB_GATEWAY_MATURITY.md) | Is OPGB a full seamless gateway? (honest scorecard) |
 | [PARTNER_API.md](./PARTNER_API.md) | Partner scopes & HTTP API |
 | [DEVELOPER_ECOSYSTEM.md](./DEVELOPER_ECOSYSTEM.md) | Developer portal |
 | [UWAIS_SMIS_PRIORITY_ROADMAP.md](./UWAIS_SMIS_PRIORITY_ROADMAP.md) | Uwais P0–P4 status |
 | [guides/USER_GUIDE_INDEX.md](./guides/USER_GUIDE_INDEX.md) | Role-based user guides |
+| [product/BACKLOG.md](../product/BACKLOG.md) | Completed + remaining engineering backlog |
 
 ---
 
@@ -85,9 +88,17 @@ npm run dev:fix
 | `SEED_UWAIS_ADMIN_EMAIL` | `uwais.admin@odelhub.local` |
 | `SEED_UWAIS_ADMIN_PASSWORD` | Falls back to `SEED_ADMIN_PASSWORD` → `ChangeMe_Admin123!` |
 | `OPENPAYGB_CHARGES_SANDBOX` | `1` forces sandbox confirm button |
-| `LIVEPAY_API_KEY` | When unset in non-prod → sandbox checkout |
+| `OPENPAYGB_CASHOUT_LIVE` | Omit/`1` = auto send when LivePay/Relworx configured; `0` = queue-only |
+| `OPENPAYGB_CASHOUT_SANDBOX` | Auto-mark merchant cashouts paid in non-prod / when set |
+| `OPENPAYGB_CARD_MOMO_SANDBOX` | `1` force card MoMo sandbox; `0` require live PSP; default sandbox if no UG keys in non-prod |
+| `LIVEPAY_API_KEY` + `LIVEPAY_ACCOUNT_NUMBER` | UG MoMo collect (also settable in Master `#ug-momo-credentials`) |
+| `RELWORX_API_KEY` + `RELWORX_ACCOUNT_NO` | Alt UG/EA MoMo collect |
+| `VIXONPAY_API_KEY` | Alt UG MoMo collect |
+| `AFRICAS_TALKING_API_KEY` + `USERNAME` | Optional SMS fee reminders |
 
 **Authoritative live demo passwords after customisation:** Master → `/admin/master#demo-logins` (not static docs alone).
+
+**Authoritative UG MoMo collect keys:** Master → `/admin/master#ug-momo-credentials` (encrypted Mongo overrides beat `.env.local`).
 
 ---
 
@@ -139,6 +150,7 @@ Production may use a different master email (e.g. `oiptechcore@gmail.com`) — u
 | Fee structure | `/admin/fee-structure` |
 | Go-live | `/admin/school-golive` |
 | Cashbook | `/admin/school-cashbook` |
+| OPGB settlement | `/admin/school-settlement` |
 | School Pay Code | Printed by seed (6-digit; also on org settings) |
 
 ### 2.5 Students
@@ -204,7 +216,7 @@ There is **no** seeded developer app by default — register one, then create ke
 | Outstanding formula | Divergent defaulters | Shared ledger formula |
 | Discounts | Ad hoc | Adjustments API + UI |
 | Parent view | None | `/parent` |
-| SMIS pilots | None | Attendance, Qur’an, exams, audit (localStorage pilots) |
+| SMIS pilots | None | Attendance, Qur’an, exams, audit — **DB-backed** via `SchoolSmisEntry` (generic row UI; domain depth still P2) |
 | Roadmap | Verbal | `docs/platform/UWAIS_SMIS_PRIORITY_ROADMAP.md` |
 
 ---
@@ -307,8 +319,10 @@ Formula: `(feeRequired − discounts) + previousBalance − (prevPaid + termPaid
 | `/admin/fee-ledger` | Student fee ledger |
 | `/admin/fee-structure` | Fee heads |
 | `/admin/school-golive` | Go-live checklist |
-| `/admin/school-cashbook` | Cashbook |
-| `/admin/school-attendance` | Attendance pilot |
+| `/admin/school-cashbook` | Cashbook + deposits |
+| `/admin/school-settlement` | OPGB merchant settlement & cashout |
+| `/admin/school-attendance` | Attendance (class roster + DB-backed SMIS log) |
+| `/admin/my-card` | Admin personal OpenPayGB card (MoMo/TON activate & fund) |
 | `/admin/school-quran` | Qur’an pilot |
 | `/admin/school-exams` | Exams pilot |
 | `/admin/school-audit` | Audit pilot |
@@ -319,6 +333,10 @@ Formula: `(feeRequired − discounts) + previousBalance − (prevPaid + termPaid
 |------|------|
 | `/admin/master` | Platform overview |
 | `/admin/master/opgb-ops` | **OPGB multi-tab console** |
+| `/admin/master#ug-momo-credentials` | **LivePay / Relworx / VixonPay collect API keys** (any one = live UG MoMo) |
+| `/admin/master#deployment-environment` | Full encrypted env (incl. `#deployment-env-livepay` etc.) |
+| `/admin/master#openpay-card-settings` | Platform card enable / issue fee |
+| `/admin/master#payment-providers` | Rail toggles |
 | `/admin/master#partner-integrations` | Keys/webhooks (also in console tab) |
 | `/admin/master#demo-logins` | Live credential directory |
 
@@ -361,7 +379,66 @@ Smoke in browser:
 5. Merchant fees, settlement balance, cashout, transactions dashboard  
 6. White-label branding + **billable** WL fees  
 7. Holistic multi-tab OPGB platform console  
-8. Docs pack (this file + cross-links)
+8. Docs pack (this file + cross-links)  
+9. **2026-09-03/04 continuation** — see §10  
+
+---
+
+## 10. Continuation pack (2026-09-03 → 2026-09-04) — no omission
+
+### 10.1 School admin auth
+
+| Item | Detail |
+|------|--------|
+| URL | `/admin/login?school=1` |
+| Prefill | `uwais.admin@odelhub.local` (schools LS key isolated from master email) |
+| Post-login | `org_admin` → `/admin/school-dashboard` when `next` is bare `/admin` |
+| Hint API | `GET /api/auth/setup-hint` → `uwaisEmail` |
+| Seed password | Printed by `npm run seed:uwais` (`SEED_UWAIS_ADMIN_PASSWORD` or `SEED_ADMIN_PASSWORD`) |
+
+### 10.2 Merchant / school cashout (send-money)
+
+| Item | Detail |
+|------|--------|
+| LivePay | `livePaySendMoney` → `POST /send-money` |
+| Relworx | `relworxSendPayment` → `POST /mobile-money/send-payment` |
+| Shared | `lib/momo-disburse.ts` → `tryAutoDisburseMerchantPayout` + MoMo withdraw complete |
+| Gate | Auto when LivePay/Relworx credentials exist; `OPENPAYGB_CASHOUT_LIVE=0` queues |
+| School UI | `/admin/school-settlement` |
+
+### 10.3 OpenPayGB platform card + Mobile Money
+
+| Item | Detail |
+|------|--------|
+| Activate/fund | MoMo (MTN/Airtel) or TON — student/admin/staff/TMA |
+| Live rule | **Any one** of LivePay / Relworx / VixonPay collect keys → real USSD |
+| Sandbox | Non-prod when no UG collect keys (or `OPENPAYGB_CARD_MOMO_SANDBOX=1`) |
+| Public config | `GET /api/public/openpay-card-momo-config` |
+| Master keys UI | `/admin/master#ug-momo-credentials` |
+| Surfaces | `/student/card`, `/admin/my-card`, `/staff/card`, TMA Card tab |
+
+### 10.4 Other backlog shipped in same pass
+
+| Item | Detail |
+|------|--------|
+| Charge webhook retry | 3× in `lib/merchant-charge-webhooks.ts` |
+| SMS/WhatsApp adapters | `lib/sms/send.ts` + fee-reminders `channels` |
+| Card acquiring | Flutterwave/Paystack start + webhooks + PayWizard (`card-acquiring-config`) |
+| Network issuing scaffold | [CARD_ISSUING.md](./CARD_ISSUING.md) — Visa VDP / LivePay |
+| Attendance roster | `SchoolAttendanceRoster` on `/admin/school-attendance` |
+| Dedupe script | `npm run db:dedupe-codes` |
+| Dev fetch guard | `DevNetworkFetchGuard` in root layout |
+| Maturity scorecard | [OPENPAYGB_GATEWAY_MATURITY.md](./OPENPAYGB_GATEWAY_MATURITY.md) |
+
+### 10.5 Previous vs current (continuation)
+
+| Area | Previous | Current |
+|------|----------|---------|
+| Card MoMo UI | Hidden if LivePay checkout inactive | Available via sandbox **or** any UG collect rail |
+| UG API keys in MAC | Only buried in Deployment environment | Dedicated **Uganda MoMo API keys** panel + deep links |
+| “Configured” LivePay | Webhook secret alone looked “set” | Collect keys required (`API_KEY` + account) |
+| Merchant cashout | Manual mark-paid / sandbox only | Live send-money code path when gated on |
+| School login | Master email could override Uwais prefill | Separate schools remember-email |
 
 ---
 

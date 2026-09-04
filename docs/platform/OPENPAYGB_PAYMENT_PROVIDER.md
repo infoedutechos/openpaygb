@@ -26,6 +26,7 @@ Full matrix: [LOCAL_DEV_AND_CREDENTIALS.md](./LOCAL_DEV_AND_CREDENTIALS.md) · [
 | `/opgb` | Provider lobby + integration overview (always reachable; not blocked by Dex hub hide) |
 | `/opgb/checkout/{id}` | Hosted checkout for a merchant charge (supports white-label branding) |
 | `/developers/dashboard` | Transactions, settlement/cashout, fees, white-label, API keys, webhooks |
+| `/admin/school-settlement` | School Admin twin: school-as-merchant float, MoMo cashout, charge history |
 | `POST /api/partner/v1/charges` | Create a charge (`charges:create`) — `amountUgx` is the **order** amount before fees |
 | `GET /api/partner/v1/charges` | List charges (`charges:read`) |
 | `GET /api/partner/v1/charges/{id}` | Fetch one charge |
@@ -59,8 +60,23 @@ Full matrix: [LOCAL_DEV_AND_CREDENTIALS.md](./LOCAL_DEV_AND_CREDENTIALS.md) · [
 
 - OPGB earns the **platform fee** on each confirmed charge.
 - Merchants earn **merchant net**, held as `settlementBalanceUgx` until cashout.
-- Cashout queues a `MerchantPayout` (pending → master ops marks paid after MoMo send, or reject to restore balance).
-- Dashboard: `/developers/dashboard#settlement`. Master queue: Partner integrations → Merchant cashouts.
+- Cashout queues a `MerchantPayout`. Disbursement:
+  - **Sandbox** — auto-paid when `OPENPAYGB_CASHOUT_SANDBOX=1` (or charges sandbox in non-prod)
+  - **Live** — automatic when LivePay/Relworx configured (`lib/momo-disburse.ts`); set `OPENPAYGB_CASHOUT_LIVE=0` to force queue-only
+  - **Ops fallback** — Master mark-paid / reject (+ restore balance)
+- Dashboard: `/developers/dashboard#settlement` (partners) or `/admin/school-settlement` (school tenants). Master queue: Partner integrations → Merchant cashouts / OPGB console.
+
+## Uganda MoMo credentials (Master)
+
+Set **any one** collect rail under **`/admin/master#ug-momo-credentials`** (or Deployment environment):
+
+| Rail | Required vars |
+|------|----------------|
+| LivePay | `LIVEPAY_API_KEY`, `LIVEPAY_ACCOUNT_NUMBER` |
+| Relworx | `RELWORX_API_KEY`, `RELWORX_ACCOUNT_NO` |
+| VixonPay | `VIXONPAY_API_KEY` |
+
+Webhook secrets alone do **not** enable collect. Dashboard overrides are encrypted in MongoDB and override `.env.local`.
 
 ## White-labelling
 
@@ -97,11 +113,13 @@ Developer-facing multi-section UI remains `/developers/dashboard` (transactions,
 
 ## Sandbox
 
-When `LIVEPAY_API_KEY` is not configured and `NODE_ENV !== production` (or `OPENPAYGB_CHARGES_SANDBOX=1`), checkout shows **Sandbox: mark as paid**.
+When no UG collect rail is configured and `NODE_ENV !== production` (or `OPENPAYGB_CHARGES_SANDBOX=1`), checkout shows **Sandbox: mark as paid**.
 
 ## Related
 
-- [PLATFORM_UPDATE_2026-09.md](./PLATFORM_UPDATE_2026-09.md) — commands + logins + recipes
+- [PLATFORM_UPDATE_2026-09.md](./PLATFORM_UPDATE_2026-09.md) — commands + logins + recipes (§10 continuation)
+- [OPENPAYGB_GATEWAY_MATURITY.md](./OPENPAYGB_GATEWAY_MATURITY.md) — is OPGB a full seamless gateway?
+- [OPENPAYGB_PLATFORM_CARD.md](./OPENPAYGB_PLATFORM_CARD.md) — closed-loop card MoMo/TON
 - [PARTNER_API.md](./PARTNER_API.md) — full Partner API
 - [DEVELOPER_ECOSYSTEM.md](./DEVELOPER_ECOSYSTEM.md) — developer portal
 - [LOCAL_DEV_AND_CREDENTIALS.md](./LOCAL_DEV_AND_CREDENTIALS.md) — seed credentials

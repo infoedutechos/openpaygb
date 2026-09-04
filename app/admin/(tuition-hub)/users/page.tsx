@@ -4,12 +4,13 @@ import { TuitionHubCheckoutExplainerCompact } from "@/components/admin/TuitionHu
 import { ServerDbUnavailable } from "@/components/ui/ServerDbUnavailable";
 import { prisma } from "@/lib/prisma";
 import { getAdminFromCookies } from "@/lib/auth";
+import { SCHOOL_ADMIN_LOGIN_PATH } from "@/lib/admin-auth-entry";
 import { organizationWhereForSession } from "@/lib/admin-org-scope";
 import { tryServerDb } from "@/lib/run-server-db";
 
 export default async function AdminUsersPage() {
   const session = await getAdminFromCookies();
-  if (!session) redirect("/admin/login");
+  if (!session) redirect(SCHOOL_ADMIN_LOGIN_PATH);
   const usersResult = await tryServerDb(async () => {
     const orgWhere = await organizationWhereForSession(session.sub, session.role);
     return prisma.adminUser.findMany({

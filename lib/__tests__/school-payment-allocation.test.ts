@@ -27,11 +27,15 @@ describe("school-payment-allocation", () => {
       {
         id: "c1",
         amountUgx: 100_000,
+        createdAt: new Date("2026-01-01"),
+        schoolAccount: { name: "Tuition" },
         allocations: [{ amountUgx: 40_000 }],
       },
       {
         id: "c2",
         amountUgx: 50_000,
+        createdAt: new Date("2026-01-02"),
+        schoolAccount: { name: "Meals" },
         allocations: [],
       },
     ] as never);

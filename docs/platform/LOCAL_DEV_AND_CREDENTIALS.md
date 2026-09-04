@@ -14,11 +14,13 @@ npm run seed:uwais
 npm run dev
 ```
 
-**Windows / broken Node `querySrv`:** if `mongodb+srv` fails (`ECONNREFUSED`, socket `10013`) while `nslookup` works, `npm run db:push` and Prisma auto-expand SRV via system DNS (`scripts/mongodb-srv-fallback.cjs`). Opt out: `MONGODB_SRV_FALLBACK=0`. Force: `MONGODB_FORCE_NON_SRV=1`.
+**Windows / broken Node `querySrv` / os error 10051:** hotspot or router DNS often makes Atlas fail with `unreachable network` even when the internet works. Prisma now **auto-expands `mongodb+srv` → host list** via **public DNS (8.8.8.8 / 1.1.1.1)** on Windows (`scripts/mongodb-srv-fallback.cjs`) and prefers IPv4. Diagnose: **`npm run db:dns-check`**. Opt out: `MONGODB_SRV_FALLBACK=0`. Force expand: `MONGODB_FORCE_NON_SRV=1`. Disable public DNS: `MONGODB_PUBLIC_DNS=0`. After a DNS fix, **restart `npm run dev`**.
 
 Open **http://localhost:3000** after the terminal shows **Ready**.
 
-**Full September 2026 update pack (commands + all logins + OPGB/Uwais recipes):** **[PLATFORM_UPDATE_2026-09.md](./PLATFORM_UPDATE_2026-09.md)**.
+**Full September 2026 update pack (commands + all logins + OPGB/Uwais recipes):** **[PLATFORM_UPDATE_2026-09.md](./PLATFORM_UPDATE_2026-09.md)** (§10 = latest continuation).  
+**Is OPGB a full seamless gateway?** **[OPENPAYGB_GATEWAY_MATURITY.md](./OPENPAYGB_GATEWAY_MATURITY.md)**.  
+**UG MoMo collect keys (Master):** `/admin/master#ug-momo-credentials` — any one of LivePay / Relworx / VixonPay.
 
 Seed wipes tuition data and recreates the **default** (university) tenant, a **school** demo tenant, programmes, and demo users. Full product-line and term-fee detail: **[PRODUCT_LINES_AND_SCHOOL_TERMS.md](./PRODUCT_LINES_AND_SCHOOL_TERMS.md)**.
 
@@ -98,7 +100,9 @@ Demo login details on the Schools / Universities lobbies are **auto-updated** fr
 |-------|--------|
 | Command | `npm run seed:uwais` |
 | Admin email | `uwais.admin@odelhub.local` (override `SEED_UWAIS_ADMIN_EMAIL`) |
-| Admin password | `ChangeMe_Admin123!` (or `SEED_UWAIS_ADMIN_PASSWORD` / `SEED_ADMIN_PASSWORD`) |
+| Admin password | **Whatever `npm run seed:uwais` prints** — uses `SEED_UWAIS_ADMIN_PASSWORD` → else `SEED_ADMIN_PASSWORD` → else `ChangeMe_Admin123!` |
+| Login URL | http://localhost:3000/admin/login?school=1 (also `/school/login`) |
+| Tip | Clear cookies if URA `admin_session` was used earlier; schools form now prefills Uwais email in dev |
 | Sign-in | http://localhost:3000/admin/login?school=1 |
 | Slug | `uwais` |
 | School Pay Code | Printed in seed console (also org settings) |

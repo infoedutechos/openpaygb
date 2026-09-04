@@ -5,6 +5,7 @@ import { hashAdminResetToken, newAdminResetTokenPlain } from "@/lib/admin-passwo
 import { sendAdminPasswordResetEmail } from "@/lib/admin-password-reset-email";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
 import { apiErrorResponse } from "@/lib/api-error";
+import { withPrismaRetry } from "@/lib/prisma-retry";
 import { enforceDemoPasswordChange } from "@/lib/demo-password-policy";
 
 const Body = z.object({
@@ -27,9 +28,11 @@ export async function POST(req: Request) {
     }
     const emailLower = parsed.data.email.toLowerCase();
 
-    const admin = await prisma.adminUser.findUnique({
-      where: { email: emailLower },
-    });
+    const admin = await withPrismaRetry(() =>
+      prisma.adminUser.findUnique({
+        where: { email: emailLower },
+      }),
+    );
 
     if (!admin) {
       return NextResponse.json({ error: NOT_REGISTERED, registered: false }, { status: 404 });

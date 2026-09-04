@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { isProductionRuntime } from "@/lib/production-secrets";
-import { DB_UNAVAILABLE_MESSAGE, isTransientMongoError } from "@/lib/prisma-retry";
+import { dbUnavailableClientMessage, isTransientMongoError } from "@/lib/prisma-retry";
 
 export type ApiErrorBody = { error: string; code?: string };
 
@@ -28,6 +28,13 @@ const SAFE_STATUS_RULES: Array<{ test: (m: string) => boolean; status: number }>
   {
     test: (m) =>
       /programme not found|no fee schedule|invalid |installment plan|cannot activate|only pending|provision failed/i.test(
+        m,
+      ),
+    status: 400,
+  },
+  {
+    test: (m) =>
+      /minimum cashout|insufficient balance|set a payout|mobile money number|invalid mobile money|network must be|cannot pay payout|cannot reject payout/i.test(
         m,
       ),
     status: 400,
@@ -103,7 +110,7 @@ export function resolveApiError(
     return {
       status: 503,
       body: {
-        error: DB_UNAVAILABLE_MESSAGE,
+        error: dbUnavailableClientMessage(e),
         code: "DB_UNAVAILABLE",
       },
       shouldLog: true,

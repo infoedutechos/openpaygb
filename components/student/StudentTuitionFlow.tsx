@@ -13,12 +13,14 @@ import {
   PAYMENT_RAIL_LIVEPAY,
   PAYMENT_RAIL_MBIYO,
   PAYMENT_RAIL_OPENPAY_CARD,
+  PAYMENT_RAIL_CARD,
   PAYMENT_RAIL_RELWORX,
   PAYMENT_RAIL_VIXONPAY,
   livepayRailSectionLabel,
   mbiyoRailSectionLabel,
   relworxRailSectionLabel,
   vixonpayRailSectionLabel,
+  cardAcquiringRailSectionLabel,
   openPayBrandLabel,
   openPayCardRailSectionLabel,
   withOpenPayGlobal,
@@ -271,12 +273,13 @@ export function StudentTuitionFlow() {
   const [chainStatus, setChainStatus] = useState<"pending" | "confirmed">("pending");
   const [confirmedTxHash, setConfirmedTxHash] = useState<string | null>(null);
   const [payChannel, setPayChannel] = useState<
-    "ton" | "mbiyo" | "livepay" | "relworx" | "vixonpay" | "openpay_card" | null
+    "ton" | "mbiyo" | "livepay" | "relworx" | "vixonpay" | "openpay_card" | "card" | null
   >(null);
   const [livepayEnabled, setLivepayEnabled] = useState(false);
   const [relworxEnabled, setRelworxEnabled] = useState(false);
   const [vixonpayEnabled, setVixonpayEnabled] = useState(false);
   const [openPayCardPlatformEnabled, setOpenPayCardPlatformEnabled] = useState(false);
+  const [cardAcquiringEnabled, setCardAcquiringEnabled] = useState(false);
   const [openPayCardBalanceUgx, setOpenPayCardBalanceUgx] = useState(0);
   const [openPayCardCanPay, setOpenPayCardCanPay] = useState(false);
   const [useOpenPayCardAtCheckout, setUseOpenPayCardAtCheckout] = useState(false);
@@ -351,6 +354,10 @@ export function StudentTuitionFlow() {
       .then((r) => r.json())
       .then((j: { enabled?: boolean }) => setVixonpayEnabled(Boolean(j.enabled)))
       .catch(() => setVixonpayEnabled(false));
+    void fetch("/api/public/card-acquiring-config")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { enabled?: boolean } | null) => setCardAcquiringEnabled(Boolean(j?.enabled)))
+      .catch(() => setCardAcquiringEnabled(false));
   }, []);
 
   useEffect(() => {
@@ -1066,6 +1073,62 @@ export function StudentTuitionFlow() {
     }
   }
 
+  async function startStudentCardAcquiring() {
+    if (!me) return;
+    setError(null);
+    if (!quote) {
+      setError("Load quote first.");
+      return;
+    }
+    const email = me.email?.trim() || "";
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Add a valid email on your student profile for bank-card receipt and 3-D Secure.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const body: Record<string, unknown> = {
+        organizationSlug: orgSlug,
+        studentId: me.id,
+        email,
+        name: me.name,
+        programmeCode: code,
+        year,
+        semester,
+        feeSelectionMode: quote.feeSelectionMode,
+        installmentCount,
+      };
+      if (quote.isFullSelection !== true && quote.lines.length > 0) {
+        body.feeIds = [...quote.lines.map((l) => l.id)].sort();
+      }
+      const r = await fetch("/api/public/checkout/card-start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body),
+      });
+      const j = (await r.json()) as {
+        error?: string;
+        paymentId?: string;
+        authorizationUrl?: string;
+        provider?: string;
+      };
+      if (!r.ok) throw new Error(j.error ?? "Could not start card payment");
+      if (!j.paymentId || !j.authorizationUrl) throw new Error("Invalid card checkout response");
+      setPayChannel("card");
+      setPaymentId(j.paymentId);
+      setPaymentMemo(`card:${j.provider ?? "acquiring"}`);
+      setPaymentTonAmount(null);
+      setChainStatus("pending");
+      setConfirmedTxHash(null);
+      setWalletNote("Complete payment on the secure card page, then return here.");
+      window.location.assign(j.authorizationUrl);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not start card payment");
+      setBusy(false);
+    }
+  }
+
   async function startStudentLivepay() {
     if (!me) return;
     setError(null);
@@ -1749,6 +1812,21 @@ export function StudentTuitionFlow() {
               ) : null}
             </GlassPanel>
           ) : null}
+          {cardAcquiringEnabled ? (
+            <GlassPanel className="border-amber-500/30 bg-amber-950/20 p-5">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-200/85">
+                {cardAcquiringRailSectionLabel}
+              </p>
+              <p className="mt-2 text-sm text-slate-400">
+                Pay UGX {quote.totalUgx.toLocaleString()} with Visa or Mastercard on a secure hosted page (3-D Secure).
+              </p>
+              <div className="mt-4">
+                <BtnGhost onClick={() => void startStudentCardAcquiring()} disabled={busy}>
+                  Pay with {PAYMENT_RAIL_CARD}
+                </BtnGhost>
+              </div>
+            </GlassPanel>
+          ) : null}
           {livepayEnabled ? (
             <GlassPanel className="border-emerald-500/25 p-5">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/85">{livepayRailSectionLabel}</p>
@@ -2038,6 +2116,12 @@ export function StudentTuitionFlow() {
                   Your payment of{" "}
                   <span className="font-bold text-cyan-200">UGX {quote.totalUgx.toLocaleString()}</span> via{" "}
                   {PAYMENT_RAIL_OPENPAY_CARD} has been confirmed.
+                </>
+              ) : payChannel === "card" ? (
+                <>
+                  Your payment of{" "}
+                  <span className="font-bold text-cyan-200">UGX {quote.totalUgx.toLocaleString()}</span> via{" "}
+                  {PAYMENT_RAIL_CARD} has been confirmed.
                 </>
               ) : payChannel === "mbiyo" || payChannel === "livepay" || payChannel === "relworx" || payChannel === "vixonpay" ? (
                 <>

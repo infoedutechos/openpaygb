@@ -8,40 +8,37 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
-vi.mock("@/lib/tuition-balance", () => ({
-  getStudentBalanceSummary: vi.fn(),
+vi.mock("@/lib/school-fee-ledger", () => ({
+  listStudentFeeLedgers: vi.fn(),
 }));
 
-vi.mock("@/lib/school-payment-allocation", () => ({
-  getAllocatedPaidUgx: vi.fn(),
-}));
-
-vi.mock("@/lib/school-account-balance", () => ({
-  getStudentTermPaidUgx: vi.fn(),
-}));
-
-import { getStudentTermPaidUgx } from "@/lib/school-account-balance";
+import { listStudentFeeLedgers } from "@/lib/school-fee-ledger";
 
 describe("school-defaulters", () => {
   beforeEach(() => {
     vi.mocked(prisma.student.findMany).mockReset();
-    vi.mocked(getStudentTermPaidUgx).mockReset();
+    vi.mocked(listStudentFeeLedgers).mockReset();
   });
 
   it("classifies overdue defaulters with bill charges", async () => {
+    vi.mocked(listStudentFeeLedgers).mockResolvedValue({
+      rows: [
+        {
+          studentId: "s1",
+          studentName: "Jane Doe",
+          admissionNo: "ADM-1",
+          classCode: "P.1",
+          className: "Primary One",
+          totalOutstandingUgx: 100_000,
+          previousBalancePaidUgx: 0,
+          currentTermPaidUgx: 0,
+          latestReceiptNo: null,
+        },
+      ],
+    } as never);
     vi.mocked(prisma.student.findMany).mockResolvedValue([
-      {
-        id: "s1",
-        name: "Jane Doe",
-        admissionNo: "ADM-1",
-        programmeCode: "P1-A",
-        year: 1,
-        schoolClass: { code: "P.1", name: "Primary One" },
-        payments: [],
-        billCharges: [{ amountUgx: 100_000 }],
-      },
+      { id: "s1", payments: [] },
     ] as never);
-    vi.mocked(getStudentTermPaidUgx).mockResolvedValue(0);
 
     const { rows } = await listSchoolDefaulters({
       organizationId: "org1",
@@ -56,19 +53,33 @@ describe("school-defaulters", () => {
   });
 
   it("classifies non-defaulters when fully paid via allocations", async () => {
+    vi.mocked(listStudentFeeLedgers).mockResolvedValue({
+      rows: [
+        {
+          studentId: "s2",
+          studentName: "John Smith",
+          admissionNo: "ADM-2",
+          classCode: "P.2",
+          className: "Primary Two",
+          totalOutstandingUgx: 0,
+          previousBalancePaidUgx: 0,
+          currentTermPaidUgx: 80_000,
+          latestReceiptNo: "RP-1",
+        },
+      ],
+    } as never);
     vi.mocked(prisma.student.findMany).mockResolvedValue([
       {
         id: "s2",
-        name: "John Smith",
-        admissionNo: "ADM-2",
-        programmeCode: "P2-A",
-        year: 1,
-        schoolClass: { code: "P.2", name: "Primary Two" },
-        payments: [{ id: "p1", confirmedAt: new Date(), semester: 1, totalUgx: 80_000, schoolReceiptNo: "RP-1" }],
-        billCharges: [{ amountUgx: 80_000 }],
+        payments: [
+          {
+            id: "p1",
+            confirmedAt: new Date(),
+            schoolReceiptNo: "RP-1",
+          },
+        ],
       },
     ] as never);
-    vi.mocked(getStudentTermPaidUgx).mockResolvedValue(80_000);
 
     const { rows } = await listSchoolDefaulters({
       organizationId: "org1",
@@ -82,31 +93,36 @@ describe("school-defaulters", () => {
   });
 
   it("filters by tab", async () => {
+    vi.mocked(listStudentFeeLedgers).mockResolvedValue({
+      rows: [
+        {
+          studentId: "s1",
+          studentName: "A",
+          admissionNo: "1",
+          classCode: "P.1",
+          className: "Primary One",
+          totalOutstandingUgx: 50_000,
+          previousBalancePaidUgx: 0,
+          currentTermPaidUgx: 0,
+          latestReceiptNo: null,
+        },
+        {
+          studentId: "s2",
+          studentName: "B",
+          admissionNo: "2",
+          classCode: "P.1",
+          className: "Primary One",
+          totalOutstandingUgx: 0,
+          previousBalancePaidUgx: 0,
+          currentTermPaidUgx: 10_000,
+          latestReceiptNo: null,
+        },
+      ],
+    } as never);
     vi.mocked(prisma.student.findMany).mockResolvedValue([
-      {
-        id: "s1",
-        name: "Debtor",
-        admissionNo: "A1",
-        programmeCode: "X",
-        year: 1,
-        schoolClass: null,
-        payments: [],
-        billCharges: [{ amountUgx: 50_000 }],
-      },
-      {
-        id: "s2",
-        name: "Clear",
-        admissionNo: "A2",
-        programmeCode: "Y",
-        year: 1,
-        schoolClass: null,
-        payments: [],
-        billCharges: [{ amountUgx: 10_000 }],
-      },
+      { id: "s1", payments: [] },
+      { id: "s2", payments: [] },
     ] as never);
-    vi.mocked(getStudentTermPaidUgx).mockImplementation(async ({ studentId }) =>
-      studentId === "s2" ? 10_000 : 0,
-    );
 
     const { rows } = await listSchoolDefaulters({
       organizationId: "org1",
@@ -114,7 +130,8 @@ describe("school-defaulters", () => {
       tab: "overdue",
     });
 
+    expect(rows.every((r) => r.tab === "overdue")).toBe(true);
     expect(rows).toHaveLength(1);
-    expect(rows[0]?.name).toBe("Debtor");
+    expect(rows[0]?.studentId).toBe("s1");
   });
 });

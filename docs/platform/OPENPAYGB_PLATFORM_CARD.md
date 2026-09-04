@@ -15,7 +15,7 @@ The **OpenPayGB platform card** is a **closed-loop UGX ledger** on ODEL HUB Pay 
 | **Student** | Opt-in, activate, fund, pay tuition, view balance | `/student/card`, `/student/pay`, `/my/*`, TMA Card/Pay tabs |
 | **Guest payer** | Pay tuition from card **if** checkout session ties to a student with active card | `/pay/{orgSlug}` (OpenPayGB checkbox when eligible) |
 | **School admin** | View student OpenPayGB cards in workspace; personal admin card | Sidebar **OpenPayGB Cards** → `/admin/virtual-cards`; **My OpenPayGB Card** → `/admin/my-card` |
-| **Master admin** | Enable platform card, issue fee, registry of all cards/balances; personal card | `/admin/master#openpay-card-settings`, `#openpay-cards-overview`; `/admin/my-card` |
+| **Master admin** | Enable platform card, issue fee, registry; **UG MoMo collect keys**; personal card | `/admin/master#openpay-card-settings`, `#openpay-cards-overview`, **`#ug-momo-credentials`**; `/admin/my-card` |
 | **Telegram (TMA)** | Card view, MoMo top-up, pay tuition from balance | `/tma` Card + Pay tabs |
 
 ---
@@ -29,7 +29,7 @@ The **OpenPayGB platform card** is a **closed-loop UGX ledger** on ODEL HUB Pay 
 | Opt-in (reserve card) | `POST /api/student/openpay-card/opt-in` |
 | View status & balance | `GET /api/student/openpay-card` |
 | Pay issue fee (TON) | `POST /api/student/openpay-card/issue/transfer` |
-| Pay issue fee (MoMo) | `POST /api/student/openpay-card/issue/momo-start` (VixonPay / LivePay / Relworx) |
+| Pay issue fee (MoMo) | `POST /api/student/openpay-card/issue/momo-start` — **any one** of LivePay / Relworx / VixonPay (Master → **Uganda MoMo API keys** `#ug-momo-credentials`); sandbox in non-prod if none set |
 
 **UI:** `components/student/OpenPayCardPanel.tsx` at `/student/card`
 
@@ -169,8 +169,22 @@ The TMA only shows executable payment rails. Hosted **bank-card acquiring is int
 - **Platform revenue lever** — TON (or MoMo) issue fee on activation
 - **Liquidity oversight** — total UGX float on active cards in master overview
 - **Product toggle** — disable card platform-wide without code deploy
+- **UG MoMo keys** — `/admin/master#ug-momo-credentials` (any one of LivePay / Relworx / VixonPay → live USSD for activate/fund)
 
 ### Ecosystem (Telegram)
 
 - **Fintech UX** — card tab, balance, top-up, in-app tuition pay align with Mini App spec
 - **Push notifications** on top-up and payment confirmed
+
+---
+
+## MoMo activate / fund (ops)
+
+| Mode | When | Behaviour |
+|------|------|-----------|
+| **Live** | Any one UG collect rail configured in MAC or env | Real MTN/Airtel USSD; webhook confirms |
+| **Sandbox** | Non-prod and no UG collect keys (or `OPENPAYGB_CARD_MOMO_SANDBOX=1`) | Instant confirm (dev) |
+
+Public readiness: `GET /api/public/openpay-card-momo-config`
+
+Related: [OPENPAYGB_GATEWAY_MATURITY.md](./OPENPAYGB_GATEWAY_MATURITY.md) · [PLATFORM_UPDATE_2026-09.md](./PLATFORM_UPDATE_2026-09.md) §10

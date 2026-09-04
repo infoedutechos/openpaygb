@@ -1,8 +1,16 @@
 "use client";
 
-import { openPayGlobalStatus, PAYMENT_RAIL_OPENPAY_CARD } from "@/lib/open-pay-brand";
+import { openPayGlobalStatus, PAYMENT_RAIL_CARD, PAYMENT_RAIL_OPENPAY_CARD } from "@/lib/open-pay-brand";
 
-export type TuitionPayChannel = "ton" | "mbiyo" | "livepay" | "relworx" | "vixonpay" | "openpay_card" | null;
+export type TuitionPayChannel =
+  | "ton"
+  | "mbiyo"
+  | "livepay"
+  | "relworx"
+  | "vixonpay"
+  | "openpay_card"
+  | "card"
+  | null;
 
 /** Shared milestone labels for guest + student tuition checkout. */
 export const TUITION_CHECKOUT_MILESTONES = [
@@ -49,6 +57,7 @@ export function milestoneForCheckoutStep(step: FlowStepLike): TuitionCheckoutMil
 
 export function paySubstepLabel(step: FlowStepLike, payChannel: TuitionPayChannel): string | null {
   if (payChannel === "openpay_card" && step === "success") return `${PAYMENT_RAIL_OPENPAY_CARD} — paid`;
+  if (payChannel === "card" && step === "success") return `${PAYMENT_RAIL_CARD} — paid`;
   if (step === "mbiyo_waiting") return openPayGlobalStatus("approve on your phone");
   if (payChannel === "mbiyo" && step === "processing") return openPayGlobalStatus("confirming");
   if (step === "connect_wallet") return "TON — connect wallet";

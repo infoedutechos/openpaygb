@@ -20,6 +20,16 @@ const nextConfig: NextConfig = {
       "zod",
     ],
   },
+  images: {
+    localPatterns: [
+      // Brand icons served with ?id=… (Next 16 requires allowing query strings)
+      { pathname: "/api/notification-social-icon" },
+      { pathname: "/api/manifest/**" },
+      { pathname: "/playhub/**" },
+      // Default local assets (omit `search` = allow with or without query)
+      { pathname: "/**" },
+    ],
+  },
   serverExternalPackages: ["@prisma/client"],
   transpilePackages: ["@tonconnect/ui-react", "@tonconnect/sdk"],
   /** File tracing root = this app (see README if Next still warns about a lockfile under your user profile). */

@@ -33,6 +33,8 @@ export async function GET() {
   if (!gate.ok) return gate.response;
 
   try {
+  const { warmDeploymentEnvCache } = await import("@/lib/deployment-env-resolve");
+  await warmDeploymentEnvCache();
   const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || "";
   const custom = await withPrismaRetry(() =>
     prisma.mobileMoneyProvider.findMany({
@@ -43,6 +45,7 @@ export async function GET() {
 
   return NextResponse.json({
     builtin: getBuiltinMobileMoneyProviders(),
+    credentialsAnchor: "/admin/master#ug-momo-credentials",
     custom: custom.map((p) => ({
       id: p.id,
       code: p.code,

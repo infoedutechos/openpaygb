@@ -38,10 +38,16 @@ export async function allocatePaymentToBillCharges(
 
   // Pay PREVIOUS BALANCE / arrears before current-term fee heads (spreadsheet PAID/DEBT then PAID/N.T).
   const orderedCharges = [...charges].sort((a, b) => {
-    const aPrev = /previous balance|arrears|o\/blc|opening balance/i.test(a.schoolAccount.name) ? 0 : 1;
-    const bPrev = /previous balance|arrears|o\/blc|opening balance/i.test(b.schoolAccount.name) ? 0 : 1;
+    const aPrev = /previous balance|arrears|o\/blc|opening balance/i.test(a.schoolAccount?.name ?? "")
+      ? 0
+      : 1;
+    const bPrev = /previous balance|arrears|o\/blc|opening balance/i.test(b.schoolAccount?.name ?? "")
+      ? 0
+      : 1;
     if (aPrev !== bPrev) return aPrev - bPrev;
-    return a.createdAt.getTime() - b.createdAt.getTime();
+    const aT = a.createdAt?.getTime?.() ?? 0;
+    const bT = b.createdAt?.getTime?.() ?? 0;
+    return aT - bT;
   });
 
   const allocations: { billChargeId: string; amountUgx: number }[] = [];

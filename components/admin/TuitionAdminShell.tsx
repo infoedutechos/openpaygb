@@ -61,6 +61,7 @@ const SCHOOL_ERP_SEGMENTS: { suffix: string; label: string }[] = [
   { suffix: "/virtual-cards", label: "OpenPayGB Cards" },
   { suffix: "/school-staff", label: "Staff" },
   { suffix: "/school-outflow", label: "Outflow" },
+  { suffix: "/school-settlement", label: "OPGB settlement" },
   { suffix: "/school-inventory", label: "Inventory" },
   { suffix: "/school-reports", label: "Reports" },
   { suffix: "/payments", label: "Online payments" },

@@ -78,7 +78,7 @@ export async function POST(req: Request) {
       request_currency: data.request_currency,
       internal_reference: data.internal_reference,
     });
-    if (topupResult.action === "card_topup_confirmed" || topupResult.action === "already_confirmed") {
+    if (topupResult.action === "card_topup_confirmed" || topupResult.action === "already_confirmed" || topupResult.action === "card_issue_confirmed") {
       return NextResponse.json({ ok: true, action: topupResult.action, event, cardTopupId: ref });
     }
 

@@ -19,8 +19,20 @@ export function getLivePayPublicWebhookUrl(): string {
   return getLivePayWebhookUrl() ?? `${appBaseUrl()}/api/webhooks/livepay`;
 }
 
+export function getFlutterwaveWebhookUrl(): string {
+  return `${appBaseUrl()}/api/webhooks/flutterwave`;
+}
+
+export function getPaystackWebhookUrl(): string {
+  return `${appBaseUrl()}/api/webhooks/paystack`;
+}
+
+export function getVisaIssuingWebhookUrl(): string {
+  return `${appBaseUrl()}/api/webhooks/visa-issuing`;
+}
+
 export type WebhookProviderAlignment = {
-  code: "mbiyo" | "momo" | "livepay";
+  code: "mbiyo" | "momo" | "livepay" | "flutterwave" | "paystack" | "visa_issuing";
   name: string;
   webhookUrl: string;
   secretEnvVar: string;
@@ -61,6 +73,38 @@ export function getWebhookProviderAlignment(): WebhookProviderAlignment[] {
       headerOrSignature: "HMAC X-Webhook-Signature (or legacy x-livepay-webhook-secret)",
       dashboardUrl: "https://livepay.me/",
       docsPath: "docs/WEBHOOK_SECRETS_ALIGNMENT.md",
+    },
+    {
+      code: "flutterwave",
+      name: "Flutterwave (card acquiring)",
+      webhookUrl: getFlutterwaveWebhookUrl(),
+      secretEnvVar: "FLUTTERWAVE_WEBHOOK_SECRET",
+      secretConfigured: Boolean(
+        deploymentEnv("FLUTTERWAVE_WEBHOOK_SECRET") || deploymentEnv("FLUTTERWAVE_SECRET_KEY"),
+      ),
+      headerOrSignature: "verif-hash header equals secret (or HMAC when configured)",
+      dashboardUrl: "https://dashboard.flutterwave.com/",
+      docsPath: "docs/platform/OPENPAYGB_GATEWAY_MATURITY.md",
+    },
+    {
+      code: "paystack",
+      name: "Paystack (card acquiring)",
+      webhookUrl: getPaystackWebhookUrl(),
+      secretEnvVar: "PAYSTACK_SECRET_KEY",
+      secretConfigured: Boolean(deploymentEnv("PAYSTACK_SECRET_KEY")),
+      headerOrSignature: "HMAC-SHA512 of raw body → x-paystack-signature",
+      dashboardUrl: "https://dashboard.paystack.com/",
+      docsPath: "docs/platform/OPENPAYGB_GATEWAY_MATURITY.md",
+    },
+    {
+      code: "visa_issuing",
+      name: "Visa / network issuing",
+      webhookUrl: getVisaIssuingWebhookUrl(),
+      secretEnvVar: "VISA_WEBHOOK_SECRET",
+      secretConfigured: Boolean(deploymentEnv("VISA_WEBHOOK_SECRET")),
+      headerOrSignature: "Shared secret → x-visa-webhook-secret (partner-dependent)",
+      dashboardUrl: "https://developer.visa.com/",
+      docsPath: "docs/platform/CARD_ISSUING.md",
     },
   ];
 }

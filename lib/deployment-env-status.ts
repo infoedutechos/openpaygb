@@ -101,6 +101,20 @@ function varStatus(def: EnvVarDefinition, dashboardNames: Set<string>): EnvVarSt
 }
 
 function groupConfigured(group: EnvGroupDefinition, vars: EnvVarStatus[]): boolean {
+  const byName = new Map(vars.map((v) => [v.name, v.set]));
+  // Collect rails need their API credentials — webhook-only secrets must not count as "configured".
+  if (group.id === "livepay") {
+    return Boolean(byName.get("LIVEPAY_API_KEY") && byName.get("LIVEPAY_ACCOUNT_NUMBER"));
+  }
+  if (group.id === "relworx") {
+    return Boolean(byName.get("RELWORX_API_KEY") && byName.get("RELWORX_ACCOUNT_NO"));
+  }
+  if (group.id === "vixonpay") {
+    return Boolean(byName.get("VIXONPAY_API_KEY"));
+  }
+  if (group.id === "mbiyo") {
+    return Boolean(byName.get("MBIYO_SECRET_KEY"));
+  }
   const required = vars.filter((v) => v.requirement === "always" || v.requirement === "all");
   if (required.length > 0) return required.every((v) => v.set);
   return vars.some((v) => v.set);

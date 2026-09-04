@@ -1,14 +1,13 @@
 "use client";
 
-import { SmisModuleShell } from "@/components/admin/school/SmisModuleShell";
+import { SchoolAttendanceRoster } from "@/components/admin/school/SchoolAttendanceRoster";
 
 export default function SchoolAttendancePage() {
   return (
-    <SmisModuleShell
-      title="Attendance"
-      description="Mark daily class attendance. Ties to class/stream from school structure."
-      storageKey="odelhub-smis-attendance"
-      columns={["Date", "Class", "Student", "Status (Present/Absent/Late)"]}
-    />
+    <div className="space-y-2">
+      <h1 className="text-2xl font-semibold text-white">Attendance</h1>
+      <p className="text-sm text-slate-400">Mark daily class attendance by roster.</p>
+      <SchoolAttendanceRoster />
+    </div>
   );
 }

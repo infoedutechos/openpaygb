@@ -3,6 +3,7 @@ import { isTransientMongoError } from "@/lib/mongo-transient-error";
 
 export {
   DB_UNAVAILABLE_MESSAGE,
+  dbUnavailableClientMessage,
   isPrismaEngineEmptyError,
   isTransientMongoError,
 } from "@/lib/mongo-transient-error";

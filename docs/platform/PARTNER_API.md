@@ -188,7 +188,7 @@ function verify(secret, rawBody, signatureHex) {
 }
 ```
 
-Deliveries are logged for 7 days in `partner_webhook_deliveries`. Failures are logged only (no automatic retry yet).
+Deliveries are logged in `partner_webhook_deliveries`. **Tuition payment** webhooks (`payment.*`) and **merchant charge** webhooks (`charge.*`) both retry up to **3 times** with short backoff.
 
 ## Mobile money (inbound)
 

@@ -1,6 +1,33 @@
 # Product & engineering backlog
 
-**Last updated:** 2026-07-19 · **Brand:** **OpenPayGB** · **Rails:** Mbiyo, LivePay, MoMo bridge · **Repo:** https://github.com/infoedutechos/ODELHUBPay
+**Last updated:** 2026-09-04 · **Brand:** **OpenPayGB** · **Rails:** Mbiyo, LivePay, Relworx, VixonPay, MoMo bridge · **Repo:** https://github.com/infoedutechos/ODELHUBPay
+
+**Sep 2026 pack:** [PLATFORM_UPDATE_2026-09.md](../platform/PLATFORM_UPDATE_2026-09.md) · Maturity: [OPENPAYGB_GATEWAY_MATURITY.md](../platform/OPENPAYGB_GATEWAY_MATURITY.md) · Uwais roadmap: [UWAIS_SMIS_PRIORITY_ROADMAP.md](../platform/UWAIS_SMIS_PRIORITY_ROADMAP.md)
+
+---
+
+## Completed (OPGB merchant + Uwais / school pass 2026-09)
+
+| ID | Item | Implementation |
+|----|------|----------------|
+| B-OPGB-M1 | Merchant charges + hosted checkout | `POST /api/partner/v1/charges`, `/opgb/checkout/[id]`, fee engine, white-label |
+| B-OPGB-M2 | Merchant settlement + cashout queue | `DeveloperApp.settlementBalanceUgx`, `MerchantPayout`, developers `#settlement`, master mark-paid |
+| B-OPGB-M3 | Charge webhook retry | 3× backoff in `lib/merchant-charge-webhooks.ts` (parity with payment webhooks) |
+| B-OPGB-M4 | Sandbox auto-cashout | `OPENPAYGB_CASHOUT_SANDBOX` / charges sandbox → `tryAutoDisburseMerchantPayout` |
+| B-OPGB-M5 | Holistic OPGB master console | `/admin/master/opgb-ops` multi-tab (fees, charges, cashouts, cards, withdraws) |
+| B-SCH-U1 | Uwais fee ledger + CSV import | `/admin/fee-ledger`, `npm run seed:uwais`, sample CSV |
+| B-SCH-U2 | Parent portal + `/pay/uwais` | `/parent`, public pay slug |
+| B-SCH-U3 | Cashbook + bank deposits | `/admin/school-cashbook`, `SchoolCashbookDeposit` |
+| B-SCH-U4 | School-as-merchant settlement | `/admin/school-settlement` (+ test charge / Telegram reminders actions) |
+| B-SCH-U5 | SMIS DB-backed pilots | `SchoolSmisEntry` + `/api/admin/school/smis` (attendance/quran/exams/audit) — not localStorage |
+| B-AUTH-01 | School login hardening | `/admin/login?school=1` Uwais prefill, clear URA cookies, `?school=1` redirects |
+| B-AUTH-01b | Schools remember-email + post-login | Separate LS key; org_admin lands on `/admin/school-dashboard` |
+| B-P5-01 | LivePay/Relworx send-money | `lib/momo-disburse.ts` wired into merchant cashout auto-disburse |
+| B-SCH-R1b | SMS/WhatsApp reminder adapters | `lib/sms/send.ts` + multi-channel fee-reminders API |
+| B-P3-01 | Card acquiring start | `PaymentRail.card` + `/api/public/checkout/card-start` |
+| B-SCH-R3b | Attendance class roster | `SchoolAttendanceRoster` on `/admin/school-attendance` |
+| B-CARD-MOMO | Platform card MoMo activate/fund | Sandbox + any-one live rail; `openpay-card-momo-config` |
+| B-MAC-UG-MOMO | Master Uganda MoMo keys panel | `/admin/master#ug-momo-credentials` (LivePay/Relworx/VixonPay) |
 
 ---
 
@@ -85,17 +112,31 @@
 
 ## Remaining / operational
 
-| ID | Item | Notes |
-|----|------|-------|
-| B-OPS-01 | Production env | [PRODUCTION_GO_LIVE.md](../deployment/PRODUCTION_GO_LIVE.md) |
-| B-OPS-05 | Vercel deployment account gate | **Resolved 2026-07-16** — production CLI deploy READY and aliased to `https://odelpay.vercel.app`; commit/push local holistic fix tree so GitHub CI matches production |
-| B-OPS-03 | PSP dashboard paste | After `deployment:provision-sync`, paste `MBIYO_*` / `MOMO_*` / `LIVEPAY_*` webhook secrets into each provider dashboard ([WEBHOOK_SECRETS_ALIGNMENT.md](../deployment/WEBHOOK_SECRETS_ALIGNMENT.md)) |
-| B-OPS-07 | Production `db:push` | After deploy: push hub-hide + SiteVisitPath/Action models if not already applied (`npm run db:push` against prod `DATABASE_URL`) |
-| B-OPS-08 | Upstash rate limits | Set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` on Vercel for multi-instance rate limits ([DEPLOYMENT_ENV_PRODUCTION.md](../deployment/DEPLOYMENT_ENV_PRODUCTION.md)) |
-| P4 | LivePay KES/GHS/XAF checkout | Stub only until LivePay product expansion — use **Mbiyo** multi-country collect when configured |
-| P3 | Card acquiring on checkout | Flutterwave/Paystack hosted pay — new `PaymentRail.card` (needs merchant account + settlement policy) |
-| P3 | LivePay card issuing API | Request docs/sandbox from LivePay; see investigation §6 Phase 2 |
-| P5 | Live on-chain delivery + PSP payout APIs | Custodial withdraw queue + master dispute resolve **shipped** (`/admin/master/opgb-ops`). Remaining: hot-wallet TON send + LivePay/Relworx `send-money` once payout credentials exist |
+| ID | Pri | Item | Status | Notes |
+|----|-----|------|--------|-------|
+| B-OPS-01 | P1 | Production env / go-live | Partial | [PRODUCTION_GO_LIVE.md](../deployment/PRODUCTION_GO_LIVE.md) |
+| B-OPS-03 | P0 | PSP dashboard paste | Ops | Paste `MBIYO_*` / `MOMO_*` / `LIVEPAY_*` webhook secrets after provision-sync |
+| B-OPS-07 | P1 | Production `db:push` | Ops | Include SMIS / cashbook deposit / fee-reminder collections + `PaymentRail.card` after deploy |
+| B-OPS-08 | P2 | Upstash rate limits | Missing | `UPSTASH_REDIS_REST_URL` + `TOKEN` on Vercel |
+| P5 | P0 | Live PSP **send-money** (merchant cashout + custodial withdraw) | **Done (auto)** | Live when LivePay/Relworx configured; `OPENPAYGB_CASHOUT_LIVE=0` forces queue-only. Fund PSP float in production. |
+| P3a | P1 | Bank Visa/MC **acquiring** | **Done (code)** | `card-start` + Flutterwave/Paystack webhooks + PayWizard; set acquirer keys. |
+| P3b | P1 | LivePay / Visa **network issuing** | **Scaffold** | [CARD_ISSUING.md](../platform/CARD_ISSUING.md) — VDP mTLS + LivePay URL; BIN sponsor for live PANs. |
+| P5b | P1 | Hot-wallet on-chain TON delivery | Missing | Dex Phase 5 — custodial ops desk already live |
+| P4 | P2 | LivePay KES/GHS/XAF | Stub | Only UG implemented — use Mbiyo multi-country when configured |
+| B-SCH-R1 | P1 | SMS/WhatsApp fee reminders | **Code done** | `lib/sms/send.ts` + fee-reminders channels; needs Africa’s Talking / WhatsApp env |
+| B-SCH-R2 | P1 | Real Uwais production spreadsheet import | Partial | Sample CSV path live — replace with full sheet for “Excel is backup” exit |
+| B-SCH-R3 | P2 | SMIS domain depth (class attendance / Qur’an grades) | **Partial→improved** | Class roster attendance (`SchoolAttendanceRoster`) + SMIS log; Qur’an/exams still generic rows |
+| B-SCH-R4 | P3 | Payroll / timetable / library / transport / parent app | Missing | Explicitly deferred in Uwais roadmap P3 |
+| B-DB-02 | P2 | Unique `admissionNo` / `schoolPayCode` after data cleanup | Partial | `npm run db:dedupe-codes` (`scripts/dedupe-admission-school-codes.ts`); Mongo `@@unique` still deferred until every env runs dedupe |
+| B-AUTH-01b | P1 | School login remember-email isolation | **Done** | Separate `odelhub_admin_email_schools`; org_admin → `/admin/school-dashboard` |
+
+### Recommended next 5 (impact × feasibility)
+
+1. Paste PSP collect keys + webhook secrets; fund float (cashout auto when rails configured)  
+2. Configure Flutterwave or Paystack + webhook URLs for bank card  
+3. Configure Africa’s Talking for SMS fee reminders  
+4. Wire Visa Developer certs / LivePay issuing URL ([CARD_ISSUING.md](../platform/CARD_ISSUING.md))  
+5. Import real Uwais spreadsheet end-to-end  
 
 ---
 
@@ -105,4 +146,8 @@
 npm run db:push
 npm run db:generate
 npm run verify
+# optional cleanup before unique indexes:
+npm run db:dedupe-codes
 ```
+
+**School admin (Uwais):** `/admin/login?school=1` → email from `SEED_UWAIS_ADMIN_EMAIL` (default `uwais.admin@odelhub.local`) and password printed by `npm run seed:uwais`.

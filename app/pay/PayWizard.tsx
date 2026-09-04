@@ -30,6 +30,8 @@ import {
   PAYMENT_RAIL_RELWORX,
   PAYMENT_RAIL_VIXONPAY,
   PAYMENT_RAIL_OPENPAY_CARD,
+  PAYMENT_RAIL_CARD,
+  cardAcquiringRailSectionLabel,
   relworxRailSectionLabel,
   vixonpayRailSectionLabel,
   withMobileMoneyRails,
@@ -220,11 +222,12 @@ export function PayWizard({
   const [confirmedTxHash, setConfirmedTxHash] = useState<string | null>(null);
   const [getStartedOpen, setGetStartedOpen] = useState(false);
   const [payChannel, setPayChannel] = useState<
-    "ton" | "mbiyo" | "livepay" | "relworx" | "vixonpay" | "openpay_card" | null
+    "ton" | "mbiyo" | "livepay" | "relworx" | "vixonpay" | "openpay_card" | "card" | null
   >(null);
   const [livepayEnabled, setLivepayEnabled] = useState(false);
   const [relworxEnabled, setRelworxEnabled] = useState(false);
   const [vixonpayEnabled, setVixonpayEnabled] = useState(false);
+  const [cardAcquiringEnabled, setCardAcquiringEnabled] = useState(false);
   const [openPayCardPlatformEnabled, setOpenPayCardPlatformEnabled] = useState(false);
   const [openPayCardBalanceUgx, setOpenPayCardBalanceUgx] = useState(0);
   const [openPayCardCanPay, setOpenPayCardCanPay] = useState(false);
@@ -290,6 +293,14 @@ export function PayWizard({
       })
       .catch(() => {
         if (!cancelled) setOpenPayCardPlatformEnabled(false);
+      });
+    void fetch("/api/public/card-acquiring-config")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { enabled?: boolean } | null) => {
+        if (!cancelled) setCardAcquiringEnabled(Boolean(j?.enabled));
+      })
+      .catch(() => {
+        if (!cancelled) setCardAcquiringEnabled(false);
       });
     return () => {
       cancelled = true;
@@ -1007,6 +1018,67 @@ export function PayWizard({
     } catch (e) {
       setError(checkoutPaymentErrorMessage(e, `Could not start ${PAYMENT_RAIL_MBIYO} payment`));
     } finally {
+      setBusy(false);
+    }
+  }
+
+  async function startGuestCardAcquiring() {
+    setError(null);
+    if (!quote) {
+      setError("Load quote first.");
+      return;
+    }
+    if (!studentName.trim()) {
+      setError("Enter your full name.");
+      return;
+    }
+    const email = studentEmail.trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Enter a valid email for bank-card receipt and 3-D Secure.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const body: Record<string, unknown> = {
+        organizationSlug: orgSlug,
+        name: studentName.trim(),
+        email,
+        programmeCode: code,
+        year,
+        semester,
+        feeSelectionMode: quote.feeSelectionMode,
+        installmentCount,
+      };
+      if (checkoutStudentId) body.studentId = checkoutStudentId;
+      if (quote.isFullSelection !== true && quote.lines.length > 0) {
+        body.feeIds = [...quote.lines.map((l) => l.id)].sort();
+      }
+      const r = await fetch("/api/public/checkout/card-start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...checkoutAuthHeaders(orgSlug) },
+        credentials: "include",
+        body: JSON.stringify(body),
+      });
+      const j = (await r.json()) as {
+        error?: string;
+        checkoutToken?: string;
+        paymentId?: string;
+        authorizationUrl?: string;
+        provider?: string;
+      };
+      if (!r.ok) throw new Error(j.error ?? "Could not start card payment");
+      if (!j.paymentId || !j.authorizationUrl) throw new Error("Invalid card checkout response");
+      if (j.checkoutToken) setCheckoutToken(orgSlug, j.checkoutToken);
+      setPayChannel("card");
+      setPaymentId(j.paymentId);
+      setPaymentMemo(`card:${j.provider ?? "acquiring"}`);
+      setPaymentTonAmount(null);
+      setChainStatus("pending");
+      setConfirmedTxHash(null);
+      setWalletNote("Complete payment on the secure card page, then return here.");
+      window.location.assign(j.authorizationUrl);
+    } catch (e) {
+      setError(checkoutPaymentErrorMessage(e, "Could not start card payment"));
       setBusy(false);
     }
   }
@@ -1826,6 +1898,25 @@ export function PayWizard({
                 ) : null}
               </div>
             ) : null}
+            {cardAcquiringEnabled ? (
+              <div className="rounded-xl border border-amber-500/30 bg-amber-950/20 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-amber-200/85">
+                  {cardAcquiringRailSectionLabel}
+                </p>
+                <p className="mt-1 text-sm text-slate-400">
+                  Pay UGX {quote.totalUgx.toLocaleString()} with Visa or Mastercard on a secure hosted page (3-D Secure).
+                  Use the email you entered above for the receipt.
+                </p>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void startGuestCardAcquiring()}
+                  className="mt-4 w-full rounded-xl border border-amber-500/40 bg-amber-600/90 py-3 text-sm font-semibold text-white hover:bg-amber-500 disabled:opacity-50"
+                >
+                  Pay with {PAYMENT_RAIL_CARD}
+                </button>
+              </div>
+            ) : null}
             {livepayEnabled ? (
               <div className="rounded-xl border border-emerald-500/25 bg-emerald-950/20 p-4">
                 <p className="text-xs font-semibold uppercase tracking-wider text-emerald-200/85">{livepayRailSectionLabel}</p>
@@ -2155,6 +2246,12 @@ export function PayWizard({
                   Your payment of{" "}
                   <span className="font-semibold text-cyan-100">UGX {quote.totalUgx.toLocaleString()}</span> via{" "}
                   {PAYMENT_RAIL_OPENPAY_CARD} has been confirmed.
+                </>
+              ) : payChannel === "card" ? (
+                <>
+                  Your payment of{" "}
+                  <span className="font-semibold text-cyan-100">UGX {quote.totalUgx.toLocaleString()}</span> via{" "}
+                  {PAYMENT_RAIL_CARD} has been confirmed.
                 </>
               ) : payChannel === "mbiyo" || payChannel === "livepay" || payChannel === "relworx" || payChannel === "vixonpay" ? (
                 <>

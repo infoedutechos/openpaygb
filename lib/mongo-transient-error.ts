@@ -3,6 +3,22 @@
 export const DB_UNAVAILABLE_MESSAGE =
   "Database is temporarily unavailable. Wait a moment and try again.";
 
+/** Extra hint for Windows DNS / hotspot failures (dev-friendly; still safe in prod). */
+export function dbUnavailableClientMessage(err?: unknown): string {
+  const msg = String((err as { message?: string })?.message ?? err ?? "");
+  if (
+    /DNS resolution|unreachable network|os error 10051|os error 10013|os error 11001|ENOTFOUND|querySrv/i.test(
+      msg,
+    )
+  ) {
+    return (
+      "Database DNS/network unreachable. Check internet (hotspot DNS often breaks Atlas). " +
+      "Dev fix: restart `npm run dev` (auto non-SRV + public DNS), or set MONGODB_FORCE_NON_SRV=1."
+    );
+  }
+  return DB_UNAVAILABLE_MESSAGE;
+}
+
 const TRANSIENT_PATTERNS = [
   "Server selection timeout",
   "No available servers",

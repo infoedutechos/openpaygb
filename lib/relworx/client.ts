@@ -137,3 +137,54 @@ export async function relworxRequestPayment(
   }
   return json;
 }
+
+export type RelworxSendPaymentInput = {
+  msisdn: string;
+  amount: number;
+  reference: string;
+  description?: string;
+  currency?: RelworxCurrency;
+};
+
+export type RelworxSendPaymentResult = {
+  success: boolean;
+  message: string;
+  internal_reference?: string;
+};
+
+/** Disburse to a mobile money subscriber (merchant cashout / withdraw). */
+export async function relworxSendPayment(
+  input: RelworxSendPaymentInput,
+): Promise<RelworxSendPaymentResult> {
+  const accountNo = deploymentEnv("RELWORX_ACCOUNT_NO");
+  if (!accountNo) throw new Error(relworxNotConfiguredMessage());
+
+  let msisdn = input.msisdn.trim();
+  if (!msisdn.startsWith("+") && /^\d+$/.test(msisdn)) msisdn = `+${msisdn}`;
+
+  const currency = input.currency ?? relworxCheckoutCurrency();
+  const body = {
+    account_no: accountNo,
+    reference: relworxCustomerReference(input.reference),
+    msisdn,
+    currency,
+    amount: Number(input.amount),
+    description: (input.description || "OpenPayGB cashout").slice(0, 200),
+  };
+
+  const res = await relworxFetch("/mobile-money/send-payment", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+
+  const json = (await res.json().catch(() => ({}))) as RelworxSendPaymentResult & {
+    error?: string;
+    message?: string;
+  };
+
+  if (!res.ok || json.success === false) {
+    const raw = json.message ?? json.error ?? `Relworx send-payment failed (${res.status})`;
+    throw new RelworxApiError(raw, res.status);
+  }
+  return json;
+}

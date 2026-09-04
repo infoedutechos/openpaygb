@@ -111,7 +111,15 @@ export function MasterMobileMoneyProviders() {
     >
       <h2 className="text-sm font-semibold text-teal-100">Mobile money providers</h2>
       <p className="mt-2 max-w-3xl text-xs leading-relaxed text-slate-400">
-        Built-in MoMo and MbiyoPay use environment variables. Add custom PSPs here — each gets a webhook at{" "}
+        Built-in LivePay / Relworx / VixonPay / Mbiyo use API keys from{" "}
+        <a href="#ug-momo-credentials" className="text-cyan-300 underline hover:text-cyan-200">
+          Uganda MoMo API keys
+        </a>{" "}
+        (or{" "}
+        <a href="#deployment-environment" className="text-cyan-300 underline hover:text-cyan-200">
+          Deployment environment
+        </a>
+        ). Add custom PSPs here — each gets a webhook at{" "}
         <code className="rounded bg-black/35 px-1 text-teal-200/90">/api/webhooks/provider/&lt;code&gt;</code>.
         Register that URL with the provider and use the generated secret for authentication.
       </p>
@@ -148,6 +156,21 @@ export function MasterMobileMoneyProviders() {
             </div>
             <p className="mt-1 break-all font-mono text-slate-500">{b.webhookPath}</p>
             <p className="mt-1 text-slate-600">{b.notes}</p>
+            {["livepay", "relworx", "vixonpay"].includes(b.code) ? (
+              <a
+                href="#ug-momo-credentials"
+                className="mt-2 inline-block text-[11px] text-cyan-300 underline hover:text-cyan-200"
+              >
+                Set {b.name} API keys →
+              </a>
+            ) : b.code === "mbiyo" ? (
+              <a
+                href="#deployment-environment"
+                className="mt-2 inline-block text-[11px] text-cyan-300 underline hover:text-cyan-200"
+              >
+                Set Mbiyo keys in Deployment environment →
+              </a>
+            ) : null}
           </li>
         ))}
       </ul>

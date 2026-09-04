@@ -47,6 +47,9 @@ export function OpenPayCardPanel({
   const [livepayEnabled, setLivepayEnabled] = useState(false);
   const [relworxEnabled, setRelworxEnabled] = useState(false);
   const [vixonpayEnabled, setVixonpayEnabled] = useState(false);
+  const [momoSandbox, setMomoSandbox] = useState(false);
+  const [momoPreferredRail, setMomoPreferredRail] = useState<string | null>(null);
+  const [momoNote, setMomoNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -83,21 +86,41 @@ export function OpenPayCardPanel({
   }, [reload]);
 
   useEffect(() => {
-    void fetchJson("/api/public/livepay-config")
+    void fetchJson("/api/public/openpay-card-momo-config")
       .then((r) => (r.ok ? r.json() : null))
-      .then((j) => setLivepayEnabled(Boolean(j?.enabled)))
-      .catch(() => setLivepayEnabled(false));
-    void fetchJson("/api/public/relworx-config")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((j) => setRelworxEnabled(Boolean(j?.enabled)))
-      .catch(() => setRelworxEnabled(false));
-    void fetchJson("/api/public/vixonpay-config")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((j) => setVixonpayEnabled(Boolean(j?.enabled)))
-      .catch(() => setVixonpayEnabled(false));
+      .then(
+        (j: {
+          enabled?: boolean;
+          sandbox?: boolean;
+          preferredRail?: string | null;
+          rails?: { livepay?: boolean; relworx?: boolean; vixonpay?: boolean; sandbox?: boolean };
+          note?: string;
+        } | null) => {
+          if (!j) return;
+          setLivepayEnabled(Boolean(j.rails?.livepay));
+          setRelworxEnabled(Boolean(j.rails?.relworx));
+          setVixonpayEnabled(Boolean(j.rails?.vixonpay));
+          setMomoSandbox(Boolean(j.sandbox));
+          setMomoPreferredRail(j.preferredRail ?? null);
+          setMomoNote(typeof j.note === "string" ? j.note : null);
+        },
+      )
+      .catch(() => {
+        setLivepayEnabled(false);
+        setRelworxEnabled(false);
+        setVixonpayEnabled(false);
+        setMomoSandbox(false);
+      });
   }, []);
 
-  const momoAvailable = vixonpayEnabled || livepayEnabled || relworxEnabled;
+  const momoAvailable = momoSandbox || vixonpayEnabled || livepayEnabled || relworxEnabled;
+
+  function pickMomoRail(): string | null {
+    return (
+      momoPreferredRail ||
+      (vixonpayEnabled ? "vixonpay" : livepayEnabled ? "livepay" : relworxEnabled ? "relworx" : momoSandbox ? "sandbox" : null)
+    );
+  }
 
   useEffect(() => {
     if (momoAvailable) {
@@ -178,15 +201,9 @@ export function OpenPayCardPanel({
   }
 
   async function payIssueFeeMomo() {
-    const rail = vixonpayEnabled
-      ? "vixonpay"
-      : livepayEnabled
-        ? "livepay"
-        : relworxEnabled
-          ? "relworx"
-          : null;
+    const rail = pickMomoRail();
     if (!rail) {
-      setError("Mobile money activation is not available (VixonPay / LivePay / Relworx not configured).");
+      setError("Mobile money activation is not available (configure LivePay / Relworx / VixonPay, or use sandbox).");
       return;
     }
     if (!momoPhone.trim()) {
@@ -204,16 +221,18 @@ export function OpenPayCardPanel({
         body: JSON.stringify({
           rail,
           phone: momoPhone.trim(),
-          network: rail === "livepay" ? momoNetwork : undefined,
+          network: rail === "livepay" || rail === "sandbox" ? momoNetwork : undefined,
         }),
       });
-      const j = (await r.json()) as { error?: string; message?: string; amountUgx?: number };
+      const j = (await r.json()) as { error?: string; message?: string; amountUgx?: number; sandbox?: boolean };
       if (!r.ok) throw new Error(j.error ?? "Could not start mobile money activation");
       const amountLabel =
         typeof j.amountUgx === "number" ? `UGX ${j.amountUgx.toLocaleString()}` : "the issue fee";
       setNote(
         j.message ??
-          `Approve the ${amountLabel} prompt on your phone. Your card activates after confirmation.`,
+          (j.sandbox
+            ? `Sandbox: card activated for ${amountLabel}.`
+            : `Approve the ${amountLabel} prompt on your phone. Your card activates after confirmation.`),
       );
       void reload();
     } catch (e) {
@@ -229,15 +248,9 @@ export function OpenPayCardPanel({
       setError("Enter at least UGX 1,000 to add.");
       return;
     }
-    const rail = vixonpayEnabled
-      ? "vixonpay"
-      : livepayEnabled
-        ? "livepay"
-        : relworxEnabled
-          ? "relworx"
-          : null;
+    const rail = pickMomoRail();
     if (!rail) {
-      setError("Mobile money top-up is not available (VixonPay / LivePay / Relworx not configured).");
+      setError("Mobile money top-up is not available (configure LivePay / Relworx / VixonPay, or use sandbox).");
       return;
     }
     if (!momoPhone.trim()) {
@@ -255,10 +268,10 @@ export function OpenPayCardPanel({
           amountUgx,
           rail,
           phone: momoPhone.trim(),
-          network: rail === "livepay" ? momoNetwork : undefined,
+          network: rail === "livepay" || rail === "sandbox" ? momoNetwork : undefined,
         }),
       });
-      const j = (await r.json()) as { error?: string; message?: string };
+      const j = (await r.json()) as { error?: string; message?: string; sandbox?: boolean };
       if (!r.ok) throw new Error(j.error ?? "Could not start mobile money top-up");
       setNote(j.message ?? "Approve the prompt on your phone. Balance updates after confirmation.");
       void reload();
@@ -387,6 +400,11 @@ export function OpenPayCardPanel({
           </div>
           {issueMode === "momo" && momoAvailable ? (
             <div className="flex flex-wrap items-end gap-2 rounded-lg border border-white/10 bg-black/20 p-3">
+              {momoSandbox ? (
+                <p className="w-full text-xs text-amber-200/90">
+                  {momoNote || "Sandbox MoMo — activates instantly without a live PSP prompt."}
+                </p>
+              ) : null}
               <label className="text-xs text-slate-500">
                 Phone (UG)
                 <input
@@ -396,7 +414,7 @@ export function OpenPayCardPanel({
                   className="mt-1 block w-40 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"
                 />
               </label>
-              {livepayEnabled ? (
+              {livepayEnabled || momoSandbox ? (
                 <label className="text-xs text-slate-500">
                   Network
                   <select
@@ -487,6 +505,11 @@ export function OpenPayCardPanel({
             </div>
             {fundMode === "momo" && momoAvailable ? (
               <div className="flex flex-wrap items-end gap-2">
+                {momoSandbox ? (
+                  <p className="w-full text-xs text-amber-200/90">
+                    {momoNote || "Sandbox MoMo — credits instantly without a live PSP prompt."}
+                  </p>
+                ) : null}
                 <label className="text-xs text-slate-500">
                   Phone (UG)
                   <input
@@ -496,7 +519,7 @@ export function OpenPayCardPanel({
                     className="mt-1 block w-40 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"
                   />
                 </label>
-                {livepayEnabled ? (
+                {livepayEnabled || momoSandbox ? (
                   <label className="text-xs text-slate-500">
                     Network
                     <select

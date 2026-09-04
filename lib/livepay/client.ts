@@ -102,6 +102,44 @@ export async function livePayCollectMoney(input: LivePayCollectInput): Promise<L
   return json;
 }
 
+export type LivePaySendInput = LivePayCollectInput;
+export type LivePaySendResult = LivePayCollectResult;
+
+/** Disburse UGX to a MoMo wallet (merchant cashout / custodial withdraw). */
+export async function livePaySendMoney(input: LivePaySendInput): Promise<LivePaySendResult> {
+  const apiKey = deploymentEnv("LIVEPAY_API_KEY");
+  const accountNumber = deploymentEnv("LIVEPAY_ACCOUNT_NUMBER");
+  if (!apiKey || !accountNumber) {
+    throw new Error(livePayNotConfiguredMessage());
+  }
+
+  const body: Record<string, string | number> = {
+    accountNumber,
+    phoneNumber: input.phoneNumber,
+    amount: Math.round(input.amountUgx),
+    currency: "UGX",
+    reference: livePayCustomerReference(input.reference),
+    description: input.description.slice(0, 120),
+  };
+  if (input.network) body.network = input.network;
+
+  const res = await fetch(`${LIVEPAY_API_BASE}/send-money`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  const json = (await res.json().catch(() => ({}))) as LivePaySendResult & { error?: string };
+  if (!res.ok) {
+    const raw = json.error ?? json.message ?? `LivePay send-money failed (${res.status})`;
+    throw new LivePayApiError(raw, res.status);
+  }
+  return json;
+}
+
 export function isLivePayWebhookSuccess(status: unknown): boolean {
   if (typeof status !== "string") return false;
   return status.trim().toLowerCase() === "success";

@@ -17,7 +17,9 @@ import {
 import { clientFetchErrorMessage, isClientFetchNetworkError } from "@/lib/client-fetch-error";
 
 const LS_EMAIL = "odelhub_admin_email";
+const LS_EMAIL_SCHOOLS = "odelhub_admin_email_schools";
 const LS_REMEMBER = "odelhub_admin_remember";
+const UWAIS_DEFAULT_EMAIL = "uwais.admin@odelhub.local";
 
 function describeLoginError(err: unknown): string {
   if (isClientFetchNetworkError(err)) {
@@ -29,8 +31,10 @@ function describeLoginError(err: unknown): string {
   return err instanceof Error ? err.message : "Login failed";
 }
 
-function safeNextParam(raw: string | null, role: string): string {
-  const fallback = role === "master" ? "/admin/master" : "/admin";
+function safeNextParam(raw: string | null, role: string, opts?: { schoolLogin?: boolean }): string {
+  const schoolFallback = "/admin/school-dashboard";
+  const fallback =
+    role === "master" ? "/admin/master" : opts?.schoolLogin ? schoolFallback : "/admin";
   if (!raw || raw[0] !== "/") return fallback;
   if (raw.startsWith("/school-admin")) {
     if (role === "org_admin" || role === "master") return raw;
@@ -38,6 +42,9 @@ function safeNextParam(raw: string | null, role: string): string {
   }
   if (!raw.startsWith("/admin")) return fallback;
   if (role === "org_admin" && raw.startsWith("/admin/master")) return fallback;
+  if (opts?.schoolLogin && role === "org_admin" && (raw === "/admin" || raw === "/admin/")) {
+    return schoolFallback;
+  }
   return raw;
 }
 
@@ -60,11 +67,12 @@ function AdminLoginForm() {
       ? ADMIN_LOGIN_COPY.default
       : ADMIN_LOGIN_COPY[loginMode];
   const showForm = loginMode !== "default";
-  const [email, setEmail] = useState("admin@odelhub.local");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [devHint, setDevHint] = useState<{ email?: string; uwaisEmail?: string; note?: string } | null>(null);
 
   const workspaceVerified = searchParams.get("workspaceVerified") === "1";
   const workspaceActivated = searchParams.get("workspaceActivated") === "1";
@@ -89,27 +97,53 @@ function AdminLoginForm() {
   useEffect(() => {
     try {
       const remembered = localStorage.getItem(LS_REMEMBER);
-      const saved = localStorage.getItem(LS_EMAIL);
-      if (saved) setEmail(saved);
       if (remembered === "0") setRemember(false);
       if (remembered === "1") setRemember(true);
+      if (loginMode === "schools") {
+        const schoolSaved = localStorage.getItem(LS_EMAIL_SCHOOLS);
+        if (schoolSaved) {
+          setEmail(schoolSaved);
+          return;
+        }
+        // Do not reuse master email on school login.
+        const generic = localStorage.getItem(LS_EMAIL);
+        if (generic && (generic.includes("uwais") || !generic.includes("admin@odelhub"))) {
+          setEmail(generic);
+          return;
+        }
+        setEmail(UWAIS_DEFAULT_EMAIL);
+        return;
+      }
+      const saved = localStorage.getItem(LS_EMAIL);
+      if (saved) setEmail(saved);
     } catch {
-      /* private mode etc. */
+      if (loginMode === "schools") setEmail(UWAIS_DEFAULT_EMAIL);
     }
-  }, []);
+  }, [loginMode]);
 
   useEffect(() => {
     if (process.env.NODE_ENV !== "development") return;
     let cancelled = false;
     void fetch("/api/auth/setup-hint")
       .then((r) => (r.ok ? r.json() : null))
-      .then((j: { email?: string } | null) => {
-        if (cancelled || !j?.email) return;
-        try {
-          if (!localStorage.getItem(LS_EMAIL)) setEmail(j.email);
-        } catch {
-          setEmail(j.email);
+      .then((j: { email?: string; uwaisEmail?: string; note?: string } | null) => {
+        if (cancelled || !j) return;
+        setDevHint(j);
+        if (loginMode === "schools") {
+          try {
+            if (localStorage.getItem(LS_EMAIL_SCHOOLS)) return;
+          } catch {
+            /* continue */
+          }
+          setEmail(j.uwaisEmail || UWAIS_DEFAULT_EMAIL);
+          return;
         }
+        try {
+          if (localStorage.getItem(LS_EMAIL)) return;
+        } catch {
+          /* continue */
+        }
+        if (j.email) setEmail(j.email);
       })
       .catch(() => {
         /* dev server not ready */
@@ -117,7 +151,12 @@ function AdminLoginForm() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [loginMode]);
+
+  useEffect(() => {
+    if (loginMode !== "schools") return;
+    if (!email.trim()) setEmail(UWAIS_DEFAULT_EMAIL);
+  }, [loginMode, email]);
 
   useEffect(() => {
     if (forgotOpen) {
@@ -158,7 +197,9 @@ function AdminLoginForm() {
           throw new Error(
             process.env.NODE_ENV === "development"
               ? (j.hint ??
-                  "Invalid email or password. Run npm run admin:ensure (or npm run seed), then use SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD from .env.local.")
+                  (loginMode === "schools"
+                    ? "Invalid email or password. Run npm run seed:uwais, then use the email/password printed in the terminal (default uwais.admin@odelhub.local)."
+                    : "Invalid email or password. Run npm run admin:ensure (or npm run seed), then use SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD from .env.local."))
               : (j.error ?? "Invalid email or password")
           );
         }
@@ -166,13 +207,20 @@ function AdminLoginForm() {
       }
       try {
         localStorage.setItem(LS_REMEMBER, remember ? "1" : "0");
-        if (remember) localStorage.setItem(LS_EMAIL, email.trim());
-        else localStorage.removeItem(LS_EMAIL);
+        if (remember) {
+          localStorage.setItem(LS_EMAIL, email.trim());
+          if (loginMode === "schools") localStorage.setItem(LS_EMAIL_SCHOOLS, email.trim());
+        } else {
+          localStorage.removeItem(LS_EMAIL);
+          if (loginMode === "schools") localStorage.removeItem(LS_EMAIL_SCHOOLS);
+        }
       } catch {
         /* ignore */
       }
       const role = j.admin?.role ?? "org_admin";
-      const next = safeNextParam(searchParams.get("next"), role);
+      const next = safeNextParam(searchParams.get("next"), role, {
+        schoolLogin: loginMode === "schools",
+      });
       router.replace(next);
     } catch (err) {
       setError(describeLoginError(err));
@@ -271,6 +319,16 @@ function AdminLoginForm() {
           {copy.hint ? (
             <p className="rounded-lg border border-cyan-500/20 bg-cyan-950/25 px-4 py-3 text-xs leading-relaxed text-slate-400">
               {copy.hint}
+            </p>
+          ) : null}
+          {loginMode === "schools" && process.env.NODE_ENV === "development" ? (
+            <p className="rounded-lg border border-emerald-500/25 bg-emerald-950/30 px-4 py-3 text-xs text-emerald-100/90">
+              <strong>Uwais pilot:</strong> after <code className="text-emerald-200">npm run seed:uwais</code>, sign in
+              with <code className="text-emerald-200">{devHint?.uwaisEmail ?? "uwais.admin@odelhub.local"}</code> and
+              the password printed in the seed terminal (often from{" "}
+              <code className="text-emerald-200">SEED_ADMIN_PASSWORD</code> /{" "}
+              <code className="text-emerald-200">SEED_UWAIS_ADMIN_PASSWORD</code>). Clear site cookies if a prior URA
+              admin session interferes.
             </p>
           ) : null}
 

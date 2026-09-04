@@ -1,22 +1,20 @@
-import { createRequire } from "node:module";
-import { join } from "node:path";
-
 /**
- * When Node cannot querySrv (Windows DNS / firewall), expand mongodb+srv via system DNS.
- * No-op when Node SRV works or fallback is disabled (`MONGODB_SRV_FALLBACK=0`).
+ * Expand mongodb+srv via system DNS on Windows when Node querySrv fails.
+ * Avoids `createRequire(...)` — Webpack warns "failed parsing argument" for dynamic paths.
  */
 export function expandMongodbSrvIfNeeded(raw: string): string {
   const trimmed = raw.trim();
   if (!trimmed.toLowerCase().startsWith("mongodb+srv://")) return trimmed;
   try {
-    const requireFromRoot = createRequire(join(process.cwd(), "package.json"));
-    const { ensureNonSrvDatabaseUrl } = requireFromRoot("./scripts/mongodb-srv-fallback.cjs") as {
+    // webpackIgnore keeps this a runtime Node require (not bundled / not createRequire).
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mod = require(/* webpackIgnore: true */ "../scripts/mongodb-srv-fallback.cjs") as {
       ensureNonSrvDatabaseUrl: (
         url: string,
         opts?: { quiet?: boolean },
       ) => { url: string; converted: boolean };
     };
-    return ensureNonSrvDatabaseUrl(trimmed, { quiet: true }).url;
+    return mod.ensureNonSrvDatabaseUrl(trimmed, { quiet: true }).url;
   } catch {
     return trimmed;
   }

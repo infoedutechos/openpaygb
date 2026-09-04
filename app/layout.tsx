@@ -13,6 +13,7 @@ import { PwaRefreshShortcutHandler } from "@/components/PwaRefreshShortcutHandle
 import { StandaloneAppRoot } from "@/components/standalone/StandaloneAppRoot";
 import { VisitBeacon } from "@/components/hub/VisitBeacon";
 import { HubVisibilityProvider } from "@/components/hub/HubVisibilityProvider";
+import { DevNetworkFetchGuard } from "@/components/DevNetworkFetchGuard";
 import { buildRootMetadata } from "@/lib/root-metadata";
 import { getPlatformBranding } from "@/lib/platform-customisation";
 import { resolveRequestSiteOrigin } from "@/lib/request-site-origin";
@@ -58,6 +59,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <PlatformSocialProvider initial={siteUi}>
             <HubVisibilityProvider initial={hubVisibility}>
               <TonConnectAppProvider>
+                <DevNetworkFetchGuard />
                 <ConditionalSiteHeaderServer />
                 <ConditionalMainServer>{children}</ConditionalMainServer>
                 <SiteChromeFooter settings={siteUi} />

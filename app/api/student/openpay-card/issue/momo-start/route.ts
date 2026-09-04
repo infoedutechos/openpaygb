@@ -5,19 +5,18 @@ import { getStudentOpenPayCard } from "@/lib/openpay-card";
 import { openPayCardIssueFeeUgx } from "@/lib/openpay-card-issue-fee";
 import { getOpenPayCardPlatformSettings } from "@/lib/openpay-card-settings";
 import { startOpenPayCardMomoTopup } from "@/lib/openpay-card-momo-topup";
-import { isLivePayConfigured } from "@/lib/livepay/client";
-import { isRelworxConfigured } from "@/lib/relworx/client";
-import { isVixonPayConfigured } from "@/lib/vixonpay/client";
-import { ugandaPhoneToE164 } from "@/lib/livepay/uganda-phone";
-import { ugandaPhoneForVixonPay } from "@/lib/vixonpay/uganda-phone";
+import {
+  normalizeCardMomoPhone,
+  openPayCardMomoRailSchema,
+  resolveAndValidateCardMomoRail,
+} from "@/lib/openpay-card-momo-route";
+import { ensureOpenPayCardMomoProductActive } from "@/lib/openpay-card-momo-ready";
 import { prisma } from "@/lib/prisma";
 import { apiErrorResponse } from "@/lib/api-error";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
 
-const E164 = z.string().regex(/^\+\d{10,15}$/);
-
 const Body = z.object({
-  rail: z.enum(["livepay", "relworx", "vixonpay"]),
+  rail: openPayCardMomoRailSchema.optional(),
   phone: z.string().min(9).max(20),
   network: z.enum(["mtn", "airtel"]).optional(),
 });
@@ -34,6 +33,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    await ensureOpenPayCardMomoProductActive();
     const settings = await getOpenPayCardPlatformSettings();
     if (!settings.enabled) {
       return NextResponse.json({ error: "OpenPayGB card is not available" }, { status: 503 });
@@ -53,29 +53,14 @@ export async function POST(req: Request) {
       );
     }
 
-    if (parsed.data.rail === "livepay" && !isLivePayConfigured()) {
-      return NextResponse.json({ error: "LivePay is not configured" }, { status: 503 });
-    }
-    if (parsed.data.rail === "relworx" && !isRelworxConfigured()) {
-      return NextResponse.json({ error: "Relworx is not configured" }, { status: 503 });
-    }
-    if (parsed.data.rail === "vixonpay" && !isVixonPayConfigured()) {
-      return NextResponse.json({ error: "VixonPay is not configured" }, { status: 503 });
+    const railGate = resolveAndValidateCardMomoRail(parsed.data.rail || "sandbox");
+    if (!railGate.ok) {
+      return NextResponse.json({ error: railGate.error }, { status: railGate.status });
     }
 
-    let phoneForRail: string;
-    if (parsed.data.rail === "vixonpay") {
-      const vixonPhone = ugandaPhoneForVixonPay(parsed.data.phone.trim());
-      if (!vixonPhone) {
-        return NextResponse.json({ error: "Use a valid Uganda mobile number" }, { status: 400 });
-      }
-      phoneForRail = vixonPhone;
-    } else {
-      const phone = ugandaPhoneToE164(parsed.data.phone.trim());
-      if (!phone || !E164.safeParse(phone).success) {
-        return NextResponse.json({ error: "Use a valid Uganda mobile number" }, { status: 400 });
-      }
-      phoneForRail = phone;
+    const phoneGate = normalizeCardMomoPhone(railGate.rail, parsed.data.phone);
+    if (!phoneGate.ok) {
+      return NextResponse.json({ error: phoneGate.error }, { status: 400 });
     }
 
     const student = await prisma.student.findUnique({
@@ -92,8 +77,8 @@ export async function POST(req: Request) {
     const started = await startOpenPayCardMomoTopup({
       cardId: card.id,
       amountUgx: fee.amountUgx,
-      rail: parsed.data.rail,
-      phone: phoneForRail,
+      rail: railGate.rail,
+      phone: phoneGate.phone,
       network: parsed.data.network?.toUpperCase() as "MTN" | "AIRTEL" | undefined,
       customerEmail: student.email || undefined,
       customerName: student.name || undefined,
@@ -104,7 +89,8 @@ export async function POST(req: Request) {
       topupId: started.topupId,
       amountUgx: fee.amountUgx,
       issueFeeTon,
-      rail: parsed.data.rail,
+      rail: started.rail,
+      sandbox: started.sandbox === true,
       message: started.message,
       reference: started.reference,
     });

@@ -21,6 +21,8 @@ enum PaymentRail {
   vixonpay
   /** Closed-loop OpenPayGB platform virtual card balance (UGX ledger). */
   openpay_card
+  /** Bank Visa/MC acquiring (Flutterwave / Paystack hosted checkout). */
+  card
   /** School admin manual receipt (cash / mobile transfer at desk). */
   manual_cash
 }
@@ -232,6 +234,9 @@ model Organization {
   schoolOutflowVouchers      SchoolOutflowVoucher[]
   schoolSalaryPayments       SchoolSalaryPayment[]
   schoolInventoryItems       SchoolInventoryItem[]
+  schoolSmisEntries          SchoolSmisEntry[]
+  schoolCashbookDeposits     SchoolCashbookDeposit[]
+  schoolFeeReminderLogs      SchoolFeeReminderLog[]
   studentBillCharges         StudentBillCharge[]
   paymentAllocations         PaymentAllocation[]
 
@@ -507,10 +512,13 @@ model MerchantPayout {
   phone          String       @default("")
   /** MTN | AIRTEL */
   network        String       @default("")
-  /** pending | paid | rejected | cancelled */
+  /** pending | processing | paid | rejected | cancelled */
   status         String       @default("pending")
   note           String       @default("")
   rejectionReason String      @default("")
+  /** livepay | relworx | sandbox | manual */
+  rail           String       @default("manual")
+  railReference  String       @default("")
   paidAt         DateTime?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
@@ -771,6 +779,55 @@ model SchoolOutflowVoucher {
   @@map("school_outflow_vouchers")
 }
 
+/** Server-backed SMIS pilot rows (attendance / quran / exams / audit). */
+model SchoolSmisEntry {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId String       @db.ObjectId
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  /** attendance | quran | exams | audit */
+  module         String
+  payloadJson    String       @default("{}")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId, module, createdAt])
+  @@map("school_smis_entries")
+}
+
+/** Cashbook bank / cash deposits (day book). */
+model SchoolCashbookDeposit {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId String       @db.ObjectId
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  term           Int          @default(1)
+  amountUgx      Int
+  method         String       @default("bank")
+  reference      String       @default("")
+  note           String       @default("")
+  depositedAt    DateTime     @default(now())
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId, term, depositedAt])
+  @@map("school_cashbook_deposits")
+}
+
+/** Fee reminder send log (Telegram / email / SMS stub). */
+model SchoolFeeReminderLog {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId String       @db.ObjectId
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  studentId      String?      @db.ObjectId
+  channel        String       @default("telegram")
+  recipient      String       @default("")
+  message        String       @default("")
+  success        Boolean      @default(false)
+  error          String       @default("")
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId, createdAt])
+  @@map("school_fee_reminder_logs")
+}
+
 model SchoolSalaryPayment {
   id             String      @id @default(auto()) @map("_id") @db.ObjectId
   organizationId String      @db.ObjectId
@@ -928,6 +985,38 @@ model OpenPayCard {
   @@index([organizationId])
   @@index([status])
   @@map("openpay_cards")
+}
+
+/**
+ * Network Visa/MC card issued via LivePay or Visa Developer (BIN partner).
+ * Never stores PAN/CVV — last4 + provider token only.
+ */
+model NetworkIssuedCard {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  studentId        String?  @db.ObjectId
+  organizationId   String?  @db.ObjectId
+  holderName       String
+  email            String
+  phone            String   @default("")
+  /** livepay | visa_vdp */
+  provider         String
+  providerCardId   String
+  providerToken    String   @default("")
+  last4            String   @default("")
+  /** visa | mastercard | unknown */
+  network          String   @default("visa")
+  /** pending | active | frozen | closed | failed */
+  status           String   @default("pending")
+  currency         String   @default("UGX")
+  clientReference  String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([provider, providerCardId])
+  @@index([studentId])
+  @@index([organizationId, status])
+  @@index([clientReference])
+  @@map("network_issued_cards")
 }
 
 /** Shareable tuition payment request (request money / receive via link). */

@@ -34,12 +34,15 @@ const DASHBOARD_SECTIONS = [
   { href: "/opgb#checkout", label: "Hosted checkout" },
 ];
 
-function navActive(pathname: string, href: string): boolean {
+function navActive(pathname: string, href: string, hash = ""): boolean {
   if (href === "/developers") return pathname === "/developers";
   if (href.includes("?")) return false;
   if (href.includes("#")) {
-    const base = href.split("#")[0]!;
-    return pathname === base || pathname.startsWith(`${base}/`);
+    const [base, section] = href.split("#");
+    if (pathname !== base && !pathname.startsWith(`${base}/`)) return false;
+    if (!section) return true;
+    const current = hash.replace(/^#/, "") || "overview";
+    return current === section;
   }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
@@ -52,6 +55,7 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
   const showAllSidesBanner = pathname === "/developers" || pathname === "/developers/";
   const onDashboard = pathname.startsWith("/developers/dashboard");
   const [collapsed, setCollapsed] = useState(false);
+  const [hash, setHash] = useState("");
 
   useEffect(() => {
     try {
@@ -61,6 +65,13 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
       /* ignore */
     }
   }, []);
+
+  useEffect(() => {
+    const sync = () => setHash(typeof window !== "undefined" ? window.location.hash : "");
+    sync();
+    window.addEventListener("hashchange", sync);
+    return () => window.removeEventListener("hashchange", sync);
+  }, [pathname]);
 
   function toggleSidebar() {
     setCollapsed((c) => {
@@ -88,7 +99,7 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={`rounded-lg px-2.5 py-1.5 ${
-                  navActive(pathname, item.href)
+                  navActive(pathname, item.href, hash)
                     ? "bg-emerald-500/15 text-emerald-100"
                     : "text-slate-400 hover:bg-white/5 hover:text-white"
                 }`}
@@ -119,13 +130,13 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
           ...DEV_NAV.map((item) => ({
             href: item.href,
             label: item.label,
-            active: navActive(pathname, item.href),
+            active: navActive(pathname, item.href, hash),
           })),
           ...(onDashboard
             ? DASHBOARD_SECTIONS.map((s) => ({
                 href: s.href,
                 label: s.label,
-                active: false,
+                active: navActive(pathname, s.href, hash),
               }))
             : []),
         ]}
@@ -147,7 +158,7 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
           {!collapsed ? (
             <div className="sticky top-4 space-y-4 p-4">
               <div className="flex items-center justify-between gap-2">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400/90">Menu</p>
+                <p className="mb-0 text-[10px] font-bold uppercase tracking-wider text-emerald-400/90">Menu</p>
                 <button
                   type="button"
                   onClick={toggleSidebar}
@@ -162,7 +173,7 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
                     key={item.href}
                     href={item.href}
                     className={`rounded-lg px-2.5 py-2 ${
-                      navActive(pathname, item.href)
+                      navActive(pathname, item.href, hash)
                         ? "bg-emerald-500/15 text-emerald-100"
                         : "text-slate-400 hover:bg-white/5 hover:text-white"
                     }`}
@@ -179,7 +190,11 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
                       <Link
                         key={item.href}
                         href={item.href}
-                        className="rounded-lg px-2.5 py-1.5 text-slate-400 hover:bg-white/5 hover:text-white"
+                        className={`rounded-lg px-2.5 py-1.5 ${
+                          navActive(pathname, item.href, hash)
+                            ? "bg-cyan-500/15 text-cyan-100"
+                            : "text-slate-400 hover:bg-white/5 hover:text-white"
+                        }`}
                       >
                         {item.label}
                       </Link>

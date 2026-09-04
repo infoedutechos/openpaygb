@@ -116,7 +116,7 @@ export const DEPLOYMENT_ENV_GROUPS: EnvGroupDefinition[] = [
     id: "livepay",
     title: "LivePay (Uganda MoMo)",
     description: "OpenPayGB rail — MTN/Airtel UGX collections via LivePay REST API.",
-    masterUiAnchor: "mobile-money-providers",
+    masterUiAnchor: "ug-momo-credentials",
     docsPath: "docs/LIVEPAY_INTEGRATION_ASSESSMENT.md",
     vars: [
       {
@@ -147,6 +147,14 @@ export const DEPLOYMENT_ENV_GROUPS: EnvGroupDefinition[] = [
         sensitive: false,
         requirement: "optional",
       },
+      {
+        name: "OPENPAYGB_CARD_MOMO_SANDBOX",
+        label: "OpenPayGB card MoMo sandbox",
+        description:
+          "1 = force instant sandbox activate/fund; 0 = require live PSP. Default: sandbox only in non-prod when no LivePay/Relworx/VixonPay keys.",
+        sensitive: false,
+        requirement: "optional",
+      },
     ],
   },
   {
@@ -154,7 +162,7 @@ export const DEPLOYMENT_ENV_GROUPS: EnvGroupDefinition[] = [
     title: "VixonPay (Uganda MoMo)",
     description:
       "Uganda UGX mobile money collections via VixonPay API — OpenPayGB card top-ups and checkout.",
-    masterUiAnchor: "mobile-money-providers",
+    masterUiAnchor: "ug-momo-credentials",
     docsPath: "https://docs.vixonpay.com/pay#description/getting-started",
     vars: [
       {
@@ -184,8 +192,8 @@ export const DEPLOYMENT_ENV_GROUPS: EnvGroupDefinition[] = [
     id: "relworx",
     title: "Relworx (East Africa MoMo)",
     description: "OpenPayGB rail — UG/KE/TZ mobile money via Relworx Payments API v2.",
-    masterUiAnchor: "deployment-environment",
-    docsPath: "docs/RELWORX_INVESTIGATION.md",
+    masterUiAnchor: "ug-momo-credentials",
+    docsPath: "docs/deployment/RELWORX_INVESTIGATION.md",
     vars: [
       {
         name: "RELWORX_API_KEY",
@@ -537,6 +545,140 @@ export const DEPLOYMENT_ENV_GROUPS: EnvGroupDefinition[] = [
         label: "OpenAI API key",
         description: "Optional support chat integration.",
         sensitive: true,
+        requirement: "optional",
+      },
+    ],
+  },
+  {
+    id: "card-acquiring",
+    title: "Bank card acquiring (Visa/MC)",
+    description: "Flutterwave or Paystack hosted checkout for PaymentRail.card.",
+    docsPath: "docs/platform/OPENPAYGB_GATEWAY_MATURITY.md",
+    masterUiAnchor: "card-network",
+    vars: [
+      {
+        name: "CARD_ACQUIRING_PROVIDER",
+        label: "Card acquiring provider",
+        description: "flutterwave | paystack (auto-detects from secret keys if empty).",
+        sensitive: false,
+        requirement: "optional",
+      },
+      {
+        name: "FLUTTERWAVE_SECRET_KEY",
+        label: "Flutterwave secret key",
+        description: "Server secret for hosted card payments.",
+        sensitive: true,
+        requirement: "optional",
+      },
+      {
+        name: "FLUTTERWAVE_WEBHOOK_SECRET",
+        label: "Flutterwave webhook secret",
+        description: "Dashboard verif-hash / webhook secret.",
+        sensitive: true,
+        requirement: "optional",
+      },
+      {
+        name: "PAYSTACK_SECRET_KEY",
+        label: "Paystack secret key",
+        description: "Server secret; also signs webhooks (HMAC-SHA512).",
+        sensitive: true,
+        requirement: "optional",
+      },
+    ],
+  },
+  {
+    id: "merchant-cashout",
+    title: "Merchant MoMo cashout",
+    description: "LivePay/Relworx send-money for funded merchant/school cashouts.",
+    docsPath: "docs/platform/OPENPAYGB_PAYMENT_PROVIDER.md",
+    masterUiAnchor: "deployment-environment",
+    vars: [
+      {
+        name: "OPENPAYGB_CASHOUT_LIVE",
+        label: "MoMo cashout live mode",
+        description:
+          "Omit or =1 to auto-send when LivePay/Relworx configured; =0 forces queue-only.",
+        sensitive: false,
+        requirement: "optional",
+      },
+      {
+        name: "OPENPAYGB_CASHOUT_RAIL",
+        label: "Preferred cashout rail",
+        description: "livepay | relworx (default: first configured).",
+        sensitive: false,
+        requirement: "optional",
+      },
+    ],
+  },
+  {
+    id: "card-issuing",
+    title: "Network Visa/MC issuing",
+    description:
+      "LivePay card API or Visa Developer (developer.visa.com) mTLS. Requires BIN sponsor for production PANs.",
+    docsPath: "docs/platform/CARD_ISSUING.md",
+    masterUiAnchor: "card-network",
+    vars: [
+      {
+        name: "CARD_ISSUING_PROVIDER",
+        label: "Issuing provider",
+        description: "livepay | visa_vdp",
+        sensitive: false,
+        requirement: "optional",
+      },
+      {
+        name: "LIVEPAY_CARD_ISSUING_URL",
+        label: "LivePay card issuing URL",
+        description: "Full create-card endpoint from LivePay (when documented).",
+        sensitive: false,
+        requirement: "optional",
+      },
+      {
+        name: "VISA_USER_ID",
+        label: "Visa API user id",
+        description: "From Visa Developer project credentials.",
+        sensitive: true,
+        requirement: "optional",
+      },
+      {
+        name: "VISA_PASSWORD",
+        label: "Visa API password",
+        description: "From Visa Developer project credentials.",
+        sensitive: true,
+        requirement: "optional",
+      },
+      {
+        name: "VISA_CERT_PATH",
+        label: "Visa client cert path",
+        description: "Path to mTLS certificate PEM (or use VISA_CERT_PEM).",
+        sensitive: false,
+        requirement: "optional",
+      },
+      {
+        name: "VISA_KEY_PATH",
+        label: "Visa client key path",
+        description: "Path to mTLS private key PEM (or use VISA_KEY_PEM).",
+        sensitive: true,
+        requirement: "optional",
+      },
+      {
+        name: "VISA_ISSUE_PATH",
+        label: "Visa issue API path",
+        description: "Program-specific path e.g. /vcpe/v2/pan/enrollment after BIN approval.",
+        sensitive: false,
+        requirement: "optional",
+      },
+      {
+        name: "VISA_WEBHOOK_SECRET",
+        label: "Visa issuing webhook secret",
+        description: "Shared secret for POST /api/webhooks/visa-issuing.",
+        sensitive: true,
+        requirement: "optional",
+      },
+      {
+        name: "VISA_ENV",
+        label: "Visa environment",
+        description: "sandbox (default) | production",
+        sensitive: false,
         requirement: "optional",
       },
     ],

@@ -83,6 +83,15 @@ async function main() {
 
   await provisionSchoolErpDefaults(org.id);
   await ensureFeeLedgerAccounts(org.id);
+
+  const { ensureSchoolMerchantApp } = await import("../lib/school-merchant-app");
+  const merchant = await ensureSchoolMerchantApp(org.id);
+  // eslint-disable-next-line no-console
+  console.log(
+    merchant.created ? "Created school OPGB merchant app" : "School OPGB merchant app ready",
+    merchant.app.clientId,
+  );
+
   const schoolPayCode = org.schoolPayCode || (await prisma.organization.findUnique({ where: { id: org.id } }))?.schoolPayCode || "";
 
 
@@ -129,6 +138,8 @@ async function main() {
   console.log("  Admin:", adminEmail, "/", adminPassword, "→ /admin/login?school=1");
   // eslint-disable-next-line no-console
   console.log("  Fee ledger:", "/admin/fee-ledger (sign in as Uwais admin)");
+  // eslint-disable-next-line no-console
+  console.log("  OPGB settlement:", "/admin/school-settlement");
   // eslint-disable-next-line no-console
   console.log("  Checkout:", `/pay/${UWAIS_SLUG}`);
   // eslint-disable-next-line no-console

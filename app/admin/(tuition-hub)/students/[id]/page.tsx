@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getAdminFromCookies } from "@/lib/auth";
+import { SCHOOL_ADMIN_LOGIN_PATH } from "@/lib/admin-auth-entry";
 import { organizationWhereForSession } from "@/lib/admin-org-scope";
 import { isValidObjectId } from "@/lib/object-id";
 import { StudentDetailView } from "@/components/admin/StudentDetailView";
@@ -15,7 +16,7 @@ import { studentCardPath } from "@/lib/admission-no";
 
 export default async function AdminStudentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getAdminFromCookies();
-  if (!session) redirect("/admin/login");
+  if (!session) redirect(SCHOOL_ADMIN_LOGIN_PATH);
   const { id } = await params;
   if (!isValidObjectId(id)) {
     return <p className="text-sm text-rose-600">Invalid student id</p>;

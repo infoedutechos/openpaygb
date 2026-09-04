@@ -14,6 +14,7 @@ type LedgerRow = {
   term: number;
   termLabel: string;
   feeRequiredUgx: number;
+  discountUgx: number;
   previousBalanceUgx: number;
   previousBalancePaidUgx: number;
   currentTermPaidUgx: number;
@@ -22,6 +23,8 @@ type LedgerRow = {
   status: string;
   statusLabel: string;
   statusNote: string;
+  latestPaymentId: string | null;
+  latestReceiptNo: string | null;
 };
 
 type Totals = {

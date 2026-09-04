@@ -266,7 +266,7 @@ flowchart TB
 | UG MTN/Airtel collect | `request-payment` | **LivePay** `livepay-start` |
 | East Africa MoMo | UG/KE/TZ (+ table: RW, CD) | **Mbiyo** (broader checkout) |
 | Card at checkout | `visa/request-session` + hosted URL | **None** |
-| Payout to phone | `send-payment` | Not first-class |
+| Payout to phone | `send-payment` | **`relworxSendPayment`** + `lib/momo-disburse.ts` (auto when configured; `OPENPAYGB_CASHOUT_LIVE=0` to queue) |
 | MSISDN name lookup | `validate` (UG MTN/Airtel) | Not used |
 | Status poll | `check-request-status` | LivePay sync on public payment route |
 | Webhook HMAC | `Relworx-Signature` + sorted fields | `X-Webhook-Signature` + fixed order |
