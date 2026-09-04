@@ -190,8 +190,8 @@ export function DeveloperDashboard() {
         fetch("/api/developers/merchant-settings", { cache: "no-store" }),
       ]);
       if (meRes.status === 401) {
-        const hash = typeof window !== "undefined" ? window.location.hash : "";
-        window.location.href = `/developers/register?next=${encodeURIComponent(`/developers/dashboard${hash}`)}`;
+        setApp(null);
+        setLoading(false);
         return;
       }
       if (!meRes.ok) throw new Error("Could not load app");
@@ -430,13 +430,34 @@ export function DeveloperDashboard() {
   }
 
   if (!app) {
+    const hash = typeof window !== "undefined" ? window.location.hash : "";
+    const next = encodeURIComponent(`/developers/dashboard${hash}`);
     return (
-      <p className="text-sm text-slate-400">
-        Not signed in.{" "}
-        <Link href="/developers/register" className="text-emerald-300 hover:underline">
-          Register or sign in
-        </Link>
-      </p>
+      <div className="rounded-2xl border border-amber-500/30 bg-amber-950/20 p-6">
+        <h1 className="text-xl font-semibold text-white">Developer session required</h1>
+        <p className="mt-2 text-sm text-slate-400">
+          This dashboard needs a <strong className="text-slate-200">developer app</strong> sign-in. Master Admin,
+          school admin, or student login does not open the Partner API dashboard.
+        </p>
+        <p className="mt-2 text-xs text-slate-500">
+          Use the left sidebar (desktop) or top <strong className="text-emerald-300">Menu</strong> (mobile) anytime —
+          it stays available even before you sign in.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link
+            href={`/developers/register?next=${next}`}
+            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500"
+          >
+            Sign in / register app
+          </Link>
+          <Link
+            href="/developers"
+            className="rounded-lg border border-white/15 px-4 py-2 text-sm text-slate-300 hover:bg-white/5"
+          >
+            Developer hub
+          </Link>
+        </div>
+      </div>
     );
   }
 

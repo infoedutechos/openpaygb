@@ -10,7 +10,7 @@ import { OPERATOR_ALL_SIDES_LINKS } from "@/lib/access-surfaces";
 
 const DEV_NAV = [
   { href: "/developers", label: "Developer hub" },
-  { href: "/developers/register", label: "Register app" },
+  { href: "/developers/register", label: "Register / sign in" },
   { href: "/developers/dashboard", label: "API dashboard" },
   { href: "/opgb", label: "OpenPayGB provider" },
   { href: "/opgb#integrate", label: "Integration guide" },
@@ -34,6 +34,8 @@ const DASHBOARD_SECTIONS = [
   { href: "/opgb#checkout", label: "Hosted checkout" },
 ];
 
+const SIDEBAR_KEY = "odelhub-devs-sidebar-collapsed";
+
 function navActive(pathname: string, href: string, hash = ""): boolean {
   if (href === "/developers") return pathname === "/developers";
   if (href.includes("?")) return false;
@@ -48,7 +50,8 @@ function navActive(pathname: string, href: string, hash = ""): boolean {
 }
 
 /**
- * Developer-facing shell with hideable/collapsible sidebar (desktop) + mobile chrome.
+ * Developer-facing shell: left sidebar always discoverable (narrow strip when collapsed).
+ * Mobile: hamburger menu. Developer app session is separate from master/school/student login.
  */
 export function DevelopersShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "";
@@ -56,14 +59,16 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
   const onDashboard = pathname.startsWith("/developers/dashboard");
   const [collapsed, setCollapsed] = useState(false);
   const [hash, setHash] = useState("");
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     try {
-      const v = localStorage.getItem("odelhub-devs-sidebar-collapsed");
+      const v = localStorage.getItem(SIDEBAR_KEY);
       if (v === "1") setCollapsed(true);
     } catch {
       /* ignore */
     }
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
@@ -77,12 +82,21 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
     setCollapsed((c) => {
       const next = !c;
       try {
-        localStorage.setItem("odelhub-devs-sidebar-collapsed", next ? "1" : "0");
+        localStorage.setItem(SIDEBAR_KEY, next ? "1" : "0");
       } catch {
         /* ignore */
       }
       return next;
     });
+  }
+
+  function expandSidebar() {
+    setCollapsed(false);
+    try {
+      localStorage.setItem(SIDEBAR_KEY, "0");
+    } catch {
+      /* ignore */
+    }
   }
 
   return (
@@ -91,7 +105,7 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.15em] text-emerald-300">Developers</p>
-            <p className="text-[10px] text-slate-500">Builder portal · faces all product sides</p>
+            <p className="text-[10px] text-slate-500">Builder portal · Partner API · OpenPayGB</p>
           </div>
           <nav className="flex flex-1 flex-wrap gap-1 text-sm">
             {DEV_NAV.slice(0, 5).map((item) => (
@@ -111,17 +125,17 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
           <button
             type="button"
             onClick={toggleSidebar}
-            className="rounded-lg border border-white/15 px-2.5 py-1.5 text-xs text-slate-300 hover:bg-white/5"
+            className="rounded-lg border border-emerald-500/40 bg-emerald-950/40 px-2.5 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-900/50"
             title={collapsed ? "Show sidebar" : "Hide sidebar"}
           >
-            {collapsed ? "Show menu" : "Hide menu"}
+            {collapsed ? "Show sidebar" : "Hide sidebar"}
           </button>
         </div>
       </div>
 
       <DashboardMobileChrome
         title="Developers"
-        subtitle="Builder portal · all product sides"
+        subtitle="Tap Menu for navigation"
         accent="emerald"
         panelId="developers-mobile-menu"
         backHref={pathname === "/developers" || pathname === "/developers/" ? "/" : "/developers"}
@@ -149,13 +163,29 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
         ]}
       />
 
-      <div className="mx-auto flex max-w-6xl gap-0 md:gap-6 px-0 md:px-4 py-0 md:py-8">
+      <div className="mx-auto flex max-w-6xl gap-0 md:gap-4 px-0 md:px-4 py-0 md:py-8">
+        {/* Desktop sidebar: full menu, or narrow always-visible strip when collapsed */}
         <aside
-          className={`hidden shrink-0 border-r border-white/10 bg-[#0a101f] md:block transition-[width,opacity] duration-200 ${
-            collapsed ? "w-0 overflow-hidden border-0 opacity-0" : "w-56 opacity-100"
+          className={`relative hidden shrink-0 border-r border-white/10 bg-[#0a101f] md:block transition-[width] duration-200 ${
+            collapsed ? "w-12" : "w-56"
           }`}
+          aria-label="Developers sidebar"
         >
-          {!collapsed ? (
+          {collapsed ? (
+            <div className="sticky top-4 flex flex-col items-center gap-2 p-2">
+              <button
+                type="button"
+                onClick={expandSidebar}
+                className="flex w-full flex-col items-center gap-1 rounded-lg border border-emerald-500/40 bg-emerald-950/50 px-1 py-3 text-[10px] font-bold uppercase tracking-wider text-emerald-200 hover:bg-emerald-900/60"
+                title="Expand sidebar menu"
+              >
+                <span aria-hidden className="text-base leading-none">
+                  ›
+                </span>
+                Menu
+              </button>
+            </div>
+          ) : (
             <div className="sticky top-4 space-y-4 p-4">
               <div className="flex items-center justify-between gap-2">
                 <p className="mb-0 text-[10px] font-bold uppercase tracking-wider text-emerald-400/90">Menu</p>
@@ -219,19 +249,23 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
                 </nav>
               </div>
             </div>
-          ) : null}
+          )}
         </aside>
 
-        <div className={`min-w-0 flex-1 space-y-6 px-4 py-6 md:px-0 md:py-0 ${collapsed ? "md:pl-0" : ""}`}>
-          {collapsed ? (
-            <button
-              type="button"
-              onClick={toggleSidebar}
-              className="mb-2 hidden rounded-lg border border-emerald-500/30 bg-emerald-950/30 px-3 py-1.5 text-xs text-emerald-200 md:inline-flex"
-            >
-              Show sidebar menu
-            </button>
+        <div className="min-w-0 flex-1 space-y-6 px-4 py-6 md:px-0 md:py-0">
+          {!hydrated ? null : collapsed ? (
+            <p className="hidden text-xs text-slate-500 md:block">
+              Sidebar collapsed — use the green <strong className="text-emerald-300">Menu</strong> strip on the left, or{" "}
+              <button type="button" onClick={expandSidebar} className="text-emerald-300 underline">
+                expand sidebar
+              </button>
+              .
+            </p>
           ) : null}
+          <p className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] text-slate-500 md:hidden">
+            On phones, open navigation with the <strong className="text-emerald-300">Menu</strong> button (top right).
+            Developer sign-in is separate from school/master login.
+          </p>
           {showAllSidesBanner ? <OperatorAllSidesNav /> : null}
           {children}
         </div>
