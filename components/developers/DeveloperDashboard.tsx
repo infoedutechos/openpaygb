@@ -3,6 +3,49 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { CopyTextButton } from "@/components/ui/CopyTextButton";
+import { OpenPayCardPanel } from "@/components/student/OpenPayCardPanel";
+
+type DashPanel =
+  | "overview"
+  | "settlement"
+  | "transactions"
+  | "fees"
+  | "branding"
+  | "api-keys"
+  | "webhooks"
+  | "opgb-card"
+  | "oauth";
+
+const PRIMARY_CARDS: { id: string; label: string; panels: DashPanel[] }[] = [
+  { id: "overview", label: "Overview", panels: ["overview"] },
+  { id: "money", label: "Money", panels: ["settlement", "transactions", "fees"] },
+  { id: "credentials", label: "Credentials", panels: ["api-keys", "webhooks"] },
+  { id: "opgb-card", label: "OPGB Card", panels: ["opgb-card"] },
+  { id: "branding", label: "White-label", panels: ["branding"] },
+  { id: "oauth", label: "Partner APIs", panels: ["oauth"] },
+];
+
+const PANEL_LABELS: Record<DashPanel, string> = {
+  overview: "Overview",
+  settlement: "Settlement",
+  transactions: "Transactions",
+  fees: "Fees",
+  branding: "White-label",
+  "api-keys": "API keys",
+  webhooks: "Webhooks",
+  "opgb-card": "OPGB Card",
+  oauth: "OAuth & APIs",
+};
+
+function panelFromHash(hash: string): DashPanel {
+  const id = hash.replace(/^#/, "") as DashPanel;
+  if (id && id in PANEL_LABELS) return id;
+  return "overview";
+}
+
+function primaryCardForPanel(panel: DashPanel): string {
+  return PRIMARY_CARDS.find((c) => c.panels.includes(panel))?.id ?? "overview";
+}
 
 type AppInfo = {
   id: string;
@@ -124,6 +167,14 @@ export function DeveloperDashboard() {
   const [newKeyPlain, setNewKeyPlain] = useState<string | null>(null);
   const [newWebhookSecret, setNewWebhookSecret] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [panel, setPanel] = useState<DashPanel>("overview");
+
+  const goToPanel = useCallback((next: DashPanel) => {
+    setPanel(next);
+    if (typeof window !== "undefined") {
+      window.history.replaceState(null, "", `#${next}`);
+    }
+  }, []);
 
   const [keyName, setKeyName] = useState("Production key");
   const [keyScopes, setKeyScopes] = useState<string[]>([
@@ -156,6 +207,9 @@ export function DeveloperDashboard() {
   const [whiteLabelMode, setWhiteLabelMode] = useState(false);
   const [supportEmail, setSupportEmail] = useState("");
   const [supportUrl, setSupportUrl] = useState("");
+  const [sampleOrderUgx, setSampleOrderUgx] = useState("25000");
+  const [feeAutoSave, setFeeAutoSave] = useState(false);
+  const [feePreviewBusy, setFeePreviewBusy] = useState(false);
 
   const applySettingsToForm = useCallback((a: AppInfo, quote?: FeeQuote | null, sum?: Settlement | null) => {
     setFeePayer((a.platformFeePayer as "pass_through" | "absorb") || "pass_through");
@@ -241,24 +295,117 @@ export function DeveloperDashboard() {
     void load();
   }, [load]);
 
-  /** Deep links like #settlement fail while the page is still "Loading…" — scroll after content mounts. */
+  /** Sync multi-card tabs from URL hash (sidebar + deep links). */
   useEffect(() => {
     if (loading || !app) return;
 
-    const scrollToHash = () => {
-      const hash = typeof window !== "undefined" ? window.location.hash.replace(/^#/, "") : "";
-      if (!hash) return;
-      const el = document.getElementById(hash);
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    const syncFromHash = () => {
+      const hash = typeof window !== "undefined" ? window.location.hash : "";
+      setPanel(panelFromHash(hash));
     };
 
-    const t = window.setTimeout(scrollToHash, 50);
-    window.addEventListener("hashchange", scrollToHash);
+    syncFromHash();
+    window.addEventListener("hashchange", syncFromHash);
+    window.addEventListener("popstate", syncFromHash);
+    const onClick = (ev: MouseEvent) => {
+      const t = ev.target as HTMLElement | null;
+      const a = t?.closest?.("a[href*='#']") as HTMLAnchorElement | null;
+      if (!a) return;
+      try {
+        const url = new URL(a.href, window.location.origin);
+        if (url.pathname.startsWith("/developers/dashboard") && url.hash) {
+          window.setTimeout(syncFromHash, 0);
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+    document.addEventListener("click", onClick);
     return () => {
-      window.clearTimeout(t);
-      window.removeEventListener("hashchange", scrollToHash);
+      window.removeEventListener("hashchange", syncFromHash);
+      window.removeEventListener("popstate", syncFromHash);
+      document.removeEventListener("click", onClick);
     };
   }, [loading, app]);
+
+  /** Live fee quote automation — preview as settings change; optional auto-save. */
+  useEffect(() => {
+    if (!app || panel !== "fees") return;
+    const order = Math.round(Number(String(sampleOrderUgx).replace(/,/g, ""))) || 25_000;
+    const handle = window.setTimeout(() => {
+      void (async () => {
+        setFeePreviewBusy(true);
+        try {
+          if (feeAutoSave) {
+            const res = await fetch("/api/developers/merchant-settings", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                platformFeePayer: feePayer,
+                merchantSurchargePercent: Number(surchargePct) || 0,
+                merchantSurchargeFixedUgx: Math.round(Number(surchargeFixed) || 0),
+                platformFeeOverrideKind: feeOverrideKind,
+                platformFeeOverrideUgx: Math.round(Number(feeOverrideUgx) || 0),
+                platformFeeOverridePercent: Number(feeOverridePct) || 0,
+                sampleOrderUgx: order,
+              }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok) {
+              setFeeQuote(data.sampleFeeQuote ?? null);
+              if (data.app) setApp(data.app);
+              if (data.settlement) setSettlement(data.settlement);
+            }
+          } else {
+            const res = await fetch("/api/developers/merchant-settings/preview", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                sampleOrderUgx: order,
+                platformFeePayer: feePayer,
+                merchantSurchargePercent: Number(surchargePct) || 0,
+                merchantSurchargeFixedUgx: Math.round(Number(surchargeFixed) || 0),
+                platformFeeOverrideKind: feeOverrideKind,
+                platformFeeOverrideUgx: Math.round(Number(feeOverrideUgx) || 0),
+                platformFeeOverridePercent: Number(feeOverridePct) || 0,
+                whiteLabelMode,
+              }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok) setFeeQuote(data.sampleFeeQuote ?? null);
+          }
+        } finally {
+          setFeePreviewBusy(false);
+        }
+      })();
+    }, 450);
+    return () => window.clearTimeout(handle);
+  }, [
+    app,
+    panel,
+    sampleOrderUgx,
+    feePayer,
+    surchargePct,
+    surchargeFixed,
+    feeOverrideKind,
+    feeOverrideUgx,
+    feeOverridePct,
+    whiteLabelMode,
+    feeAutoSave,
+  ]);
+
+  function applyFeePreset(kind: "pass_through" | "absorb" | "waive_pass") {
+    if (kind === "pass_through") {
+      setFeePayer("pass_through");
+      setFeeOverrideKind("inherit");
+    } else if (kind === "absorb") {
+      setFeePayer("absorb");
+      setFeeOverrideKind("inherit");
+    } else {
+      setFeePayer("pass_through");
+      setFeeOverrideKind("none");
+    }
+  }
 
   async function createKey() {
     setMessage(null);
@@ -276,11 +423,7 @@ export function DeveloperDashboard() {
     setNewKeyPlain(typeof data.apiKey === "string" ? data.apiKey : null);
     setMessage("API key created — copy it now.");
     void load();
-    if (typeof window !== "undefined") {
-      window.requestAnimationFrame(() => {
-        document.getElementById("api-keys")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-    }
+    goToPanel("api-keys");
   }
 
   async function createWebhook() {
@@ -318,6 +461,7 @@ export function DeveloperDashboard() {
           platformFeeOverridePercent: Number(feeOverridePct) || 0,
           payoutPhone,
           payoutNetwork: payoutNetwork || "",
+          sampleOrderUgx: Math.round(Number(String(sampleOrderUgx).replace(/,/g, ""))) || 25_000,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -466,71 +610,102 @@ export function DeveloperDashboard() {
     );
   }
 
+  const activePrimary = primaryCardForPanel(panel);
+  const activePrimaryCard = PRIMARY_CARDS.find((c) => c.id === activePrimary);
+
   return (
-    <div className="space-y-8">
-      <header id="overview" className="scroll-mt-6 rounded-2xl border border-emerald-500/25 bg-emerald-950/20 p-6">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-300">Developer app</p>
-        <h1 className="mt-2 text-2xl font-semibold text-white">{app.brandingName || app.name}</h1>
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <p className="font-mono text-xs text-slate-400">client_id: {app.clientId}</p>
-          <CopyTextButton
-            text={app.clientId}
-            label="Copy client_id"
-            className="rounded-md border border-white/15 px-2 py-0.5 text-[10px] text-slate-200 hover:bg-white/10"
-          />
+    <div className="space-y-6">
+      <header className="rounded-2xl border border-emerald-500/25 bg-gradient-to-br from-emerald-950/40 via-slate-950/60 to-slate-950/80 p-5 shadow-[0_0_0_1px_rgba(16,185,129,0.08)]">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-300">Developer app</p>
+            <h1 className="mt-1 text-2xl font-semibold text-white">{app.brandingName || app.name}</h1>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <p className="font-mono text-xs text-slate-400">client_id: {app.clientId}</p>
+              <CopyTextButton
+                text={app.clientId}
+                label="Copy client_id"
+                className="rounded-md border border-white/15 px-2 py-0.5 text-[10px] text-slate-200 hover:bg-white/10"
+              />
+            </div>
+            <p className="mt-1 text-xs text-slate-500">Scopes: {app.scopes.join(", ")}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void logout()}
+            className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-400 hover:text-white"
+          >
+            Sign out
+          </button>
         </div>
-        <p className="mt-1 text-xs text-slate-500">Scopes: {app.scopes.join(", ")}</p>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-xl border border-violet-500/25 bg-violet-950/30 p-4">
+          <button
+            type="button"
+            onClick={() => goToPanel("settlement")}
+            className="rounded-xl border border-violet-500/25 bg-violet-950/30 p-4 text-left transition hover:border-violet-400/50"
+          >
             <p className="text-[10px] uppercase tracking-wider text-violet-300">Available to cash out</p>
             <p className="mt-1 text-xl font-semibold text-white">
               {formatUgx(settlement?.availableBalanceUgx ?? app.settlementBalanceUgx ?? 0)}
             </p>
-          </div>
-          <div className="rounded-xl border border-white/10 bg-slate-950/40 p-4">
+          </button>
+          <button
+            type="button"
+            onClick={() => goToPanel("transactions")}
+            className="rounded-xl border border-white/10 bg-slate-950/40 p-4 text-left transition hover:border-emerald-400/40"
+          >
             <p className="text-[10px] uppercase tracking-wider text-slate-400">Confirmed charges</p>
             <p className="mt-1 text-xl font-semibold text-white">{settlement?.confirmedChargeCount ?? 0}</p>
-          </div>
-          <div className="rounded-xl border border-white/10 bg-slate-950/40 p-4">
-            <p className="text-[10px] uppercase tracking-wider text-slate-400">OPGB fees collected</p>
-            <p className="mt-1 text-xl font-semibold text-white">
-              {formatUgx(settlement?.lifetimePlatformFeesUgx ?? 0)}
-            </p>
-          </div>
-        </div>
-        <div className="mt-4 rounded-xl border border-violet-500/25 bg-violet-950/30 p-4 text-sm text-slate-300">
-          <p className="font-semibold text-violet-100">OpenPayGB payment provider</p>
-          <p className="mt-1 text-xs leading-relaxed text-slate-400">
-            Create merchant charges with <code className="text-violet-200">POST /api/partner/v1/charges</code>, send
-            payers to <code className="text-cyan-200">checkoutUrl</code>, cash out settled balance, and brand hosted
-            checkout. Overview:{" "}
-            <Link href="/opgb" className="text-violet-300 hover:underline">
-              /opgb
-            </Link>
-            .
-          </p>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <a href="#settlement" className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-200 hover:border-emerald-400/40">
-            Cash out
-          </a>
-          <a href="#transactions" className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-200 hover:border-emerald-400/40">
-            Transactions
-          </a>
-          <a href="#api-keys" className="rounded-lg border border-emerald-500/40 bg-emerald-950/40 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:border-emerald-400/60">
-            Partner API keys
-          </a>
-          <a href="#webhooks" className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-200 hover:border-emerald-400/40">
-            Webhooks
-          </a>
-          <Link href="/opgb#integrate" className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-200 hover:border-emerald-400/40">
-            Integration guide
-          </Link>
-          <button type="button" onClick={() => void logout()} className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-400 hover:text-white">
-            Sign out
+          </button>
+          <button
+            type="button"
+            onClick={() => goToPanel("api-keys")}
+            className="rounded-xl border border-emerald-500/25 bg-emerald-950/30 p-4 text-left transition hover:border-emerald-400/50"
+          >
+            <p className="text-[10px] uppercase tracking-wider text-emerald-300">Generated API keys</p>
+            <p className="mt-1 text-xl font-semibold text-white">{keys.length}</p>
           </button>
         </div>
       </header>
+
+      <nav aria-label="Dashboard cards" className="flex flex-wrap gap-2">
+        {PRIMARY_CARDS.map((card) => {
+          const active = card.id === activePrimary;
+          return (
+            <button
+              key={card.id}
+              type="button"
+              onClick={() => goToPanel(card.panels[0]!)}
+              className={`rounded-xl border px-3.5 py-2 text-sm font-medium transition ${
+                active
+                  ? "border-emerald-400/50 bg-emerald-500/15 text-emerald-50 shadow-[0_0_24px_rgba(16,185,129,0.12)]"
+                  : "border-white/10 bg-slate-900/50 text-slate-400 hover:border-white/20 hover:text-white"
+              }`}
+            >
+              {card.label}
+            </button>
+          );
+        })}
+      </nav>
+
+      {activePrimaryCard && activePrimaryCard.panels.length > 1 ? (
+        <div className="flex flex-wrap gap-1 rounded-xl border border-white/10 bg-slate-950/50 p-1">
+          {activePrimaryCard.panels.map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => goToPanel(p)}
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                panel === p
+                  ? "bg-cyan-500/20 text-cyan-100"
+                  : "text-slate-400 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              {PANEL_LABELS[p]}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       {error ? <p className="text-sm text-rose-300">{error}</p> : null}
       {message ? <p className="text-sm text-emerald-200">{message}</p> : null}
@@ -553,7 +728,67 @@ export function DeveloperDashboard() {
         </div>
       ) : null}
 
-      <section id="settlement" className="scroll-mt-6 rounded-2xl border border-cyan-500/20 bg-cyan-950/15 p-6">
+      {panel === "overview" ? (
+        <section id="overview" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {(
+            [
+              {
+                panel: "settlement" as const,
+                title: "Settlement & cashout",
+                body: "Cash out confirmed merchant net via Mobile Money.",
+              },
+              {
+                panel: "transactions" as const,
+                title: "Transactions",
+                body: "Partner API charges and checkout links for this app.",
+              },
+              {
+                panel: "api-keys" as const,
+                title: "Generated API keys",
+                body: "Create and review Partner API key prefixes (full secret once).",
+              },
+              {
+                panel: "webhooks" as const,
+                title: "Webhooks",
+                body: "Receive charge and payment events at your HTTPS URL.",
+              },
+              {
+                panel: "opgb-card" as const,
+                title: "Secure OPGB Card",
+                body: "Reserve and activate your OpenPayGB card with TON or Mobile Money.",
+              },
+              {
+                panel: "branding" as const,
+                title: "White-label",
+                body: "Brand hosted checkout with your name, logo, and colors.",
+              },
+              {
+                panel: "fees" as const,
+                title: "Fees",
+                body: "Choose who pays the OPGB fee and set your surcharge.",
+              },
+              {
+                panel: "oauth" as const,
+                title: "Partner APIs & WooCommerce",
+                body: "OAuth, charges, payouts, Dex, and the WooCommerce gateway plugin under /integrations/woocommerce.",
+              },
+            ] as const
+          ).map((card) => (
+            <button
+              key={card.panel}
+              type="button"
+              onClick={() => goToPanel(card.panel)}
+              className="rounded-2xl border border-white/10 bg-slate-900/50 p-5 text-left transition hover:border-emerald-400/40 hover:bg-slate-900/80"
+            >
+              <p className="text-sm font-semibold text-white">{card.title}</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-400">{card.body}</p>
+            </button>
+          ))}
+        </section>
+      ) : null}
+
+      {panel === "settlement" ? (
+      <section id="settlement" className="rounded-2xl border border-cyan-500/20 bg-cyan-950/15 p-6">
         <h2 className="text-lg font-semibold text-cyan-100">Settlement & cashout</h2>
         <p className="mt-1 text-sm text-slate-400">
           Confirmed charges credit your settlement balance (merchant net after OPGB fee rules). Request a Mobile Money
@@ -713,8 +948,10 @@ export function DeveloperDashboard() {
           )}
         </ul>
       </section>
+      ) : null}
 
-      <section id="transactions" className="scroll-mt-6 rounded-2xl border border-white/10 bg-slate-900/40 p-6">
+      {panel === "transactions" ? (
+      <section id="transactions" className="rounded-2xl border border-white/10 bg-slate-900/40 p-6">
         <h2 className="text-lg font-semibold text-white">Transactions</h2>
         <p className="mt-1 text-sm text-slate-400">Merchant charges created via Partner API for this app.</p>
         <div className="mt-4 overflow-x-auto">
@@ -762,15 +999,54 @@ export function DeveloperDashboard() {
           </table>
         </div>
       </section>
+      ) : null}
 
-      <section id="fees" className="scroll-mt-6 rounded-2xl border border-amber-500/20 bg-amber-950/10 p-6">
+      {panel === "fees" ? (
+      <section id="fees" className="rounded-2xl border border-amber-500/20 bg-amber-950/10 p-6">
         <h2 className="text-lg font-semibold text-amber-100">Who sets fees</h2>
         <p className="mt-1 text-sm text-slate-400">
           <strong className="text-slate-200">OpenPayGB</strong> sets the platform fee (default 2.5%, min 500 UGX,
           configurable per app). <strong className="text-slate-200">You</strong> choose whether the customer pays that
           fee (pass-through) or you absorb it, and you may add your own surcharge.
         </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => applyFeePreset("pass_through")}
+            className="rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100"
+          >
+            Preset: customer pays OPGB fee
+          </button>
+          <button
+            type="button"
+            onClick={() => applyFeePreset("absorb")}
+            className="rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-100"
+          >
+            Preset: I absorb OPGB fee
+          </button>
+          <button
+            type="button"
+            onClick={() => applyFeePreset("waive_pass")}
+            className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-300"
+          >
+            Preset: waive OPGB fee
+          </button>
+        </div>
+        <label className="mt-3 inline-flex items-center gap-2 text-xs text-slate-400">
+          <input type="checkbox" checked={feeAutoSave} onChange={(e) => setFeeAutoSave(e.target.checked)} />
+          Auto-save fee settings when you change them
+          {feePreviewBusy ? <span className="text-amber-200/80">· updating quote…</span> : null}
+        </label>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <label className="block text-xs text-slate-400">
+            Sample order (UGX) — live quote
+            <input
+              value={sampleOrderUgx}
+              onChange={(e) => setSampleOrderUgx(e.target.value)}
+              inputMode="numeric"
+              className="mt-1 w-full rounded-lg border border-white/15 bg-slate-950 px-3 py-2 text-sm text-white"
+            />
+          </label>
           <label className="block text-xs text-slate-400">
             Who pays OPGB fee
             <select
@@ -850,7 +1126,10 @@ export function DeveloperDashboard() {
         </div>
         {feeQuote ? (
           <div className="mt-4 rounded-xl border border-white/10 bg-slate-950/50 p-4 text-xs text-slate-400">
-            <p className="font-semibold text-slate-200">Sample quote on {formatUgx(feeQuote.orderAmountUgx)}</p>
+            <p className="font-semibold text-slate-200">
+              Live quote on {formatUgx(feeQuote.orderAmountUgx)}
+              {feeAutoSave ? " · auto-saved" : " · preview (Save to persist)"}
+            </p>
             <ul className="mt-2 space-y-1">
               <li>Customer pays {formatUgx(feeQuote.customerTotalUgx)}</li>
               <li>OPGB fee {formatUgx(feeQuote.platformFeeUgx)}</li>
@@ -871,8 +1150,10 @@ export function DeveloperDashboard() {
           Save fee & payout settings
         </button>
       </section>
+      ) : null}
 
-      <section id="branding" className="scroll-mt-6 rounded-2xl border border-violet-500/25 bg-violet-950/15 p-6">
+      {panel === "branding" ? (
+      <section id="branding" className="rounded-2xl border border-violet-500/25 bg-violet-950/15 p-6">
         <h2 className="text-lg font-semibold text-violet-100">White-label checkout</h2>
         <p className="mt-1 text-sm text-slate-400">
           Brand hosted <code className="text-violet-200">/opgb/checkout/…</code> with your name, logo, and colors.
@@ -965,9 +1246,11 @@ export function DeveloperDashboard() {
           Save branding
         </button>
       </section>
+      ) : null}
 
-      <section id="api-keys" className="scroll-mt-6 rounded-2xl border border-white/10 bg-slate-900/40 p-6">
-        <h2 className="text-lg font-semibold text-white">Partner API keys</h2>
+      {panel === "api-keys" ? (
+      <section id="api-keys" className="rounded-2xl border border-white/10 bg-slate-900/40 p-6">
+        <h2 className="text-lg font-semibold text-white">Generated Partner API keys</h2>
         <p className="mt-1 text-sm text-slate-400">
           Use as <code className="text-emerald-200">Authorization: Bearer odelhub_live_…</code> on Partner APIs.
         </p>
@@ -1018,8 +1301,10 @@ export function DeveloperDashboard() {
           ))}
         </ul>
       </section>
+      ) : null}
 
-      <section id="webhooks" className="scroll-mt-6 rounded-2xl border border-white/10 bg-slate-900/40 p-6">
+      {panel === "webhooks" ? (
+      <section id="webhooks" className="rounded-2xl border border-white/10 bg-slate-900/40 p-6">
         <h2 className="text-lg font-semibold text-white">Webhook endpoints</h2>
         <p className="mt-1 text-sm text-slate-400">Receive payment, charge, and Dex intent events at your HTTPS URL.</p>
         <div className="mt-4 grid gap-3">
@@ -1059,9 +1344,24 @@ export function DeveloperDashboard() {
           ))}
         </ul>
       </section>
+      ) : null}
 
-      <section id="oauth" className="scroll-mt-6 rounded-2xl border border-violet-500/20 bg-violet-950/15 p-6 text-sm text-slate-300">
-        <h2 className="text-lg font-semibold text-violet-200">OAuth & OPGB partner APIs</h2>
+      {panel === "opgb-card" ? (
+        <section id="opgb-card" className="rounded-2xl border border-teal-500/25 bg-teal-950/15 p-6">
+          <h2 className="text-lg font-semibold text-teal-100">Secure your OPGB Card</h2>
+          <p className="mt-1 text-sm text-slate-400">
+            Reserve a personal OpenPayGB card for this integrator app, then activate and fund it with{" "}
+            <strong className="text-slate-200">TON</strong> or <strong className="text-slate-200">Mobile Money</strong>.
+          </p>
+          <div className="mt-5">
+            <OpenPayCardPanel apiBase="/api/developers/openpay-card" showTuitionHint={false} />
+          </div>
+        </section>
+      ) : null}
+
+      {panel === "oauth" ? (
+      <section id="oauth" className="rounded-2xl border border-violet-500/20 bg-violet-950/15 p-6 text-sm text-slate-300">
+        <h2 className="text-lg font-semibold text-violet-200">OAuth, OPGB partner APIs & WooCommerce</h2>
         <ul className="mt-3 list-inside list-disc space-y-1 text-slate-400">
           <li>
             Authorize: <code className="text-xs">/api/oauth/authorize?response_type=code&client_id=…</code>
@@ -1072,11 +1372,31 @@ export function DeveloperDashboard() {
           <li>Dex quote: <code className="text-xs">GET /api/partner/v1/dex/quote</code></li>
           <li>Payment intents: <code className="text-xs">POST /api/partner/v1/dex/payment-intents</code></li>
           <li>OPGB balances: <code className="text-xs">GET /api/partner/v1/opgb/balances?studentId=…</code></li>
+          <li>
+            P2P escrow (any card holder): <code className="text-xs">POST /api/openpay/dex/p2p/escrow</code>
+          </li>
         </ul>
+        <div className="mt-4 rounded-xl border border-cyan-500/25 bg-cyan-950/20 p-4 text-xs text-slate-400">
+          <p className="font-semibold text-cyan-100">WooCommerce</p>
+          <p className="mt-1">
+            Install the plugin from <code className="text-cyan-200">integrations/woocommerce/odelhub-openpaygb</code>.
+            Paste your Partner API key + webhook signing secret; checkout creates{" "}
+            <code className="text-cyan-200">POST /api/partner/v1/charges</code> and redirects to hosted{" "}
+            <code className="text-cyan-200">/opgb/checkout/…</code>. Webhooks mark Woo orders paid on{" "}
+            <code className="text-cyan-200">charge.confirmed</code>.
+          </p>
+          <p className="mt-2">
+            Guide:{" "}
+            <Link href="/api/docs/platform/WOOCOMMERCE.md" className="text-cyan-300 hover:underline">
+              docs/platform/WOOCOMMERCE.md
+            </Link>
+          </p>
+        </div>
         <Link href="/opgb#integrate" className="mt-4 inline-block text-sm text-violet-300 hover:underline">
           Full integration guide on OpenPayGB →
         </Link>
       </section>
+      ) : null}
     </div>
   );
 }

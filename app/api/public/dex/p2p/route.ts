@@ -17,7 +17,7 @@ export async function GET() {
         status: o.status,
         expiresAt: o.expiresAt.toISOString(),
       })),
-      note: "Sign in as a student and POST /api/student/dex/p2p/escrow to hold OPGB in escrow for an open offer.",
+      note: "Sign in as any OpenPayGB card holder (student, admin, staff, developer, or guest after card register) and POST /api/openpay/dex/p2p/escrow to hold OPGB in escrow for an open offer.",
     });
   } catch (e) {
     return apiErrorResponse(e, { route: "GET /api/public/dex/p2p" });

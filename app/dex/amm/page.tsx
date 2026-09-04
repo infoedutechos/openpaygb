@@ -112,13 +112,21 @@ export default function DexAmmPage() {
             onClick={() => void executeSwap()}
             className="mt-4 w-full rounded-lg bg-cyan-500 py-2.5 font-semibold text-slate-950 disabled:opacity-50"
           >
-            Execute swap (student sign-in)
+            Execute swap (OpenPayGB card holder)
           </button>
           <p className="mt-3 text-xs text-slate-500">
             <Link href="/student/login" className="text-cyan-300 underline">
-              Sign in
-            </Link>{" "}
-            ·{" "}
+              Student
+            </Link>
+            {" · "}
+            <Link href="/admin/login" className="text-cyan-300 underline">
+              Admin
+            </Link>
+            {" · "}
+            <Link href="/dex/p2p" className="text-cyan-300 underline">
+              P2P
+            </Link>
+            {" · "}
             <Link href="/dex/onramp" className="text-cyan-300 underline">
               Onramp
             </Link>

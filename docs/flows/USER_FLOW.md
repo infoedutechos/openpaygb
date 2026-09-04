@@ -114,7 +114,7 @@ Checkout from card balance uses **`POST /api/public/checkout/openpay-card-pay`**
 | `/dex`, `/dex/onramp`, `/dex/offramp`, `/dex/convert` | Public quote/onramp helpers under `/api/public/dex/*` |
 | `/dex/buy` | `GET /api/public/dex/buy-quote`, `POST /api/public/dex/buy` |
 | `/dex/amm` | `GET /api/public/dex/amm-quote`, `POST /api/student/dex/amm-swap` (student session) |
-| `/dex/p2p` | `GET /api/public/dex/p2p`, `POST /api/student/dex/p2p/escrow`, `POST /api/student/dex/p2p/offers` |
+| `/dex/p2p` | `GET /api/public/dex/p2p`, `POST /api/openpay/dex/p2p/escrow` (any card holder; `/api/student/dex/p2p/*` aliases) |
 
 Phase 3 execution is **custodial** (ledger debits/credits); on-chain auto-release is backlog. See [OPGB_TOKEN_ECOSYSTEM.md](../platform/OPGB_TOKEN_ECOSYSTEM.md).
 

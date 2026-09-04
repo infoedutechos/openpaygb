@@ -60,7 +60,12 @@ function RegisterForm() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(typeof data.error === "string" ? data.error : "Sign-in failed");
-      router.push(next);
+      // Preserve #panel hashes (e.g. /developers/dashboard#settlement) — App Router can drop them.
+      if (next.includes("#")) {
+        window.location.assign(next);
+      } else {
+        router.push(next);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign-in failed");
     } finally {

@@ -4,6 +4,7 @@ import { assertActiveOrganizationSlug } from "@/lib/organizations";
 import { registerGuestOpenPayCard } from "@/lib/guest-card-register";
 import { clientIp, rateLimitHit } from "@/lib/rate-limit";
 import { apiErrorResponse } from "@/lib/api-error";
+import { signStudentToken, studentCookieName } from "@/lib/student-auth";
 
 const Body = z.object({
   organizationSlug: z.string().min(2),
@@ -31,7 +32,12 @@ export async function POST(req: Request) {
       otp: parsed.data.otp,
     });
 
-    return NextResponse.json({
+    const token = await signStudentToken({
+      sub: result.studentId,
+      organizationId: org.id,
+    });
+
+    const res = NextResponse.json({
       ok: true,
       studentId: result.studentId,
       card: {
@@ -39,8 +45,19 @@ export async function POST(req: Request) {
         status: result.cardStatus,
         maskedPan: result.maskedPan,
       },
-      nextStep: "Pay the card issue fee at /student/card or fund via MoMo/TON",
+      sessionIssued: true,
+      nextStep: "Activate/fund your card, then trade on /dex/p2p (student session cookie set).",
     });
+
+    res.cookies.set(studentCookieName(), token, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+
+    return res;
   } catch (e) {
     return apiErrorResponse(e, {
       route: "POST /api/public/guest-card/register",

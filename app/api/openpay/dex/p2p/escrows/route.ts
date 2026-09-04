@@ -3,7 +3,6 @@ import { resolveOpenPayP2pActor } from "@/lib/openpay-p2p-actor";
 import { prisma } from "@/lib/prisma";
 import { apiErrorResponse } from "@/lib/api-error";
 
-/** @deprecated Prefer GET /api/openpay/dex/p2p/escrows */
 export async function GET(req: Request) {
   try {
     const gate = await resolveOpenPayP2pActor(req);
@@ -35,8 +34,12 @@ export async function GET(req: Request) {
       take: 25,
     });
 
-    return NextResponse.json({ actor: gate.actor.kind, escrows, makerOffers: asMaker });
+    return NextResponse.json({
+      actor: gate.actor.kind,
+      escrows,
+      makerOffers: asMaker,
+    });
   } catch (e) {
-    return apiErrorResponse(e, { route: "GET /api/student/dex/p2p/escrows" });
+    return apiErrorResponse(e, { route: "GET /api/openpay/dex/p2p/escrows" });
   }
 }

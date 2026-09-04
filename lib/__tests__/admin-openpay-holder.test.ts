@@ -6,6 +6,7 @@ describe("admin openpay holder", () => {
     expect(ADMIN_CARD_PROGRAMME).toBe("ADMIN_CARD");
     expect(isNonTuitionCardProgramme("ADMIN_CARD")).toBe(true);
     expect(isNonTuitionCardProgramme("GUEST")).toBe(true);
+    expect(isNonTuitionCardProgramme("DEVELOPER_CARD")).toBe(true);
     expect(isNonTuitionCardProgramme("BSC-CS")).toBe(false);
   });
 

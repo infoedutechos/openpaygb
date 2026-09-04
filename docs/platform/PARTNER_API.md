@@ -80,6 +80,18 @@ Content-Type: application/json
 
 `amountUgx` on create is the **order**; response `amountUgx` is the **customer total** after fee rules. Fee payer and surcharges are configured on the Developer App (`/developers/dashboard#fees`).
 
+### WooCommerce
+
+Ship-ready plugin: `integrations/woocommerce/odelhub-openpaygb/` — see [WOOCOMMERCE.md](./WOOCOMMERCE.md). Creates Partner charges, redirects to hosted checkout, completes Woo orders on `charge.confirmed` webhooks.
+
+### P2P escrow (any OpenPayGB card holder)
+
+```http
+POST /api/openpay/dex/p2p/escrow
+```
+
+Accepts student, admin, staff, or developer sessions (shadow card holders). Legacy `/api/student/dex/p2p/*` routes resolve the same actors.
+
 1. Redirect the payer to `checkoutUrl`.
 2. Payer pays with MTN/Airtel MoMo (or sandbox confirm in local/dev when LivePay is unset).
 3. Receive webhook `charge.confirmed` (also `charge.created`, `charge.failed`). Confirmed charges credit `merchantNetUgx` to settlement balance.

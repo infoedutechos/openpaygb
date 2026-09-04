@@ -7,6 +7,8 @@ import { clientFetchErrorMessage } from "@/lib/client-fetch-error";
 import { readJsonResponse } from "@/utils/read-json-response";
 import { fetchJson } from "@/utils/fetch-json";
 
+const P2P_API = "/api/openpay/dex/p2p";
+
 type Offer = {
   id: string;
   side: string;
@@ -34,6 +36,7 @@ type EscrowRow = {
 export default function DexP2pPage() {
   const [data, setData] = useState<P2pPayload | null>(null);
   const [escrows, setEscrows] = useState<EscrowRow[]>([]);
+  const [actor, setActor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -43,10 +46,14 @@ export default function DexP2pPage() {
       const r = await fetchJson("/api/public/dex/p2p");
       if (!r.ok) throw new Error("Could not load P2P book");
       setData((await r.json()) as P2pPayload);
-      const er = await fetch("/api/student/dex/p2p/escrows", { credentials: "include" });
+      const er = await fetch(`${P2P_API}/escrows`, { credentials: "include" });
       if (er.ok) {
-        const ej = (await er.json()) as { escrows?: EscrowRow[] };
+        const ej = (await er.json()) as { escrows?: EscrowRow[]; actor?: string };
         setEscrows(ej.escrows ?? []);
+        setActor(ej.actor ?? null);
+      } else {
+        setEscrows([]);
+        setActor(null);
       }
     } catch (e) {
       setError(clientFetchErrorMessage(e, "Could not load P2P book. Wait for dev Ready, then refresh."));
@@ -84,7 +91,7 @@ export default function DexP2pPage() {
     setError(null);
     setMsg(null);
     try {
-      const r = await fetch("/api/student/dex/p2p/escrow", {
+      const r = await fetch(`${P2P_API}/escrow`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -106,8 +113,11 @@ export default function DexP2pPage() {
       <DexPageBack />
       <h1 className="text-2xl font-semibold text-white">P2P market</h1>
       <p className="mt-2 text-sm text-slate-400">
-        Autonomous peer offers — accept with OPGB escrow (1 OPGB = 1 UGX).
+        Autonomous peer offers — accept with OPGB escrow (1 OPGB = 1 UGX). Open to every OpenPayGB card holder.
       </p>
+      {actor ? (
+        <p className="mt-2 text-xs text-emerald-300/90">Signed in as {actor} card holder</p>
+      ) : null}
       {error ? <p className="mt-4 text-sm text-rose-300">{error}</p> : null}
       {msg ? <p className="mt-4 text-sm text-emerald-300">{msg}</p> : null}
       {data ? (
@@ -148,7 +158,7 @@ export default function DexP2pPage() {
                           <button
                             type="button"
                             disabled={busyId === e.id}
-                            onClick={() => void escrowAction("/api/student/dex/p2p/escrow/release", e.id)}
+                            onClick={() => void escrowAction(`${P2P_API}/escrow/release`, e.id)}
                             className="rounded bg-emerald-700 px-2 py-1 text-white disabled:opacity-50"
                           >
                             Release
@@ -156,7 +166,7 @@ export default function DexP2pPage() {
                           <button
                             type="button"
                             disabled={busyId === e.id}
-                            onClick={() => void escrowAction("/api/student/dex/p2p/escrow/cancel", e.id)}
+                            onClick={() => void escrowAction(`${P2P_API}/escrow/cancel`, e.id)}
                             className="rounded bg-slate-700 px-2 py-1 text-white disabled:opacity-50"
                           >
                             Cancel
@@ -165,7 +175,7 @@ export default function DexP2pPage() {
                             type="button"
                             disabled={busyId === e.id}
                             onClick={() =>
-                              void escrowAction("/api/student/dex/p2p/dispute", e.id, {
+                              void escrowAction(`${P2P_API}/dispute`, e.id, {
                                 reason: "Delivery issue — escalate to platform",
                               })
                             }
@@ -181,12 +191,29 @@ export default function DexP2pPage() {
               </ul>
             </div>
           ) : null}
-          <p className="mt-4 text-xs text-slate-500">
-            <Link href="/student/login" className="text-cyan-300 underline">
-              Student sign-in
-            </Link>{" "}
-            required · auto-release after 24h · OPGB from card top-ups
-          </p>
+          <div className="mt-4 space-y-2 text-xs text-slate-500">
+            <p>Auto-release after 24h · OPGB from card top-ups (TON or Mobile Money).</p>
+            <p className="flex flex-wrap gap-x-3 gap-y-1">
+              <Link href="/student/login" className="text-cyan-300 underline">
+                Student
+              </Link>
+              <Link href="/admin/login" className="text-cyan-300 underline">
+                Admin
+              </Link>
+              <Link href="/staff/login" className="text-cyan-300 underline">
+                Staff
+              </Link>
+              <Link href="/developers/register" className="text-cyan-300 underline">
+                Developer
+              </Link>
+              <Link href="/card/get" className="text-cyan-300 underline">
+                Get a card
+              </Link>
+              <Link href="/dex/p2p" className="text-cyan-300 underline">
+                P2P
+              </Link>
+            </p>
+          </div>
         </>
       ) : null}
     </div>

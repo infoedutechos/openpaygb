@@ -3,7 +3,6 @@ import { resolveOpenPayP2pActor } from "@/lib/openpay-p2p-actor";
 import { createP2pOffer, type P2pAsset, type P2pOfferSide } from "@/lib/dex-p2p-escrow";
 import { apiErrorResponse } from "@/lib/api-error";
 
-/** @deprecated Prefer POST /api/openpay/dex/p2p/offers */
 export async function POST(req: NextRequest) {
   try {
     const gate = await resolveOpenPayP2pActor(req);
@@ -43,6 +42,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, offer, actor: gate.actor.kind });
   } catch (e) {
-    return apiErrorResponse(e, { route: "POST /api/student/dex/p2p/offers" });
+    return apiErrorResponse(e, { route: "POST /api/openpay/dex/p2p/offers" });
   }
 }

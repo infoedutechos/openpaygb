@@ -3,7 +3,7 @@ import { resolveOpenPayP2pActor } from "@/lib/openpay-p2p-actor";
 import { acceptP2pEscrow } from "@/lib/dex-p2p-escrow";
 import { apiErrorResponse } from "@/lib/api-error";
 
-/** @deprecated Prefer POST /api/openpay/dex/p2p/escrow — accepts any OpenPayGB holder. */
+/** Accept a P2P offer and hold OPGB in escrow — any OpenPayGB card holder. */
 export async function POST(req: NextRequest) {
   try {
     const gate = await resolveOpenPayP2pActor(req);
@@ -34,6 +34,6 @@ export async function POST(req: NextRequest) {
       actor: gate.actor.kind,
     });
   } catch (e) {
-    return apiErrorResponse(e, { route: "POST /api/student/dex/p2p/escrow" });
+    return apiErrorResponse(e, { route: "POST /api/openpay/dex/p2p/escrow" });
   }
 }

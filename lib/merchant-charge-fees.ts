@@ -14,6 +14,16 @@ export type MerchantFeeBreakdown = {
   notes: string[];
 };
 
+export type MerchantFeeDraft = {
+  platformFeePayer?: "pass_through" | "absorb";
+  merchantSurchargePercent?: number;
+  merchantSurchargeFixedUgx?: number;
+  platformFeeOverrideKind?: string;
+  platformFeeOverrideUgx?: number;
+  platformFeeOverridePercent?: number;
+  whiteLabelMode?: boolean;
+};
+
 function roundUgx(n: number): number {
   return Math.max(0, Math.round(n));
 }
@@ -22,6 +32,8 @@ function roundUgx(n: number): number {
 export async function quoteMerchantChargeFees(opts: {
   developerAppId: string;
   orderAmountUgx: number;
+  /** Optional unsaved overrides for live dashboard preview (no DB write). */
+  draft?: MerchantFeeDraft;
 }): Promise<MerchantFeeBreakdown> {
   const order = Math.max(0, Math.round(opts.orderAmountUgx));
   const app = await prisma.developerApp.findUnique({
@@ -37,6 +49,16 @@ export async function quoteMerchantChargeFees(opts: {
     },
   });
 
+  const draft = opts.draft;
+  const platformFeePayerRaw = draft?.platformFeePayer ?? app?.platformFeePayer;
+  const merchantSurchargePercent = draft?.merchantSurchargePercent ?? app?.merchantSurchargePercent ?? 0;
+  const merchantSurchargeFixedUgx = draft?.merchantSurchargeFixedUgx ?? app?.merchantSurchargeFixedUgx ?? 0;
+  const platformFeeOverrideKind = draft?.platformFeeOverrideKind ?? app?.platformFeeOverrideKind;
+  const platformFeeOverrideUgx = draft?.platformFeeOverrideUgx ?? app?.platformFeeOverrideUgx;
+  const platformFeeOverridePercent = draft?.platformFeeOverridePercent ?? app?.platformFeeOverridePercent;
+  const whiteLabelModeFlag =
+    draft?.whiteLabelMode !== undefined ? draft.whiteLabelMode : Boolean(app?.whiteLabelMode);
+
   const site = await prisma.siteUiSettings.findFirst({
     where: { key: "platform" },
     select: {
@@ -51,7 +73,7 @@ export async function quoteMerchantChargeFees(opts: {
   });
 
   const notes: string[] = [];
-  let kind = (app?.platformFeeOverrideKind || "inherit").toLowerCase();
+  let kind = (platformFeeOverrideKind || "inherit").toLowerCase();
   let feeUgx = 0;
   let feePercent = 0;
 
@@ -60,9 +82,9 @@ export async function quoteMerchantChargeFees(opts: {
     feeUgx = site?.merchantChargePlatformFeeUgx ?? 0;
     feePercent = site?.merchantChargePlatformFeePercent ?? 2.5;
   } else if (kind === "fixed_ugx") {
-    feeUgx = app?.platformFeeOverrideUgx ?? 0;
+    feeUgx = platformFeeOverrideUgx ?? 0;
   } else if (kind === "percent") {
-    feePercent = app?.platformFeeOverridePercent ?? 0;
+    feePercent = platformFeeOverridePercent ?? 0;
   } else if (kind === "none") {
     feeUgx = 0;
     feePercent = 0;
@@ -86,7 +108,7 @@ export async function quoteMerchantChargeFees(opts: {
   }
 
   let whiteLabelFeeUgx = 0;
-  const whiteLabelMode = Boolean(app?.whiteLabelMode);
+  const whiteLabelMode = Boolean(whiteLabelModeFlag);
   if (whiteLabelMode) {
     const wlKind = (site?.whiteLabelFeeKind || "percent").toLowerCase();
     if (wlKind === "fixed_ugx") {
@@ -105,14 +127,14 @@ export async function quoteMerchantChargeFees(opts: {
 
   const platformFeeUgx = basePlatformFeeUgx + whiteLabelFeeUgx;
 
-  const surchargePct = Math.max(0, app?.merchantSurchargePercent ?? 0);
-  const surchargeFixed = Math.max(0, app?.merchantSurchargeFixedUgx ?? 0);
+  const surchargePct = Math.max(0, merchantSurchargePercent);
+  const surchargeFixed = Math.max(0, merchantSurchargeFixedUgx);
   const merchantFeeUgx = roundUgx((order * surchargePct) / 100) + surchargeFixed;
   if (merchantFeeUgx > 0) {
     notes.push(`Merchant surcharge ${merchantFeeUgx.toLocaleString()} UGX`);
   }
 
-  const payerRaw = (app?.platformFeePayer || "pass_through").toLowerCase();
+  const payerRaw = (platformFeePayerRaw || "pass_through").toLowerCase();
   const platformFeePayer: "pass_through" | "absorb" =
     payerRaw === "absorb" ? "absorb" : "pass_through";
 

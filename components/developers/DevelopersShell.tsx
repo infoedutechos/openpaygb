@@ -12,6 +12,8 @@ const DEV_NAV = [
   { href: "/developers", label: "Developer hub" },
   { href: "/developers/register", label: "Register / sign in" },
   { href: "/developers/dashboard", label: "API dashboard" },
+  { href: "/developers/dashboard#api-keys", label: "Generated API keys" },
+  { href: "/developers/dashboard#opgb-card", label: "OPGB Card" },
   { href: "/opgb", label: "OpenPayGB provider" },
   { href: "/opgb#integrate", label: "Integration guide" },
   { href: "/help/partner-api-overview", label: "Partner API docs" },
@@ -26,8 +28,9 @@ const DASHBOARD_SECTIONS = [
   { href: "/developers/dashboard#transactions", label: "Transactions" },
   { href: "/developers/dashboard#fees", label: "Fees" },
   { href: "/developers/dashboard#branding", label: "White-label" },
-  { href: "/developers/dashboard#api-keys", label: "API keys" },
+  { href: "/developers/dashboard#api-keys", label: "Generated API keys" },
   { href: "/developers/dashboard#webhooks", label: "Webhooks" },
+  { href: "/developers/dashboard#opgb-card", label: "OPGB Card (TON / MoMo)" },
   { href: "/developers/dashboard#oauth", label: "OAuth & OPGB APIs" },
   { href: "/opgb#charges", label: "Create a charge" },
   { href: "/opgb#webhooks", label: "Charge webhooks" },
@@ -108,7 +111,7 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
             <p className="text-[10px] text-slate-500">Builder portal · Partner API · OpenPayGB</p>
           </div>
           <nav className="flex flex-1 flex-wrap gap-1 text-sm">
-            {DEV_NAV.slice(0, 5).map((item) => (
+            {DEV_NAV.slice(0, 6).map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -220,6 +223,15 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
                       <Link
                         key={item.href}
                         href={item.href}
+                        onClick={(e) => {
+                          if (!item.href.includes("#")) return;
+                          const [base, section] = item.href.split("#");
+                          if (pathname.startsWith(base) && section) {
+                            e.preventDefault();
+                            window.location.hash = section;
+                            window.dispatchEvent(new HashChangeEvent("hashchange"));
+                          }
+                        }}
                         className={`rounded-lg px-2.5 py-1.5 ${
                           navActive(pathname, item.href, hash)
                             ? "bg-cyan-500/15 text-cyan-100"
@@ -231,7 +243,25 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
                     ))}
                   </nav>
                 </div>
-              ) : null}
+              ) : (
+                <div>
+                  <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Quick links</p>
+                  <nav className="flex flex-col gap-0.5 text-sm">
+                    <Link
+                      href="/developers/dashboard#api-keys"
+                      className="rounded-lg px-2.5 py-1.5 text-slate-400 hover:bg-white/5 hover:text-emerald-100"
+                    >
+                      Generated API keys
+                    </Link>
+                    <Link
+                      href="/developers/dashboard#opgb-card"
+                      className="rounded-lg px-2.5 py-1.5 text-slate-400 hover:bg-white/5 hover:text-emerald-100"
+                    >
+                      OPGB Card (TON / MoMo)
+                    </Link>
+                  </nav>
+                </div>
+              )}
               <div>
                 <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Product sides</p>
                 <nav className="flex flex-col gap-0.5 text-xs">

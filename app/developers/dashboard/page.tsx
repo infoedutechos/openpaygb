@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function DeveloperDashboardPage() {
   return (
-    <div className="mx-auto max-w-4xl px-0 py-2 md:py-4">
+    <div className="mx-auto max-w-5xl px-0 py-2 md:py-4">
       <DeveloperDashboard />
     </div>
   );

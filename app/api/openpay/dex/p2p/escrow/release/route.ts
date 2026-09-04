@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resolveOpenPayP2pActor } from "@/lib/openpay-p2p-actor";
-import { escalateP2pDispute } from "@/lib/dex-p2p-release";
+import { releaseP2pEscrow } from "@/lib/dex-p2p-release";
 import { apiErrorResponse } from "@/lib/api-error";
 
-/** @deprecated Prefer POST /api/openpay/dex/p2p/dispute */
 export async function POST(req: NextRequest) {
   try {
     const gate = await resolveOpenPayP2pActor(req);
@@ -11,18 +10,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: gate.error }, { status: gate.status });
     }
 
-    const body = (await req.json()) as { escrowId?: string; reason?: string };
+    const body = (await req.json()) as { escrowId?: string };
     if (!body.escrowId?.trim()) {
       return NextResponse.json({ error: "escrowId required" }, { status: 400 });
     }
-    if (!body.reason?.trim()) {
-      return NextResponse.json({ error: "reason required" }, { status: 400 });
-    }
 
-    const result = await escalateP2pDispute({
+    const result = await releaseP2pEscrow({
       escrowId: body.escrowId.trim(),
-      escalatedBy: gate.actor.studentId,
-      reason: body.reason.trim(),
+      actorStudentId: gate.actor.studentId,
     });
 
     if (!result.ok) {
@@ -31,11 +26,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       ok: true,
-      disputeId: result.disputeId,
+      escrowId: result.escrowId,
       message: result.message,
       actor: gate.actor.kind,
     });
   } catch (e) {
-    return apiErrorResponse(e, { route: "POST /api/student/dex/p2p/dispute" });
+    return apiErrorResponse(e, { route: "POST /api/openpay/dex/p2p/escrow/release" });
   }
 }

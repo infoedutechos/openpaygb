@@ -398,6 +398,11 @@ model DeveloperApp {
   enabled          Boolean                  @default(true)
   organizationId   String?                  @db.ObjectId
   organization     Organization?            @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  /**
+   * Shadow Student id used as OpenPayGB card holder for this integrator app (wallet / MoMo / TON).
+   * Not a tuition enrollee — programmeCode DEVELOPER_CARD.
+   */
+  openPayStudentId String?                  @db.ObjectId
   apiKeys          PartnerApiKey[]
   webhooks         PartnerWebhookEndpoint[]
   oauthCodes       OAuthAuthorizationCode[]
@@ -409,6 +414,7 @@ model DeveloperApp {
 
   @@index([contactEmail])
   @@index([organizationId])
+  @@index([openPayStudentId])
   @@map("developer_apps")
 }
 
