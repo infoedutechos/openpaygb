@@ -14,7 +14,8 @@ type DashPanel =
   | "api-keys"
   | "webhooks"
   | "opgb-card"
-  | "oauth";
+  | "oauth"
+  | "woocommerce";
 
 const PRIMARY_CARDS: { id: string; label: string; panels: DashPanel[] }[] = [
   { id: "overview", label: "Overview", panels: ["overview"] },
@@ -23,6 +24,7 @@ const PRIMARY_CARDS: { id: string; label: string; panels: DashPanel[] }[] = [
   { id: "opgb-card", label: "OPGB Card", panels: ["opgb-card"] },
   { id: "branding", label: "White-label", panels: ["branding"] },
   { id: "oauth", label: "Partner APIs", panels: ["oauth"] },
+  { id: "woocommerce", label: "WooCommerce", panels: ["woocommerce"] },
 ];
 
 const PANEL_LABELS: Record<DashPanel, string> = {
@@ -35,6 +37,7 @@ const PANEL_LABELS: Record<DashPanel, string> = {
   webhooks: "Webhooks",
   "opgb-card": "OPGB Card",
   oauth: "OAuth & APIs",
+  woocommerce: "WooCommerce",
 };
 
 function panelFromHash(hash: string): DashPanel {
@@ -769,8 +772,13 @@ export function DeveloperDashboard() {
               },
               {
                 panel: "oauth" as const,
-                title: "Partner APIs & WooCommerce",
-                body: "OAuth, charges, payouts, Dex, and the WooCommerce gateway plugin under /integrations/woocommerce.",
+                title: "Partner APIs",
+                body: "OAuth, charges, payouts, Dex, and OPGB partner endpoints.",
+              },
+              {
+                panel: "woocommerce" as const,
+                title: "WooCommerce",
+                body: "Installable gateway plugin under /integrations/woocommerce — download zip and wire Partner API keys.",
               },
             ] as const
           ).map((card) => (
@@ -1361,7 +1369,7 @@ export function DeveloperDashboard() {
 
       {panel === "oauth" ? (
       <section id="oauth" className="rounded-2xl border border-violet-500/20 bg-violet-950/15 p-6 text-sm text-slate-300">
-        <h2 className="text-lg font-semibold text-violet-200">OAuth, OPGB partner APIs & WooCommerce</h2>
+        <h2 className="text-lg font-semibold text-violet-200">OAuth & OPGB partner APIs</h2>
         <ul className="mt-3 list-inside list-disc space-y-1 text-slate-400">
           <li>
             Authorize: <code className="text-xs">/api/oauth/authorize?response_type=code&client_id=…</code>
@@ -1379,14 +1387,32 @@ export function DeveloperDashboard() {
         <div className="mt-4 rounded-xl border border-cyan-500/25 bg-cyan-950/20 p-4 text-xs text-slate-400">
           <p className="font-semibold text-cyan-100">WooCommerce</p>
           <p className="mt-1">
-            Install the plugin from <code className="text-cyan-200">integrations/woocommerce/odelhub-openpaygb</code>.
-            Paste your Partner API key + webhook signing secret; checkout creates{" "}
+            Install the plugin from{" "}
+            <Link
+              href="/integrations/woocommerce/odelhub-openpaygb"
+              className="font-mono text-cyan-200 underline-offset-2 hover:underline"
+            >
+              integrations/woocommerce/odelhub-openpaygb
+            </Link>
+            . Paste your Partner API key + webhook signing secret; checkout creates{" "}
             <code className="text-cyan-200">POST /api/partner/v1/charges</code> and redirects to hosted{" "}
             <code className="text-cyan-200">/opgb/checkout/…</code>. Webhooks mark Woo orders paid on{" "}
             <code className="text-cyan-200">charge.confirmed</code>.
           </p>
-          <p className="mt-2">
-            Guide:{" "}
+          <p className="mt-3 flex flex-wrap gap-3">
+            <Link
+              href="/developers/dashboard#woocommerce"
+              className="text-cyan-300 hover:underline"
+              onClick={(e) => {
+                e.preventDefault();
+                goToPanel("woocommerce");
+              }}
+            >
+              Open WooCommerce panel →
+            </Link>
+            <a href="/api/public/woocommerce-plugin" className="text-emerald-300 hover:underline">
+              Download plugin (.zip)
+            </a>
             <Link href="/api/docs/platform/WOOCOMMERCE.md" className="text-cyan-300 hover:underline">
               docs/platform/WOOCOMMERCE.md
             </Link>
@@ -1395,6 +1421,70 @@ export function DeveloperDashboard() {
         <Link href="/opgb#integrate" className="mt-4 inline-block text-sm text-violet-300 hover:underline">
           Full integration guide on OpenPayGB →
         </Link>
+      </section>
+      ) : null}
+
+      {panel === "woocommerce" ? (
+      <section id="woocommerce" className="rounded-2xl border border-cyan-500/25 bg-cyan-950/15 p-6 text-sm text-slate-300">
+        <h2 className="text-lg font-semibold text-cyan-100">WooCommerce gateway</h2>
+        <p className="mt-2 text-slate-400">
+          Installable OpenPayGB plugin for WordPress / WooCommerce. Source path{" "}
+          <Link
+            href="/integrations/woocommerce/odelhub-openpaygb"
+            className="font-mono text-cyan-200 underline-offset-2 hover:underline"
+          >
+            integrations/woocommerce/odelhub-openpaygb
+          </Link>
+          .
+        </p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <a
+            href="/api/public/woocommerce-plugin"
+            className="inline-flex rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
+          >
+            Download installable plugin (.zip)
+          </a>
+          <Link
+            href="/integrations/woocommerce"
+            className="inline-flex rounded-xl border border-cyan-400/40 bg-cyan-950/40 px-4 py-2.5 text-sm font-medium text-cyan-100 hover:border-cyan-300/60"
+          >
+            /integrations/woocommerce
+          </Link>
+          <Link
+            href="/integrations/woocommerce/odelhub-openpaygb"
+            className="inline-flex rounded-xl border border-white/15 px-4 py-2.5 text-sm text-slate-200 hover:bg-white/5"
+          >
+            Plugin details
+          </Link>
+        </div>
+        <ol className="mt-5 list-decimal space-y-2 pl-5 text-slate-400">
+          <li>
+            Download the zip → unzip into <code className="text-slate-300">wp-content/plugins/odelhub-openpaygb/</code> →
+            activate <strong className="font-medium text-slate-200">OpenPayGB for WooCommerce</strong>.
+          </li>
+          <li>
+            Paste Partner API key from{" "}
+            <button type="button" onClick={() => goToPanel("api-keys")} className="text-cyan-300 hover:underline">
+              Generated API keys
+            </button>{" "}
+            and webhook signing secret from{" "}
+            <button type="button" onClick={() => goToPanel("webhooks")} className="text-cyan-300 hover:underline">
+              Webhooks
+            </button>
+            .
+          </li>
+          <li>
+            Checkout creates <code className="text-slate-300">POST /api/partner/v1/charges</code> and redirects to hosted{" "}
+            <code className="text-slate-300">/opgb/checkout/…</code>. Webhooks mark Woo orders paid on{" "}
+            <code className="text-slate-300">charge.confirmed</code>.
+          </li>
+        </ol>
+        <p className="mt-4 text-xs text-slate-500">
+          Guide:{" "}
+          <Link href="/api/docs/platform/WOOCOMMERCE.md" className="text-cyan-300 hover:underline">
+            docs/platform/WOOCOMMERCE.md
+          </Link>
+        </p>
       </section>
       ) : null}
     </div>

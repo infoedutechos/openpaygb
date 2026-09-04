@@ -14,6 +14,8 @@ const DEV_NAV = [
   { href: "/developers/dashboard", label: "API dashboard" },
   { href: "/developers/dashboard#api-keys", label: "Generated API keys" },
   { href: "/developers/dashboard#opgb-card", label: "OPGB Card" },
+  { href: "/developers/dashboard#woocommerce", label: "WooCommerce" },
+  { href: "/integrations/woocommerce", label: "WooCommerce plugin" },
   { href: "/opgb", label: "OpenPayGB provider" },
   { href: "/opgb#integrate", label: "Integration guide" },
   { href: "/help/partner-api-overview", label: "Partner API docs" },
@@ -32,6 +34,8 @@ const DASHBOARD_SECTIONS = [
   { href: "/developers/dashboard#webhooks", label: "Webhooks" },
   { href: "/developers/dashboard#opgb-card", label: "OPGB Card (TON / MoMo)" },
   { href: "/developers/dashboard#oauth", label: "OAuth & OPGB APIs" },
+  { href: "/developers/dashboard#woocommerce", label: "WooCommerce plugin" },
+  { href: "/integrations/woocommerce/odelhub-openpaygb", label: "Download · odelhub-openpaygb" },
   { href: "/opgb#charges", label: "Create a charge" },
   { href: "/opgb#webhooks", label: "Charge webhooks" },
   { href: "/opgb#checkout", label: "Hosted checkout" },
@@ -111,7 +115,7 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
             <p className="text-[10px] text-slate-500">Builder portal · Partner API · OpenPayGB</p>
           </div>
           <nav className="flex flex-1 flex-wrap gap-1 text-sm">
-            {DEV_NAV.slice(0, 6).map((item) => (
+            {DEV_NAV.slice(0, 8).map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -258,6 +262,18 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
                       className="rounded-lg px-2.5 py-1.5 text-slate-400 hover:bg-white/5 hover:text-emerald-100"
                     >
                       OPGB Card (TON / MoMo)
+                    </Link>
+                    <Link
+                      href="/developers/dashboard#woocommerce"
+                      className="rounded-lg px-2.5 py-1.5 text-slate-400 hover:bg-white/5 hover:text-emerald-100"
+                    >
+                      WooCommerce plugin
+                    </Link>
+                    <Link
+                      href="/integrations/woocommerce"
+                      className="rounded-lg px-2.5 py-1.5 text-slate-400 hover:bg-white/5 hover:text-emerald-100"
+                    >
+                      /integrations/woocommerce
                     </Link>
                   </nav>
                 </div>
