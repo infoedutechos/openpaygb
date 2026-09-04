@@ -15,6 +15,7 @@ import { karibuDaysCompleted } from '@/utils/karibu-daily-ui';
 import { navigateToKaribuDaily } from '@/utils/karibu-navigation';
 import SupportChatWidget from '@/components/SupportChatWidget';
 import NotificationCenter from '@/components/NotificationCenter';
+import { PlayHubLaunchSwitcher } from '@/components/PlayHubLaunchSwitcher';
 
 type ActionCenterTab = 'most-used' | 'favorites';
 
@@ -649,6 +650,10 @@ export default function Home({ setCurrentView }: HomeProps) {
               sizes="(max-width: 576px) 100vw, 576px"
               priority
             />
+          </div>
+
+          <div className="mt-3">
+            <PlayHubLaunchSwitcher compact />
           </div>
 
           {showEcosystemDashboard ? (

@@ -32,6 +32,10 @@ import Guild from '@/components/Guild';
 import KaribuDailyPage from '@/components/KaribuDailyPage';
 import UraTvPage from '@/components/UraTvPage';
 import UraFcPage from '@/components/UraFcPage';
+import {
+  PlayHubLaunchIframeHost,
+  PlayHubLaunchProvider,
+} from '@/components/PlayHubLaunchSwitcher';
 
 function useExitFullscreenWhenOpenedViaOpenButton() {
   useEffect(() => {
@@ -117,7 +121,9 @@ function ClickerPageInner() {
     }, [currentView, initialView, isInitialized]);
 
     return (
+        <PlayHubLaunchProvider>
         <div className="bg-ura-page min-h-screen text-white tg-safe-area-padding">
+            <PlayHubLaunchIframeHost />
             {
                 isInitialized &&
                 <>
@@ -142,6 +148,7 @@ function ClickerPageInner() {
                 />
             )}
         </div>
+        </PlayHubLaunchProvider>
     );
 }
 

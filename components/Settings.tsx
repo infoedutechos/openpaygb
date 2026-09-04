@@ -12,6 +12,7 @@ import Toggle from '@/components/Toggle';
 import { triggerHapticFeedback } from '@/utils/ui';
 import { UGANDA_DISTRICTS } from '@/utils/uganda-districts';
 import { readStoredDistrictSlug, writeStoredDistrictSlug } from '@/utils/user-district-storage';
+import { PlayHubLaunchSwitcher } from '@/components/PlayHubLaunchSwitcher';
 
 interface SettingsProps {
   setCurrentView: (view: string) => void;
@@ -577,6 +578,7 @@ export default function Settings({ setCurrentView }: SettingsProps) {
         return (
           <div className="space-y-4">
             <h2 className="text-lg font-bold text-white">Settings</h2>
+            <PlayHubLaunchSwitcher />
             <div className="rounded-lg border border-ura-border/75 bg-[#2a2d38] p-4 space-y-4">
               <div className="flex justify-between items-center">
                 <p className="text-sm text-white">Touch vibration</p>

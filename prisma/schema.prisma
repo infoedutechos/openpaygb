@@ -1400,6 +1400,11 @@ model SiteUiSettings {
   tuitionHubHidden      Boolean @default(false)
   /** When true, Play Hub is fully hidden. */
   playHubHidden         Boolean @default(false)
+  /**
+   * JSON array of Play Hub launch targets (Telegram game / external / iframe / internal).
+   * Exactly one may have isActive=true — used as primary CTA; others can still be opened from the switcher.
+   */
+  playHubLaunchTargetsJson String @default("[]")
   /** When true, Dex Hub is fully hidden. */
   dexHubHidden          Boolean @default(false)
   /** When true, Developers Hub is fully hidden. */

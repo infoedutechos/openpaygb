@@ -26,6 +26,7 @@ import { MasterKnowledgeBaseSettings } from "@/components/admin/MasterKnowledgeB
 import { MasterPlatformCommunicationsSettings } from "@/components/admin/MasterPlatformCommunicationsSettings";
 import { MasterHubMaintenanceSettings } from "@/components/admin/MasterHubMaintenanceSettings";
 import { MasterHubVisibilitySettings } from "@/components/admin/MasterHubVisibilitySettings";
+import { MasterPlayHubLaunchSettings } from "@/components/admin/MasterPlayHubLaunchSettings";
 import { MasterTelegramHubSettings } from "@/components/admin/MasterTelegramHubSettings";
 import { MasterPaymentProviders } from "@/components/admin/MasterPaymentProviders";
 import { readJsonResponse } from "@/utils/read-json-response";
@@ -200,6 +201,12 @@ export default function MasterManagerOverviewPage() {
           OPGB ops
         </Link>
         <Link
+          href="/admin/master#play-hub-launch-targets"
+          className="rounded-xl border border-fuchsia-500/35 bg-fuchsia-950/25 px-5 py-2.5 text-sm font-medium text-fuchsia-100 hover:border-fuchsia-400/55"
+        >
+          Play Hub game URLs
+        </Link>
+        <Link
           href="/admin/master/programmes"
           className="rounded-xl border border-amber-500/35 bg-amber-950/25 px-5 py-2.5 text-sm font-medium text-amber-100 hover:border-amber-400/55"
         >
@@ -334,6 +341,8 @@ export default function MasterManagerOverviewPage() {
       <MasterVisitorAnalyticsSettings />
 
       <MasterHubVisibilitySettings />
+
+      <MasterPlayHubLaunchSettings />
 
       <MasterHubMaintenanceSettings />
 
