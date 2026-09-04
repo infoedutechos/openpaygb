@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { CopyTextButton } from "@/components/ui/CopyTextButton";
 import { OpenPayCardPanel } from "@/components/student/OpenPayCardPanel";
+import { DeveloperWooCommerceSetup } from "@/components/developers/DeveloperWooCommerceSetup";
 
 type DashPanel =
   | "overview"
@@ -1425,66 +1426,22 @@ export function DeveloperDashboard() {
       ) : null}
 
       {panel === "woocommerce" ? (
-      <section id="woocommerce" className="rounded-2xl border border-cyan-500/25 bg-cyan-950/15 p-6 text-sm text-slate-300">
-        <h2 className="text-lg font-semibold text-cyan-100">WooCommerce gateway</h2>
-        <p className="mt-2 text-slate-400">
-          Installable OpenPayGB plugin for WordPress / WooCommerce. Source path{" "}
-          <Link
-            href="/integrations/woocommerce/odelhub-openpaygb"
-            className="font-mono text-cyan-200 underline-offset-2 hover:underline"
-          >
-            integrations/woocommerce/odelhub-openpaygb
-          </Link>
-          .
-        </p>
-        <div className="mt-5 flex flex-wrap gap-3">
-          <a
-            href="/api/public/woocommerce-plugin"
-            className="inline-flex rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
-          >
-            Download installable plugin (.zip)
-          </a>
-          <Link
-            href="/integrations/woocommerce"
-            className="inline-flex rounded-xl border border-cyan-400/40 bg-cyan-950/40 px-4 py-2.5 text-sm font-medium text-cyan-100 hover:border-cyan-300/60"
-          >
-            /integrations/woocommerce
-          </Link>
-          <Link
-            href="/integrations/woocommerce/odelhub-openpaygb"
-            className="inline-flex rounded-xl border border-white/15 px-4 py-2.5 text-sm text-slate-200 hover:bg-white/5"
-          >
-            Plugin details
-          </Link>
-        </div>
-        <ol className="mt-5 list-decimal space-y-2 pl-5 text-slate-400">
-          <li>
-            Download the zip → unzip into <code className="text-slate-300">wp-content/plugins/odelhub-openpaygb/</code> →
-            activate <strong className="font-medium text-slate-200">OpenPayGB for WooCommerce</strong>.
-          </li>
-          <li>
-            Paste Partner API key from{" "}
-            <button type="button" onClick={() => goToPanel("api-keys")} className="text-cyan-300 hover:underline">
-              Generated API keys
-            </button>{" "}
-            and webhook signing secret from{" "}
-            <button type="button" onClick={() => goToPanel("webhooks")} className="text-cyan-300 hover:underline">
-              Webhooks
-            </button>
-            .
-          </li>
-          <li>
-            Checkout creates <code className="text-slate-300">POST /api/partner/v1/charges</code> and redirects to hosted{" "}
-            <code className="text-slate-300">/opgb/checkout/…</code>. Webhooks mark Woo orders paid on{" "}
-            <code className="text-slate-300">charge.confirmed</code>.
-          </li>
-        </ol>
-        <p className="mt-4 text-xs text-slate-500">
-          Guide:{" "}
-          <Link href="/api/docs/platform/WOOCOMMERCE.md" className="text-cyan-300 hover:underline">
-            docs/platform/WOOCOMMERCE.md
-          </Link>
-        </p>
+      <section id="woocommerce" className="rounded-2xl border border-cyan-500/25 bg-cyan-950/15 p-6">
+        <DeveloperWooCommerceSetup
+          keys={keys}
+          webhooks={webhooks}
+          onRefresh={() => void load()}
+          onGoToApiKeys={() => goToPanel("api-keys")}
+          onGoToWebhooks={() => goToPanel("webhooks")}
+          onCreatedKey={(plain) => {
+            setNewKeyPlain(plain);
+            setMessage("WooCommerce API key created — copy it from the setup panel (or banner above).");
+          }}
+          onCreatedWebhookSecret={(secret) => {
+            setNewWebhookSecret(secret);
+            setMessage("WooCommerce webhook registered — copy the signing secret now.");
+          }}
+        />
       </section>
       ) : null}
     </div>
