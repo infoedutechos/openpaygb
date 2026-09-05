@@ -49,6 +49,15 @@ export async function buildCashFlowReport(input: {
     orderBy: { confirmedAt: "asc" },
   });
 
+  const cashbook = await prisma.schoolCashbookDeposit.findMany({
+    where: {
+      organizationId: input.organizationId,
+      ...(term ? { term } : {}),
+      ...(dateFilter ? { depositedAt: dateFilter } : {}),
+    },
+    orderBy: { depositedAt: "asc" },
+  });
+
   const vouchers = await prisma.schoolOutflowVoucher.findMany({
     where: {
       organizationId: input.organizationId,
@@ -73,14 +82,26 @@ export async function buildCashFlowReport(input: {
     orderBy: { paidAt: "asc" },
   });
 
-  const inflow: CashFlowLine[] = payments.map((p) => ({
-    date: (p.confirmedAt ?? p.createdAt).toISOString().slice(0, 10),
-    trackId: p.id.slice(-8).toUpperCase(),
-    name: p.student.name,
-    particulars: `Tuition payment (${p.programmeCode})`,
-    amountUgx: p.totalUgx,
-    direction: "inflow",
-  }));
+  const inflow: CashFlowLine[] = [
+    ...payments.map((p) => ({
+      date: (p.confirmedAt ?? p.createdAt).toISOString().slice(0, 10),
+      trackId: p.id.slice(-8).toUpperCase(),
+      name: p.student.name,
+      particulars: `Tuition payment (${p.programmeCode})`,
+      amountUgx: p.totalUgx,
+      direction: "inflow" as const,
+    })),
+    ...cashbook.map((d) => ({
+      date: d.depositedAt.toISOString().slice(0, 10),
+      trackId: d.id.slice(-8).toUpperCase(),
+      name: d.method || "Cashbook",
+      particulars: d.note?.trim()
+        ? `Cashbook deposit — ${d.note.trim()}${d.reference ? ` (${d.reference})` : ""}`
+        : `Cashbook deposit${d.reference ? ` (${d.reference})` : ""}`,
+      amountUgx: d.amountUgx,
+      direction: "inflow" as const,
+    })),
+  ].sort((a, b) => a.date.localeCompare(b.date));
 
   const outflow: CashFlowLine[] = [
     ...vouchers.flatMap((v) => {

@@ -29,9 +29,18 @@ type Props = {
   open: boolean;
   onClose: () => void;
   onPaid?: () => void;
+  /** Open Assign bill for the same student (e.g. when no charges yet). */
+  onAssignBill?: () => void;
 };
 
-export function SchoolPayBillModal({ studentId, studentName, open, onClose, onPaid }: Props) {
+export function SchoolPayBillModal({
+  studentId,
+  studentName,
+  open,
+  onClose,
+  onPaid,
+  onAssignBill,
+}: Props) {
   const { schoolFetch, organizationSlug, hrefWithOrgSlug } = useSchoolAdminApi();
   const [term, setTerm] = useState(1);
   const [termLabel, setTermLabel] = useState("Term 1");
@@ -192,6 +201,19 @@ export function SchoolPayBillModal({ studentId, studentName, open, onClose, onPa
               }}
             />
 
+            {onAssignBill ? (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onAssignBill}
+                  className="rounded-lg border border-violet-500/40 bg-violet-900/40 px-3 py-2 text-sm font-semibold text-violet-100 hover:bg-violet-800/50"
+                >
+                  Assign bill
+                </button>
+                <span className="text-xs text-slate-500">Add or update fee charges before recording payment.</span>
+              </div>
+            ) : null}
+
             <div className="mt-4 grid grid-cols-2 gap-3 rounded-xl border border-white/10 bg-black/20 p-3 text-sm">
               <div>
                 <p className="text-xs text-slate-500">Previous balance</p>
@@ -248,7 +270,18 @@ export function SchoolPayBillModal({ studentId, studentName, open, onClose, onPa
                     </li>
                   </ul>
                 ) : (
-                  <p className="mt-4 text-sm text-slate-500">No bill charges — enter amount manually.</p>
+                  <div className="mt-4 space-y-2 rounded-lg border border-amber-500/25 bg-amber-950/20 p-3">
+                    <p className="text-sm text-amber-100/90">No bill charges for this term — assign a bill or enter amount manually.</p>
+                    {onAssignBill ? (
+                      <button
+                        type="button"
+                        onClick={onAssignBill}
+                        className="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-500"
+                      >
+                        Assign bill
+                      </button>
+                    ) : null}
+                  </div>
                 )}
                 <div className="mt-4 grid gap-3">
                   <input

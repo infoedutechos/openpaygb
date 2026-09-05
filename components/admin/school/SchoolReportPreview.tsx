@@ -10,22 +10,22 @@ export function SchoolReportPreview({ reportId, data }: { reportId: string; data
   const d = data as Record<string, unknown>;
 
   if (reportId === "cash-flow") {
-    const inflow = (d.inflow as { date: string; name: string; particulars: string; amountUgx: number }[]) ?? [];
-    const outflow = (d.outflow as { date: string; name: string; particulars: string; amountUgx: number }[]) ?? [];
+    const inflow = (d.inflow as { date: string; name: string; particulars: string; amountUgx: number; direction?: string }[]) ?? [];
+    const outflow = (d.outflow as { date: string; name: string; particulars: string; amountUgx: number; direction?: string }[]) ?? [];
     const totals = d.totals as { inflowUgx: number; outflowUgx: number } | undefined;
+    const net = (totals?.inflowUgx ?? 0) - (totals?.outflowUgx ?? 0);
     return (
       <div className="space-y-4 text-sm">
         <p className="text-slate-300">
-          Inflow {formatUgx(totals?.inflowUgx ?? 0)} · Outflow {formatUgx(totals?.outflowUgx ?? 0)}
+          Inflow {formatUgx(totals?.inflowUgx ?? 0)} · Outflow {formatUgx(totals?.outflowUgx ?? 0)} · Net{" "}
+          <span className={net >= 0 ? "text-emerald-300" : "text-rose-300"}>{formatUgx(net)}</span>
         </p>
         <ReportTable
-          headers={["Date", "Name", "Particulars", "Amount"]}
-          rows={[...inflow, ...outflow].map((r) => [
-            r.date,
-            r.name,
-            r.particulars,
-            formatUgx(r.amountUgx),
-          ])}
+          headers={["Date", "Direction", "Name", "Particulars", "Amount"]}
+          rows={[
+            ...inflow.map((r) => [r.date, "Inflow", r.name, r.particulars, formatUgx(r.amountUgx)]),
+            ...outflow.map((r) => [r.date, "Outflow", r.name, r.particulars, formatUgx(r.amountUgx)]),
+          ]}
         />
       </div>
     );
@@ -33,25 +33,42 @@ export function SchoolReportPreview({ reportId, data }: { reportId: string; data
 
   if (reportId === "profit-loss") {
     return (
-      <ul className="space-y-1 text-sm text-slate-200">
-        <li>Income: {formatUgx(Number(d.incomeUgx ?? 0))}</li>
-        <li>Expenditure: {formatUgx(Number(d.expenditureUgx ?? 0))}</li>
-        <li>Net: {formatUgx(Number(d.netUgx ?? 0))}</li>
-        <li>Inventory units: {String(d.inventoryUnits ?? 0)}</li>
-        <li>Inventory value: {formatUgx(Number(d.inventoryValueUgx ?? 0))}</li>
-      </ul>
+      <div className="space-y-3 text-sm text-slate-200">
+        <ul className="space-y-1">
+          <li>Operating income (cash inflows): {formatUgx(Number(d.incomeUgx ?? 0))}</li>
+          <li>Operating expenditure (cash outflows): {formatUgx(Number(d.expenditureUgx ?? 0))}</li>
+          <li className="font-semibold text-white">
+            Net operating surplus: {formatUgx(Number(d.netUgx ?? 0))}
+          </li>
+        </ul>
+        <div className="rounded-lg border border-white/10 bg-black/20 p-3">
+          <p className="text-xs uppercase text-slate-500">Inventory position</p>
+          <p className="mt-1">Available units: {String(d.inventoryUnits ?? 0)}</p>
+          <p>Available stock value: {formatUgx(Number(d.inventoryValueUgx ?? 0))}</p>
+        </div>
+      </div>
     );
   }
 
   if (reportId === "class-bills" || reportId === "bill-account" || reportId === "expense-account" || reportId === "inventory-account" || reportId === "payroll") {
     const rows = (d.rows as Record<string, string | number | null>[]) ?? [];
+    const totals = d.totals as Record<string, number> | undefined;
     if (rows.length === 0) return <p className="text-sm text-slate-500">No rows.</p>;
     const headers = Object.keys(rows[0] ?? {});
     return (
-      <ReportTable
-        headers={headers}
-        rows={rows.map((r) => headers.map((h) => formatCell(r[h], h)))}
-      />
+      <div className="space-y-3">
+        {totals ? (
+          <p className="text-sm text-slate-300">
+            {Object.entries(totals)
+              .map(([k, v]) => `${k.replace(/([A-Z])/g, " $1")}: ${formatUgx(v)}`)
+              .join(" · ")}
+          </p>
+        ) : null}
+        <ReportTable
+          headers={headers}
+          rows={rows.map((r) => headers.map((h) => formatCell(r[h], h)))}
+        />
+      </div>
     );
   }
 

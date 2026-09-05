@@ -50,6 +50,7 @@ const SCHOOL_ERP_SEGMENTS: { suffix: string; label: string }[] = [
   { suffix: "/school-structure", label: "Class registration" },
   { suffix: "/programmes", label: "Fee programmes" },
   { suffix: "/students", label: "Students / bills" },
+  { suffix: "/students-register", label: "Students Register" },
   { suffix: "/fee-ledger", label: "Fee ledger" },
   { suffix: "/fee-structure", label: "Fee structure" },
   { suffix: "/school-golive", label: "Go-live" },

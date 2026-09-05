@@ -674,7 +674,14 @@ export default function AdminStudentsPage() {
           studentName={payBillStudent.name}
           open
           onClose={() => setPayBillStudent(null)}
-          onPaid={() => void load(q)}
+          onPaid={() => {
+            setRegisterKey((k) => k + 1);
+            void load(q);
+          }}
+          onAssignBill={() => {
+            setBillStudent(payBillStudent);
+            setPayBillStudent(null);
+          }}
         />
       ) : null}
       {billStudent ? (
