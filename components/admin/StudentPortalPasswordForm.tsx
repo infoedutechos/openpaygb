@@ -44,16 +44,16 @@ export function StudentPortalPasswordForm({ studentId, studentEmail, portalSignI
 
   if (!studentEmail.trim()) {
     return (
-      <p className="mt-4 text-sm text-amber-800">
+      <p className="mt-4 text-sm text-amber-200">
         Add an email on this student record before setting a portal password.
       </p>
     );
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-6 rounded-lg border border-slate-200 bg-slate-50/80 p-4">
-      <h3 className="text-sm font-semibold text-slate-900">Student portal password</h3>
-      <p className="mt-1 text-xs text-slate-600">
+    <form onSubmit={onSubmit} className="mt-6 rounded-lg border border-white/10 bg-black/25 p-4">
+      <h3 className="text-sm font-semibold text-white">Student portal password</h3>
+      <p className="mt-1 text-xs text-slate-400">
         {portalSignInEnabled
           ? "Reset the password this student uses at /student/login."
           : "Guest payer — set a password so they can sign in and view receipts."}
@@ -65,15 +65,15 @@ export function StudentPortalPasswordForm({ studentId, studentEmail, portalSignI
           required
           minLength={10}
           placeholder="Min 10 characters"
-          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+          className="w-full rounded-lg border border-white/15 bg-[#0a101f] px-3 py-2 text-sm text-white"
         />
       </div>
-      {error ? <p className="mt-2 text-sm text-rose-600">{error}</p> : null}
-      {message ? <p className="mt-2 text-sm text-emerald-700">{message}</p> : null}
+      {error ? <p className="mt-2 text-sm text-rose-300">{error}</p> : null}
+      {message ? <p className="mt-2 text-sm text-emerald-300">{message}</p> : null}
       <button
         type="submit"
         disabled={busy}
-        className="mt-3 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-50"
+        className="mt-3 rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-500 disabled:opacity-50"
       >
         {busy ? "Saving…" : portalSignInEnabled ? "Update portal password" : "Set portal password"}
       </button>

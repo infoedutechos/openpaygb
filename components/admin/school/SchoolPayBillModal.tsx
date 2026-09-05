@@ -42,7 +42,7 @@ export function SchoolPayBillModal({ studentId, studentName, open, onClose, onPa
   const [receiptNo, setReceiptNo] = useState<string | null>(null);
 
   const feeLedgerHref = hrefWithOrgSlug(
-    `/admin/fee-ledger?studentId=${encodeURIComponent(studentId)}&term=${term}`,
+    `/admin/fee-ledger?studentId=${encodeURIComponent(studentId)}&term=${term}&returnPay=1&studentName=${encodeURIComponent(studentName)}`,
   );
 
   const load = useCallback(async () => {

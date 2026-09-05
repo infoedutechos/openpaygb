@@ -59,6 +59,8 @@ function FeeLedgerInner() {
   });
   const [q, setQ] = useState(() => searchParams.get("q")?.trim() ?? "");
   const [focusStudentId, setFocusStudentId] = useState(() => searchParams.get("studentId")?.trim() ?? "");
+  const returnPay = searchParams.get("returnPay") === "1";
+  const returnStudentName = searchParams.get("studentName")?.trim() || q || "Student";
   const [error, setError] = useState<string | null>(null);
   const [importBusy, setImportBusy] = useState(false);
   const [importMessage, setImportMessage] = useState<string | null>(null);
@@ -214,6 +216,22 @@ function FeeLedgerInner() {
       {error ? <p className="text-sm text-rose-400">{error}</p> : null}
       {importMessage ? <p className="text-sm text-cyan-200">{importMessage}</p> : null}
 
+      {returnPay && focusStudentId ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-500/35 bg-emerald-950/30 px-4 py-3">
+          <p className="text-sm text-emerald-100">
+            Viewing ledger for <span className="font-semibold">{returnStudentName}</span>
+          </p>
+          <Link
+            href={hrefWithOrgSlug(
+              `/admin/students?payStudentId=${encodeURIComponent(focusStudentId)}&payStudentName=${encodeURIComponent(returnStudentName)}&term=${term}`,
+            )}
+            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500"
+          >
+            ← Back to Pay bill
+          </Link>
+        </div>
+      ) : null}
+
       <div className="flex flex-wrap items-end gap-3">
         <label className="text-sm text-slate-300">
           Term
@@ -319,10 +337,12 @@ function FeeLedgerInner() {
                 <td className="px-3 py-2">
                   <div className="flex flex-wrap gap-1 text-[10px]">
                     <Link
-                      href={hrefWithOrgSlug(`/admin/students/${r.studentId}`)}
-                      className="rounded border border-white/15 px-1.5 py-0.5 text-cyan-300 hover:bg-white/5"
+                      href={hrefWithOrgSlug(
+                        `/admin/students?payStudentId=${encodeURIComponent(r.studentId)}&payStudentName=${encodeURIComponent(r.studentName)}&term=${term}`,
+                      )}
+                      className="rounded border border-emerald-500/35 bg-emerald-950/40 px-1.5 py-0.5 text-emerald-200 hover:bg-emerald-900/50"
                     >
-                      Pay
+                      Pay bill
                     </Link>
                     <button
                       type="button"

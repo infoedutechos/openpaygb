@@ -82,6 +82,20 @@ export default function AdminStudentsPage() {
   const [actionStudent, setActionStudent] = useState<{ id: string; name: string } | null>(null);
   const [editStudentId, setEditStudentId] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sp = new URLSearchParams(window.location.search);
+    const payId = sp.get("payStudentId")?.trim();
+    if (!payId) return;
+    const payName = sp.get("payStudentName")?.trim() || "Student";
+    setPayBillStudent({ id: payId, name: payName });
+    sp.delete("payStudentId");
+    sp.delete("payStudentName");
+    sp.delete("term");
+    const qstr = sp.toString();
+    window.history.replaceState({}, "", `${window.location.pathname}${qstr ? `?${qstr}` : ""}`);
+  }, []);
+
   const fetchNextAdmission = useCallback(async () => {
     setAdmissionBusy(true);
     try {

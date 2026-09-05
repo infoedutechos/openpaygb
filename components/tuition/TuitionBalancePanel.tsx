@@ -96,20 +96,20 @@ export function TuitionBalancePanel({ balance, variant = "student", onPayInstall
     <section
       className={
         isAdmin
-          ? "rounded-lg border border-amber-200 bg-amber-50/80 px-5 py-4"
+          ? "rounded-lg border border-amber-400/30 bg-amber-950/35 px-5 py-4"
           : "rounded-xl border border-cyan-500/30 bg-cyan-950/30 px-4 py-4"
       }
     >
-      <h2 className={`text-sm font-semibold ${isAdmin ? "text-amber-900" : "text-cyan-200"}`}>
+      <h2 className={`text-sm font-semibold ${isAdmin ? "text-amber-100" : "text-cyan-200"}`}>
         Tuition balance
       </h2>
 
       {progress ? (
-        <div className={`mt-3 rounded-lg ${isAdmin ? "bg-white" : "bg-[#0d1526]/60"} px-3 py-3 text-sm`}>
-          <p className={`font-medium ${isAdmin ? "text-slate-800" : "text-slate-200"}`}>
+        <div className={`mt-3 rounded-lg ${isAdmin ? "bg-black/30" : "bg-[#0d1526]/60"} px-3 py-3 text-sm`}>
+          <p className={`font-medium ${isAdmin ? "text-amber-50" : "text-slate-200"}`}>
             Programme progress: {progress.completedSemesters} of {progress.totalSemesters} semesters completed
           </p>
-          <p className={`mt-1 ${isAdmin ? "text-slate-600" : "text-slate-400"}`}>
+          <p className={`mt-1 ${isAdmin ? "text-amber-100/80" : "text-slate-400"}`}>
             {progress.durationYears} year{progress.durationYears === 1 ? "" : "s"} · {progress.semestersPerYear} semester
             {progress.semestersPerYear === 1 ? "" : "s"} per year · {progress.remainingYears} year
             {progress.remainingYears === 1 ? "" : "s"} / {progress.remainingSemesters} semester
@@ -132,12 +132,10 @@ export function TuitionBalancePanel({ balance, variant = "student", onPayInstall
                     key={`${period.year}-${period.semester}`}
                     className={
                       period.isCompleted
-                        ? "rounded-md border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 text-xs text-emerald-300"
+                        ? "rounded-md border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 text-xs text-emerald-200"
                         : paid > 0
-                          ? "rounded-md border border-amber-400/30 bg-amber-500/10 px-2 py-1 text-xs text-amber-200"
-                          : isAdmin
-                            ? "rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-600"
-                            : "rounded-md border border-white/10 bg-white/[0.03] px-2 py-1 text-xs text-slate-400"
+                          ? "rounded-md border border-amber-400/30 bg-amber-500/10 px-2 py-1 text-xs text-amber-100"
+                          : "rounded-md border border-white/10 bg-white/[0.03] px-2 py-1 text-xs text-slate-300"
                     }
                     title={
                       period.hasFeeSchedule
@@ -155,7 +153,7 @@ export function TuitionBalancePanel({ balance, variant = "student", onPayInstall
       ) : null}
 
       {plans.length > 0 ? (
-        <ul className={`mt-3 space-y-3 ${isAdmin ? "text-slate-800" : "text-slate-200"}`}>
+        <ul className={`mt-3 space-y-3 ${isAdmin ? "text-amber-50" : "text-slate-200"}`}>
           {plans.map((plan) => {
             const due = plan.slices.find((s) => s.index === plan.nextDueIndex);
             return (
@@ -163,7 +161,7 @@ export function TuitionBalancePanel({ balance, variant = "student", onPayInstall
                 key={plan.installmentPlanId}
                 className={
                   isAdmin
-                    ? "rounded-md border border-amber-100 bg-white px-3 py-3 text-sm"
+                    ? "rounded-md border border-amber-400/20 bg-black/25 px-3 py-3 text-sm"
                     : "rounded-lg border border-white/10 bg-[#0d1526]/60 px-3 py-3 text-sm"
                 }
               >
@@ -176,12 +174,12 @@ export function TuitionBalancePanel({ balance, variant = "student", onPayInstall
                     : "Semester"}{" "}
                   · Installments ({plan.installmentCount})
                 </p>
-                <p className={`mt-1 ${isAdmin ? "text-slate-600" : "text-slate-400"}`}>
+                <p className={`mt-1 ${isAdmin ? "text-amber-100/75" : "text-slate-400"}`}>
                   Paid UGX {plan.paidTotalUgx.toLocaleString()} of {plan.fullPlanTotalUgx.toLocaleString()} ·
                   Remaining UGX {plan.remainingTotalUgx.toLocaleString()}
                 </p>
                 {due ? (
-                  <p className={`mt-1 ${isAdmin ? "text-slate-700" : "text-slate-300"}`}>
+                  <p className={`mt-1 ${isAdmin ? "text-amber-50" : "text-slate-300"}`}>
                     Next due: installment {plan.nextDueIndex} — UGX {due.totalUgx.toLocaleString()}
                   </p>
                 ) : null}
@@ -192,7 +190,7 @@ export function TuitionBalancePanel({ balance, variant = "student", onPayInstall
                     onClick={() => onPayInstallment(plan)}
                     className={
                       isAdmin
-                        ? "mt-2 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                        ? "mt-2 rounded-lg bg-cyan-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-cyan-500 disabled:opacity-50"
                         : "mt-2 rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
                     }
                   >
@@ -206,7 +204,7 @@ export function TuitionBalancePanel({ balance, variant = "student", onPayInstall
       ) : null}
 
       {openContexts.length > 0 ? (
-        <ul className={`mt-3 space-y-2 text-sm ${isAdmin ? "text-slate-700" : "text-slate-300"}`}>
+        <ul className={`mt-3 space-y-2 text-sm ${isAdmin ? "text-amber-50/90" : "text-slate-300"}`}>
           {openContexts.map((ctx) => (
             <li key={`${ctx.feeSelectionMode}-${ctx.year}-${ctx.semester}`}>
               {periodLabel(ctx.programmeCode, ctx.year, ctx.semester)} (
@@ -217,7 +215,7 @@ export function TuitionBalancePanel({ balance, variant = "student", onPayInstall
                 : "semester"}
               ): outstanding UGX {ctx.remainingSubtotalUgx.toLocaleString()}
               {ctx.remainingFullPayTotalUgx !== ctx.remainingSubtotalUgx ? (
-                <span className={isAdmin ? "text-slate-500" : "text-slate-500"}>
+                <span className="text-slate-400">
                   {" "}
                   (incl. fees if paying in full: {ctx.remainingFullPayTotalUgx.toLocaleString()})
                 </span>

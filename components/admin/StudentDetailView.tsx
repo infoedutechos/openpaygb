@@ -41,7 +41,7 @@ function formatDate(iso: string): string {
 
 function StatusConfirmed() {
   return (
-    <span className="inline-flex items-center gap-1.5 text-sm text-slate-700">
+    <span className="inline-flex items-center gap-1.5 text-sm text-emerald-200">
       <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white">
         <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
           <path
@@ -123,33 +123,51 @@ export function StudentDetailView({
   const activePayment = payments.find((p) => p.id === activeReceiptId);
 
   return (
-    <div className="space-y-5">
-      <Link href="/admin/students" className="text-sm font-medium text-blue-600 hover:underline">
-        ← Students
-      </Link>
+    <div className="space-y-5 text-slate-100">
+      <div className="flex flex-wrap items-center gap-3">
+        <Link href="/admin/students" className="text-sm font-medium text-cyan-300 hover:underline">
+          ← Students / bills
+        </Link>
+        {student.periodLabel === "Term" ? (
+          <>
+            <Link
+              href={`/admin/students?payStudentId=${encodeURIComponent(student.id)}&payStudentName=${encodeURIComponent(student.name)}`}
+              className="rounded-lg bg-emerald-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-600"
+            >
+              Pay bill
+            </Link>
+            <Link
+              href={`/admin/fee-ledger?studentId=${encodeURIComponent(student.id)}&returnPay=1&studentName=${encodeURIComponent(student.name)}`}
+              className="rounded-lg border border-violet-500/40 bg-violet-950/40 px-3 py-1.5 text-sm font-semibold text-violet-100 hover:border-violet-400/60"
+            >
+              Fee ledger
+            </Link>
+          </>
+        ) : null}
+      </div>
 
-      <article className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <article className="rounded-xl border border-white/10 bg-[#0a101f] p-6 shadow-sm text-slate-100">
         <div className="flex flex-wrap gap-5">
           <div
-            className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xl font-semibold text-slate-600"
+            className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-cyan-500/20 text-xl font-semibold text-cyan-100 ring-1 ring-cyan-400/30"
             aria-hidden
           >
             {student.name.slice(0, 1).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-bold text-slate-900">{student.name}</h1>
-            <p className="mt-0.5 text-sm text-slate-600">
+            <h1 className="text-xl font-bold text-white">{student.name}</h1>
+            <p className="mt-0.5 text-sm text-slate-300">
               {programmeLabel(student.programmeCode, student.year, student.semester)}
             </p>
             <p className="mt-1 text-xs text-slate-400">
               {student.organizationName}{" "}
-              <span className="font-mono">({student.organizationSlug})</span>
+              <span className="font-mono text-cyan-200/80">({student.organizationSlug})</span>
             </p>
-            <ul className="mt-4 space-y-2 text-sm text-slate-700">
+            <ul className="mt-4 space-y-2 text-sm text-slate-200">
               {student.admissionNo ? (
                 <li className="flex flex-wrap items-center gap-2">
                   <span className="text-slate-400">Admission / registration no.</span>
-                  <span className="font-mono font-semibold tracking-wide text-slate-900">
+                  <span className="font-mono font-semibold tracking-wide text-white">
                     {student.admissionNo}
                   </span>
                 </li>
@@ -207,41 +225,41 @@ export function StudentDetailView({
         ) : null}
 
         {openPayCardEnabled ? (
-          <div className="mt-6 rounded-lg border border-indigo-200 bg-indigo-50/60 px-5 py-4">
-            <p className="text-sm font-semibold text-indigo-900">OpenPayGB virtual card</p>
+          <div className="mt-6 rounded-lg border border-indigo-400/30 bg-indigo-950/40 px-5 py-4">
+            <p className="text-sm font-semibold text-indigo-100">OpenPayGB virtual card</p>
             {openPayCard ? (
               <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
                 <div>
-                  <dt className="text-xs font-medium uppercase tracking-wide text-indigo-600/80">Card</dt>
-                  <dd className="mt-0.5 font-mono text-indigo-950">{openPayCard.maskedPan || "—"}</dd>
+                  <dt className="text-xs font-medium uppercase tracking-wide text-indigo-300/80">Card</dt>
+                  <dd className="mt-0.5 font-mono text-indigo-50">{openPayCard.maskedPan || "—"}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs font-medium uppercase tracking-wide text-indigo-600/80">Status</dt>
-                  <dd className="mt-0.5 text-indigo-950">{openPayCardStatusLabel(openPayCard.status)}</dd>
+                  <dt className="text-xs font-medium uppercase tracking-wide text-indigo-300/80">Status</dt>
+                  <dd className="mt-0.5 text-indigo-50">{openPayCardStatusLabel(openPayCard.status)}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs font-medium uppercase tracking-wide text-indigo-600/80">Balance</dt>
-                  <dd className="mt-0.5 font-semibold tabular-nums text-indigo-950">
+                  <dt className="text-xs font-medium uppercase tracking-wide text-indigo-300/80">Balance</dt>
+                  <dd className="mt-0.5 font-semibold tabular-nums text-indigo-50">
                     UGX {openPayCard.balanceUgx.toLocaleString()}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-xs font-medium uppercase tracking-wide text-indigo-600/80">Top-ups</dt>
-                  <dd className="mt-0.5 text-indigo-950">{openPayCard.topupCount}</dd>
+                  <dt className="text-xs font-medium uppercase tracking-wide text-indigo-300/80">Top-ups</dt>
+                  <dd className="mt-0.5 text-indigo-50">{openPayCard.topupCount}</dd>
                 </div>
                 {openPayCard.issuedAt ? (
                   <div className="sm:col-span-2">
-                    <dt className="text-xs font-medium uppercase tracking-wide text-indigo-600/80">Issued</dt>
-                    <dd className="mt-0.5 text-indigo-950">{formatDate(openPayCard.issuedAt)}</dd>
+                    <dt className="text-xs font-medium uppercase tracking-wide text-indigo-300/80">Issued</dt>
+                    <dd className="mt-0.5 text-indigo-50">{formatDate(openPayCard.issuedAt)}</dd>
                   </div>
                 ) : null}
               </dl>
             ) : (
-              <p className="mt-2 text-sm text-indigo-800/90">
+              <p className="mt-2 text-sm text-indigo-200/90">
                 This student has not opted in to an OpenPayGB card yet.
               </p>
             )}
-            <p className="mt-3 text-xs text-indigo-700/80">
+            <p className="mt-3 text-xs text-indigo-300/80">
               Read-only view for school admins. Students manage top-ups from their portal.
             </p>
           </div>
@@ -259,19 +277,19 @@ export function StudentDetailView({
           </div>
         ) : null}
 
-        <div className="mt-8 rounded-lg border border-slate-200 bg-slate-50/80 px-5 py-4">
-          <p className="text-sm font-medium text-slate-500">Total Payments</p>
+        <div className="mt-8 rounded-lg border border-white/10 bg-black/30 px-5 py-4">
+          <p className="text-sm font-medium text-slate-400">Total Payments</p>
           <div className="mt-3 flex flex-wrap items-baseline justify-between gap-6">
-            <p className="text-2xl font-semibold text-slate-900">{totalTon.toFixed(2)} TON</p>
-            <p className="text-2xl font-semibold text-slate-900">UGX {totalUgx.toLocaleString()}</p>
+            <p className="text-2xl font-semibold text-white">{totalTon.toFixed(2)} TON</p>
+            <p className="text-2xl font-semibold text-white">UGX {totalUgx.toLocaleString()}</p>
           </div>
         </div>
 
-        <h2 className="mt-8 text-base font-semibold text-slate-900">Payment History</h2>
+        <h2 className="mt-8 text-base font-semibold text-white">Payment History</h2>
 
         <div className="mt-4 space-y-3 md:hidden">
           {payments.length === 0 ? (
-            <p className="py-6 text-center text-sm text-slate-500">No payments yet.</p>
+            <p className="py-6 text-center text-sm text-slate-400">No payments yet.</p>
           ) : (
             payments.map((p) => {
               const selected = p.id === activeReceiptId;
@@ -281,18 +299,20 @@ export function StudentDetailView({
                   type="button"
                   onClick={() => setSelectedPaymentId(p.id)}
                   className={`w-full rounded-xl border p-4 text-left text-sm transition-colors ${
-                    selected ? "border-blue-300 bg-blue-50/80" : "border-slate-200 bg-white hover:bg-slate-50"
+                    selected
+                      ? "border-cyan-400/40 bg-cyan-950/40"
+                      : "border-white/10 bg-black/20 hover:bg-white/5"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-slate-700">{formatDate(p.createdAt)}</p>
+                    <p className="text-slate-200">{formatDate(p.createdAt)}</p>
                     {p.status === "confirmed" ? <StatusConfirmed /> : (
-                      <span className="text-xs capitalize text-slate-500">{p.status}</span>
+                      <span className="text-xs capitalize text-slate-400">{p.status}</span>
                     )}
                   </div>
-                  <p className="mt-2 font-semibold text-slate-900">UGX {p.totalUgx.toLocaleString()}</p>
-                  <p className="mt-1 text-xs text-slate-500">{paymentProgrammeLabel(p)}</p>
-                  <p className="mt-1 font-mono text-slate-700">{p.tonAmount.toFixed(2)} TON</p>
+                  <p className="mt-2 font-semibold text-white">UGX {p.totalUgx.toLocaleString()}</p>
+                  <p className="mt-1 text-xs text-slate-400">{paymentProgrammeLabel(p)}</p>
+                  <p className="mt-1 font-mono text-slate-200">{p.tonAmount.toFixed(2)} TON</p>
                   <p className="mt-1 font-mono text-xs text-slate-500 break-all" title={p.txHash}>
                     {abbrevTx(p.txHash, 8, 8)}
                   </p>
@@ -304,7 +324,7 @@ export function StudentDetailView({
 
         <div className="mt-4 hidden overflow-x-auto md:block">
           <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-slate-200 text-xs font-medium uppercase tracking-wide text-slate-500">
+            <thead className="border-b border-white/10 text-xs font-medium uppercase tracking-wide text-slate-400">
               <tr>
                 <th className="pb-3 pr-4 font-medium">Date</th>
                 <th className="pb-3 pr-4 font-medium">Programme</th>
@@ -314,10 +334,10 @@ export function StudentDetailView({
                 <th className="pb-3 font-medium">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-white/10">
               {payments.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-500">
+                  <td colSpan={6} className="py-8 text-center text-slate-400">
                     No payments yet.
                   </td>
                 </tr>
@@ -327,13 +347,13 @@ export function StudentDetailView({
                   return (
                     <tr
                       key={p.id}
-                      className={`cursor-pointer transition-colors ${selected ? "bg-blue-50/60" : "hover:bg-slate-50"}`}
+                      className={`cursor-pointer transition-colors ${selected ? "bg-cyan-950/40" : "hover:bg-white/5"}`}
                       onClick={() => setSelectedPaymentId(p.id)}
                     >
-                      <td className="py-3 pr-4 text-slate-700">{formatDate(p.createdAt)}</td>
-                      <td className="py-3 pr-4 text-slate-600">{paymentProgrammeLabel(p)}</td>
-                      <td className="py-3 pr-4 text-slate-800">UGX {p.totalUgx.toLocaleString()}</td>
-                      <td className="py-3 pr-4 font-mono text-slate-700">{p.tonAmount.toFixed(2)}</td>
+                      <td className="py-3 pr-4 text-slate-200">{formatDate(p.createdAt)}</td>
+                      <td className="py-3 pr-4 text-slate-300">{paymentProgrammeLabel(p)}</td>
+                      <td className="py-3 pr-4 text-white">UGX {p.totalUgx.toLocaleString()}</td>
+                      <td className="py-3 pr-4 font-mono text-slate-200">{p.tonAmount.toFixed(2)}</td>
                       <td className="max-w-[100px] py-3 pr-4 font-mono text-xs text-slate-500" title={p.txHash}>
                         {abbrevTx(p.txHash)}
                       </td>
@@ -341,7 +361,7 @@ export function StudentDetailView({
                         {p.status === "confirmed" ? (
                           <StatusConfirmed />
                         ) : (
-                          <span className="text-sm capitalize text-slate-500">{p.status}</span>
+                          <span className="text-sm capitalize text-slate-400">{p.status}</span>
                         )}
                       </td>
                     </tr>
@@ -357,13 +377,13 @@ export function StudentDetailView({
             <button
               type="button"
               onClick={() => setPreviewId(activeReceiptId)}
-              className="flex-1 rounded-lg border border-slate-200 bg-white py-3 text-sm font-semibold text-blue-600 shadow-sm hover:bg-slate-50"
+              className="flex-1 rounded-lg border border-cyan-500/35 bg-cyan-950/40 py-3 text-sm font-semibold text-cyan-100 hover:border-cyan-400/55"
             >
               View Receipt
             </button>
             <a
               href={`/api/receipts/${activeReceiptId}/pdf`}
-              className="inline-flex h-[46px] w-12 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50"
+              className="inline-flex h-[46px] w-12 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-black/30 text-slate-200 hover:bg-white/5"
               title="Download receipt PDF"
               aria-label="Download receipt PDF"
             >
@@ -371,7 +391,7 @@ export function StudentDetailView({
             </a>
           </div>
         ) : activePayment ? (
-          <p className="mt-6 text-center text-sm text-slate-500">
+          <p className="mt-6 text-center text-sm text-slate-400">
             Receipt is available once this payment is confirmed.
           </p>
         ) : null}
