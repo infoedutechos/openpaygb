@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { SchoolModalHeader } from "@/components/admin/school/SchoolModalHeader";
+import { SchoolTermSelect } from "@/components/admin/school/SchoolTermSelect";
 import { useSchoolAdminApi } from "@/hooks/useSchoolAdminApi";
 
 type ClassOption = {
@@ -27,8 +28,11 @@ export function SchoolStudentEditModal({ studentId, open, onClose, onSaved }: Pr
     email: "",
     phone: "",
     address: "",
+    telegramId: "",
     schoolClassId: "",
     schoolStreamId: "",
+    year: 1,
+    semester: 1,
   });
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -52,18 +56,23 @@ export function SchoolStudentEditModal({ studentId, open, onClose, onSaved }: Pr
           const j = (await stuR.json()) as { error?: string };
           throw new Error(j.error ?? "Failed to load student");
         }
-        const j = (await stuR.json()) as { student?: Record<string, string | null> };
+        const j = (await stuR.json()) as {
+          student?: Record<string, string | number | null>;
+        };
         const s = j.student;
         if (!s) throw new Error("Student not found");
         setForm({
-          name: s.name ?? "",
-          admissionNo: s.admissionNo ?? "",
-          sex: (s.sex as string) ?? "other",
-          email: s.email ?? "",
-          phone: s.phone ?? "",
-          address: s.address ?? "",
-          schoolClassId: s.schoolClassId ?? "",
-          schoolStreamId: s.schoolStreamId ?? "",
+          name: String(s.name ?? ""),
+          admissionNo: String(s.admissionNo ?? ""),
+          sex: String(s.sex ?? "other"),
+          email: String(s.email ?? ""),
+          phone: String(s.phone ?? ""),
+          address: String(s.address ?? ""),
+          telegramId: String(s.telegramId ?? ""),
+          schoolClassId: String(s.schoolClassId ?? ""),
+          schoolStreamId: String(s.schoolStreamId ?? ""),
+          year: typeof s.year === "number" ? s.year : Number(s.year) || 1,
+          semester: typeof s.semester === "number" ? s.semester : Number(s.semester) || 1,
         });
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load student");
@@ -86,13 +95,16 @@ export function SchoolStudentEditModal({ studentId, open, onClose, onSaved }: Pr
             setError(null);
             try {
               const email = form.email.trim();
-              const payload: Record<string, string> = {
+              const payload: Record<string, string | number> = {
                 name: form.name.trim(),
                 admissionNo: form.admissionNo.trim(),
                 sex: form.sex,
                 phone: form.phone.trim(),
                 address: form.address.trim(),
-                email: email,
+                email,
+                telegramId: form.telegramId.trim(),
+                year: form.year,
+                semester: form.semester,
               };
               if (form.schoolClassId && form.schoolStreamId) {
                 payload.schoolClassId = form.schoolClassId;
@@ -123,35 +135,109 @@ export function SchoolStudentEditModal({ studentId, open, onClose, onSaved }: Pr
         <SchoolModalHeader onBack={onClose} title="Edit student" />
         {loading ? <p className="mt-3 text-sm text-slate-400">Loading…</p> : null}
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
-          <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Name" className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white sm:col-span-2" />
-          <input value={form.admissionNo} onChange={(e) => setForm({ ...form, admissionNo: e.target.value })} placeholder="Admission no." className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white" />
-          <select value={form.sex} onChange={(e) => setForm({ ...form, sex: e.target.value })} className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white">
+          <input
+            required
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            placeholder="Name"
+            className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white sm:col-span-2"
+          />
+          <input
+            value={form.admissionNo}
+            onChange={(e) => setForm({ ...form, admissionNo: e.target.value })}
+            placeholder="Admission no."
+            className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white"
+          />
+          <select
+            value={form.sex}
+            onChange={(e) => setForm({ ...form, sex: e.target.value })}
+            className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white"
+          >
             <option value="female">Female</option>
             <option value="male">Male</option>
             <option value="other">Other</option>
           </select>
-          <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="Phone" className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white" />
-          <input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="Email (optional)" className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white" />
-          <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Address" className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white sm:col-span-2" />
-          <select value={form.schoolClassId} onChange={(e) => setForm({ ...form, schoolClassId: e.target.value, schoolStreamId: "" })} className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white">
+          <input
+            value={form.phone}
+            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            placeholder="Phone"
+            className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white"
+          />
+          <input
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            placeholder="Email (optional)"
+            className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white"
+          />
+          <input
+            value={form.telegramId}
+            onChange={(e) => setForm({ ...form, telegramId: e.target.value })}
+            placeholder="Telegram ID"
+            className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white"
+          />
+          <input
+            value={form.address}
+            onChange={(e) => setForm({ ...form, address: e.target.value })}
+            placeholder="Address"
+            className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white sm:col-span-2"
+          />
+          <select
+            value={form.schoolClassId}
+            onChange={(e) =>
+              setForm({ ...form, schoolClassId: e.target.value, schoolStreamId: "" })
+            }
+            className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white"
+          >
             <option value="">Class</option>
             {classes.map((c) => (
-              <option key={c.id} value={c.id}>{c.code}</option>
+              <option key={c.id} value={c.id}>
+                {c.code}
+              </option>
             ))}
           </select>
-          <select value={form.schoolStreamId} onChange={(e) => setForm({ ...form, schoolStreamId: e.target.value })} className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white">
+          <select
+            value={form.schoolStreamId}
+            onChange={(e) => setForm({ ...form, schoolStreamId: e.target.value })}
+            className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white"
+          >
             <option value="">Stream</option>
             {(classes.find((c) => c.id === form.schoolClassId)?.streams ?? []).map((s) => (
-              <option key={s.id} value={s.id}>{s.code}</option>
+              <option key={s.id} value={s.id}>
+                {s.code}
+              </option>
             ))}
           </select>
+          <select
+            value={form.year}
+            onChange={(e) => setForm({ ...form, year: Number(e.target.value) })}
+            className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white"
+          >
+            {[1, 2, 3, 4, 5, 6].map((y) => (
+              <option key={y} value={y}>
+                Year {y}
+              </option>
+            ))}
+          </select>
+          <SchoolTermSelect
+            value={form.semester}
+            onChange={(n) => setForm({ ...form, semester: n })}
+            className="text-xs"
+          />
         </div>
         {error ? <p className="mt-2 text-sm text-rose-400">{error}</p> : null}
         <div className="mt-4 flex gap-2">
-          <button type="submit" disabled={busy || loading} className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+          <button
+            type="submit"
+            disabled={busy || loading}
+            className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          >
             Save
           </button>
-          <button type="button" onClick={onClose} className="rounded-lg border border-white/15 px-4 py-2 text-sm text-slate-300">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-white/15 px-4 py-2 text-sm text-slate-300"
+          >
             Cancel
           </button>
         </div>

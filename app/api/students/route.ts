@@ -17,6 +17,7 @@ import { ensureSchoolPayCode } from "@/lib/school-pay-code";
 import { appBaseUrl } from "@/lib/root-metadata";
 import { resolveOrganizationIdForProgrammeAdmin } from "@/lib/admin-programmes-scope";
 import { copyClassTermBillsToStudent } from "@/lib/school-copy-class-bills";
+import { SCHOOL_TERM_MAX, SCHOOL_TERM_MIN } from "@/lib/school-term";
 
 const CreateBody = z
   .object({
@@ -31,7 +32,7 @@ const CreateBody = z
     schoolClassId: z.string().optional(),
     schoolStreamId: z.string().optional(),
     year: z.number().int().min(1).max(6),
-    semester: z.number().int().min(1).max(3),
+    semester: z.number().int().min(SCHOOL_TERM_MIN).max(SCHOOL_TERM_MAX),
     portalPassword: z.string().min(10).max(128).optional(),
     organizationSlug: z.string().optional(),
   })
@@ -133,7 +134,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "programmeCode is required" }, { status: 400 });
   }
 
-  const semester = isSchool ? activeTerm : data.semester;
+  const semester = data.semester;
 
   const doc = await prisma.student.create({
     data: {
@@ -204,7 +205,7 @@ export async function GET(req: Request) {
   }
   const url = new URL(req.url);
   const q = url.searchParams.get("q")?.trim() ?? "";
-  const limit = Math.min(Number(url.searchParams.get("limit") ?? "50") || 50, 200);
+  const limit = Math.min(Number(url.searchParams.get("limit") ?? "50") || 50, 500);
   const organizationSlug = url.searchParams.get("organizationSlug")?.trim().toLowerCase() ?? "";
   const schoolClassId = url.searchParams.get("schoolClassId")?.trim() ?? "";
 

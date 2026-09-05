@@ -6,6 +6,7 @@ import { organizationWhereForSession } from "@/lib/admin-org-scope";
 import { isValidObjectId } from "@/lib/object-id";
 import { buildStudentProgrammeProgress, getProgrammeDurationSummary } from "@/lib/tuition-progress";
 import { resolveStudentEnrollmentFromClassStream } from "@/lib/school-structure-server";
+import { SCHOOL_TERM_MAX, SCHOOL_TERM_MIN } from "@/lib/school-term";
 
 const optionalEmail = z.preprocess((v) => {
   if (v === undefined || v === null) return undefined;
@@ -20,13 +21,14 @@ const PatchBody = z
     schoolClassId: z.string().optional(),
     schoolStreamId: z.string().optional(),
     year: z.number().int().min(1).max(6).optional(),
-    semester: z.number().int().min(1).max(3).optional(),
+    semester: z.number().int().min(SCHOOL_TERM_MIN).max(SCHOOL_TERM_MAX).optional(),
     name: z.string().min(2).optional(),
     admissionNo: z.string().optional(),
     address: z.string().optional(),
     sex: z.enum(["male", "female", "other"]).optional(),
     email: optionalEmail,
     phone: z.string().optional(),
+    telegramId: z.string().optional(),
   })
   .superRefine((val, ctx) => {
     if (val.schoolClassId?.trim() && !isValidObjectId(val.schoolClassId.trim())) {
@@ -150,6 +152,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
     sex?: "male" | "female" | "other";
     email?: string;
     phone?: string;
+    telegramId?: string;
     programmeCode?: string;
     schoolClassId?: string | null;
     schoolStreamId?: string | null;
@@ -163,6 +166,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   if (data.sex !== undefined) update.sex = data.sex;
   if (data.email !== undefined) update.email = data.email;
   if (data.phone !== undefined) update.phone = data.phone;
+  if (data.telegramId !== undefined) update.telegramId = data.telegramId.trim();
   if (data.year !== undefined) update.year = data.year;
   if (data.semester !== undefined) update.semester = data.semester;
 

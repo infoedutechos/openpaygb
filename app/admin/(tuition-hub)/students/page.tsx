@@ -9,6 +9,8 @@ import { SchoolPayBillModal } from "@/components/admin/school/SchoolPayBillModal
 import { SchoolStudentActionSheet } from "@/components/admin/school/SchoolStudentActionSheet";
 import { SchoolStudentEditModal } from "@/components/admin/school/SchoolStudentEditModal";
 import { SchoolStudentImportModal } from "@/components/admin/school/SchoolStudentImportModal";
+import { SchoolStudentsRegisterPanel } from "@/components/admin/school/SchoolStudentsRegisterPanel";
+import { SchoolTermSelect } from "@/components/admin/school/SchoolTermSelect";
 import { SchoolPayCodePanel } from "@/components/admin/SchoolPayCodePanel";
 import { StudentShareCard, type StudentShareCardData } from "@/components/admin/StudentShareCard";
 import { TuitionHubCheckoutExplainerCompact } from "@/components/admin/TuitionHubCheckoutExplainer";
@@ -70,6 +72,7 @@ export default function AdminStudentsPage() {
     address: "",
     email: "",
     phone: "",
+    telegramId: "",
     programmeCode: "",
     schoolClassId: "",
     schoolStreamId: "",
@@ -83,6 +86,7 @@ export default function AdminStudentsPage() {
   const [billStudent, setBillStudent] = useState<{ id: string; name: string } | null>(null);
   const [actionStudent, setActionStudent] = useState<{ id: string; name: string } | null>(null);
   const [editStudentId, setEditStudentId] = useState<string | null>(null);
+  const [registerKey, setRegisterKey] = useState(0);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -162,7 +166,7 @@ export default function AdminStudentsPage() {
       const master = gate.auth.admin?.role === "master";
       setIsMaster(master);
 
-      const limit = master ? 400 : 100;
+      const limit = isSchoolTenant ? 500 : master ? 400 : 100;
       const qp = new URLSearchParams();
       qp.set("limit", String(limit));
       qp.set("q", search.trim());
@@ -206,23 +210,17 @@ export default function AdminStudentsPage() {
       {isSchoolTenant ? <SchoolBulkBillsPanel onAssigned={() => void load(q)} /> : null}
       {isSchoolTenant ? (
         <div className="flex flex-wrap gap-2 text-sm">
-          <button
-            type="button"
-            onClick={() => { window.location.href = "/api/admin/school/students/export"; }}
-            className="rounded-lg border border-white/15 px-3 py-2 text-cyan-300 hover:bg-white/5"
+          <a
+            href="/api/admin/school/students/export?template=1"
+            className="rounded-lg border border-white/15 px-3 py-2 text-emerald-300 hover:bg-white/5"
           >
-            Export students (CSV)
-          </button>
+            Register template (CSV)
+          </a>
           <button
             type="button"
-            onClick={() => setImportOpen(true)}
-            className="rounded-lg border border-white/15 px-3 py-2 text-violet-300 hover:bg-white/5"
-          >
-            Import students
-          </button>
-          <button
-            type="button"
-            onClick={() => { window.location.href = "/api/admin/school/bills/export"; }}
+            onClick={() => {
+              window.location.href = "/api/admin/school/bills/export";
+            }}
             className="rounded-lg border border-white/15 px-3 py-2 text-cyan-300 hover:bg-white/5"
           >
             Export bills (CSV)
@@ -239,7 +237,11 @@ export default function AdminStudentsPage() {
                 void (async () => {
                   const fd = new FormData();
                   fd.set("file", file);
-                  await fetch("/api/admin/school/bills/import", { method: "POST", credentials: "include", body: fd });
+                  await fetch("/api/admin/school/bills/import", {
+                    method: "POST",
+                    credentials: "include",
+                    body: fd,
+                  });
                 })();
               }}
             />
@@ -282,6 +284,7 @@ export default function AdminStudentsPage() {
                       address: createForm.address.trim() || undefined,
                       email: createForm.email.trim() || undefined,
                       phone: createForm.phone.trim(),
+                      telegramId: createForm.telegramId.trim(),
                       ...(isSchoolTenant && createForm.schoolClassId && createForm.schoolStreamId
                         ? {
                             schoolClassId: createForm.schoolClassId,
@@ -319,6 +322,7 @@ export default function AdminStudentsPage() {
                     address: "",
                     email: "",
                     phone: "",
+                    telegramId: "",
                     programmeCode: "",
                     schoolClassId: "",
                     schoolStreamId: "",
@@ -327,6 +331,7 @@ export default function AdminStudentsPage() {
                     password: "",
                   });
                   setShowCreate(false);
+                  setRegisterKey((k) => k + 1);
                   await load(q);
                 } catch (err) {
                   setError(err instanceof Error ? err.message : "Create failed");
@@ -380,7 +385,12 @@ export default function AdminStudentsPage() {
               <>
                 <select
                   value={createForm.sex}
-                  onChange={(e) => setCreateForm((f) => ({ ...f, sex: e.target.value as "male" | "female" | "other" }))}
+                  onChange={(e) =>
+                    setCreateForm((f) => ({
+                      ...f,
+                      sex: e.target.value as "male" | "female" | "other",
+                    }))
+                  }
                   className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
                 >
                   <option value="female">Female</option>
@@ -388,13 +398,32 @@ export default function AdminStudentsPage() {
                   <option value="other">Other</option>
                 </select>
                 <input
+                  placeholder="Phone"
+                  value={createForm.phone}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, phone: e.target.value }))}
+                  className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
+                />
+                <input
+                  placeholder="Telegram ID (optional — fee reminders)"
+                  value={createForm.telegramId}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, telegramId: e.target.value }))}
+                  className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
+                />
+                <input
                   placeholder="Contact address"
                   value={createForm.address}
                   onChange={(e) => setCreateForm((f) => ({ ...f, address: e.target.value }))}
                   className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white sm:col-span-2"
                 />
               </>
-            ) : null}
+            ) : (
+              <input
+                placeholder="Phone"
+                value={createForm.phone}
+                onChange={(e) => setCreateForm((f) => ({ ...f, phone: e.target.value }))}
+                className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
+              />
+            )}
             <input
               type="email"
               placeholder="Email (optional — use admission no. if no email)"
@@ -479,17 +508,25 @@ export default function AdminStudentsPage() {
                 </option>
               ))}
             </select>
-            <select
-              value={createForm.semester}
-              onChange={(e) => setCreateForm((f) => ({ ...f, semester: Number(e.target.value) }))}
-              className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
-            >
-              {[1, 2, 3].map((s) => (
-                <option key={s} value={s}>
-                  {periodLabel} {s}
-                </option>
-              ))}
-            </select>
+            {isSchoolTenant ? (
+              <SchoolTermSelect
+                value={createForm.semester}
+                onChange={(n) => setCreateForm((f) => ({ ...f, semester: n }))}
+                className="text-xs text-slate-400"
+              />
+            ) : (
+              <select
+                value={createForm.semester}
+                onChange={(e) => setCreateForm((f) => ({ ...f, semester: Number(e.target.value) }))}
+                className="rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
+              >
+                {[1, 2, 3].map((s) => (
+                  <option key={s} value={s}>
+                    {periodLabel} {s}
+                  </option>
+                ))}
+              </select>
+            )}
             <button
               type="submit"
               disabled={createBusy || admissionBusy || !createForm.admissionNo.trim()}
@@ -542,117 +579,87 @@ export default function AdminStudentsPage() {
         ) : null}
       </div>
       <div className="space-y-3 md:hidden">
-        {rows.map((s) => (
-          <Link
-            key={s.id}
-            href={`/admin/students/${s.id}`}
-            className="block rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 hover:border-cyan-500/30"
-          >
-            <p className="font-medium text-sky-400">{s.name}</p>
-            <p className="mt-1 text-xs text-slate-400">
-              {s.schoolClassCode && s.schoolStreamCode
-                ? `${s.schoolClassCode}/${s.schoolStreamCode}`
-                : s.programmeCode}{" "}
-              · Yr{s.year} {periodLabel.slice(0, 1)}
-              {s.semester}
-            </p>
-            {isMaster && s.organizationSlug ? (
-              <p className="mt-1 text-xs text-slate-500">
-                {s.organizationName ?? s.organizationSlug}
-                <span className="ml-1 font-mono text-cyan-200/80">({s.organizationSlug})</span>
-              </p>
-            ) : null}
-            <p className="mt-2 truncate text-xs text-slate-500">{s.email || s.phone || "—"}</p>
-            {isSchoolTenant ? (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setActionStudent({ id: s.id, name: s.name });
-                }}
-                className="mt-2 text-xs font-semibold text-violet-300"
+        {!isSchoolTenant
+          ? rows.map((s) => (
+              <Link
+                key={s.id}
+                href={`/admin/students/${s.id}`}
+                className="block rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 hover:border-cyan-500/30"
               >
-                Actions
-              </button>
-            ) : null}
-          </Link>
-        ))}
-      </div>
-      <div className="hidden overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--card)] md:block">
-        <table className="min-w-full text-left text-sm text-slate-200">
-          <thead className="border-b border-[var(--border)] text-xs uppercase text-slate-500">
-            <tr>
-              <th className="px-3 py-2">Name</th>
-              {isSchoolTenant ? <th className="px-3 py-2">Admission</th> : null}
-              {isSchoolTenant ? <th className="px-3 py-2">Sex</th> : null}
-              <th className="px-3 py-2">School</th>
-              <th className="px-3 py-2">Programme</th>
-              <th className="px-3 py-2">Email</th>
-              <th className="px-3 py-2">Phone</th>
-              {isSchoolTenant ? <th className="px-3 py-2">Actions</th> : null}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((s) => (
-              <tr key={s.id} className="border-b border-[var(--border)]/60">
-                <td className="px-3 py-2">
-                  <button
-                    type="button"
-                    onClick={() => setActionStudent({ id: s.id, name: s.name })}
-                    className="text-sky-400 hover:underline text-left"
-                  >
-                    {s.name}
-                  </button>
-                </td>
-                {isSchoolTenant ? <td className="px-3 py-2 text-xs text-slate-400">{s.admissionNo || "—"}</td> : null}
-                {isSchoolTenant ? <td className="px-3 py-2 text-xs capitalize text-slate-400">{s.sex || "—"}</td> : null}
-                <td className="px-3 py-2 text-xs">
-                  {s.organizationSlug ? (
-                    <button
-                      type="button"
-                      onClick={() => setSchoolSlug(s.organizationSlug!)}
-                      className="text-left text-sky-400 hover:underline"
-                    >
-                      <span className="font-medium">{s.organizationName ?? s.organizationSlug}</span>
-                      {isMaster ? (
-                        <span className="ml-1 font-mono text-cyan-200/80">({s.organizationSlug})</span>
-                      ) : null}
-                    </button>
-                  ) : (
-                    <span className="text-slate-400">{s.organizationName ?? "—"}</span>
-                  )}
-                </td>
-                <td className="px-3 py-2">
-                  {s.schoolClassCode && s.schoolStreamCode ? (
-                    <>
-                      {s.schoolClassCode}/{s.schoolStreamCode}{" "}
-                      <span className="text-slate-500">({s.programmeCode})</span>
-                    </>
-                  ) : (
-                    s.programmeCode
-                  )}{" "}
-                  Yr{s.year} {periodLabel.slice(0, 1)}
+                <p className="font-medium text-sky-400">{s.name}</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  {s.programmeCode} · Yr{s.year} {periodLabel.slice(0, 1)}
                   {s.semester}
-                </td>
-                <td className="px-3 py-2 text-slate-400">{s.email || "—"}</td>
-                <td className="px-3 py-2 text-slate-400">{s.phone || "—"}</td>
-                {isSchoolTenant ? (
-                  <td className="px-3 py-2">
-                    <button
-                      type="button"
-                      onClick={() => setActionStudent({ id: s.id, name: s.name })}
-                      className="text-xs font-semibold text-violet-300 hover:underline"
-                    >
-                      Actions
-                    </button>
-                  </td>
+                </p>
+                {isMaster && s.organizationSlug ? (
+                  <p className="mt-1 text-xs text-slate-500">
+                    {s.organizationName ?? s.organizationSlug}
+                    <span className="ml-1 font-mono text-cyan-200/80">({s.organizationSlug})</span>
+                  </p>
                 ) : null}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                <p className="mt-2 truncate text-xs text-slate-500">{s.email || s.phone || "—"}</p>
+              </Link>
+            ))
+          : null}
       </div>
       {isSchoolTenant ? (
+        <SchoolStudentsRegisterPanel
+          search={q}
+          classFilter={classFilter}
+          classes={schoolClasses}
+          refreshKey={registerKey}
+          onImportOpen={() => setImportOpen(true)}
+          onOpenActions={(s) => setActionStudent(s)}
+        />
+      ) : (
+        <div className="hidden overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--card)] md:block">
+          <table className="min-w-full text-left text-sm text-slate-200">
+            <thead className="border-b border-[var(--border)] text-xs uppercase text-slate-500">
+              <tr>
+                <th className="px-3 py-2">Name</th>
+                <th className="px-3 py-2">School</th>
+                <th className="px-3 py-2">Programme</th>
+                <th className="px-3 py-2">Email</th>
+                <th className="px-3 py-2">Phone</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((s) => (
+                <tr key={s.id} className="border-b border-[var(--border)]/60">
+                  <td className="px-3 py-2">
+                    <Link href={`/admin/students/${s.id}`} className="text-sky-400 hover:underline">
+                      {s.name}
+                    </Link>
+                  </td>
+                  <td className="px-3 py-2 text-xs">
+                    {s.organizationSlug ? (
+                      <button
+                        type="button"
+                        onClick={() => setSchoolSlug(s.organizationSlug!)}
+                        className="text-left text-sky-400 hover:underline"
+                      >
+                        <span className="font-medium">{s.organizationName ?? s.organizationSlug}</span>
+                        {isMaster ? (
+                          <span className="ml-1 font-mono text-cyan-200/80">({s.organizationSlug})</span>
+                        ) : null}
+                      </button>
+                    ) : (
+                      <span className="text-slate-400">{s.organizationName ?? "—"}</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2">
+                    {s.programmeCode} Yr{s.year} {periodLabel.slice(0, 1)}
+                    {s.semester}
+                  </td>
+                  <td className="px-3 py-2 text-slate-400">{s.email || "—"}</td>
+                  <td className="px-3 py-2 text-slate-400">{s.phone || "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {isSchoolTenant ? null : rows.length ? (
         <p className="text-sm text-slate-400">No. of students: {rows.length}</p>
       ) : null}
       <SchoolDetailModal
@@ -697,6 +704,7 @@ export default function AdminStudentsPage() {
           onDelete={async () => {
             await fetch(`/api/students/${actionStudent.id}`, { method: "DELETE", credentials: "include" });
             setActionStudent(null);
+            setRegisterKey((k) => k + 1);
             void load(q);
           }}
         />
@@ -706,10 +714,20 @@ export default function AdminStudentsPage() {
           studentId={editStudentId}
           open
           onClose={() => setEditStudentId(null)}
-          onSaved={() => void load(q)}
+          onSaved={() => {
+            setRegisterKey((k) => k + 1);
+            void load(q);
+          }}
         />
       ) : null}
-      <SchoolStudentImportModal open={importOpen} onClose={() => setImportOpen(false)} onDone={() => void load(q)} />
+      <SchoolStudentImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onDone={() => {
+          setRegisterKey((k) => k + 1);
+          void load(q);
+        }}
+      />
     </div>
   );
 }

@@ -9,10 +9,12 @@ export async function GET(req: Request) {
     if (!auth.ok) return Response.json({ error: auth.error }, { status: auth.status });
 
     const classId = url.searchParams.get("classId");
+    const template = url.searchParams.get("template") === "1";
     return exportSchoolStudentsCsv({
       organizationId: auth.scope.organizationId,
       sessionId: auth.context.sessionId,
       classId,
+      template,
     });
   } catch (e) {
     return apiErrorResponse(e, { route: "GET /api/admin/school/students/export" });

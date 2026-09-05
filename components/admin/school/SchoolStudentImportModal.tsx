@@ -203,11 +203,13 @@ export function SchoolStudentImportModal({ open, onClose, onDone }: Props) {
 
       const r = await fetch("/api/admin/school/students/import", { method: "POST", credentials: "include", body: fd });
 
-      const j = (await r.json()) as { created?: number; skipped?: number; error?: string };
+      const j = (await r.json()) as { created?: number; updated?: number; skipped?: number; error?: string };
 
       if (!r.ok) throw new Error(j.error ?? "Import failed");
 
-      setMessage(`Imported ${j.created ?? 0} student(s)${j.skipped ? `, skipped ${j.skipped}` : ""}.`);
+      setMessage(
+        `Imported ${j.created ?? 0} new, updated ${j.updated ?? 0}${j.skipped ? `, skipped ${j.skipped}` : ""}.`,
+      );
 
       onDone();
 
@@ -260,6 +262,22 @@ export function SchoolStudentImportModal({ open, onClose, onDone }: Props) {
         {tab === "internal" ? (
 
           <div className="mt-4 space-y-3 text-sm">
+
+            <p className="rounded-lg border border-emerald-800/40 bg-emerald-950/20 px-3 py-2 text-xs leading-relaxed text-emerald-100/90">
+
+              Register CSV columns: Name, AdmissionNo, Sex, Phone, Email, Address, TelegramId, Class, Stream,
+
+              ProgrammeCode, Year, Term, Session, PortalPassword (optional). Uncheck &quot;new only&quot; to update
+
+              existing admission numbers.{" "}
+
+              <a href="/api/admin/school/students/export?template=1" className="underline hover:text-white">
+
+                Download template
+
+              </a>
+
+            </p>
 
             <label className="block text-slate-300">
 
