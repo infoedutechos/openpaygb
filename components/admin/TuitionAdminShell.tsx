@@ -260,7 +260,7 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
             </div>
           }
         />
-        <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 md:py-8">
+        <div className="mx-auto w-full min-w-0 max-w-6xl flex-1 overflow-x-hidden px-4 py-6 md:py-8">
           <AdminWorkspaceBar />
           {authMe?.dbDegraded ? <DbDegradedBanner /> : null}
           <WorkspaceEmailUnverifiedBanner />

@@ -70,12 +70,12 @@ export default function StudentsRegisterPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 max-w-full space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-white">Students Register</h1>
         <p className="text-sm text-slate-400">
-          Holistic Excel-style roster — demographics, contacts, class/stream, year, and term. Import/export CSV
-          matches these columns.
+          Holistic Excel-style roster — tap a student to open their registration card and QR code (same as after
+          create). Import/export CSV matches these columns.
         </p>
         <Link
           href={hrefWithOrgSlug("/admin/students")}

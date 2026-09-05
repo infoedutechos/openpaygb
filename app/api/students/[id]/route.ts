@@ -7,6 +7,9 @@ import { isValidObjectId } from "@/lib/object-id";
 import { buildStudentProgrammeProgress, getProgrammeDurationSummary } from "@/lib/tuition-progress";
 import { resolveStudentEnrollmentFromClassStream } from "@/lib/school-structure-server";
 import { SCHOOL_TERM_MAX, SCHOOL_TERM_MIN } from "@/lib/school-term";
+import { ensureSchoolPayCode } from "@/lib/school-pay-code";
+import { studentCardPath } from "@/lib/admission-no";
+import { appBaseUrl } from "@/lib/root-metadata";
 
 const optionalEmail = z.preprocess((v) => {
   if (v === undefined || v === null) return undefined;
@@ -76,6 +79,9 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       )
     : null;
   const programmeDuration = programme ? getProgrammeDurationSummary(programme) : null;
+  const schoolPayCode = await ensureSchoolPayCode(student.organizationId);
+  const cardUrl = `${appBaseUrl()}${studentCardPath(student.id)}`;
+  const periodLabel = student.organization.institutionTier === "school" ? "Term" : "Semester";
 
   return NextResponse.json({
     student: {
@@ -101,6 +107,9 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       createdAt: student.createdAt,
       organizationSlug: student.organization.slug,
       organizationName: student.organization.name,
+      schoolPayCode,
+      cardUrl,
+      periodLabel,
       progress,
     },
     payments: payments.map((p) => ({
