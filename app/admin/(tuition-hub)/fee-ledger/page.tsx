@@ -2,6 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { formatUgx } from "@/components/admin/school/SchoolContextBar";
 import { useSchoolAdminApi } from "@/hooks/useSchoolAdminApi";
 
@@ -48,11 +49,16 @@ function statusClass(status: string): string {
 }
 
 function FeeLedgerInner() {
+  const searchParams = useSearchParams();
   const { schoolFetch, schoolUrl, needsOrgSlug, hrefWithOrgSlug, organizationSlug } = useSchoolAdminApi();
   const [rows, setRows] = useState<LedgerRow[]>([]);
   const [totals, setTotals] = useState<Totals | null>(null);
-  const [term, setTerm] = useState(2);
-  const [q, setQ] = useState("");
+  const [term, setTerm] = useState(() => {
+    const t = Number(searchParams.get("term"));
+    return t === 1 || t === 2 || t === 3 ? t : 2;
+  });
+  const [q, setQ] = useState(() => searchParams.get("q")?.trim() ?? "");
+  const [focusStudentId, setFocusStudentId] = useState(() => searchParams.get("studentId")?.trim() ?? "");
   const [error, setError] = useState<string | null>(null);
   const [importBusy, setImportBusy] = useState(false);
   const [importMessage, setImportMessage] = useState<string | null>(null);
@@ -64,17 +70,33 @@ function FeeLedgerInner() {
 
   const load = useCallback(async () => {
     if (needsOrgSlug) return;
-    const r = await schoolFetch("/api/admin/school/fee-ledger", undefined, { term, q: q.trim() || undefined });
-    const j = (await r.json()) as { rows?: LedgerRow[]; totals?: Totals; error?: string; term?: number };
+    const r = await schoolFetch("/api/admin/school/fee-ledger", undefined, {
+      term,
+      q: q.trim() || undefined,
+      studentId: focusStudentId || undefined,
+    });
+    const j = (await r.json()) as {
+      rows?: LedgerRow[];
+      row?: LedgerRow;
+      totals?: Totals;
+      error?: string;
+      term?: number;
+    };
     if (!r.ok) {
       setError(j.error ?? "Failed to load fee ledger");
       return;
     }
     setError(null);
-    setRows(j.rows ?? []);
-    setTotals(j.totals ?? null);
+    if (j.row) {
+      setRows([j.row]);
+      if (!q.trim()) setQ(j.row.studentName || j.row.admissionNo || "");
+      setTotals(null);
+    } else {
+      setRows(j.rows ?? []);
+      setTotals(j.totals ?? null);
+    }
     if (j.term) setTerm(j.term);
-  }, [needsOrgSlug, schoolFetch, term, q]);
+  }, [needsOrgSlug, schoolFetch, term, q, focusStudentId]);
 
   useEffect(() => {
     const t = setTimeout(() => void load(), 200);
@@ -209,7 +231,10 @@ function FeeLedgerInner() {
           Search
           <input
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={(e) => {
+              setFocusStudentId("");
+              setQ(e.target.value);
+            }}
             placeholder="Name or admission no."
             className="ml-2 rounded-lg border border-white/15 bg-[#0a101f] px-3 py-2 text-white"
           />

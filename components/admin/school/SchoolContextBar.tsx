@@ -28,7 +28,8 @@ export function SchoolContextBar({ onContextChange }: { onContextChange?: (ctx: 
     if (needsOrgSlug) return;
     const [sessRes, classRes] = await Promise.all([
       schoolFetch("/api/admin/school/sessions"),
-      schoolFetch("/api/admin/school/classes"),
+      // List all org classes so the Class filter is never empty after a session rollover.
+      schoolFetch("/api/admin/school/classes", undefined, { allSessions: "1" }),
     ]);
     if (sessRes.ok) {
       const j = (await sessRes.json()) as { context?: Context };
@@ -124,6 +125,7 @@ export function SchoolContextBar({ onContextChange }: { onContextChange?: (ctx: 
       <span className="text-xs text-slate-500">
         {schoolTermLabel(context.activeTerm)}
         {schoolClassId ? " · class filter" : " · all classes"} applies to lists
+        {classes.length === 0 ? " · no classes yet — add them under School structure" : null}
       </span>
     </div>
   );

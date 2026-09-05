@@ -10,12 +10,15 @@ export function SmisModuleShell({
   description,
   storageKey,
   columns,
+  logOnly = false,
 }: {
   title: string;
   description: string;
   /** Maps to API module key, e.g. attendance */
   storageKey: string;
   columns: string[];
+  /** When true, hide the free-text add form (roster UI owns entry). */
+  logOnly?: boolean;
 }) {
   const moduleName = storageKey.replace(/^odelhub-smis-/, "").replace(/^smis[-_]?/i, "") || storageKey;
   const { schoolFetch, needsOrgSlug } = useSchoolAdminApi();
@@ -114,25 +117,27 @@ export function SmisModuleShell({
       </div>
       {needsOrgSlug ? <p className="text-sm text-amber-300">Master: set org slug first.</p> : null}
       {error ? <p className="text-sm text-rose-300">{error}</p> : null}
-      <div className="grid gap-2 rounded-2xl border border-white/10 bg-[#0a101f] p-4 sm:grid-cols-2">
-        {columns.map((c) => (
-          <label key={c} className="text-xs text-slate-400">
-            {c}
-            <input
-              value={draft[c] ?? ""}
-              onChange={(e) => setDraft((d) => ({ ...d, [c]: e.target.value }))}
-              className="mt-1 w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white"
-            />
-          </label>
-        ))}
-        <button
-          type="button"
-          className="sm:col-span-2 rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white"
-          onClick={() => void addEntry()}
-        >
-          Add entry
-        </button>
-      </div>
+      {!logOnly ? (
+        <div className="grid gap-2 rounded-2xl border border-white/10 bg-[#0a101f] p-4 sm:grid-cols-2">
+          {columns.map((c) => (
+            <label key={c} className="text-xs text-slate-400">
+              {c}
+              <input
+                value={draft[c] ?? ""}
+                onChange={(e) => setDraft((d) => ({ ...d, [c]: e.target.value }))}
+                className="mt-1 w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white"
+              />
+            </label>
+          ))}
+          <button
+            type="button"
+            className="sm:col-span-2 rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white"
+            onClick={() => void addEntry()}
+          >
+            Add entry
+          </button>
+        </div>
+      ) : null}
       {loading ? (
         <p className="text-sm text-slate-500">Loading…</p>
       ) : (

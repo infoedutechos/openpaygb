@@ -45,7 +45,7 @@ type StudentRow = {
 
 export default function AdminStudentsPage() {
   const { orgSlug, setOrgSlug } = useMasterOrgSlug();
-  const { schoolScope } = useSchoolAdminApi();
+  const { schoolScope, schoolFetch } = useSchoolAdminApi();
   const isSchoolTenant = schoolScope;
   const periodLabel = isSchoolTenant ? "Term" : "Semester";
   const { loading: authLoading, ensureTuitionSession } = useTuitionAdminGate();
@@ -113,14 +113,14 @@ export default function AdminStudentsPage() {
 
   useEffect(() => {
     if (!isSchoolTenant) return;
-    void fetch("/api/admin/school/classes", { credentials: "include" })
+    void schoolFetch("/api/admin/school/classes", undefined, { allSessions: "1" })
       .then(async (r) => {
         if (!r.ok) return;
         const j = (await r.json()) as { classes?: ClassOption[] };
         setSchoolClasses(j.classes ?? []);
       })
       .catch(() => undefined);
-  }, [isSchoolTenant]);
+  }, [isSchoolTenant, schoolFetch]);
 
   const load = useCallback(
     async (search: string) => {

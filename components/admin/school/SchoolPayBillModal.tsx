@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { formatUgx } from "@/components/admin/school/SchoolContextBar";
 import { useSchoolAdminApi } from "@/hooks/useSchoolAdminApi";
 
@@ -9,6 +10,14 @@ type Charge = {
   accountName: string;
   amountUgx: number;
   term: number;
+};
+
+type LedgerSnapshot = {
+  previousBalanceUgx: number;
+  currentBalanceUgx: number;
+  totalOutstandingUgx: number;
+  feeRequiredUgx: number;
+  statusLabel?: string;
 };
 
 type Props = {
@@ -20,9 +29,10 @@ type Props = {
 };
 
 export function SchoolPayBillModal({ studentId, studentName, open, onClose, onPaid }: Props) {
-  const { schoolFetch, organizationSlug } = useSchoolAdminApi();
+  const { schoolFetch, organizationSlug, hrefWithOrgSlug } = useSchoolAdminApi();
   const [term, setTerm] = useState(1);
   const [charges, setCharges] = useState<Charge[]>([]);
+  const [ledger, setLedger] = useState<LedgerSnapshot | null>(null);
   const [loading, setLoading] = useState(false);
   const [amountUgx, setAmountUgx] = useState(0);
   const [paymentMode, setPaymentMode] = useState<"CASH" | "MOBILE TRANSFER">("CASH");
@@ -31,13 +41,18 @@ export function SchoolPayBillModal({ studentId, studentName, open, onClose, onPa
   const [error, setError] = useState<string | null>(null);
   const [receiptNo, setReceiptNo] = useState<string | null>(null);
 
+  const feeLedgerHref = hrefWithOrgSlug(
+    `/admin/fee-ledger?studentId=${encodeURIComponent(studentId)}&term=${term}`,
+  );
+
   const load = useCallback(async () => {
     if (!open || !studentId) return;
     setLoading(true);
     try {
-      const [billR, sessR] = await Promise.all([
+      const [billR, sessR, ledgerR] = await Promise.all([
         schoolFetch("/api/admin/school/bills", undefined, { studentId, term }),
         schoolFetch("/api/admin/school/sessions"),
+        schoolFetch("/api/admin/school/fee-ledger", undefined, { studentId, term }),
       ]);
       if (billR.ok) {
         const j = (await billR.json()) as { charges?: Charge[] };
@@ -49,6 +64,15 @@ export function SchoolPayBillModal({ studentId, studentName, open, onClose, onPa
       if (sessR.ok) {
         const j = (await sessR.json()) as { context?: { activeTerm?: number } };
         if (j.context?.activeTerm) setTerm(j.context.activeTerm);
+      }
+      if (ledgerR.ok) {
+        const j = (await ledgerR.json()) as { row?: LedgerSnapshot };
+        setLedger(j.row ?? null);
+        if (j.row && j.row.totalOutstandingUgx > 0) {
+          setAmountUgx(j.row.totalOutstandingUgx);
+        }
+      } else {
+        setLedger(null);
       }
     } finally {
       setLoading(false);
@@ -107,12 +131,24 @@ export function SchoolPayBillModal({ studentId, studentName, open, onClose, onPa
         {receiptNo ? (
           <div className="mt-4 space-y-3 rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-4">
             <p className="text-emerald-300 font-semibold">Payment recorded — {receiptNo}</p>
-            <p className="text-sm text-slate-300">{formatUgx(amountUgx)} via {paymentMode}</p>
-            <div className="flex gap-2">
+            <p className="text-sm text-slate-300">
+              {formatUgx(amountUgx)} via {paymentMode}
+            </p>
+            <div className="flex flex-wrap gap-2">
               <a href="/admin/receipts" className="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white">
                 View receipts
               </a>
-              <button type="button" onClick={onClose} className="rounded-lg border border-white/15 px-4 py-2 text-sm text-slate-300">
+              <Link
+                href={feeLedgerHref}
+                className="rounded-lg border border-cyan-500/40 px-4 py-2 text-sm font-semibold text-cyan-200"
+              >
+                Student fee ledger
+              </Link>
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-lg border border-white/15 px-4 py-2 text-sm text-slate-300"
+              >
                 Close
               </button>
             </div>
@@ -131,6 +167,45 @@ export function SchoolPayBillModal({ studentId, studentName, open, onClose, onPa
                 <option value={3}>Term 3</option>
               </select>
             </label>
+
+            <div className="mt-4 grid grid-cols-2 gap-3 rounded-xl border border-white/10 bg-black/20 p-3 text-sm">
+              <div>
+                <p className="text-xs text-slate-500">Previous balance</p>
+                <p className="font-semibold text-amber-200">
+                  {ledger ? formatUgx(ledger.previousBalanceUgx) : "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">Current balance</p>
+                <p className="font-semibold text-white">
+                  {ledger ? formatUgx(ledger.currentBalanceUgx) : "—"}
+                </p>
+              </div>
+              {ledger ? (
+                <div className="col-span-2 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-2">
+                  <span className="text-xs text-slate-400">
+                    Outstanding {formatUgx(ledger.totalOutstandingUgx)}
+                    {ledger.statusLabel ? ` · ${ledger.statusLabel}` : ""}
+                  </span>
+                  <Link
+                    href={feeLedgerHref}
+                    className="rounded-lg bg-violet-800/70 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-700"
+                  >
+                    Student fee ledger
+                  </Link>
+                </div>
+              ) : (
+                <div className="col-span-2">
+                  <Link
+                    href={feeLedgerHref}
+                    className="inline-flex rounded-lg bg-violet-800/70 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-700"
+                  >
+                    Student fee ledger
+                  </Link>
+                </div>
+              )}
+            </div>
+
             {loading ? (
               <p className="mt-4 text-sm text-slate-500">Loading charges…</p>
             ) : (

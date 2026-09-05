@@ -22,30 +22,45 @@ export async function GET(req: Request) {
     const auth = await requireSchoolAdminScope(url.searchParams.get("organizationSlug"));
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-    const classes = await prisma.schoolClass.findMany({
+    const include = {
+      streams: {
+        orderBy: [{ sortOrder: "asc" as const }, { code: "asc" as const }],
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          sortOrder: true,
+          enabled: true,
+          _count: { select: { students: true } },
+        },
+      },
+      _count: { select: { students: true, streams: true } },
+    };
+
+    const forceAllSessions = url.searchParams.get("allSessions") === "1";
+    let sessionFallback = false;
+    let classes = await prisma.schoolClass.findMany({
       where: {
         organizationId: auth.scope.organizationId,
-        ...schoolClassSessionWhere(auth.context.sessionId),
+        ...(forceAllSessions ? {} : schoolClassSessionWhere(auth.context.sessionId)),
       },
       orderBy: [{ sortOrder: "asc" }, { code: "asc" }],
-      include: {
-        streams: {
-          orderBy: [{ sortOrder: "asc" }, { code: "asc" }],
-          select: {
-            id: true,
-            code: true,
-            name: true,
-            sortOrder: true,
-            enabled: true,
-            _count: { select: { students: true } },
-          },
-        },
-        _count: { select: { students: true, streams: true } },
-      },
+      include,
     });
+
+    // New academic sessions often leave classes on a prior sessionId — fall back so Class dropdowns are not empty.
+    if (!forceAllSessions && classes.length === 0 && auth.context.sessionId) {
+      classes = await prisma.schoolClass.findMany({
+        where: { organizationId: auth.scope.organizationId },
+        orderBy: [{ sortOrder: "asc" }, { code: "asc" }],
+        include,
+      });
+      sessionFallback = classes.length > 0;
+    }
 
     return NextResponse.json({
       currentAcademicYearLabel: auth.context.sessionLabel,
+      sessionFallback,
       classes: classes.map((c) => ({
         id: c.id,
         code: c.code,
@@ -53,6 +68,7 @@ export async function GET(req: Request) {
         levelKind: c.levelKind,
         sortOrder: c.sortOrder,
         enabled: c.enabled,
+        schoolSessionId: c.schoolSessionId,
         streamCount: c._count.streams,
         studentCount: c._count.students,
         streams: c.streams.map((s) => ({
