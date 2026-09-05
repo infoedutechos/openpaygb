@@ -13,6 +13,7 @@ const NAV: { href: string; label: string }[] = [
   { href: "/staff/profile", label: "My profile" },
   { href: "/staff/card", label: "OpenPayGB Card" },
   { href: "/staff/salary", label: "Salary history" },
+  { href: "/staff/advertise", label: "Advertise" },
   { href: "/", label: "Lobby" },
 ];
 

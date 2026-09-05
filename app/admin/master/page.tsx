@@ -24,6 +24,7 @@ import { MasterAuthSessionSettings } from "@/components/admin/MasterAuthSessionS
 import { MasterCronOpsPanel } from "@/components/admin/MasterCronOpsPanel";
 import { MasterKnowledgeBaseSettings } from "@/components/admin/MasterKnowledgeBaseSettings";
 import { MasterPlatformCommunicationsSettings } from "@/components/admin/MasterPlatformCommunicationsSettings";
+import { MasterAdsConsole } from "@/components/admin/MasterAdsConsole";
 import { MasterHubMaintenanceSettings } from "@/components/admin/MasterHubMaintenanceSettings";
 import { MasterHubVisibilitySettings } from "@/components/admin/MasterHubVisibilitySettings";
 import { MasterPlayHubLaunchSettings } from "@/components/admin/MasterPlayHubLaunchSettings";
@@ -349,6 +350,8 @@ export default function MasterManagerOverviewPage() {
       <MasterKnowledgeBaseSettings />
 
       <MasterPlatformCommunicationsSettings />
+
+      <MasterAdsConsole />
 
       <MasterPlatformCheckoutFeeSettings />
 

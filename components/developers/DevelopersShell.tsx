@@ -18,6 +18,7 @@ const DEV_NAV = [
   { href: "/integrations/woocommerce", label: "WooCommerce plugin" },
   { href: "/opgb", label: "OpenPayGB provider" },
   { href: "/opgb#integrate", label: "Integration guide" },
+  { href: "/developers/advertise", label: "Advertise (ads API)" },
   { href: "/help/partner-api-overview", label: "Partner API docs" },
   { href: "/api/docs/guides/USER_GUIDE_PARTNER_INTEGRATOR.md", label: "Integrator guide" },
   { href: USER_GUIDES_INDEX_HREF, label: "All user guides" },

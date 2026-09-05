@@ -65,6 +65,11 @@ const nav: { href: string; label: string; desc?: string }[] = [
     desc: "Bell + ODEL HUB Copilot",
   },
   {
+    href: "/admin/master#ads-console",
+    label: "Ads platform",
+    desc: "Campaigns · placements · approval",
+  },
+  {
     href: "/admin/master#knowledge-base",
     label: "Knowledge base",
     desc: "Copilot articles",

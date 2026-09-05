@@ -15,7 +15,8 @@ export type OpgbLedgerKind =
   | "amm_swap"
   | "p2p_escrow_hold"
   | "p2p_escrow_release"
-  | "adjustment";
+  | "adjustment"
+  | "ad_spend";
 
 export type OpgbLedgerDirection = "credit" | "debit";
 

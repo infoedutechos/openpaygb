@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { schoolTermLabel, schoolTermOptions } from "@/lib/school-term";
 import { useSchoolAdminApi } from "@/hooks/useSchoolAdminApi";
 import {
   readSchoolClassFilterId,
@@ -11,28 +10,40 @@ import {
 
 type Context = {
   activeTerm: number;
+  activeTermId?: string | null;
+  activeTermLabel?: string;
   sessionLabel: string;
   currentAcademicYearLabel: string;
 };
 
+type TermOption = { id: string; label: string; termNumber: number; isActive: boolean };
 type ClassOption = { id: string; code: string; name: string; enabled?: boolean };
 
 export function SchoolContextBar({ onContextChange }: { onContextChange?: (ctx: Context) => void }) {
   const { schoolFetch, organizationSlug, needsOrgSlug } = useSchoolAdminApi();
   const [context, setContext] = useState<Context | null>(null);
+  const [terms, setTerms] = useState<TermOption[]>([]);
   const [classes, setClasses] = useState<ClassOption[]>([]);
   const [schoolClassId, setSchoolClassId] = useState("");
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
     if (needsOrgSlug) return;
-    const [sessRes, classRes] = await Promise.all([
+    const [sessRes, termsRes, classRes] = await Promise.all([
       schoolFetch("/api/admin/school/sessions"),
-      // List all org classes so the Class filter is never empty after a session rollover.
+      schoolFetch("/api/admin/school/terms"),
       schoolFetch("/api/admin/school/classes", undefined, { allSessions: "1" }),
     ]);
     if (sessRes.ok) {
       const j = (await sessRes.json()) as { context?: Context };
+      if (j.context) {
+        setContext(j.context);
+        onContextChange?.(j.context);
+      }
+    }
+    if (termsRes.ok) {
+      const j = (await termsRes.json()) as { terms?: TermOption[]; context?: Context };
+      setTerms(j.terms ?? []);
       if (j.context) {
         setContext(j.context);
         onContextChange?.(j.context);
@@ -64,13 +75,13 @@ export function SchoolContextBar({ onContextChange }: { onContextChange?: (ctx: 
     return () => window.removeEventListener(SCHOOL_CLASS_FILTER_EVENT, onFilter);
   }, []);
 
-  async function setTerm(term: number) {
+  async function setTerm(termId: string) {
     setBusy(true);
     try {
-      await schoolFetch("/api/admin/school/sessions", {
-        method: "PATCH",
+      await schoolFetch(`/api/admin/school/terms/${termId}/activate`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ activeTerm: term, organizationSlug }),
+        body: JSON.stringify({ organizationSlug }),
       });
       await load();
     } finally {
@@ -85,22 +96,26 @@ export function SchoolContextBar({ onContextChange }: { onContextChange?: (ctx: 
 
   if (needsOrgSlug || !context) return null;
 
+  const selectValue = context.activeTermId || terms.find((t) => t.isActive)?.id || "";
+
   return (
     <div className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-cyan-500/25 bg-cyan-950/20 px-4 py-3 text-sm">
       <span className="text-slate-400">Active session</span>
-      <span className="font-semibold text-white">{context.sessionLabel || context.currentAcademicYearLabel || "—"}</span>
+      <span className="font-semibold text-white">
+        {context.sessionLabel || context.currentAcademicYearLabel || "—"}
+      </span>
       <span className="text-slate-600">|</span>
       <label className="flex items-center gap-2 text-slate-400">
         Term
         <select
-          disabled={busy}
-          value={context.activeTerm}
-          onChange={(e) => void setTerm(Number(e.target.value))}
+          disabled={busy || terms.length === 0}
+          value={selectValue}
+          onChange={(e) => void setTerm(e.target.value)}
           className="rounded-lg border border-white/15 bg-[#0a101f] px-2 py-1 text-white"
         >
-          {schoolTermOptions().map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label} ({o.ordinal})
+          {terms.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.label}
             </option>
           ))}
         </select>
@@ -123,7 +138,7 @@ export function SchoolContextBar({ onContextChange }: { onContextChange?: (ctx: 
         </select>
       </label>
       <span className="text-xs text-slate-500">
-        {schoolTermLabel(context.activeTerm)}
+        {context.activeTermLabel || "Term"}
         {schoolClassId ? " · class filter" : " · all classes"} applies to lists
         {classes.length === 0 ? " · no classes yet — add them under School structure" : null}
       </span>

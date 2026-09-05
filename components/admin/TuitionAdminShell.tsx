@@ -18,6 +18,7 @@ import { WelcomeBackStrip } from "@/components/profile/WelcomeBackStrip";
 import { adminRoleToProfileRole } from "@/lib/profile-mappers";
 import { DEX_SIDEBAR_NAV, pathnameIsDexHub } from "@/lib/dex-nav";
 import { SchoolContextBar } from "@/components/admin/school/SchoolContextBar";
+import { AdSlot } from "@/components/ads/AdSlot";
 import { adminGuideForTier, AUDIENCE_GUIDES } from "@/lib/audience-guides";
 
 const UNIVERSITY_SEGMENTS: { suffix: string; label: string; schoolOnly?: boolean }[] = [
@@ -43,6 +44,8 @@ const SCHOOL_ERP_SEGMENTS: { suffix: string; label: string }[] = [
   { suffix: "/profile", label: "Profile" },
   { suffix: "/my-card", label: "My OpenPayGB Card" },
   { suffix: "/school-session", label: "Session" },
+  { suffix: "/school-terms", label: "Set Terms" },
+  { suffix: "/school-advertise", label: "Advertise" },
   { suffix: "/school-accounts", label: "Accounts" },
   { suffix: "/school-structure", label: "Class registration" },
   { suffix: "/programmes", label: "Fee programmes" },
@@ -71,10 +74,11 @@ const SCHOOL_ERP_SEGMENTS: { suffix: string; label: string }[] = [
 
 function navActive(pathname: string, href: string): boolean {
   if (href === DEX_SIDEBAR_NAV.href) return pathnameIsDexHub(pathname);
-  if (href.endsWith("/admin") || href.endsWith("/school-admin")) {
-    return pathname === href;
+  const pathOnly = href.split("#")[0] ?? href;
+  if (pathOnly.endsWith("/admin") || pathOnly.endsWith("/school-admin")) {
+    return pathname === pathOnly;
   }
-  return pathname === href || pathname.startsWith(`${href}/`);
+  return pathname === pathOnly || pathname.startsWith(`${pathOnly}/`);
 }
 
 function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
@@ -267,6 +271,15 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
             </p>
           ) : null}
           {children}
+          {showSchoolErp ? (
+            <div className="mt-8 max-w-sm">
+              <AdSlot placement="web_schools_dashboard" hub="schools" />
+            </div>
+          ) : (
+            <div className="mt-8 max-w-sm">
+              <AdSlot placement="web_dashboard_sidebar" hub="tuition" />
+            </div>
+          )}
         </div>
       </div>
     </div>

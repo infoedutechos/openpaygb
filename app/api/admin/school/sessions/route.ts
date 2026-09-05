@@ -83,15 +83,37 @@ export async function PATCH(req: Request) {
     const body = z
       .object({
         organizationSlug: z.string().optional(),
-        activeTerm: z.number().int().min(1).max(3).optional(),
+        activeTerm: z.number().int().min(1).max(99).optional(),
         activeSessionId: z.string().optional(),
       })
       .parse(await req.json());
     const auth = await requireSchoolAdminScope(body.organizationSlug);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-    const data: { activeSchoolTerm?: number; activeSchoolSessionId?: string; currentAcademicYearLabel?: string } = {};
-    if (body.activeTerm !== undefined) data.activeSchoolTerm = normalizeSchoolTerm(body.activeTerm);
+    const data: {
+      activeSchoolTerm?: number;
+      activeSchoolTermId?: string;
+      activeSchoolSessionId?: string;
+      currentAcademicYearLabel?: string;
+    } = {};
+    if (body.activeTerm !== undefined) {
+      const { ensureDefaultSchoolTerms } = await import("@/lib/school-terms");
+      await ensureDefaultSchoolTerms(auth.scope.organizationId);
+      const term = await prisma.schoolTerm.findFirst({
+        where: { organizationId: auth.scope.organizationId, termNumber: body.activeTerm },
+      });
+      if (term) {
+        await prisma.schoolTerm.updateMany({
+          where: { organizationId: auth.scope.organizationId },
+          data: { isActive: false },
+        });
+        await prisma.schoolTerm.update({ where: { id: term.id }, data: { isActive: true } });
+        data.activeSchoolTerm = term.termNumber;
+        data.activeSchoolTermId = term.id;
+      } else {
+        data.activeSchoolTerm = normalizeSchoolTerm(body.activeTerm);
+      }
+    }
     if (body.activeSessionId) {
       const session = await prisma.schoolSession.findFirst({
         where: { id: body.activeSessionId, organizationId: auth.scope.organizationId },

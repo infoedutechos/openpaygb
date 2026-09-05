@@ -11,13 +11,13 @@ enum PaymentRail {
   telegram
   web
   momo_bridge
-  /** Mbiyo rail — MbiyoPay API (OpenPayGB brand at checkout). */
+  /** Mbiyo rail ? MbiyoPay API (OpenPayGB brand at checkout). */
   mbiyo
-  /** LivePay rail — Uganda UGX MTN/Airtel (OpenPayGB brand at checkout). */
+  /** LivePay rail ? Uganda UGX MTN/Airtel (OpenPayGB brand at checkout). */
   livepay
-  /** Relworx rail — East Africa MoMo collect (https://payments.relworx.com/docs/). */
+  /** Relworx rail ? East Africa MoMo collect (https://payments.relworx.com/docs/). */
   relworx
-  /** VixonPay rail — Uganda UGX MoMo collect (https://docs.vixonpay.com/pay). */
+  /** VixonPay rail ? Uganda UGX MoMo collect (https://docs.vixonpay.com/pay). */
   vixonpay
   /** Closed-loop OpenPayGB platform virtual card balance (UGX ledger). */
   openpay_card
@@ -60,7 +60,7 @@ enum InstitutionTier {
   school
 }
 
-/** Nursery / primary / secondary / A-level band for K–12 class rows. */
+/** Nursery / primary / secondary / A-level band for K?12 class rows. */
 enum SchoolLevelKind {
   nursery
   primary
@@ -68,7 +68,7 @@ enum SchoolLevelKind {
   a_level
 }
 
-/** School chart of accounts — income (fee heads) vs expenditure. */
+/** School chart of accounts ? income (fee heads) vs expenditure. */
 enum SchoolAccountKind {
   income
   expenditure
@@ -118,11 +118,11 @@ model Organization {
   tenantStatus               OrganizationTenantStatus   @default(active)
   registrationContactEmail String                     @default("")
   registrationNote           String                     @default("")
-  /** Optional school website — used to fetch favicon on workspace activation. */
+  /** Optional school website ? used to fetch favicon on workspace activation. */
   registrationWebsiteUrl     String                     @default("")
   /** Set when the applicant confirms their registration email (workspace request). */
   registrationEmailVerifiedAt DateTime?
-  /** Higher institutions (university) vs primary/secondary schools — OdelPay product line. */
+  /** Higher institutions (university) vs primary/secondary schools ? OdelPay product line. */
   institutionTier            InstitutionTier            @default(university)
   /** What this workspace is (main campus, branch, affiliate, etc.). */
   unitKind                   OrganizationUnitKind       @default(main_campus)
@@ -137,9 +137,9 @@ model Organization {
   /** Raw favicon.ico (or PNG) bytes; paired with faviconUploadedAt when set via Master or school admin. */
   faviconIco                 Bytes?
   faviconUploadedAt          DateTime?
-  /** Display label for the active academic year (e.g. 2025/2026) — school tenants. */
+  /** Display label for the active academic year (e.g. 2025/2026) ? school tenants. */
   currentAcademicYearLabel   String                     @default("")
-  /** Active term 1–3 for school fee/billing context (global header). */
+  /** Active school term number (synced from SchoolTerm.termNumber when a term is activated). */
   activeSchoolTerm           Int                        @default(1)
   /** Sequential receipt counter for school manual payments (RP-N). */
   schoolReceiptCounter       Int                        @default(0)
@@ -159,7 +159,7 @@ model Organization {
   admissionIncludeYear       Boolean                    @default(true)
   /** calendar = YYYY; academic = digits from currentAcademicYearLabel; none = omit year even if includeYear. */
   admissionYearSource        String                     @default("calendar")
-  /** Zero-padded sequence width (3–6). */
+  /** Zero-padded sequence width (3?6). */
   admissionSeqDigits         Int                        @default(4)
   /** Separator between parts (typically "-"). */
   admissionSeparator         String                     @default("-")
@@ -182,7 +182,7 @@ model Organization {
    * JSON array: `[{ "label": "DOS", "category": "teaching" | "non_teaching" }, ...]`
    */
   staffDuties                Json                       @default("[]")
-  /** School letterhead for receipts — phone / email / address (public-safe). */
+  /** School letterhead for receipts ? phone / email / address (public-safe). */
   letterheadPhone            String                     @default("")
   letterheadEmail            String                     @default("")
   letterheadAddress          String                     @default("")
@@ -192,13 +192,16 @@ model Organization {
   /** Active academic session row (optional; falls back to currentAcademicYearLabel). */
   activeSchoolSessionId      String?                    @db.ObjectId
   activeSchoolSession        SchoolSession?             @relation("ActiveSchoolSession", fields: [activeSchoolSessionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /** Active custom school term row (optional; syncs activeSchoolTerm number). */
+  activeSchoolTermId         String?                    @db.ObjectId
+  activeSchoolTermRow        SchoolTerm?                @relation("ActiveSchoolTerm", fields: [activeSchoolTermId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   /**
    * Fixed UGX added at checkout (processing / platform). **-1** = use deployment env `CHECKOUT_PLATFORM_FEE_UGX`;
-   * **≥ 0** = override for this tenant (UGX, capped server-side).
+   * **? 0** = override for this tenant (UGX, capped server-side).
    */
   /**
    * Processing charge override: **inherit** (use platform default), **fixed_ugx**, or **percent** of subtotal.
-   * Legacy: `checkoutPlatformFeeUgx` ≥ 0 without kind still treated as fixed UGX.
+   * Legacy: `checkoutPlatformFeeUgx` ? 0 without kind still treated as fixed UGX.
    */
   checkoutPlatformFeeKind    String                     @default("inherit")
   checkoutPlatformFeeUgx     Int                        @default(-1)
@@ -228,6 +231,7 @@ model Organization {
   schoolClasses              SchoolClass[]
   schoolStreams              SchoolStream[]
   schoolSessions             SchoolSession[]            @relation("OrgSchoolSessions")
+  schoolTerms                SchoolTerm[]               @relation("OrgSchoolTerms")
   schoolAccounts             SchoolAccount[]
   schoolFundsAppropriations  SchoolFundsAppropriation[]
   schoolStaff                SchoolStaff[]
@@ -297,7 +301,7 @@ model MobileMoneyProvider {
   @@map("mobile_money_providers")
 }
 
-/** Partner / SIS machine-to-machine API keys (Bearer `odelhub_live_…`). */
+/** Partner / SIS machine-to-machine API keys (Bearer `odelhub_live_?`). */
 model PartnerApiKey {
   id             String        @id @default(auto()) @map("_id") @db.ObjectId
   name           String
@@ -367,7 +371,7 @@ model DeveloperApp {
   /** Hex primary color for hosted checkout (e.g. #7c3aed). */
   brandingPrimaryColor String               @default("")
   brandingAccentColor  String               @default("")
-  /** When true, checkout hides OpenPayGB marketing chrome (keeps small “Powered by” unless fully muted). */
+  /** When true, checkout hides OpenPayGB marketing chrome (keeps small ?Powered by? unless fully muted). */
   whiteLabelMode   Boolean                  @default(false)
   /** Set when white-label was first successfully activated (activation fee paid or waived). */
   whiteLabelActivatedAt DateTime?
@@ -400,7 +404,7 @@ model DeveloperApp {
   organization     Organization?            @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   /**
    * Shadow Student id used as OpenPayGB card holder for this integrator app (wallet / MoMo / TON).
-   * Not a tuition enrollee — programmeCode DEVELOPER_CARD.
+   * Not a tuition enrollee ? programmeCode DEVELOPER_CARD.
    */
   openPayStudentId String?                  @db.ObjectId
   apiKeys          PartnerApiKey[]
@@ -547,12 +551,12 @@ model AdminUser {
   telegramId            String                    @default("")
   lastLoginAt           DateTime?
   previousLoginAt       DateTime?
-  /** Optional profile photo (PNG, JPEG, WebP, ICO) — served from /api/auth/admin/profile-image. */
+  /** Optional profile photo (PNG, JPEG, WebP, ICO) ? served from /api/auth/admin/profile-image. */
   profileImage          Bytes?
   profileImageUploadedAt DateTime?
   /**
    * Shadow Student id used as OpenPayGB card holder for this admin (wallet / MoMo / TON).
-   * Not a tuition enrollee — programmeCode ADMIN_CARD.
+   * Not a tuition enrollee ? programmeCode ADMIN_CARD.
    */
   openPayStudentId      String?                   @db.ObjectId
   createdAt             DateTime                  @default(now())
@@ -650,6 +654,29 @@ model SchoolSession {
   @@unique([organizationId, label])
   @@index([organizationId, isActive])
   @@map("school_sessions")
+}
+
+/** Customisable academic terms (e.g. Term 1, June-August) - same UX pattern as SchoolSession. */
+model SchoolTerm {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId String       @db.ObjectId
+  organization   Organization @relation("OrgSchoolTerms", fields: [organizationId], references: [id], onDelete: Cascade)
+  /** Display label - fully customisable. */
+  label          String
+  /**
+   * Numeric code used by fee ledger / bills (legacy Int term). Unique per org.
+   * Defaults to next free integer when created.
+   */
+  termNumber     Int
+  isActive       Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  activeForOrgs  Organization[] @relation("ActiveSchoolTerm")
+
+  @@unique([organizationId, label])
+  @@unique([organizationId, termNumber])
+  @@index([organizationId, isActive])
+  @@map("school_terms")
 }
 
 model SchoolAccount {
@@ -888,7 +915,7 @@ model Programme {
   track            ProgrammeTrack @default(regular)
   /** Explicit completion length. 0 = infer from fee rows for legacy/incomplete programmes. */
   durationYears    Int?
-  /** Semesters per academic year. 0 = infer from fee rows; current checkout supports 1–3. */
+  /** Semesters per academic year. 0 = infer from fee rows; current checkout supports 1?3. */
   semestersPerYear Int?
   fees             ProgrammeFee[]
   createdAt        DateTime       @default(now())
@@ -905,7 +932,7 @@ model ProgrammeFee {
   programmeId       String                  @db.ObjectId
   programme         Programme               @relation(fields: [programmeId], references: [id], onDelete: Cascade)
   year              Int
-  /** 1–3 for `once` and `per_semester`; use 0 for `per_year` (year-level only). */
+  /** 1?3 for `once` and `per_semester`; use 0 for `per_year` (year-level only). */
   semester          Int
   recurrence        ProgrammeFeeRecurrence  @default(per_semester)
   /** Distinguishes multiple lines in the same period (e.g. separate levy rows). */
@@ -929,15 +956,15 @@ model Student {
   address              String       @default("")
   sex                  SchoolStaffSex @default(other)
   telegramId           String       @default("")
-  /** Google account `sub` when the student uses “Continue with Google”; empty otherwise. */
+  /** Google account `sub` when the student uses ?Continue with Google?; empty otherwise. */
   googleSub            String       @default("")
-  /** bcrypt — set by institution admin (or master); required for `/student` portal sign-in. */
+  /** bcrypt ? set by institution admin (or master); required for `/student` portal sign-in. */
   portalPasswordHash   String?
   programmeCode        String
-  /** K–12 class enrollment (school tenants). */
+  /** K?12 class enrollment (school tenants). */
   schoolClassId        String?      @db.ObjectId
   schoolClass          SchoolClass? @relation(fields: [schoolClassId], references: [id], onDelete: SetNull)
-  /** K–12 stream enrollment (school tenants). */
+  /** K?12 stream enrollment (school tenants). */
   schoolStreamId       String?      @db.ObjectId
   schoolStream         SchoolStream? @relation(fields: [schoolStreamId], references: [id], onDelete: SetNull)
   /** Active academic session enrollment. */
@@ -997,7 +1024,7 @@ model OpenPayCard {
 
 /**
  * Network Visa/MC card issued via LivePay or Visa Developer (BIN partner).
- * Never stores PAN/CVV — last4 + provider token only.
+ * Never stores PAN/CVV ? last4 + provider token only.
  */
 model NetworkIssuedCard {
   id               String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -1180,7 +1207,7 @@ model OpgbLedgerEntry {
   amountMinor       Int
   /** deposit_momo | deposit_ton | deposit_card_topup | tuition_pay | withdraw | swap | adjustment */
   kind              String
-  /** Idempotency key — payment id, topup id, transfer id, etc. */
+  /** Idempotency key ? payment id, topup id, transfer id, etc. */
   referenceKey      String     @unique
   sourceRail        String     @default("")
   sourceCurrency    String     @default("UGX")
@@ -1194,7 +1221,7 @@ model OpgbLedgerEntry {
   @@map("opgb_ledger_entries")
 }
 
-/** Custodial AMM swap — OPGB debited; crypto settlement via onramp (Phase 3). */
+/** Custodial AMM swap ? OPGB debited; crypto settlement via onramp (Phase 3). */
 model DexAmmSwap {
   id             String   @id @default(auto()) @map("_id") @db.ObjectId
   studentId      String   @db.ObjectId
@@ -1213,7 +1240,7 @@ model DexAmmSwap {
   @@map("dex_amm_swaps")
 }
 
-/** Fiat → crypto buy queue (settles via onramp / ops). */
+/** Fiat ? crypto buy queue (settles via onramp / ops). */
 model DexBuyOrder {
   id             String    @id @default(auto()) @map("_id") @db.ObjectId
   studentId      String?   @db.ObjectId
@@ -1266,7 +1293,7 @@ model DexP2pOffer {
   @@map("dex_p2p_offers")
 }
 
-/** P2P escrow hold — OPGB locked until release (Phase 3). */
+/** P2P escrow hold ? OPGB locked until release (Phase 3). */
 model DexP2pEscrow {
   id             String         @id @default(auto()) @map("_id") @db.ObjectId
   offerId        String         @db.ObjectId
@@ -1321,7 +1348,7 @@ model StudentSignupToken {
   @@map("student_signup_tokens")
 }
 
-/** Singleton row (`key: platform`) — master-editable public shell settings (footer visibility, copy). */
+/** Singleton row (`key: platform`) ? master-editable public shell settings (footer visibility, copy). */
 model SiteUiSettings {
   id               String   @id @default(auto()) @map("_id") @db.ObjectId
   key              String   @unique @default("platform")
@@ -1337,7 +1364,7 @@ model SiteUiSettings {
   footerCopyrightVisible Boolean @default(true)
   /**
    * Platform default processing charge when orgs inherit: **env** | **fixed_ugx** | **percent**.
-   * Legacy rows without kind: `checkoutPlatformFeeDefaultUgx` ≥ 0 ⇒ fixed, **-1** ⇒ env.
+   * Legacy rows without kind: `checkoutPlatformFeeDefaultUgx` ? 0 ? fixed, **-1** ? env.
    */
   checkoutPlatformFeeDefaultKind    String @default("env")
   checkoutPlatformFeeDefaultUgx     Int    @default(-1)
@@ -1369,26 +1396,26 @@ model SiteUiSettings {
   fxOverrideKind             String   @default("none")
   fxOverrideUgxPerTon        Float?
   fxOverrideBufferPct        Float    @default(0)
-  /** Master-edited social & community links — array of SocialLink objects (see lib/site-ui-settings). */
+  /** Master-edited social & community links ? array of SocialLink objects (see lib/site-ui-settings). */
   socialLinks        Json     @default("[]")
   /** When false, hide global share UI. */
   shareEnabled       Boolean  @default(true)
   shareDefaultTitle  String   @default("ODEL HUB")
-  shareDefaultText   String   @default("Check out ODEL HUB — tuition payments, TON settlement, and our ecosystem hubs.")
+  shareDefaultText   String   @default("Check out ODEL HUB ? tuition payments, TON settlement, and our ecosystem hubs.")
   /** Optional overrides; empty string = use deployment env in lib/site-ui-settings. */
   supportPhone       String   @default("")
   supportEmail       String   @default("")
-  /** WhatsApp community group — shown as “Community Support” in the help panel. */
+  /** WhatsApp community group ? shown as ?Community Support? in the help panel. */
   communitySupportUrl String  @default("")
   showSupportPhone    Boolean @default(true)
   showSupportEmail    Boolean @default(true)
   showCommunitySupport Boolean @default(true)
-  /** PWA / Add to Home Screen — master-editable install prompt on home page. */
+  /** PWA / Add to Home Screen ? master-editable install prompt on home page. */
   homeScreenEnabled       Boolean @default(true)
   homeScreenShowOnHome    Boolean @default(true)
   homeScreenTitle         String  @default("ODEL HUB")
   homeScreenShortName     String  @default("ODEL HUB")
-  homeScreenDescription   String  @default("Tuition, TON payments, Play & Dex — save ODEL HUB to your home screen or desktop.")
+  homeScreenDescription   String  @default("Tuition, TON payments, Play & Dex ? save ODEL HUB to your home screen or desktop.")
   homeScreenThemeColor    String  @default("#0ea5e9")
   /** When true, public Tuition Hub routes show a maintenance screen. */
   tuitionHubMaintenance Boolean @default(false)
@@ -1402,14 +1429,14 @@ model SiteUiSettings {
   playHubHidden         Boolean @default(false)
   /**
    * JSON array of Play Hub launch targets (Telegram game / external / iframe / internal).
-   * Exactly one may have isActive=true — used as primary CTA; others can still be opened from the switcher.
+   * Exactly one may have isActive=true ? used as primary CTA; others can still be opened from the switcher.
    */
   playHubLaunchTargetsJson String @default("[]")
   /** When true, Dex Hub is fully hidden. */
   dexHubHidden          Boolean @default(false)
   /** When true, Developers Hub is fully hidden. */
   developersHubHidden   Boolean @default(false)
-  /** Platform icon/logo (PNG, ICO, JPEG, WebP) — favicon, PWA, share previews. */
+  /** Platform icon/logo (PNG, ICO, JPEG, WebP) ? favicon, PWA, share previews. */
   platformLogo              Bytes?
   platformLogoUploadedAt    DateTime?
   /** Optional image on the floating Help copilot bubble (PNG, JPEG, WebP; square works best). */
@@ -1438,12 +1465,12 @@ model SiteUiSettings {
   guestCardEnabled       Boolean @default(true)
   /** TON charged once to activate the platform virtual card (master-editable). */
   openPayCardIssueFeeTon Float   @default(5)
-  /** Official Telegram channel — shown in Master Admin and synced to the telegram_channel social link. */
+  /** Official Telegram channel ? shown in Master Admin and synced to the telegram_channel social link. */
   telegramOfficialChannelName String @default("")
   telegramOfficialChannelUrl  String @default("")
   /** Numeric channel id for operator reference (e.g. -1003916461172); not used for Mini App sign-in. */
   telegramOfficialChannelId   String @default("")
-  /** Master toggles for built-in payment providers — `{ "livepay": true, "mbiyo": false, ... }`. */
+  /** Master toggles for built-in payment providers ? `{ "livepay": true, "mbiyo": false, ... }`. */
   paymentProviderPolicy       Json   @default("{}")
   /**
    * Canonical demo login directory (master-editable).
@@ -1453,8 +1480,8 @@ model SiteUiSettings {
    */
   demoLoginDirectory          Json   @default("{}")
   /**
-   * When true, demo-directory accounts cannot self-serve change/forgot/reset passwords —
-   * only Master Admin → Demo logins can set them (for community test sharing).
+   * When true, demo-directory accounts cannot self-serve change/forgot/reset passwords ?
+   * only Master Admin ? Demo logins can set them (for community test sharing).
    */
   demoPasswordLock            Boolean @default(true)
   /**
@@ -1616,7 +1643,7 @@ model User {
   // User region (derived from Telegram language_code or set manually)
   region                    String?
 
-  // Uganda district (canonical slug, e.g. kampala); optional — used for district rankings
+  // Uganda district (canonical slug, e.g. kampala); optional ? used for district rankings
   district                  String?
 
   // Admin controls
@@ -1727,14 +1754,14 @@ model Transfer {
   amount             Float
   feeAmount          Float     @default(0)  // Fee charged (ALM) on this transfer; 0 for fee-transfer records
   isFeeTransfer      Boolean   @default(false)  // True when this record is the fee going to treasury
-  isDonation         Boolean   @default(false)  // True when this transfer is a charity donation (donor → Treasury)
+  isDonation         Boolean   @default(false)  // True when this transfer is a charity donation (donor ? Treasury)
   parentTransferId   String?   @db.ObjectId  // Set on fee row: links to the main transfer
   parentTransfer     Transfer? @relation("TransferFee", fields: [parentTransferId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   feeTransfers       Transfer[] @relation("TransferFee")
   createdAt          DateTime  @default(now())
 }
 
-// Treasury credits from upgrades (multitap, mine, energy limit) – transfer fees stay in Transfer
+// Treasury credits from upgrades (multitap, mine, energy limit) ? transfer fees stay in Transfer
 model TreasuryTransaction {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   amount    Float
@@ -1744,7 +1771,7 @@ model TreasuryTransaction {
   createdAt DateTime @default(now())
 }
 
-// Charity donations – points donated for charity (donation center)
+// Charity donations ? points donated for charity (donation center)
 model CharityDonation {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1808,7 +1835,7 @@ model UserTask {
   @@unique([userId, taskId])
 }
 
-/// Admin-published posts shown under “Activities” on the Earn tab (newest first).
+/// Admin-published posts shown under ?Activities? on the Earn tab (newest first).
 model PublishedActivity {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   title       String
@@ -1963,7 +1990,7 @@ model QuizSettings {
   completionBonusPoints    Int      @default(0) // extra ALM when user gets all questions correct
   /// When true, pick a random active set from the pool on scheduled UTC weekdays (see autoRotationWeekdays).
   autoRotationEnabled      Boolean  @default(false)
-  /// Comma-separated JS getUTCDay() values: 0=Sun … 1=Mon … 4=Thu. Default "1,4" = Monday & Thursday.
+  /// Comma-separated JS getUTCDay() values: 0=Sun ? 1=Mon ? 4=Thu. Default "1,4" = Monday & Thursday.
   autoRotationWeekdays     String   @default("1,4")
   /// UTC calendar date (YYYY-MM-DD) of last automated rotation; avoids double-rotating the same day.
   lastAutoRotationUtcDate  String?
@@ -2045,7 +2072,7 @@ model UserWeeklyProgress {
   @@unique([userId, weekKey])
 }
 
-// Leagues – weekly LP per user (reset each week)
+// Leagues ? weekly LP per user (reset each week)
 model UserLeagueWeek {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -2057,7 +2084,7 @@ model UserLeagueWeek {
   @@unique([userId, weekKey])
 }
 
-// Teams – weekly TP per user (reset each week); users in a team earn TP; users in a league also earn LP
+// Teams ? weekly TP per user (reset each week); users in a team earn TP; users in a league also earn LP
 model UserTeamWeek {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -2434,7 +2461,7 @@ model GlobalTaskChallengeSnapshot {
   createdAt   DateTime @default(now())
 }
 
-// Marketplace – P2P sell/buy ALM (points-only now; money coming later)
+// Marketplace ? P2P sell/buy ALM (points-only now; money coming later)
 model MarketplaceListing {
   id             String   @id @default(auto()) @map("_id") @db.ObjectId
   seller         User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
@@ -2465,7 +2492,7 @@ model MarketplaceTrade {
   createdAt      DateTime @default(now())
 }
 
-// Shop (Match 2 Earn) – product marketplace: users list products, sell for ALM, admin verifies
+// Shop (Match 2 Earn) ? product marketplace: users list products, sell for ALM, admin verifies
 model ShopProduct {
   id             String   @id @default(auto()) @map("_id") @db.ObjectId
   seller         User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
@@ -2661,7 +2688,7 @@ model TvProgramComment {
   @@index([programId])
 }
 
-/// URA FC fixtures — mirrors club schedule for in-app display ([URA FC official site](https://urafc.co.ug/)).
+/// URA FC fixtures ? mirrors club schedule for in-app display ([URA FC official site](https://urafc.co.ug/)).
 model UraFcMatch {
   id           String   @id @default(auto()) @map("_id") @db.ObjectId
   homeTeam     String
@@ -2681,7 +2708,7 @@ model UraFcMatch {
   updatedAt    DateTime @updatedAt
 }
 
-/** Extensible knowledge base — powers KB search and the zero-API-cost copilot. */
+/** Extensible knowledge base ? powers KB search and the zero-API-cost copilot. */
 model KnowledgeArticle {
   id        String           @id @default(auto()) @map("_id") @db.ObjectId
   slug      String           @unique
@@ -2701,7 +2728,7 @@ model KnowledgeArticle {
   @@map("knowledge_articles")
 }
 
-/** Copilot queries — auto-promoted to articles; pending = too short or not yet learned. */
+/** Copilot queries ? auto-promoted to articles; pending = too short or not yet learned. */
 model KnowledgeLearningGap {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
   queryNorm     String   @unique
@@ -2805,7 +2832,7 @@ model SiteVisitGeoDay {
 
 /**
  * First-seen visitor keys per UTC day (for unique counting).
- * visitorKey is SHA-256 of the anonymous cookie — raw IP addresses are never stored.
+ * visitorKey is SHA-256 of the anonymous cookie ? raw IP addresses are never stored.
  */
 model SiteVisitSeen {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -2867,7 +2894,7 @@ model SiteVisitActionDay {
 
 /**
  * Individual anonymized actions (recent window for MAC drill-down).
- * visitorKey is hashed — raw IPs never stored. Pruned after ~14 days.
+ * visitorKey is hashed ? raw IPs never stored. Pruned after ~14 days.
  */
 model SiteVisitActionEvent {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -2880,4 +2907,192 @@ model SiteVisitActionEvent {
   @@index([day, path])
   @@index([createdAt])
   @@map("site_visit_action_events")
+}
+
+// ---------------------------------------------------------------------------
+// Ads platform (Phase 1+) ? campaigns, creatives, placements, targeting,
+// approval, OpenPayGB spend hooks, analytics events. See docs/platform/ADS_PLATFORM_PLAN.md
+// ---------------------------------------------------------------------------
+
+enum AdAdvertiserKind {
+  master
+  organization
+  user
+  partner
+  staff
+}
+
+enum AdCampaignStatus {
+  draft
+  pending_review
+  approved
+  rejected
+  scheduled
+  active
+  paused
+  completed
+  cancelled
+}
+
+enum AdPlacementSurface {
+  web_dashboard
+  web_hub
+  telegram_bot
+  telegram_channel
+  telegram_mini_app
+}
+
+enum AdCreativeFormat {
+  text
+  image
+  video
+  carousel
+}
+
+/** Singleton-ish platform ads config (key = platform). */
+model AdPlatformSettings {
+  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
+  key                   String   @unique @default("platform")
+  enabled               Boolean  @default(true)
+  autoApproveTrusted    Boolean  @default(false)
+  requireMasterApproval Boolean  @default(true)
+  /** Platform fee bps on ad spend (100 = 1%). */
+  platformFeeBps        Int      @default(500)
+  /** Minimum campaign budget in UGX minor (1 = 1 UGX). */
+  minBudgetMinor        Int      @default(5000)
+  defaultDailyCapMinor  Int      @default(50000)
+  telegramDeliveryEnabled Boolean @default(true)
+  webDeliveryEnabled    Boolean  @default(true)
+  updatedAt             DateTime @updatedAt
+  createdAt             DateTime @default(now())
+
+  @@map("ad_platform_settings")
+}
+
+/** Inventory slot where creatives can render. */
+model AdPlacement {
+  id          String             @id @default(auto()) @map("_id") @db.ObjectId
+  code        String             @unique
+  title       String
+  description String             @default("")
+  surface     AdPlacementSurface
+  /** Optional hub filter: all | tuition | play | admin | dex | schools | opgb */
+  hub         String             @default("all")
+  maxPerDay   Int                @default(20)
+  isActive    Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  campaigns   AdCampaign[]
+
+  @@index([surface, isActive])
+  @@map("ad_placements")
+}
+
+model AdCreative {
+  id           String           @id @default(auto()) @map("_id") @db.ObjectId
+  advertiserKind AdAdvertiserKind @default(master)
+  /** organizationId | userId | partnerId | adminUserId depending on kind */
+  advertiserId String           @default("")
+  organizationId String?        @db.ObjectId
+  title        String
+  body         String           @default("")
+  format       AdCreativeFormat @default(text)
+  imageUrl     String?
+  videoUrl     String?
+  ctaLabel     String           @default("Learn more")
+  ctaHref      String           @default("")
+  isActive     Boolean          @default(true)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  campaigns    AdCampaign[]
+
+  @@index([advertiserKind, advertiserId])
+  @@index([organizationId])
+  @@map("ad_creatives")
+}
+
+model AdCampaign {
+  id              String           @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  status          AdCampaignStatus @default(draft)
+  advertiserKind  AdAdvertiserKind @default(master)
+  advertiserId    String           @default("")
+  organizationId  String?          @db.ObjectId
+  /** Student wallet charged for OpenPayGB ad spend (required for live debit). */
+  billingStudentId String?         @db.ObjectId
+  creativeId      String           @db.ObjectId
+  creative        AdCreative       @relation(fields: [creativeId], references: [id], onDelete: Cascade)
+  placementId     String           @db.ObjectId
+  placement       AdPlacement      @relation(fields: [placementId], references: [id])
+  /** Multi-dimensional targeting JSON: roles, hubs, orgIds, geo, tiers, telegram, etc. */
+  targetingJson   String           @default("{}")
+  budgetMinor     Int              @default(0)
+  dailyCapMinor   Int              @default(0)
+  spentMinor      Int              @default(0)
+  /** UTC day key YYYY-MM-DD for dailyCap rollup. */
+  spentTodayDay   String           @default("")
+  spentTodayMinor Int              @default(0)
+  startsAt        DateTime?
+  endsAt          DateTime?
+  approvedAt      DateTime?
+  approvedById    String?
+  rejectedReason  String           @default("")
+  notificationId  String?          @db.ObjectId
+  impressions     Int              @default(0)
+  clicks          Int              @default(0)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  events          AdDeliveryEvent[]
+  spendEntries    AdSpendEntry[]
+
+  @@index([status, startsAt])
+  @@index([advertiserKind, advertiserId])
+  @@index([organizationId])
+  @@index([placementId, status])
+  @@map("ad_campaigns")
+}
+
+model AdSpendEntry {
+  id             String     @id @default(auto()) @map("_id") @db.ObjectId
+  campaignId     String     @db.ObjectId
+  campaign       AdCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  amountMinor    Int
+  platformFeeMinor Int      @default(0)
+  /** Idempotency ? also used as OpgbLedgerEntry.referenceKey when billed */
+  referenceKey   String     @unique
+  ledgerKind     String     @default("ad_spend")
+  memo           String     @default("")
+  createdAt      DateTime   @default(now())
+
+  @@index([campaignId, createdAt])
+  @@map("ad_spend_entries")
+}
+
+model AdDeliveryEvent {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  campaignId   String   @db.ObjectId
+  campaign     AdCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  /** impression | click | telegram_sent | telegram_failed | serve */
+  kind         String
+  surface      AdPlacementSurface?
+  viewerKey    String   @default("")
+  metaJson     String   @default("{}")
+  createdAt    DateTime @default(now())
+
+  @@index([campaignId, kind, createdAt])
+  @@index([createdAt])
+  @@map("ad_delivery_events")
+}
+
+model AdModerationEvent {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  campaignId String   @db.ObjectId
+  actorId    String   @default("")
+  /** submit | approve | reject | pause | resume | cancel */
+  action     String
+  note       String   @default("")
+  createdAt  DateTime @default(now())
+
+  @@index([campaignId, createdAt])
+  @@map("ad_moderation_events")
 }

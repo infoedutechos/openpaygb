@@ -15,6 +15,8 @@ export const PARTNER_SCOPES = [
   "charges:read",
   "payouts:create",
   "payouts:read",
+  "ads:read",
+  "ads:write",
 ] as const;
 
 export type PartnerScope = (typeof PARTNER_SCOPES)[number];

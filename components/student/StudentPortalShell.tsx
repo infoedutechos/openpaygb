@@ -40,6 +40,7 @@ const NAV: { href: string; label: string }[] = [
   { href: "/my/receipts", label: "Receipts & history" },
   { href: "/student/pay", label: "Pay tuition" },
   { href: "/student/card", label: "OpenPayGB Card" },
+  { href: "/my/advertise", label: "Advertise" },
   DEX_SIDEBAR_NAV,
   { href: "/student", label: "Student home" },
   { href: "/", label: "Lobby" },
