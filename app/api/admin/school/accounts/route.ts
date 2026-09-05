@@ -10,6 +10,7 @@ const CreateBody = z.object({
   organizationSlug: z.string().optional(),
   name: z.string().min(1).max(120),
   kind: z.nativeEnum(SchoolAccountKind).optional(),
+  defaultAmountUgx: z.number().int().min(0).optional(),
 });
 
 export async function GET(req: Request) {
@@ -41,6 +42,7 @@ export async function GET(req: Request) {
         id: a.id,
         name: a.name,
         kind: a.kind,
+        defaultAmountUgx: a.defaultAmountUgx ?? 0,
         sortOrder: a.sortOrder,
         enabled: a.enabled,
       })),
@@ -61,10 +63,18 @@ export async function POST(req: Request) {
         organizationId: auth.scope.organizationId,
         name: body.name.trim(),
         kind: body.kind ?? SchoolAccountKind.income,
+        defaultAmountUgx: body.defaultAmountUgx ?? 0,
       },
     });
 
-    return NextResponse.json({ account: { id: account.id, name: account.name, kind: account.kind } });
+    return NextResponse.json({
+      account: {
+        id: account.id,
+        name: account.name,
+        kind: account.kind,
+        defaultAmountUgx: account.defaultAmountUgx,
+      },
+    });
   } catch (e) {
     return apiErrorResponse(e, { route: "POST /api/admin/school/accounts" });
   }

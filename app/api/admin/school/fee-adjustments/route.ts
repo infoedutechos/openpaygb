@@ -86,7 +86,7 @@ export async function GET(req: Request) {
     const accounts = await prisma.schoolAccount.findMany({
       where: { organizationId: auth.scope.organizationId, kind: "income", enabled: true },
       orderBy: { sortOrder: "asc" },
-      select: { id: true, name: true, sortOrder: true },
+      select: { id: true, name: true, sortOrder: true, defaultAmountUgx: true },
     });
 
     const recommended = [FEE_LEDGER_TUITION_ACCOUNT, ...FEE_LEDGER_EXTRA_INCOME_ACCOUNTS];

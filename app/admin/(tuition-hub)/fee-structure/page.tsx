@@ -5,7 +5,7 @@ import Link from "next/link";
 import { formatUgx } from "@/components/admin/school/SchoolContextBar";
 import { useSchoolAdminApi } from "@/hooks/useSchoolAdminApi";
 
-type Account = { id: string; name: string; sortOrder: number };
+type Account = { id: string; name: string; sortOrder: number; defaultAmountUgx?: number };
 
 function FeeStructureInner() {
   const { schoolFetch, needsOrgSlug, hrefWithOrgSlug, organizationSlug } = useSchoolAdminApi();
@@ -14,7 +14,10 @@ function FeeStructureInner() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
+  const [newAmount, setNewAmount] = useState("");
   const [busy, setBusy] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editAmount, setEditAmount] = useState("");
 
   const load = useCallback(async () => {
     if (needsOrgSlug) return;
@@ -33,9 +36,10 @@ function FeeStructureInner() {
     void load();
   }, [load]);
 
-  async function addHead(name: string) {
+  async function addHead(name: string, amountUgx = 0) {
     setBusy(true);
     setMessage(null);
+    setError(null);
     try {
       const r = await schoolFetch("/api/admin/school/accounts", {
         method: "POST",
@@ -43,16 +47,39 @@ function FeeStructureInner() {
         body: JSON.stringify({
           name: name.trim().toUpperCase(),
           kind: "income",
+          defaultAmountUgx: amountUgx,
           organizationSlug,
         }),
       });
       const j = (await r.json()) as { error?: string };
       if (!r.ok) throw new Error(j.error ?? "Could not create fee head");
-      setMessage(`Added ${name.trim().toUpperCase()}`);
+      setMessage(`Added ${name.trim().toUpperCase()}${amountUgx > 0 ? ` (${formatUgx(amountUgx)})` : ""}`);
       setNewName("");
+      setNewAmount("");
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Create failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveAmount(id: string, amountUgx: number) {
+    setBusy(true);
+    setError(null);
+    try {
+      const r = await schoolFetch(`/api/admin/school/accounts/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ defaultAmountUgx: amountUgx, organizationSlug }),
+      });
+      const j = (await r.json()) as { error?: string };
+      if (!r.ok) throw new Error(j.error ?? "Could not update amount");
+      setEditingId(null);
+      setMessage("Amount saved — Assign bill will use this as the default.");
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Update failed");
     } finally {
       setBusy(false);
     }
@@ -63,11 +90,11 @@ function FeeStructureInner() {
       <div>
         <h1 className="text-2xl font-semibold text-white">Fee structure</h1>
         <p className="text-sm text-slate-400">
-          Income fee heads (Tuition, Feeding, Qur&apos;an Memorisation, …). Assign amounts per class under{" "}
+          Define income fee heads and their default amounts. Then bill students under{" "}
           <Link href={hrefWithOrgSlug("/admin/students")} className="text-cyan-300 hover:underline">
             Students / bills
-          </Link>
-          .
+          </Link>{" "}
+          — amount autofills from here (you can still change it per bill).
         </p>
       </div>
       {needsOrgSlug ? <p className="text-sm text-amber-300">Select a school organization first.</p> : null}
@@ -76,6 +103,7 @@ function FeeStructureInner() {
 
       <section className="rounded-2xl border border-white/10 bg-[#0a101f] p-5">
         <h2 className="text-sm font-semibold text-white">Recommended heads</h2>
+        <p className="mt-1 text-xs text-slate-500">Adds the head; set the amount in the table below.</p>
         <div className="mt-3 flex flex-wrap gap-2">
           {recommended.map((name) => {
             const exists = accounts.some((a) => a.name === name);
@@ -105,12 +133,22 @@ function FeeStructureInner() {
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             placeholder="e.g. EXAM FEE"
-            className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white"
+            className="min-w-[160px] flex-1 rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white"
+          />
+          <input
+            type="number"
+            min={0}
+            value={newAmount}
+            onChange={(e) => setNewAmount(e.target.value)}
+            placeholder="Amount UGX"
+            className="w-40 rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white"
           />
           <button
             type="button"
             disabled={busy || !newName.trim()}
-            onClick={() => void addHead(newName)}
+            onClick={() =>
+              void addHead(newName, Math.max(0, parseInt(newAmount.replace(/[^\d]/g, ""), 10) || 0))
+            }
             className="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
           >
             Add
@@ -123,14 +161,69 @@ function FeeStructureInner() {
           <thead className="bg-[#0a101f] text-xs uppercase text-slate-400">
             <tr>
               <th className="px-3 py-2">Fee head</th>
+              <th className="px-3 py-2">Default amount</th>
               <th className="px-3 py-2">Order</th>
+              <th className="px-3 py-2" />
             </tr>
           </thead>
           <tbody>
             {accounts.map((a) => (
               <tr key={a.id} className="border-t border-white/5 text-slate-200">
                 <td className="px-3 py-2 font-medium">{a.name}</td>
+                <td className="px-3 py-2">
+                  {editingId === a.id ? (
+                    <input
+                      type="number"
+                      min={0}
+                      autoFocus
+                      value={editAmount}
+                      onChange={(e) => setEditAmount(e.target.value)}
+                      className="w-36 rounded-lg border border-white/15 bg-black/30 px-2 py-1 text-white"
+                    />
+                  ) : (
+                    <span className={a.defaultAmountUgx ? "text-white" : "text-slate-500"}>
+                      {a.defaultAmountUgx ? formatUgx(a.defaultAmountUgx) : "— set amount"}
+                    </span>
+                  )}
+                </td>
                 <td className="px-3 py-2 text-slate-500">{a.sortOrder}</td>
+                <td className="px-3 py-2 text-right">
+                  {editingId === a.id ? (
+                    <div className="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() =>
+                          void saveAmount(
+                            a.id,
+                            Math.max(0, parseInt(editAmount.replace(/[^\d]/g, ""), 10) || 0),
+                          )
+                        }
+                        className="text-xs font-semibold text-emerald-300 hover:underline"
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingId(null)}
+                        className="text-xs text-slate-400 hover:underline"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingId(a.id);
+                        setEditAmount(a.defaultAmountUgx ? String(a.defaultAmountUgx) : "");
+                      }}
+                      className="text-xs font-semibold text-cyan-300 hover:underline"
+                    >
+                      Edit amount
+                    </button>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -138,8 +231,9 @@ function FeeStructureInner() {
       </div>
 
       <p className="text-xs text-slate-500">
-        Tip: After heads exist, use bulk bills or fee ledger import. Discounts/scholarships/waivers: Fee ledger → Adjust.
-        Manage all accounts at{" "}
+        Tip: You do <strong className="text-slate-400">not</strong> need an “Add fee item” on Assign bill — pick the
+        fee head (amount fills from here), then Assign. For another head, Assign bill again. Discounts: Fee ledger →
+        Adjust. All accounts:{" "}
         <Link href={hrefWithOrgSlug("/admin/school-accounts")} className="text-cyan-300 hover:underline">
           Accounts
         </Link>

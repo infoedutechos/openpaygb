@@ -10,9 +10,14 @@ export async function PATCH(req: Request, { params }: Params) {
   try {
     const { id } = await params;
     const body = z
-      .object({ name: z.string().min(1).max(120).optional(), enabled: z.boolean().optional() })
+      .object({
+        organizationSlug: z.string().optional(),
+        name: z.string().min(1).max(120).optional(),
+        enabled: z.boolean().optional(),
+        defaultAmountUgx: z.number().int().min(0).optional(),
+      })
       .parse(await req.json());
-    const auth = await requireSchoolAdminScope();
+    const auth = await requireSchoolAdminScope(body.organizationSlug);
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const updated = await prisma.schoolAccount.updateMany({
@@ -20,6 +25,7 @@ export async function PATCH(req: Request, { params }: Params) {
       data: {
         ...(body.name ? { name: body.name.trim() } : {}),
         ...(body.enabled !== undefined ? { enabled: body.enabled } : {}),
+        ...(body.defaultAmountUgx !== undefined ? { defaultAmountUgx: body.defaultAmountUgx } : {}),
       },
     });
     if (updated.count === 0) return NextResponse.json({ error: "Account not found" }, { status: 404 });

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { formatUgx } from "@/components/admin/school/SchoolContextBar";
 import { useSchoolAdminApi } from "@/hooks/useSchoolAdminApi";
 
-type Account = { id: string; name: string };
+type Account = { id: string; name: string; defaultAmountUgx?: number };
 
 type Props = {
   studentId: string;
@@ -104,13 +104,21 @@ export function SchoolBillStudentModal({ studentId, studentName, open, onClose, 
           </label>
           <select
             value={accountId}
-            onChange={(e) => setAccountId(e.target.value)}
+            onChange={(e) => {
+              const id = e.target.value;
+              setAccountId(id);
+              const acc = accounts.find((a) => a.id === id);
+              if (acc?.defaultAmountUgx && acc.defaultAmountUgx > 0) {
+                setAmountUgx(acc.defaultAmountUgx);
+              }
+            }}
             className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white"
           >
             <option value="">Income account (fee head)</option>
             {accounts.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.name}
+                {a.defaultAmountUgx ? ` — ${formatUgx(a.defaultAmountUgx)}` : ""}
               </option>
             ))}
           </select>
