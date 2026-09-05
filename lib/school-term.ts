@@ -1,7 +1,7 @@
-/** School term helpers — Term 1–3 (maps reference app FIRST/SECOND/THIRD). */
+/** School term helpers — supports custom Set Terms (termNumber 1–99). */
 
 export const SCHOOL_TERM_MIN = 1;
-export const SCHOOL_TERM_MAX = 3;
+export const SCHOOL_TERM_MAX = 99;
 
 export function normalizeSchoolTerm(value: number | string | null | undefined): number {
   const n = typeof value === "string" ? parseInt(value, 10) : value ?? 1;
@@ -19,7 +19,8 @@ export function schoolTermOrdinal(term: number): string {
   const t = normalizeSchoolTerm(term);
   if (t === 1) return "FIRST";
   if (t === 2) return "SECOND";
-  return "THIRD";
+  if (t === 3) return "THIRD";
+  return `TERM ${t}`;
 }
 
 export function schoolTermOptions(): { value: number; label: string; ordinal: string }[] {

@@ -9,7 +9,7 @@ import { normalizeSchoolTerm } from "@/lib/school-term";
 const AdjustBody = z.object({
   organizationSlug: z.string().optional(),
   studentId: z.string().min(1),
-  term: z.number().int().min(1).max(3),
+  term: z.number().int().min(1).max(99),
   amountUgx: z.number().int().min(0),
   kind: z.enum(["discount", "scholarship", "waiver"]),
   note: z.string().max(200).optional(),

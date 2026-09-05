@@ -7,15 +7,23 @@ import { normalizeSchoolTerm } from "@/lib/school-term";
 import { schoolSessionWhere } from "@/lib/school-session-scope";
 import { excludeNonTuitionCardHoldersWhere } from "@/lib/admin-openpay-holder";
 import { isValidObjectId } from "@/lib/object-id";
+import {
+  isSchoolBillingRound,
+  schoolBillingRoundLabel,
+  termsForBillingRound,
+  type SchoolBillingRound,
+} from "@/lib/school-billing-rounds";
+import { ensureDefaultSchoolTerms } from "@/lib/school-terms";
 
 const BulkBillBody = z.object({
   organizationSlug: z.string().optional().nullable(),
-  term: z.coerce.number().int().min(1).max(3),
+  term: z.coerce.number().int().min(1).max(99),
   schoolAccountId: z.string().min(1),
   amountUgx: z.coerce.number().int().min(0),
   classId: z.string().optional().nullable(),
   studentIds: z.array(z.string()).optional(),
   notes: z.string().optional().nullable(),
+  billingRound: z.enum(["once", "per_term", "per_session"]).optional().default("once"),
 });
 
 export async function GET(req: Request) {
@@ -53,6 +61,8 @@ export async function GET(req: Request) {
         amountUgx: c.amountUgx,
         term: c.term,
         notes: c.notes,
+        billingRound: (c as { billingRound?: string }).billingRound ?? "once",
+        billingRoundLabel: schoolBillingRoundLabel((c as { billingRound?: string }).billingRound),
       })),
     });
   } catch (e) {
@@ -81,7 +91,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid classId" }, { status: 400 });
     }
 
-    const term = normalizeSchoolTerm(body.term);
+    const billingRound: SchoolBillingRound = isSchoolBillingRound(body.billingRound)
+      ? body.billingRound
+      : "once";
+    const primaryTerm = normalizeSchoolTerm(body.term);
+
+    await ensureDefaultSchoolTerms(auth.scope.organizationId);
+    const termRows = await prisma.schoolTerm.findMany({
+      where: { organizationId: auth.scope.organizationId },
+      select: { termNumber: true },
+      orderBy: { termNumber: "asc" },
+    });
+    const targetTerms = termsForBillingRound(
+      billingRound,
+      primaryTerm,
+      termRows.map((t) => t.termNumber),
+    );
+
     const account = await prisma.schoolAccount.findFirst({
       where: {
         id: body.schoolAccountId,
@@ -120,38 +146,51 @@ export async function POST(req: Request) {
           )?.id ?? null
         : null;
 
-    const notes = body.notes?.trim() ?? "";
+    const baseNotes = body.notes?.trim() ?? "";
+    const roundTag = schoolBillingRoundLabel(billingRound);
+    const notes = baseNotes || `Set rounds: ${roundTag}`;
+
+    let chargeCount = 0;
     for (const studentId of studentIds) {
-      const existing = await prisma.studentBillCharge.findFirst({
-        where: {
-          organizationId: auth.scope.organizationId,
-          studentId,
-          schoolAccountId: body.schoolAccountId,
-          term,
-        },
-        select: { id: true },
-      });
-      if (existing) {
-        await prisma.studentBillCharge.update({
-          where: { id: existing.id },
-          data: { amountUgx: body.amountUgx, notes },
-        });
-      } else {
-        await prisma.studentBillCharge.create({
-          data: {
+      for (const term of targetTerms) {
+        const existing = await prisma.studentBillCharge.findFirst({
+          where: {
             organizationId: auth.scope.organizationId,
             studentId,
             schoolAccountId: body.schoolAccountId,
-            sessionId,
             term,
-            amountUgx: body.amountUgx,
-            notes,
           },
+          select: { id: true },
         });
+        if (existing) {
+          await prisma.studentBillCharge.update({
+            where: { id: existing.id },
+            data: { amountUgx: body.amountUgx, notes, billingRound },
+          });
+        } else {
+          await prisma.studentBillCharge.create({
+            data: {
+              organizationId: auth.scope.organizationId,
+              studentId,
+              schoolAccountId: body.schoolAccountId,
+              sessionId,
+              term,
+              amountUgx: body.amountUgx,
+              notes,
+              billingRound,
+            },
+          });
+        }
+        chargeCount++;
       }
     }
 
-    return NextResponse.json({ created: studentIds.length });
+    return NextResponse.json({
+      created: studentIds.length,
+      charges: chargeCount,
+      terms: targetTerms,
+      billingRound,
+    });
   } catch (e) {
     return apiErrorResponse(e, { route: "POST /api/admin/school/bills" });
   }

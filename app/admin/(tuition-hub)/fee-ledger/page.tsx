@@ -4,6 +4,7 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { formatUgx } from "@/components/admin/school/SchoolContextBar";
+import { SchoolTermSelect } from "@/components/admin/school/SchoolTermSelect";
 import { useSchoolAdminApi } from "@/hooks/useSchoolAdminApi";
 
 type LedgerRow = {
@@ -248,18 +249,7 @@ function FeeLedgerInner() {
       ) : null}
 
       <div className="flex flex-wrap items-end gap-3">
-        <label className="text-sm text-slate-300">
-          Term
-          <select
-            value={term}
-            onChange={(e) => setTerm(Number(e.target.value))}
-            className="ml-2 rounded-lg border border-white/15 bg-[#0a101f] px-3 py-2 text-white"
-          >
-            <option value={1}>Term 1</option>
-            <option value={2}>Term 2 (Jun–Aug)</option>
-            <option value={3}>Term 3 (Jul–Sept)</option>
-          </select>
-        </label>
+        <SchoolTermSelect value={term} onChange={(n) => setTerm(n)} />
         <label className="text-sm text-slate-300">
           Search
           <input

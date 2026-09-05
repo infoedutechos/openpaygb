@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { SchoolModalHeader } from "@/components/admin/school/SchoolModalHeader";
 import { useSchoolAdminApi } from "@/hooks/useSchoolAdminApi";
 
 type ClassOption = {
@@ -119,7 +120,7 @@ export function SchoolStudentEditModal({ studentId, open, onClose, onSaved }: Pr
           })();
         }}
       >
-        <h2 className="text-lg font-semibold text-white">Edit student</h2>
+        <SchoolModalHeader onBack={onClose} title="Edit student" />
         {loading ? <p className="mt-3 text-sm text-slate-400">Loading…</p> : null}
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
           <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Name" className="rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-white sm:col-span-2" />

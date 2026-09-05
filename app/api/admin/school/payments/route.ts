@@ -8,7 +8,7 @@ import { normalizeSchoolTerm } from "@/lib/school-term";
 const Body = z.object({
   organizationSlug: z.string().optional(),
   studentId: z.string().min(1),
-  term: z.number().int().min(1).max(3),
+  term: z.number().int().min(1).max(99),
   amountUgx: z.number().int().min(1),
   paymentMode: z.enum(["CASH", "MOBILE TRANSFER"]),
   notes: z.string().optional(),

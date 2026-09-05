@@ -3,7 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { formatUgx } from "@/components/admin/school/SchoolContextBar";
+import { SchoolModalHeader } from "@/components/admin/school/SchoolModalHeader";
+import { SchoolTermSelect } from "@/components/admin/school/SchoolTermSelect";
 import { useSchoolAdminApi } from "@/hooks/useSchoolAdminApi";
+import { schoolTermLabel } from "@/lib/school-term";
 
 type Charge = {
   id: string;
@@ -31,6 +34,8 @@ type Props = {
 export function SchoolPayBillModal({ studentId, studentName, open, onClose, onPaid }: Props) {
   const { schoolFetch, organizationSlug, hrefWithOrgSlug } = useSchoolAdminApi();
   const [term, setTerm] = useState(1);
+  const [termLabel, setTermLabel] = useState("Term 1");
+  const [termReady, setTermReady] = useState(false);
   const [charges, setCharges] = useState<Charge[]>([]);
   const [ledger, setLedger] = useState<LedgerSnapshot | null>(null);
   const [loading, setLoading] = useState(false);
@@ -45,13 +50,48 @@ export function SchoolPayBillModal({ studentId, studentName, open, onClose, onPa
     `/admin/fee-ledger?studentId=${encodeURIComponent(studentId)}&term=${term}&returnPay=1&studentName=${encodeURIComponent(studentName)}`,
   );
 
-  const load = useCallback(async () => {
-    if (!open || !studentId) return;
+  useEffect(() => {
+    if (!open) return;
+    setReceiptNo(null);
+    setError(null);
+    setTermReady(false);
+    setAmountUgx(0);
+    void (async () => {
+      const [sessR, termsR] = await Promise.all([
+        schoolFetch("/api/admin/school/sessions"),
+        schoolFetch("/api/admin/school/terms"),
+      ]);
+      let nextTerm = 1;
+      let nextLabel = "Term 1";
+      if (sessR.ok) {
+        const j = (await sessR.json()) as {
+          context?: { activeTerm?: number; activeTermLabel?: string };
+        };
+        if (j.context?.activeTerm) nextTerm = j.context.activeTerm;
+        if (j.context?.activeTermLabel) nextLabel = j.context.activeTermLabel;
+      }
+      if (termsR.ok) {
+        const j = (await termsR.json()) as {
+          terms?: { termNumber: number; label: string; isActive: boolean }[];
+          context?: { activeTerm?: number; activeTermLabel?: string };
+        };
+        if (j.context?.activeTerm) nextTerm = j.context.activeTerm;
+        if (j.context?.activeTermLabel) nextLabel = j.context.activeTermLabel;
+        const match = j.terms?.find((t) => t.termNumber === nextTerm);
+        if (match?.label) nextLabel = match.label;
+      }
+      setTerm(nextTerm);
+      setTermLabel(nextLabel || schoolTermLabel(nextTerm));
+      setTermReady(true);
+    })();
+  }, [open, schoolFetch]);
+
+  const loadCharges = useCallback(async () => {
+    if (!open || !studentId || !termReady) return;
     setLoading(true);
     try {
-      const [billR, sessR, ledgerR] = await Promise.all([
+      const [billR, ledgerR] = await Promise.all([
         schoolFetch("/api/admin/school/bills", undefined, { studentId, term }),
-        schoolFetch("/api/admin/school/sessions"),
         schoolFetch("/api/admin/school/fee-ledger", undefined, { studentId, term }),
       ]);
       if (billR.ok) {
@@ -60,10 +100,6 @@ export function SchoolPayBillModal({ studentId, studentName, open, onClose, onPa
         setCharges(list);
         const total = list.reduce((s, c) => s + c.amountUgx, 0);
         if (total > 0) setAmountUgx(total);
-      }
-      if (sessR.ok) {
-        const j = (await sessR.json()) as { context?: { activeTerm?: number } };
-        if (j.context?.activeTerm) setTerm(j.context.activeTerm);
       }
       if (ledgerR.ok) {
         const j = (await ledgerR.json()) as { row?: LedgerSnapshot };
@@ -77,15 +113,11 @@ export function SchoolPayBillModal({ studentId, studentName, open, onClose, onPa
     } finally {
       setLoading(false);
     }
-  }, [open, studentId, term, schoolFetch]);
+  }, [open, studentId, term, termReady, schoolFetch]);
 
   useEffect(() => {
-    if (open) {
-      setReceiptNo(null);
-      setError(null);
-      void load();
-    }
-  }, [open, load]);
+    void loadCharges();
+  }, [loadCharges]);
 
   async function submitPayment() {
     if (amountUgx <= 0) {
@@ -118,19 +150,15 @@ export function SchoolPayBillModal({ studentId, studentName, open, onClose, onPa
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/10 bg-[#0a101f] p-5 shadow-xl">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold text-white">{studentName} — Pay bill</h2>
-            <p className="text-sm text-slate-400">Record cash or mobile transfer receipt for Term {term}.</p>
-          </div>
-          <button type="button" onClick={onClose} className="text-slate-400 hover:text-white">
-            ✕
-          </button>
-        </div>
+        <SchoolModalHeader
+          onBack={onClose}
+          title={`${studentName} — Pay bill`}
+          subtitle={`Record cash or mobile transfer receipt for ${termLabel}.`}
+        />
 
         {receiptNo ? (
           <div className="mt-4 space-y-3 rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-4">
-            <p className="text-emerald-300 font-semibold">Payment recorded — {receiptNo}</p>
+            <p className="font-semibold text-emerald-300">Payment recorded — {receiptNo}</p>
             <p className="text-sm text-slate-300">
               {formatUgx(amountUgx)} via {paymentMode}
             </p>
@@ -155,18 +183,14 @@ export function SchoolPayBillModal({ studentId, studentName, open, onClose, onPa
           </div>
         ) : (
           <>
-            <label className="mt-4 flex items-center gap-2 text-sm text-slate-300">
-              Term
-              <select
-                value={term}
-                onChange={(e) => setTerm(Number(e.target.value))}
-                className="rounded-lg border border-white/15 bg-black/30 px-2 py-1 text-white"
-              >
-                <option value={1}>Term 1</option>
-                <option value={2}>Term 2</option>
-                <option value={3}>Term 3</option>
-              </select>
-            </label>
+            <SchoolTermSelect
+              className="mt-4"
+              value={term}
+              onChange={(n, label) => {
+                setTerm(n);
+                setTermLabel(label);
+              }}
+            />
 
             <div className="mt-4 grid grid-cols-2 gap-3 rounded-xl border border-white/10 bg-black/20 p-3 text-sm">
               <div>
@@ -206,7 +230,7 @@ export function SchoolPayBillModal({ studentId, studentName, open, onClose, onPa
               )}
             </div>
 
-            {loading ? (
+            {loading || !termReady ? (
               <p className="mt-4 text-sm text-slate-500">Loading charges…</p>
             ) : (
               <>

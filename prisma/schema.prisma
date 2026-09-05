@@ -730,6 +730,11 @@ model StudentBillCharge {
   session        SchoolSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
   term           Int
   amountUgx      Int
+  /**
+   * Billing cadence when this charge was assigned:
+   * once | per_term | per_session
+   */
+  billingRound   String?       @default("once")
   /** Reduction applied to this bill line (UGX). */
   discountUgx    Int           @default(0)
   /** discount | scholarship | waiver | "" */

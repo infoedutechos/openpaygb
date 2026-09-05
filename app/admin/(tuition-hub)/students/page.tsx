@@ -697,12 +697,10 @@ export default function AdminStudentsPage() {
             setEditStudentId(actionStudent.id);
             setActionStudent(null);
           }}
-          onDelete={() => {
-            if (!confirm(`Delete ${actionStudent.name}?`)) return;
-            void fetch(`/api/students/${actionStudent.id}`, { method: "DELETE", credentials: "include" }).then(() => {
-              setActionStudent(null);
-              void load(q);
-            });
+          onDelete={async () => {
+            await fetch(`/api/students/${actionStudent.id}`, { method: "DELETE", credentials: "include" });
+            setActionStudent(null);
+            void load(q);
           }}
         />
       ) : null}

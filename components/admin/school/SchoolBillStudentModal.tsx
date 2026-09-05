@@ -2,7 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { formatUgx } from "@/components/admin/school/SchoolContextBar";
+import { SchoolBillingRoundSelect } from "@/components/admin/school/SchoolBillingRoundSelect";
+import { SchoolModalHeader } from "@/components/admin/school/SchoolModalHeader";
+import { SchoolTermSelect } from "@/components/admin/school/SchoolTermSelect";
 import { useSchoolAdminApi } from "@/hooks/useSchoolAdminApi";
+import type { SchoolBillingRound } from "@/lib/school-billing-rounds";
 
 type Account = { id: string; name: string; defaultAmountUgx?: number };
 
@@ -18,6 +22,7 @@ export function SchoolBillStudentModal({ studentId, studentName, open, onClose, 
   const { schoolFetch, organizationSlug } = useSchoolAdminApi();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [term, setTerm] = useState(1);
+  const [billingRound, setBillingRound] = useState<SchoolBillingRound>("once");
   const [accountId, setAccountId] = useState("");
   const [amountUgx, setAmountUgx] = useState(0);
   const [notes, setNotes] = useState("");
@@ -47,6 +52,7 @@ export function SchoolBillStudentModal({ studentId, studentName, open, onClose, 
     setAmountUgx(0);
     setAccountId("");
     setNotes("");
+    setBillingRound("once");
     void loadMeta();
   }, [open, loadMeta]);
 
@@ -69,11 +75,23 @@ export function SchoolBillStudentModal({ studentId, studentName, open, onClose, 
           amountUgx,
           studentIds: [studentId],
           notes,
+          billingRound,
         }),
       });
-      const j = (await r.json()) as { created?: number; error?: string };
+      const j = (await r.json()) as {
+        created?: number;
+        charges?: number;
+        terms?: number[];
+        error?: string;
+      };
       if (!r.ok) throw new Error(j.error ?? "Could not assign bill");
-      setMessage(`Bill assigned (${formatUgx(amountUgx)}). Student is now on the fee ledger.`);
+      const termNote =
+        billingRound === "per_term" && j.terms?.length
+          ? ` across terms ${j.terms.join(", ")}`
+          : "";
+      setMessage(
+        `Bill assigned (${formatUgx(amountUgx)}${termNote}). Student is on the fee ledger.`,
+      );
       onAssigned?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not assign bill");
@@ -87,21 +105,14 @@ export function SchoolBillStudentModal({ studentId, studentName, open, onClose, 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0a101f] p-5">
-        <h2 className="text-lg font-semibold text-white">Assign bill</h2>
-        <p className="mt-1 text-sm text-slate-400">{studentName}</p>
+        <SchoolModalHeader onBack={onClose} title="Assign bill" subtitle={studentName} />
         <div className="mt-4 space-y-3">
-          <label className="flex items-center gap-2 text-sm text-slate-300">
-            Term
-            <select
-              value={term}
-              onChange={(e) => setTerm(Number(e.target.value))}
-              className="rounded-lg border border-white/15 bg-black/30 px-2 py-1 text-white"
-            >
-              <option value={1}>Term 1</option>
-              <option value={2}>Term 2</option>
-              <option value={3}>Term 3</option>
-            </select>
-          </label>
+          <SchoolBillingRoundSelect value={billingRound} onChange={setBillingRound} />
+          {billingRound !== "per_term" ? (
+            <SchoolTermSelect value={term} onChange={(n) => setTerm(n)} />
+          ) : (
+            <p className="text-xs text-slate-500">Charges will be created for every term in Set Terms.</p>
+          )}
           <select
             value={accountId}
             onChange={(e) => {
@@ -149,7 +160,7 @@ export function SchoolBillStudentModal({ studentId, studentName, open, onClose, 
             {busy ? "Assigning…" : "Assign bill"}
           </button>
           <button type="button" onClick={onClose} className="rounded-lg border border-white/15 px-4 py-2 text-sm text-slate-300">
-            Close
+            Cancel
           </button>
         </div>
       </div>

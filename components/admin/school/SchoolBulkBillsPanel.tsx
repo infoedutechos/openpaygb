@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { formatUgx } from "@/components/admin/school/SchoolContextBar";
+import { SchoolBillingRoundSelect } from "@/components/admin/school/SchoolBillingRoundSelect";
+import { SchoolTermSelect } from "@/components/admin/school/SchoolTermSelect";
 import { useSchoolAdminApi } from "@/hooks/useSchoolAdminApi";
+import type { SchoolBillingRound } from "@/lib/school-billing-rounds";
 
 type Account = { id: string; name: string; defaultAmountUgx?: number };
 type ClassOption = { id: string; code: string; name: string };
@@ -13,6 +16,7 @@ export function SchoolBulkBillsPanel({ onAssigned }: { onAssigned?: () => void }
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [classes, setClasses] = useState<ClassOption[]>([]);
   const [term, setTerm] = useState(1);
+  const [billingRound, setBillingRound] = useState<SchoolBillingRound>("once");
   const [accountId, setAccountId] = useState("");
   const [classId, setClassId] = useState("");
   const [amountUgx, setAmountUgx] = useState(0);
@@ -66,11 +70,19 @@ export function SchoolBulkBillsPanel({ onAssigned }: { onAssigned?: () => void }
           amountUgx,
           classId,
           notes,
+          billingRound,
         }),
       });
-      const j = (await r.json()) as { created?: number; error?: string };
+      const j = (await r.json()) as {
+        created?: number;
+        charges?: number;
+        terms?: number[];
+        error?: string;
+      };
       if (!r.ok) throw new Error(j.error ?? "Bulk bill failed");
-      setMessage(`Assigned bill to ${j.created ?? 0} student(s).`);
+      const termNote =
+        billingRound === "per_term" && j.terms?.length ? ` (terms ${j.terms.join(", ")})` : "";
+      setMessage(`Assigned bill to ${j.created ?? 0} student(s)${termNote}.`);
       onAssigned?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Bulk bill failed");
@@ -90,18 +102,12 @@ export function SchoolBulkBillsPanel({ onAssigned }: { onAssigned?: () => void }
       </button>
       {open ? (
         <div className="mt-4 space-y-4">
-          <label className="flex items-center gap-2 text-sm text-slate-300">
-            Term
-            <select
-              value={term}
-              onChange={(e) => setTerm(Number(e.target.value))}
-              className="rounded-lg border border-white/15 bg-black/30 px-2 py-1 text-white"
-            >
-              <option value={1}>Term 1</option>
-              <option value={2}>Term 2</option>
-              <option value={3}>Term 3</option>
-            </select>
-          </label>
+          <SchoolBillingRoundSelect value={billingRound} onChange={setBillingRound} />
+          {billingRound !== "per_term" ? (
+            <SchoolTermSelect value={term} onChange={(n) => setTerm(n)} />
+          ) : (
+            <p className="text-xs text-slate-500">Same amount will be billed for every term in Set Terms.</p>
+          )}
           <div className="grid gap-3 sm:grid-cols-2">
             <select
               value={classId}
@@ -161,7 +167,8 @@ export function SchoolBulkBillsPanel({ onAssigned }: { onAssigned?: () => void }
           {message ? <p className="text-sm text-emerald-400">{message}</p> : null}
           {error ? <p className="text-sm text-rose-400">{error}</p> : null}
           <p className="text-xs text-slate-500">
-            Each student receives a {formatUgx(amountUgx || 0).replace("0", "…")} charge on the selected fee head for Term {term}.
+            Each student receives {formatUgx(amountUgx || 0)} on the selected fee head
+            {billingRound === "per_term" ? " for every term" : ` for Term ${term}`}.
           </p>
         </div>
       ) : null}
