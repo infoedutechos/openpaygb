@@ -7,6 +7,13 @@ import { isValidObjectId } from "@/lib/object-id";
 import { buildStudentProgrammeProgress, getProgrammeDurationSummary } from "@/lib/tuition-progress";
 import { resolveStudentEnrollmentFromClassStream } from "@/lib/school-structure-server";
 
+const optionalEmail = z.preprocess((v) => {
+  if (v === undefined || v === null) return undefined;
+  if (typeof v !== "string") return v;
+  const t = v.trim();
+  return t === "" ? "" : t.toLowerCase();
+}, z.union([z.literal(""), z.string().email()]).optional());
+
 const PatchBody = z
   .object({
     programmeCode: z.string().min(2).optional(),
@@ -18,14 +25,14 @@ const PatchBody = z
     admissionNo: z.string().optional(),
     address: z.string().optional(),
     sex: z.enum(["male", "female", "other"]).optional(),
-    email: z.string().email().optional(),
+    email: optionalEmail,
     phone: z.string().optional(),
   })
   .superRefine((val, ctx) => {
-    if (val.schoolClassId && !isValidObjectId(val.schoolClassId)) {
+    if (val.schoolClassId?.trim() && !isValidObjectId(val.schoolClassId.trim())) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Invalid schoolClassId", path: ["schoolClassId"] });
     }
-    if (val.schoolStreamId && !isValidObjectId(val.schoolStreamId)) {
+    if (val.schoolStreamId?.trim() && !isValidObjectId(val.schoolStreamId.trim())) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Invalid schoolStreamId", path: ["schoolStreamId"] });
     }
   });

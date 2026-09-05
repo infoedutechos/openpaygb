@@ -15,11 +15,13 @@ import { schoolSessionWhere } from "@/lib/school-session-scope";
 import { allocateAdmissionNo, studentCardPath } from "@/lib/admission-no";
 import { ensureSchoolPayCode } from "@/lib/school-pay-code";
 import { appBaseUrl } from "@/lib/root-metadata";
+import { resolveOrganizationIdForProgrammeAdmin } from "@/lib/admin-programmes-scope";
+import { copyClassTermBillsToStudent } from "@/lib/school-copy-class-bills";
 
 const CreateBody = z
   .object({
     name: z.string().min(2),
-    email: z.string().email().optional(),
+    email: z.string().email().optional().or(z.literal("")),
     phone: z.string().optional().default(""),
     telegramId: z.string().optional().default(""),
     admissionNo: z.string().optional(),
@@ -31,6 +33,7 @@ const CreateBody = z
     year: z.number().int().min(1).max(6),
     semester: z.number().int().min(1).max(3),
     portalPassword: z.string().min(10).max(128).optional(),
+    organizationSlug: z.string().optional(),
   })
   .superRefine((val, ctx) => {
     if (val.email?.trim() && !val.portalPassword?.trim()) {
@@ -63,21 +66,6 @@ export async function POST(req: Request) {
   if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const adminUser = await prisma.adminUser.findUnique({
-    where: { id: admin.sub },
-    select: { organizationId: true },
-  });
-  if (!adminUser) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const organizationId = adminUser.organizationId ?? (await getDefaultOrganizationId());
-
-  const orgMeta = await prisma.organization.findUnique({
-    where: { id: organizationId },
-    select: { institutionTier: true, activeSchoolSessionId: true },
-  });
-  const schoolSessionId =
-    orgMeta?.institutionTier === "school" ? orgMeta.activeSchoolSessionId : null;
 
   const json = await req.json();
   const parsed = CreateBody.safeParse(json);
@@ -85,6 +73,28 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid body", details: parsed.error.flatten() }, { status: 400 });
   }
   const data = parsed.data;
+
+  const orgResolved = await resolveOrganizationIdForProgrammeAdmin(admin, data.organizationSlug ?? null);
+  let organizationId: string;
+  if (orgResolved.ok) {
+    organizationId = orgResolved.organizationId;
+  } else if (admin.role === "master" && !data.organizationSlug?.trim()) {
+    organizationId = await getDefaultOrganizationId();
+  } else {
+    return NextResponse.json(
+      { error: orgResolved.ok ? "Organization required" : orgResolved.error },
+      { status: orgResolved.ok ? 400 : orgResolved.status },
+    );
+  }
+
+  const orgMeta = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    select: { institutionTier: true },
+  });
+  const isSchool = orgMeta?.institutionTier === "school";
+  const schoolContext = isSchool ? await loadSchoolOrgContext(organizationId) : null;
+  const schoolSessionId = isSchool ? (schoolContext?.sessionId ?? null) : null;
+  const activeTerm = schoolContext?.activeTerm ?? 1;
   const requestedAdmission = data.admissionNo?.trim() ?? "";
   let admissionNo = requestedAdmission;
   if (!admissionNo) {
@@ -123,6 +133,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "programmeCode is required" }, { status: 400 });
   }
 
+  const semester = isSchool ? activeTerm : data.semester;
+
   const doc = await prisma.student.create({
     data: {
       organizationId,
@@ -138,10 +150,21 @@ export async function POST(req: Request) {
       schoolStreamId: schoolStreamId ?? null,
       schoolSessionId,
       year: data.year,
-      semester: data.semester,
+      semester,
       ...(portalPasswordHash ? { portalPasswordHash } : {}),
     },
   });
+
+  let billsCopied = 0;
+  if (isSchool && schoolClassId) {
+    billsCopied = await copyClassTermBillsToStudent({
+      organizationId,
+      studentId: doc.id,
+      schoolClassId,
+      term: activeTerm,
+      sessionId: schoolSessionId,
+    });
+  }
 
   const org = await prisma.organization.findUnique({
     where: { id: organizationId },
@@ -168,6 +191,7 @@ export async function POST(req: Request) {
         cardUrl,
         periodLabel: org?.institutionTier === "school" ? "Term" : "Semester",
       },
+      billsCopied,
     },
     { status: 201 },
   );

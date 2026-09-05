@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { SchoolDetailModal } from "@/components/admin/SchoolDetailModal";
 import { SchoolBulkBillsPanel } from "@/components/admin/school/SchoolBulkBillsPanel";
+import { SchoolBillStudentModal } from "@/components/admin/school/SchoolBillStudentModal";
 import { SchoolPayBillModal } from "@/components/admin/school/SchoolPayBillModal";
 import { SchoolStudentActionSheet } from "@/components/admin/school/SchoolStudentActionSheet";
 import { SchoolStudentEditModal } from "@/components/admin/school/SchoolStudentEditModal";
@@ -45,7 +46,7 @@ type StudentRow = {
 
 export default function AdminStudentsPage() {
   const { orgSlug, setOrgSlug } = useMasterOrgSlug();
-  const { schoolScope, schoolFetch } = useSchoolAdminApi();
+  const { schoolScope, schoolFetch, organizationSlug } = useSchoolAdminApi();
   const isSchoolTenant = schoolScope;
   const periodLabel = isSchoolTenant ? "Term" : "Semester";
   const { loading: authLoading, ensureTuitionSession } = useTuitionAdminGate();
@@ -79,6 +80,7 @@ export default function AdminStudentsPage() {
   const [schoolClasses, setSchoolClasses] = useState<ClassOption[]>([]);
   const [classFilter, setClassFilter] = useSchoolClassFilter();
   const [payBillStudent, setPayBillStudent] = useState<{ id: string; name: string } | null>(null);
+  const [billStudent, setBillStudent] = useState<{ id: string; name: string } | null>(null);
   const [actionStudent, setActionStudent] = useState<{ id: string; name: string } | null>(null);
   const [editStudentId, setEditStudentId] = useState<string | null>(null);
 
@@ -86,11 +88,20 @@ export default function AdminStudentsPage() {
     if (typeof window === "undefined") return;
     const sp = new URLSearchParams(window.location.search);
     const payId = sp.get("payStudentId")?.trim();
-    if (!payId) return;
-    const payName = sp.get("payStudentName")?.trim() || "Student";
-    setPayBillStudent({ id: payId, name: payName });
+    const billId = sp.get("billStudentId")?.trim();
+    if (payId) {
+      const payName = sp.get("payStudentName")?.trim() || "Student";
+      setPayBillStudent({ id: payId, name: payName });
+    }
+    if (billId) {
+      const billName = sp.get("billStudentName")?.trim() || "Student";
+      setBillStudent({ id: billId, name: billName });
+    }
+    if (!payId && !billId) return;
     sp.delete("payStudentId");
     sp.delete("payStudentName");
+    sp.delete("billStudentId");
+    sp.delete("billStudentName");
     sp.delete("term");
     const qstr = sp.toString();
     window.history.replaceState({}, "", `${window.location.pathname}${qstr ? `?${qstr}` : ""}`);
@@ -186,7 +197,7 @@ export default function AdminStudentsPage() {
           Search by name, email, or phone.
           {isMaster ? " As platform master you see records for every tenant; optionally filter by school slug." : null}{" "}
           {isSchoolTenant
-            ? "Assign bulk bills by class, then record payments under Receipt of payments."
+            ? "Assign bills to a class or a single student, then record payments. New students inherit classmates’ active-term fees when those already exist."
             : "Programme / year / semester are the student's current enrollment context; actual fee lines and totals for each payment are built at checkout from your programme schedules."}
         </p>
         <TuitionHubCheckoutExplainerCompact className="mt-2 max-w-3xl" />
@@ -282,6 +293,7 @@ export default function AdminStudentsPage() {
                       ...(createForm.password.trim().length >= 10
                         ? { portalPassword: createForm.password.trim() }
                         : {}),
+                      ...(organizationSlug ? { organizationSlug } : {}),
                     }),
                   });
                   const j = (await r.json()) as {
@@ -658,12 +670,25 @@ export default function AdminStudentsPage() {
           onPaid={() => void load(q)}
         />
       ) : null}
+      {billStudent ? (
+        <SchoolBillStudentModal
+          studentId={billStudent.id}
+          studentName={billStudent.name}
+          open
+          onClose={() => setBillStudent(null)}
+          onAssigned={() => void load(q)}
+        />
+      ) : null}
       {actionStudent ? (
         <SchoolStudentActionSheet
           studentId={actionStudent.id}
           studentName={actionStudent.name}
           open
           onClose={() => setActionStudent(null)}
+          onAssignBill={() => {
+            setBillStudent(actionStudent);
+            setActionStudent(null);
+          }}
           onPayBill={() => {
             setPayBillStudent(actionStudent);
             setActionStudent(null);

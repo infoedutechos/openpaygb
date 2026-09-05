@@ -55,7 +55,11 @@ function FeeLedgerInner() {
   const [totals, setTotals] = useState<Totals | null>(null);
   const [term, setTerm] = useState(() => {
     const t = Number(searchParams.get("term"));
-    return t === 1 || t === 2 || t === 3 ? t : 2;
+    return t === 1 || t === 2 || t === 3 ? t : 1;
+  });
+  const [termReady, setTermReady] = useState(() => {
+    const t = Number(searchParams.get("term"));
+    return t === 1 || t === 2 || t === 3;
   });
   const [q, setQ] = useState(() => searchParams.get("q")?.trim() ?? "");
   const [focusStudentId, setFocusStudentId] = useState(() => searchParams.get("studentId")?.trim() ?? "");
@@ -70,8 +74,19 @@ function FeeLedgerInner() {
   const [adjustNote, setAdjustNote] = useState("");
   const [adjustBusy, setAdjustBusy] = useState(false);
 
+  useEffect(() => {
+    if (termReady || needsOrgSlug) return;
+    void schoolFetch("/api/admin/school/sessions")
+      .then((r) => r.json())
+      .then((j: { context?: { activeTerm?: number } }) => {
+        const t = j.context?.activeTerm;
+        if (t === 1 || t === 2 || t === 3) setTerm(t);
+      })
+      .finally(() => setTermReady(true));
+  }, [termReady, needsOrgSlug, schoolFetch]);
+
   const load = useCallback(async () => {
-    if (needsOrgSlug) return;
+    if (needsOrgSlug || !termReady) return;
     const r = await schoolFetch("/api/admin/school/fee-ledger", undefined, {
       term,
       q: q.trim() || undefined,
@@ -98,7 +113,7 @@ function FeeLedgerInner() {
       setTotals(j.totals ?? null);
     }
     if (j.term) setTerm(j.term);
-  }, [needsOrgSlug, schoolFetch, term, q, focusStudentId]);
+  }, [needsOrgSlug, termReady, schoolFetch, term, q, focusStudentId]);
 
   useEffect(() => {
     const t = setTimeout(() => void load(), 200);

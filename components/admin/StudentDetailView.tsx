@@ -131,10 +131,16 @@ export function StudentDetailView({
         {student.periodLabel === "Term" ? (
           <>
             <Link
+              href={`/admin/students?billStudentId=${encodeURIComponent(student.id)}&billStudentName=${encodeURIComponent(student.name)}`}
+              className="rounded-lg bg-violet-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-violet-500"
+            >
+              Assign bill
+            </Link>
+            <Link
               href={`/admin/students?payStudentId=${encodeURIComponent(student.id)}&payStudentName=${encodeURIComponent(student.name)}`}
               className="rounded-lg bg-emerald-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-600"
             >
-              Pay bill
+              Record payment
             </Link>
             <Link
               href={`/admin/fee-ledger?studentId=${encodeURIComponent(student.id)}&returnPay=1&studentName=${encodeURIComponent(student.name)}`}
