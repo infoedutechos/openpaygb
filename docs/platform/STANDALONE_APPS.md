@@ -37,6 +37,8 @@ NEXT_PUBLIC_APP_URL=https://play.odelpay.vercel.app
 
 `STANDALONE_APP` overrides host detection. Use when you want separate scaling, env, or cron scope.
 
+**OpenPayGB:** team project [openpaygb](https://vercel.com/odeldevelopers-projects/openpaygb) (`STANDALONE_APP=openpaygb`). Git mirror: [infoedutechos/openpaygb](https://github.com/infoedutechos/openpaygb). Connect steps: [VERCEL_OPENPAYGB_CONNECT.md](../deployment/VERCEL_OPENPAYGB_CONNECT.md).
+
 ---
 
 ## Local development

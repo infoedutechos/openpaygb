@@ -199,7 +199,7 @@ Do **not** mix multiple pegs in Phase 1 — all external currencies convert **th
 | Item | Document |
 |------|----------|
 | Vercel login `info.edutechos@gmail.com` | [VERCEL_ODELPAY_DEPLOY.md](../deployment/VERCEL_ODELPAY_DEPLOY.md), [DEPLOYMENT_ENV_PRODUCTION.md](../deployment/DEPLOYMENT_ENV_PRODUCTION.md) |
-| GitHub `openpayglobal/openpaygb` | [README.md](../upstream-ura-game/README.md), [PROJECT_DESCRIPTION.md](../product/PROJECT_DESCRIPTION.md) |
+| GitHub `infoedutechos/openpaygb` (mirror; legacy `openpayglobal/openpaygb` deleted) | [STANDALONE_APPS.md](./STANDALONE_APPS.md), [VERCEL_OPENPAYGB_CONNECT.md](../deployment/VERCEL_OPENPAYGB_CONNECT.md) |
 | `.env` ↔ Master Admin | [LOCAL_DEV_AND_CREDENTIALS.md](./LOCAL_DEV_AND_CREDENTIALS.md) — `npm run deployment:env-audit` |
 | Workspace portal & verify | [SCHOOL_WORKSPACE_SELF_REGISTER.md](../school/SCHOOL_WORKSPACE_SELF_REGISTER.md), [ORGANIZATION_REGISTRATION.md](../school/ORGANIZATION_REGISTRATION.md) |
 | Telegram | [TELEGRAM_BOT_DEPLOYMENT.md](../deployment/TELEGRAM_BOT_DEPLOYMENT.md), `GET /api/public/telegram-config` |
