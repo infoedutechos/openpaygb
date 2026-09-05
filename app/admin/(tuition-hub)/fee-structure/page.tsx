@@ -231,9 +231,8 @@ function FeeStructureInner() {
       </div>
 
       <p className="text-xs text-slate-500">
-        Tip: You do <strong className="text-slate-400">not</strong> need an “Add fee item” on Assign bill — pick the
-        fee head (amount fills from here), then Assign. For another head, Assign bill again. Discounts: Fee ledger →
-        Adjust. All accounts:{" "}
+        Tip: You do not need an Add fee item control on Assign bill — pick the fee head (amount fills from here), then
+        Assign. For another head, Assign bill again. Discounts: Fee ledger → Adjust. All accounts:{" "}
         <Link href={hrefWithOrgSlug("/admin/school-accounts")} className="text-cyan-300 hover:underline">
           Accounts
         </Link>

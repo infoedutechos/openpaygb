@@ -21,9 +21,11 @@ export function formatLoginTimestamp(iso: string | null | undefined): string | n
   if (!iso) return null;
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleString(undefined, {
+  // Fixed locale so SSR / client never diverge (React hydration #418).
+  return d.toLocaleString("en-GB", {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone: "UTC",
   });
 }
 

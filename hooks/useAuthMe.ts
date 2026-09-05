@@ -42,10 +42,14 @@ function getAuthMe(): Promise<AuthMeJson | null> {
   return inflight;
 }
 
-/** Dedupes `/api/auth/me` across admin shell + pages (30s in-memory TTL). */
+/**
+ * Dedupes `/api/auth/me` across admin shell + pages (30s in-memory TTL).
+ * Initial state is always null so SSR HTML matches the first client paint
+ * (module cache must not seed useState — that caused React #418 hydration mismatches).
+ */
 export function useAuthMe() {
-  const [data, setData] = useState<AuthMeJson | null>(cached?.data ?? null);
-  const [loading, setLoading] = useState(!cached);
+  const [data, setData] = useState<AuthMeJson | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(() => {
     invalidateAuthMeCache();

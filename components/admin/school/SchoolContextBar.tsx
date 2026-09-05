@@ -147,5 +147,7 @@ export function SchoolContextBar({ onContextChange }: { onContextChange?: (ctx: 
 }
 
 export function formatUgx(n: number): string {
-  return `UGX ${n.toLocaleString("en-UG")}`;
+  const v = Math.round(Number.isFinite(n) ? n : 0);
+  const abs = Math.abs(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return `UGX ${v < 0 ? `-${abs}` : abs}`;
 }
