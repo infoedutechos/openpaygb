@@ -7,6 +7,7 @@ import { OPEN_PAY_BRAND, PAYMENT_RAIL_OPENPAY_CARD } from "@/lib/open-pay-brand"
 import { clientFetchErrorMessage } from "@/lib/client-fetch-error";
 import { readJsonResponse } from "@/utils/read-json-response";
 import { fetchJson } from "@/utils/fetch-json";
+import { ModalHeader } from "@/components/nav/ModalHeader";
 
 type CardStatus = {
   platform: { enabled: boolean; issueFeeTon: number; issueFeeUgx: number | null };
@@ -802,11 +803,26 @@ export function OpenPayCardPanel({
         </div>
 
         {/* Sheets */}
-        {sheet === "topup" ? <div className="mt-4">{renderFundPanel()}</div> : null}
+        {sheet === "topup" ? (
+          <div className="mt-4 space-y-3">
+            <ModalHeader
+              variant="light"
+              onBack={() => setSheet(null)}
+              title="Top up card"
+              subtitle="Pay with Mobile Money or TON"
+            />
+            {renderFundPanel()}
+          </div>
+        ) : null}
 
         {sheet === "cashout" ? (
           <div className="mt-4 space-y-3 rounded-xl border border-slate-200 bg-slate-50/80 p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Send to Mobile Money</p>
+            <ModalHeader
+              variant="light"
+              onBack={() => setSheet(null)}
+              title="Send to MoMo"
+              subtitle="Cash out card balance"
+            />
             <label className="block text-xs font-medium text-slate-500">
               Amount (UGX)
               <input
@@ -850,9 +866,11 @@ export function OpenPayCardPanel({
 
         {sheet === "block" ? (
           <div className="mt-4 space-y-3 rounded-xl border border-slate-200 bg-slate-50/80 p-3">
-            <p className="text-sm font-semibold text-slate-800">
-              {isBlocked ? "Unblock your card?" : "Block your card?"}
-            </p>
+            <ModalHeader
+              variant="light"
+              onBack={() => setSheet(null)}
+              title={isBlocked ? "Unblock card" : "Block card"}
+            />
             <p className="text-xs text-slate-500">
               {isBlocked
                 ? "Unblocking restores top-ups, cashout, and tuition payments from this card."
@@ -873,7 +891,7 @@ export function OpenPayCardPanel({
 
         {sheet === "settings" ? (
           <div className="mt-4 space-y-3 rounded-xl border border-slate-200 bg-slate-50/80 p-3 text-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Card settings</p>
+            <ModalHeader variant="light" onBack={() => setSheet(null)} title="Card settings" />
             <dl className="space-y-2 text-slate-700">
               <div className="flex justify-between gap-3">
                 <dt className="text-slate-500">Holder</dt>

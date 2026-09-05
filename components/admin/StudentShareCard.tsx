@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import QRCode from "qrcode";
+import { ModalHeader } from "@/components/nav/ModalHeader";
 import {
   SHARE_CHANNELS,
   buildSharePayload,
@@ -114,21 +115,20 @@ export function StudentShareCard({ student, variant = "panel", onClose }: Props)
       }
     >
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold text-white">Student details</h2>
-          <p className="mt-1 text-xs text-slate-400">
-            Print this card or share the link via WhatsApp, Telegram, and other apps.
-          </p>
-        </div>
         {variant === "modal" && onClose ? (
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg border border-white/15 px-2.5 py-1 text-xs text-slate-300 hover:bg-white/5"
-          >
-            Close
-          </button>
-        ) : null}
+          <ModalHeader
+            onBack={onClose}
+            title="Student details"
+            subtitle="Print this card or share the link via WhatsApp, Telegram, and other apps."
+          />
+        ) : (
+          <div>
+            <h2 className="text-lg font-semibold text-white">Student details</h2>
+            <p className="mt-1 text-xs text-slate-400">
+              Print this card or share the link via WhatsApp, Telegram, and other apps.
+            </p>
+          </div>
+        )}
       </div>
 
       <div ref={printRef} className="mt-4 rounded-xl border border-white/10 bg-white p-4 text-slate-900">

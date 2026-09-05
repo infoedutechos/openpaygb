@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ModalHeader } from "@/components/nav/ModalHeader";
 
 type Props = {
   studentId: string;
@@ -31,11 +32,11 @@ export function SchoolStudentActionSheet({
     return (
       <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center">
         <div className="w-full max-w-sm rounded-2xl border border-rose-500/30 bg-[#0a101f] p-4">
-          <p className="font-semibold text-white">Delete student?</p>
-          <p className="mt-2 text-sm text-slate-300">
-            Are you sure you want to delete <span className="font-medium text-white">{studentName}</span>? This
-            cannot be undone.
-          </p>
+          <ModalHeader
+            onBack={() => setConfirmDelete(false)}
+            title="Delete student?"
+            subtitle={`Are you sure you want to delete ${studentName}? This cannot be undone.`}
+          />
           <div className="mt-4 flex flex-col gap-2">
             <button
               type="button"
@@ -72,7 +73,7 @@ export function SchoolStudentActionSheet({
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center">
       <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#0a101f] p-4">
-        <p className="font-semibold text-white">{studentName}</p>
+        <ModalHeader onBack={onClose} title={studentName} subtitle="Choose an action" />
         <div className="mt-3 flex flex-col gap-2">
           <button type="button" onClick={onAssignBill} className="rounded-lg bg-violet-600 px-4 py-3 text-left text-sm font-semibold text-white">
             Assign bill

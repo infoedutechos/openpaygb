@@ -679,7 +679,7 @@ export default function AdminStudentsPage() {
           onAssigned={() => void load(q)}
         />
       ) : null}
-      {actionStudent ? (
+      {actionStudent && !billStudent && !payBillStudent && !editStudentId ? (
         <SchoolStudentActionSheet
           studentId={actionStudent.id}
           studentName={actionStudent.name}
@@ -687,15 +687,12 @@ export default function AdminStudentsPage() {
           onClose={() => setActionStudent(null)}
           onAssignBill={() => {
             setBillStudent(actionStudent);
-            setActionStudent(null);
           }}
           onPayBill={() => {
             setPayBillStudent(actionStudent);
-            setActionStudent(null);
           }}
           onEdit={() => {
             setEditStudentId(actionStudent.id);
-            setActionStudent(null);
           }}
           onDelete={async () => {
             await fetch(`/api/students/${actionStudent.id}`, { method: "DELETE", credentials: "include" });

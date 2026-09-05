@@ -4,6 +4,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { ModalHeader } from "@/components/nav/ModalHeader";
 import { useSchoolAdminApi } from "@/hooks/useSchoolAdminApi";
 
 
@@ -224,7 +225,7 @@ export function SchoolClassImportModal({ open, onClose, onDone }: Props) {
 
       <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/10 bg-[#0a101f] p-5">
 
-        <h2 className="text-lg font-semibold text-white">Import class</h2>
+        <ModalHeader onBack={onClose} title="Import class" />
 
         <div className="mt-3 flex gap-2">
 

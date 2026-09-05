@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { ModalHeader } from "@/components/nav/ModalHeader";
 import { PROGRAMME_TRACK_LABEL, type ProgrammeTrack } from "@/lib/programme-track";
 
 type SchoolDetail = {
@@ -151,20 +152,12 @@ export function SchoolDetailModal({
         className="relative max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-xl sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute right-3 top-3 rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-          aria-label="Close school details"
-        >
-          <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
-          </svg>
-        </button>
-
-        <h2 id="school-detail-title" className="pr-8 text-lg font-semibold text-slate-900">
-          {org?.name ?? "School details"}
-        </h2>
+        <div className="mb-1">
+          <ModalHeader variant="light" onBack={onClose} title={org?.name ?? "School details"} />
+          <h2 id="school-detail-title" className="sr-only">
+            {org?.name ?? "School details"}
+          </h2>
+        </div>
 
         <div className="mt-4 max-h-[min(70vh,32rem)] space-y-5 overflow-y-auto">
           {loading && <p className="text-sm text-slate-500">Loading school profile…</p>}
