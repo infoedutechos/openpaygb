@@ -686,7 +686,7 @@ model SchoolAccount {
   name             String
   kind             SchoolAccountKind @default(income)
   /** Suggested bill amount (UGX) for this income fee head — used when assigning bills. */
-  defaultAmountUgx Int               @default(0)
+  defaultAmountUgx Int?              @default(0)
   sortOrder        Int               @default(0)
   enabled          Boolean           @default(true)
   createdAt        DateTime          @default(now())
