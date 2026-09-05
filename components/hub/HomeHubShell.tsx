@@ -51,6 +51,11 @@ function HomeHubShellInner({ children }: { children: ReactNode }) {
   const setHub = useCallback(
     (next: HubKey) => {
       if (hidden[next]) return;
+      // Play Hub entry honors MAC active launch target (Telegram / external / built-in).
+      if (next === "play") {
+        router.push("/play");
+        return;
+      }
       router.replace(homeUrlForHub(next), { scroll: false });
     },
     [hidden, router],
@@ -80,7 +85,7 @@ function HomeHubShellInner({ children }: { children: ReactNode }) {
       ) : hub === "tuition" ? (
         <TuitionHubMobileMenu />
       ) : (
-        <TuitionHubMobileMenu title="Play Hub" subtitle="URAPearls · games · tasks" />
+        <TuitionHubMobileMenu title="Play Hub" subtitle="Active game from Master · Play Hub URLs" />
       )}
       {children}
       <div

@@ -66,7 +66,7 @@ export default async function HomePage() {
               ) : null}
               {!hubHidden.play ? (
                 <Link
-                  href="/?hub=play"
+                  href="/play"
                   className="rounded-xl border border-white/15 bg-white/[0.06] px-6 py-3 text-sm font-semibold text-slate-100 hover:border-cyan-400/35 hover:bg-white/[0.09] transition-colors"
                 >
                   Open Play Hub

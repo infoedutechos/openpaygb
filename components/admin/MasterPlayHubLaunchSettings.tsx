@@ -33,7 +33,7 @@ const emptyForm = {
   kind: "telegram_webapp" as PlayHubLaunchKind,
   openMode: "telegram" as PlayHubOpenMode,
   notes: "",
-  activate: false,
+  activate: true,
 };
 
 export function MasterPlayHubLaunchSettings() {
@@ -134,11 +134,15 @@ export function MasterPlayHubLaunchSettings() {
       <h2 className="text-sm font-semibold text-fuchsia-100">Play Hub · game / launch URLs</h2>
       <p className="mt-2 max-w-3xl text-sm text-slate-400">
         Add Telegram Mini App / Web App URLs or any https link, then <strong className="font-medium text-slate-300">Activate</strong>{" "}
-        exactly one as the primary Play Hub launch. Players on{" "}
-        <a href="/clicker" className="text-fuchsia-200/90 underline-offset-2 hover:underline">
-          /clicker
+        exactly one as the primary Play Hub launch. The home <strong className="font-medium text-slate-300">Play</strong> button and{" "}
+        <a href="/play" className="text-fuchsia-200/90 underline-offset-2 hover:underline">
+          /play
         </a>{" "}
-        can switch between enabled targets. Deactivating means disable or activate another — only one is active.
+        open that active URL (e.g. Telegram bot). Built-in URAPearls stays at{" "}
+        <a href="/clicker?builtin=1" className="text-fuchsia-200/90 underline-offset-2 hover:underline">
+          /clicker?builtin=1
+        </a>
+        .
       </p>
       {hint ? <p className="mt-2 text-xs text-fuchsia-200/70">{hint}</p> : null}
 

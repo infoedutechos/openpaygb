@@ -17,7 +17,7 @@ const DEX_DESTINATIONS = [
   { href: HUBS.dex.routes?.amm ?? "/dex/amm", label: "AMM swap" },
   { href: "/opgb", label: "OpenPayGB platform" },
   { href: "/pay", label: "Pay tuition" },
-  { href: "/clicker", label: "Play Hub" },
+  { href: "/play", label: "Play Hub" },
   { href: "/student/login", label: "Student sign in" },
   { href: "/help?hub=dex", label: "Dex help" },
   { href: HELP_CENTER_HREF, label: "Help center" },

@@ -148,7 +148,7 @@ export const SITE_HEADER_MENUS: SiteNavMenu[] = [
       { label: "AMM swap", href: "/dex/amm", description: "Execute custodial swap" },
       { label: "Offramp", href: "/dex/offramp", description: "Withdraw queue" },
       { label: "P2P market", href: "/dex/p2p", description: "Escrow offers" },
-      { label: "Play Hub", href: "/clicker", description: "Games and clicker mini-app" },
+      { label: "Play Hub", href: "/play", description: "Games — MAC active launch URL or built-in clicker" },
     ],
   },
 ];

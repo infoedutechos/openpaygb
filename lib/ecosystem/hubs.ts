@@ -43,9 +43,10 @@ export const HUBS: Record<HubKey, HubDefinition> = {
     shortLabel: "Play",
     description: "Gamification — learn, services, earn, guild.",
     homeQueryValue: "play",
-    basePath: "/clicker",
+    basePath: "/play",
     routes: {
-      mini: "/clicker",
+      mini: "/play",
+      builtin: "/clicker",
       landing: "/",
     },
     upstream: {

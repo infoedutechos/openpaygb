@@ -22,11 +22,11 @@ type NavEntry =
   | { kind: "dex"; name: string; href: string };
 
 const NAV_ITEMS: NavEntry[] = [
-  { kind: "home", name: "Home", image: navHome, hrefPlayLanding: "/?hub=play", hrefClicker: "/clicker" },
-  { kind: "view", name: "Learn", image: navLearn, href: "/clicker?view=eearn" },
-  { kind: "view", name: "Services", image: navServices, href: "/clicker?view=services" },
-  { kind: "view", name: "Earn", image: earnRewardsIcon, href: "/clicker?view=earn" },
-  { kind: "view", name: "Guild", image: navGuild, href: "/clicker?view=guild" },
+  { kind: "home", name: "Home", image: navHome, hrefPlayLanding: "/play", hrefClicker: "/play" },
+  { kind: "view", name: "Learn", image: navLearn, href: "/clicker?view=eearn&builtin=1" },
+  { kind: "view", name: "Services", image: navServices, href: "/clicker?view=services&builtin=1" },
+  { kind: "view", name: "Earn", image: earnRewardsIcon, href: "/clicker?view=earn&builtin=1" },
+  { kind: "view", name: "Guild", image: navGuild, href: "/clicker?view=guild&builtin=1" },
   { kind: "dex", name: "Dex", href: "/dex" },
 ];
 
@@ -44,7 +44,7 @@ function NavInner() {
     if (item.kind === "dex" && (app?.hideEcosystemLinks || hubHidden.dex)) return false;
     return true;
   });
-  const homeClickerHref = app?.lobbyPath ?? "/clicker";
+  const homeClickerHref = app?.lobbyPath ?? "/play";
 
   return (
     <nav

@@ -174,7 +174,13 @@ export function PlayHubLaunchSwitcher({ compact = false, className = "" }: Switc
   const { loading, error, targets, selected, showSwitcher, selectTarget, iframeUrl, setIframeUrl } =
     usePlayHubLaunch();
 
-  if (loading || error || !showSwitcher) {
+  if (loading || error || targets.length === 0) {
+    return null;
+  }
+
+  // Always show when there is a non-builtin primary or multiple targets
+  const hasExternal = targets.some((t) => t.id !== BUILTIN_PLAY_HUB_TARGET_ID);
+  if (!showSwitcher && !hasExternal && !iframeUrl) {
     return null;
   }
 

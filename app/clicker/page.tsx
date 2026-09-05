@@ -36,6 +36,7 @@ import {
   PlayHubLaunchIframeHost,
   PlayHubLaunchProvider,
 } from '@/components/PlayHubLaunchSwitcher';
+import { PlayHubActiveLaunchBanner } from '@/components/PlayHubActiveLaunchBanner';
 
 function useExitFullscreenWhenOpenedViaOpenButton() {
   useEffect(() => {
@@ -63,6 +64,7 @@ const MORE_VIEWS = new Set([
 function ClickerPageInner() {
     useExitFullscreenWhenOpenedViaOpenButton();
     const searchParams = useSearchParams();
+    const forceBuiltin = searchParams.get('builtin') === '1';
     const initialView = resolveClickerView(searchParams.get('view'));
     const [currentView, setCurrentViewState] = useState<string>('loading');
     const [isInitialized, setIsInitialized] = useState(false);
@@ -123,6 +125,7 @@ function ClickerPageInner() {
     return (
         <PlayHubLaunchProvider>
         <div className="bg-ura-page min-h-screen text-white tg-safe-area-padding">
+            <PlayHubActiveLaunchBanner suppressAutoOpen={forceBuiltin} />
             <PlayHubLaunchIframeHost />
             {
                 isInitialized &&

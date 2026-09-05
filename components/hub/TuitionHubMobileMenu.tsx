@@ -22,7 +22,7 @@ const TUITION_DESTINATIONS = [
   { href: "/student/login", label: "Student sign in" },
   { href: "/login", label: "Log in chooser" },
   { href: "/dex", label: "Dex Hub" },
-  { href: "/clicker", label: "Play Hub" },
+  { href: "/play", label: "Play Hub" },
   { href: AUDIENCE_GUIDES.student_schools.helpHref, label: AUDIENCE_GUIDES.student_schools.label },
   { href: AUDIENCE_GUIDES.student_higher.helpHref, label: AUDIENCE_GUIDES.student_higher.label },
   { href: AUDIENCE_GUIDES.admin_schools.helpHref, label: AUDIENCE_GUIDES.admin_schools.label },

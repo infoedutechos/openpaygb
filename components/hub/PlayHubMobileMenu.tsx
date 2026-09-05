@@ -6,7 +6,8 @@ import { DashboardMobileChrome } from "@/components/nav/DashboardMobileChrome";
 import { HELP_CENTER_HREF } from "@/lib/audience-guides";
 
 const PLAY_DESTINATIONS = [
-  { href: "/clicker", label: "Play Hub home" },
+  { href: "/play", label: "Play Hub home (active game)" },
+  { href: "/clicker?builtin=1", label: "Built-in URAPearls clicker" },
   { href: "/?hub=play", label: "Play on home switcher" },
   { href: "/pay", label: "Pay tuition" },
   { href: "/student/login", label: "Student sign in" },
