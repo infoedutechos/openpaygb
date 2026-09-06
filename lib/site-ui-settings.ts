@@ -346,6 +346,7 @@ export async function getPublicSiteUiSettings(): Promise<PublicSiteUiSettings> {
       getPlatformSiteUiSettings(),
     ]);
     const branding = await getPlatformBranding();
+    const { normalizePlatformBrandName } = await import("@/lib/platform-brand");
     const data = toPublicSiteUiSettings({
       ...s,
       platformDisplayName: branding.platformDisplayName,
@@ -354,6 +355,10 @@ export async function getPublicSiteUiSettings(): Promise<PublicSiteUiSettings> {
       homeHeroSubhead: branding.homeHeroSubhead,
       copilotAssistantName: branding.copilotAssistantName || s.copilotAssistantName,
       shareDefaultTitle: branding.platformDisplayName || s.shareDefaultTitle,
+      homeScreenTitle: normalizePlatformBrandName(s.homeScreenTitle || branding.platformDisplayName),
+      homeScreenDescription: (s.homeScreenDescription || "")
+        .replace(/ODEL HUB/gi, "ODELPay HUB")
+        .trim() || s.homeScreenDescription,
     });
     publicSiteUiCache = { at: now, data };
     return data;

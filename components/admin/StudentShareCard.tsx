@@ -76,14 +76,11 @@ export function StudentShareCard({ student, variant = "panel", onClose }: Props)
   function printCard() {
     const node = printRef.current;
     if (!node) return;
-    const win = window.open("", "_blank", "noopener,noreferrer,width=480,height=720");
-    if (!win) {
-      window.print();
-      return;
-    }
-    win.document.write(`<!doctype html><html><head><title>${student.name} — Student card</title>
+
+    const html = `<!doctype html><html><head><title>${student.name.replace(/</g, "")} — Student card</title>
       <style>
-        body{font-family:system-ui,sans-serif;padding:24px;color:#0f172a}
+        html,body{margin:0;padding:0;background:#fff;color:#0f172a}
+        body{font-family:system-ui,sans-serif;padding:24px}
         h1{font-size:20px;margin:0 0 4px}
         .muted{color:#64748b;font-size:13px}
         .box{border:1px solid #cbd5e1;border-radius:12px;padding:16px;margin-top:16px}
@@ -91,11 +88,58 @@ export function StudentShareCard({ student, variant = "panel", onClose }: Props)
         .label{color:#64748b}
         .qr{display:block;margin:16px auto;width:200px;height:200px}
         .mono{font-family:ui-monospace,monospace;font-weight:700;letter-spacing:.06em}
-        @media print{body{padding:0}}
-      </style></head><body>${node.innerHTML}</body></html>`);
-    win.document.close();
-    win.focus();
-    win.print();
+        @media print{body{padding:12px} @page{margin:12mm}}
+      </style></head><body>${node.innerHTML}</body></html>`;
+
+    const iframe = document.createElement("iframe");
+    iframe.setAttribute("aria-hidden", "true");
+    iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0;pointer-events:none";
+    document.body.appendChild(iframe);
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!doc) {
+      iframe.remove();
+      return;
+    }
+    doc.open();
+    doc.write(html);
+    doc.close();
+
+    const cleanup = () => {
+      setTimeout(() => iframe.remove(), 500);
+    };
+    const win = iframe.contentWindow;
+    if (!win) {
+      cleanup();
+      return;
+    }
+    const trigger = () => {
+      if ((iframe as HTMLIFrameElement & { __printed?: boolean }).__printed) return;
+      (iframe as HTMLIFrameElement & { __printed?: boolean }).__printed = true;
+      try {
+        win.focus();
+        win.print();
+      } finally {
+        cleanup();
+      }
+    };
+    // Images (QR) may still be loading in the iframe.
+    if (doc.images.length === 0) {
+      trigger();
+      return;
+    }
+    let pending = doc.images.length;
+    const done = () => {
+      pending -= 1;
+      if (pending <= 0) trigger();
+    };
+    Array.from(doc.images).forEach((img) => {
+      if (img.complete) done();
+      else {
+        img.addEventListener("load", done);
+        img.addEventListener("error", done);
+      }
+    });
+    setTimeout(trigger, 1500);
   }
 
   function downloadCard() {

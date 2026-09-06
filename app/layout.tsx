@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ConditionalSiteHeaderServer } from "@/components/pay/ConditionalSiteHeaderServer";
+import { ConditionalSiteTitleBarServer } from "@/components/ConditionalSiteTitleBarServer";
 import { ConditionalMainServer } from "@/components/pay/ConditionalMainServer";
 import { PlatformSocialProvider } from "@/components/PlatformSocialProvider";
 import { TonConnectAppProvider } from "@/components/TonConnectAppProvider";
@@ -60,6 +61,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <HubVisibilityProvider initial={hubVisibility}>
               <TonConnectAppProvider>
                 <DevNetworkFetchGuard />
+                <ConditionalSiteTitleBarServer />
                 <ConditionalSiteHeaderServer />
                 <ConditionalMainServer>{children}</ConditionalMainServer>
                 <SiteChromeFooter settings={siteUi} />

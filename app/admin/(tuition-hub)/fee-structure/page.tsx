@@ -85,6 +85,30 @@ function FeeStructureInner() {
     }
   }
 
+  async function deleteHead(id: string, name: string) {
+    if (!confirm(`Delete fee head “${name}”? If it already has bills, it will be disabled instead.`)) {
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const r = await schoolFetch(
+        `/api/admin/school/accounts/${id}`,
+        { method: "DELETE" },
+        organizationSlug ? { organizationSlug } : undefined,
+      );
+      const j = (await r.json()) as { error?: string; message?: string; disabled?: boolean };
+      if (!r.ok) throw new Error(j.error ?? "Could not delete fee head");
+      setMessage(j.message ?? (j.disabled ? "Fee head disabled (has bills)." : `Deleted ${name}`));
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Delete failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -212,16 +236,26 @@ function FeeStructureInner() {
                       </button>
                     </div>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditingId(a.id);
-                        setEditAmount(a.defaultAmountUgx ? String(a.defaultAmountUgx) : "");
-                      }}
-                      className="text-xs font-semibold text-cyan-300 hover:underline"
-                    >
-                      Edit amount
-                    </button>
+                    <div className="flex justify-end gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingId(a.id);
+                          setEditAmount(a.defaultAmountUgx ? String(a.defaultAmountUgx) : "");
+                        }}
+                        className="text-xs font-semibold text-cyan-300 hover:underline"
+                      >
+                        Edit amount
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void deleteHead(a.id, a.name)}
+                        className="text-xs font-semibold text-rose-300 hover:underline disabled:opacity-50"
+                      >
+                        Delete item
+                      </button>
+                    </div>
                   )}
                 </td>
               </tr>

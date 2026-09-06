@@ -4,26 +4,14 @@ import { usePathname } from "next/navigation";
 import { SiteHeader } from "@/components/pay/SiteHeader";
 import { useStandaloneApp } from "@/components/standalone/StandaloneAppProvider";
 
-/** Routes with their own shell — skip global header + `/api/student/session` probe. */
-const HIDE_HEADER_PREFIXES = [
-  "/admin",
-  "/school",
-  "/school-admin",
-  "/pay",
-  "/student",
-  "/my",
-  "/clicker",
-  "/dex",
-  "/opgb",
-  "/OdelPayUniversities",
-  "/OdelPaySchools",
-  "/developers",
-  "/help",
-] as const;
-
+/**
+ * Global site header for home + all user categories (student, staff, admin, developers, etc.).
+ * Only skipped for standalone embeds and the Play clicker surface.
+ */
 function hidesGlobalHeader(pathname: string, standaloneAppId?: string | null): boolean {
   if (standaloneAppId) return true;
-  return HIDE_HEADER_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  if (pathname === "/clicker" || pathname.startsWith("/clicker/")) return true;
+  return false;
 }
 
 export function ConditionalSiteHeader({ initialPathname }: { initialPathname: string }) {
