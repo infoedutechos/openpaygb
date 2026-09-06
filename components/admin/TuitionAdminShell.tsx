@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useMemo } from "react";
 import { useMasterOrgSlug } from "@/hooks/useMasterOrgSlug";
+import { useCollapsibleSidebar } from "@/hooks/useCollapsibleSidebar";
 import { OdelShieldIcon } from "@/components/icons/OdelShieldIcon";
 import { AdminWorkspaceBar } from "@/components/admin/AdminWorkspaceBar";
 import { RequestSchoolWorkspaceCta } from "@/components/tuition/RequestSchoolWorkspaceCta";
@@ -11,9 +12,11 @@ import { PUBLIC_SCHOOL_LOGIN_PATH } from "@/lib/admin-auth-entry";
 import { invalidateAuthMeCache, useAuthMe } from "@/hooks/useAuthMe";
 import { DbDegradedBanner } from "@/components/admin/DbDegradedBanner";
 import { WorkspaceEmailUnverifiedBanner } from "@/components/admin/WorkspaceEmailUnverifiedBanner";
+import { CollapsibleNavLink } from "@/components/nav/CollapsibleNavLink";
 import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton";
 import { DashboardGuideNavLinks } from "@/components/nav/DashboardGuideNavLinks";
 import { DashboardMobileChrome } from "@/components/nav/DashboardMobileChrome";
+import { SidebarCollapseToggle } from "@/components/nav/SidebarCollapseToggle";
 import { WelcomeBackStrip } from "@/components/profile/WelcomeBackStrip";
 import { adminRoleToProfileRole } from "@/lib/profile-mappers";
 import { DEX_SIDEBAR_NAV, pathnameIsDexHub } from "@/lib/dex-nav";
@@ -21,57 +24,64 @@ import { SchoolContextBar } from "@/components/admin/school/SchoolContextBar";
 import { AdSlot } from "@/components/ads/AdSlot";
 import { adminGuideForTier, AUDIENCE_GUIDES } from "@/lib/audience-guides";
 
-const UNIVERSITY_SEGMENTS: { suffix: string; label: string; schoolOnly?: boolean }[] = [
-  { suffix: "", label: "Dashboard" },
-  { suffix: "/profile", label: "Profile" },
-  { suffix: "/my-card", label: "My OpenPayGB Card" },
-  { suffix: "/tuition-balance", label: "Tuition balance" },
-  { suffix: "/students", label: "Students" },
-  { suffix: "/school-structure", label: "Classes & streams", schoolOnly: true },
-  { suffix: "/payments", label: "Payments" },
-  { suffix: "/payment-requests", label: "Payment requests" },
-  { suffix: "/virtual-cards", label: "OpenPayGB Cards" },
-  { suffix: "/school-staff", label: "Staff" },
-  { suffix: "/programmes", label: "Programs" },
-  { suffix: "/receipts", label: "Receipts" },
-  { suffix: "/reports", label: "Reports" },
-  { suffix: "/users", label: "Users" },
-  { suffix: "/settings", label: "Settings" },
+import type { SidebarIconId } from "@/components/nav/sidebar-nav-icons";
+
+const UNIVERSITY_SEGMENTS: { suffix: string; label: string; iconId: SidebarIconId; schoolOnly?: boolean }[] = [
+  { suffix: "", label: "Dashboard", iconId: "dashboard" },
+  { suffix: "/profile", label: "Profile", iconId: "profile" },
+  { suffix: "/my-card", label: "My OpenPayGB Card", iconId: "card" },
+  { suffix: "/tuition-balance", label: "Tuition balance", iconId: "balance" },
+  { suffix: "/students", label: "Students", iconId: "students" },
+  { suffix: "/school-structure", label: "Classes & streams", iconId: "structure", schoolOnly: true },
+  { suffix: "/payments", label: "Payments", iconId: "payments" },
+  { suffix: "/payment-requests", label: "Payment requests", iconId: "requests" },
+  { suffix: "/virtual-cards", label: "OpenPayGB Cards", iconId: "cards" },
+  { suffix: "/school-staff", label: "Staff", iconId: "staff" },
+  { suffix: "/programmes", label: "Programs", iconId: "programmes" },
+  { suffix: "/receipts", label: "Receipts", iconId: "receipts" },
+  { suffix: "/reports", label: "Reports", iconId: "reports" },
+  { suffix: "/users", label: "Users", iconId: "users" },
+  { suffix: "/settings", label: "Settings", iconId: "settings" },
 ];
 
-const SCHOOL_ERP_SEGMENTS: { suffix: string; label: string }[] = [
-  { suffix: "/school-dashboard", label: "Dashboard" },
-  { suffix: "/profile", label: "Profile" },
-  { suffix: "/my-card", label: "My OpenPayGB Card" },
-  { suffix: "/school-session", label: "Session" },
-  { suffix: "/school-terms", label: "Set Terms" },
-  { suffix: "/school-advertise", label: "Advertise" },
-  { suffix: "/school-accounts", label: "Accounts" },
-  { suffix: "/school-structure", label: "Class registration" },
-  { suffix: "/programmes", label: "Fee programmes" },
-  { suffix: "/students", label: "Students / bills" },
-  { suffix: "/students-register", label: "Students Register" },
-  { suffix: "/fee-ledger", label: "Fee ledger" },
-  { suffix: "/fee-structure", label: "Fee structure" },
-  { suffix: "/school-golive", label: "Go-live" },
-  { suffix: "/defaulters", label: "Defaulters" },
-  { suffix: "/school-cashbook", label: "Cashbook" },
-  { suffix: "/school-attendance", label: "Attendance" },
-  { suffix: "/school-quran", label: "Qur'an progress" },
-  { suffix: "/school-exams", label: "Examinations" },
-  { suffix: "/school-audit", label: "Audit log" },
-  { suffix: "/receipts", label: "Receipt of payments" },
-  { suffix: "/payment-requests", label: "Payment requests" },
-  { suffix: "/virtual-cards", label: "OpenPayGB Cards" },
-  { suffix: "/school-staff", label: "Staff" },
-  { suffix: "/school-outflow", label: "Outflow" },
-  { suffix: "/school-settlement", label: "OPGB settlement" },
-  { suffix: "/school-inventory", label: "Inventory" },
-  { suffix: "/school-reports", label: "Reports" },
-  { suffix: "/payments", label: "Online payments" },
-  { suffix: "/users", label: "Users" },
-  { suffix: "/settings", label: "Settings" },
+const SCHOOL_ERP_SEGMENTS: { suffix: string; label: string; iconId: SidebarIconId }[] = [
+  { suffix: "/school-dashboard", label: "Dashboard", iconId: "dashboard" },
+  { suffix: "/profile", label: "Profile", iconId: "profile" },
+  { suffix: "/my-card", label: "My OpenPayGB Card", iconId: "card" },
+  { suffix: "/school-session", label: "Session", iconId: "session" },
+  { suffix: "/school-terms", label: "Set Terms", iconId: "terms" },
+  { suffix: "/school-advertise", label: "Advertise", iconId: "advertise" },
+  { suffix: "/school-accounts", label: "Accounts", iconId: "accounts" },
+  { suffix: "/school-structure", label: "Class registration", iconId: "structure" },
+  { suffix: "/programmes", label: "Fee programmes", iconId: "programmes" },
+  { suffix: "/students", label: "Students / bills", iconId: "students" },
+  { suffix: "/students-register", label: "Students Register", iconId: "register" },
+  { suffix: "/fee-ledger", label: "Fee ledger", iconId: "ledger" },
+  { suffix: "/fee-structure", label: "Fee structure", iconId: "fees" },
+  { suffix: "/school-golive", label: "Go-live", iconId: "golive" },
+  { suffix: "/defaulters", label: "Defaulters", iconId: "defaulters" },
+  { suffix: "/school-cashbook", label: "Cashbook", iconId: "cashbook" },
+  { suffix: "/school-attendance", label: "Attendance", iconId: "attendance" },
+  { suffix: "/school-quran", label: "Qur'an progress", iconId: "quran" },
+  { suffix: "/school-exams", label: "Examinations", iconId: "exams" },
+  { suffix: "/school-audit", label: "Audit log", iconId: "audit" },
+  { suffix: "/receipts", label: "Receipt of payments", iconId: "receipts" },
+  { suffix: "/payment-requests", label: "Payment requests", iconId: "requests" },
+  { suffix: "/virtual-cards", label: "OpenPayGB Cards", iconId: "cards" },
+  { suffix: "/school-staff", label: "Staff", iconId: "staff" },
+  { suffix: "/school-outflow", label: "Outflow", iconId: "outflow" },
+  { suffix: "/school-settlement", label: "OPGB settlement", iconId: "settlement" },
+  { suffix: "/school-inventory", label: "Inventory", iconId: "inventory" },
+  { suffix: "/school-reports", label: "Reports", iconId: "reports" },
+  { suffix: "/payments", label: "Online payments", iconId: "payments" },
+  { suffix: "/users", label: "Users", iconId: "users" },
+  { suffix: "/settings", label: "Settings", iconId: "settings" },
 ];
+
+function suffixToNavKey(prefix: "school" | "uni", suffix: string): string {
+  const slug = suffix.replace(/^\//, "") || "dashboard";
+  return `${prefix}.${slug}`;
+}
 
 function navActive(pathname: string, href: string): boolean {
   if (href === DEX_SIDEBAR_NAV.href) return pathnameIsDexHub(pathname);
@@ -94,6 +104,7 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
   const isSchoolTenant = authMe?.admin?.organization?.institutionTier === "school";
   const showSchoolErp = isSchoolTenant || (isMaster && Boolean(orgSlug));
   const navItems = useMemo(() => {
+    const prefix = showSchoolErp ? "school" : "uni";
     const segments = showSchoolErp
       ? SCHOOL_ERP_SEGMENTS
       : UNIVERSITY_SEGMENTS.filter((s) => !s.schoolOnly);
@@ -101,8 +112,19 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
       ...segments.map((s) => ({
         href: hrefWithOrgSlug(`${base}${s.suffix}`),
         label: s.label,
+        navKey: suffixToNavKey(prefix, s.suffix),
+        iconId: s.iconId,
       })),
-      ...(showSchoolErp ? [] : [DEX_SIDEBAR_NAV]),
+      ...(showSchoolErp
+        ? []
+        : [
+            {
+              href: DEX_SIDEBAR_NAV.href,
+              label: DEX_SIDEBAR_NAV.label,
+              navKey: "shared.dex",
+              iconId: "dex" as SidebarIconId,
+            },
+          ]),
     ];
   }, [base, hrefWithOrgSlug, showSchoolErp]);
   const tenantLabel = !authMe?.admin
@@ -121,6 +143,7 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
     }
     return [adminGuideForTier(authMe?.admin?.organization?.institutionTier)];
   }, [isMaster, authMe?.admin?.organization?.institutionTier]);
+  const { collapsed, toggle } = useCollapsibleSidebar("odelhub-tuition-sidebar-collapsed");
 
   async function logout() {
     invalidateAuthMeCache();
@@ -138,19 +161,28 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-[calc(100vh-1px)] bg-[#070d18] text-slate-200">
-      <aside className="hidden w-56 shrink-0 flex-col border-r border-white/10 bg-[#0a101f] py-6 pl-4 pr-2 text-slate-200 md:flex">
-        <div className="flex items-center gap-2 px-2 pb-6">
+      <aside
+        className={`hidden shrink-0 flex-col border-r border-white/10 bg-[#0a101f] py-4 text-slate-200 transition-[width] duration-200 md:flex ${
+          collapsed ? "w-14 items-center px-1.5" : "w-56 pl-4 pr-2"
+        }`}
+      >
+        <div
+          className={`mb-4 flex w-full items-center ${collapsed ? "flex-col gap-2" : "gap-2 px-2 pb-2"}`}
+        >
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-cyan-500/30 bg-cyan-500/10 text-cyan-100">
             <OdelShieldIcon className="h-5 w-5" />
           </span>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold tracking-wide text-white">ODEL HUB</p>
-            <p className="truncate text-xs text-slate-400" title={tenantLabel}>
-              {tenantLabel}
-            </p>
-          </div>
+          {!collapsed ? (
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold tracking-wide text-white">ODEL HUB</p>
+              <p className="truncate text-xs text-slate-400" title={tenantLabel}>
+                {tenantLabel}
+              </p>
+            </div>
+          ) : null}
+          <SidebarCollapseToggle collapsed={collapsed} onToggle={toggle} accent="cyan" />
         </div>
-        {adminWelcomeName && adminWelcomeRole ? (
+        {!collapsed && adminWelcomeName && adminWelcomeRole ? (
           <div className="mb-4 px-2">
             <WelcomeBackStrip
               name={adminWelcomeName}
@@ -159,39 +191,55 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
             />
           </div>
         ) : null}
-        <nav className="flex flex-1 flex-col gap-0.5 text-sm">
+        <nav className={`flex flex-1 flex-col gap-0.5 text-sm ${collapsed ? "items-center" : ""}`}>
           {navItems.map((item) => (
-            <Link
+            <CollapsibleNavLink
               key={item.href}
               href={item.href}
-              className={`rounded-lg px-3 py-2 transition-colors ${
-                navActive(pathname, item.href)
-                  ? "bg-cyan-500/15 font-medium text-cyan-100"
-                  : "text-slate-400 hover:bg-white/5 hover:text-white"
-              }`}
-            >
-              {item.label}
-            </Link>
+              label={item.label}
+              navKey={item.navKey}
+              iconId={item.iconId}
+              collapsed={collapsed}
+              active={navActive(pathname, item.href)}
+              accent="cyan"
+            />
           ))}
-          <DashboardChatNavButton variant="tuition" />
-          <DashboardGuideNavLinks guides={guideLinks} />
+          {!collapsed ? (
+            <>
+              <DashboardChatNavButton variant="tuition" />
+              <DashboardGuideNavLinks guides={guideLinks} />
+            </>
+          ) : null}
         </nav>
-        {isMaster ? (
-          <Link
-            href="/admin/master"
-            className="mx-2 mt-2 rounded-lg border border-amber-500/40 bg-amber-950/30 px-3 py-2 text-xs font-medium text-amber-100 hover:border-amber-400/60"
+        {!collapsed ? (
+          <>
+            {isMaster ? (
+              <Link
+                href="/admin/master"
+                className="mx-2 mt-2 rounded-lg border border-amber-500/40 bg-amber-950/30 px-3 py-2 text-xs font-medium text-amber-100 hover:border-amber-400/60"
+              >
+                Manager console
+              </Link>
+            ) : null}
+            <RequestSchoolWorkspaceCta variant="compact" className="mt-3" />
+            <button
+              type="button"
+              onClick={() => void logout()}
+              className="mx-2 mt-4 rounded-lg px-3 py-2 text-left text-sm text-slate-500 hover:bg-white/5 hover:text-rose-200"
+            >
+              Logout
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            title="Logout"
+            onClick={() => void logout()}
+            className="mt-2 flex h-9 w-9 items-center justify-center rounded-lg text-[10px] font-bold text-rose-300/80 hover:bg-white/5"
           >
-            Manager console
-          </Link>
-        ) : null}
-        <RequestSchoolWorkspaceCta variant="compact" className="mt-3" />
-        <button
-          type="button"
-          onClick={() => void logout()}
-          className="mx-2 mt-4 rounded-lg px-3 py-2 text-left text-sm text-slate-500 hover:bg-white/5 hover:text-rose-200"
-        >
-          Logout
-        </button>
+            ×
+          </button>
+        )}
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">

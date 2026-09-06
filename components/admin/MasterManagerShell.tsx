@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { CollapsibleNavLink } from "@/components/nav/CollapsibleNavLink";
 import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton";
 import { DashboardGuideNavLinks } from "@/components/nav/DashboardGuideNavLinks";
 import { DashboardMobileChrome } from "@/components/nav/DashboardMobileChrome";
+import { SidebarCollapseToggle } from "@/components/nav/SidebarCollapseToggle";
 import { WelcomeBackStrip } from "@/components/profile/WelcomeBackStrip";
 import { useAuthMe } from "@/hooks/useAuthMe";
+import { useCollapsibleSidebar } from "@/hooks/useCollapsibleSidebar";
 import { DEX_SIDEBAR_NAV, pathnameIsDexHub } from "@/lib/dex-nav";
 import { AUDIENCE_GUIDE_LIST, USER_GUIDES_INDEX_HREF } from "@/lib/audience-guides";
 import { OPERATOR_ALL_SIDES_LINKS } from "@/lib/access-surfaces";
@@ -105,6 +108,11 @@ const nav: { href: string; label: string; desc?: string }[] = [
     desc: "Name, SEO, hero, accent",
   },
   {
+    href: "/admin/master#sidebar-nav-icons",
+    label: "Sidebar icons",
+    desc: "Dashboard icon set (MAC)",
+  },
+  {
     href: "/admin/master#auth-session-policy",
     label: "Auth policy",
     desc: "Sessions & payment TTL",
@@ -151,6 +159,57 @@ const nav: { href: string; label: string; desc?: string }[] = [
   },
 ];
 
+import type { SidebarIconId } from "@/components/nav/sidebar-nav-icons";
+
+function masterIconForHref(href: string): { navKey: string; iconId: SidebarIconId } {
+  if (href.includes("dex")) return { navKey: "shared.dex", iconId: "dex" };
+  let rest = href;
+  if (rest.startsWith("/admin/master")) rest = rest.slice("/admin/master".length);
+  else if (rest.startsWith("/admin/")) rest = rest.slice("/admin/".length);
+  else rest = rest.replace(/^\//, "");
+  const hashIdx = rest.indexOf("#");
+  const pathPart = (hashIdx >= 0 ? rest.slice(0, hashIdx) : rest).replace(/^\//, "");
+  const hashPart = hashIdx >= 0 ? rest.slice(hashIdx + 1) : "";
+  let slug = (hashPart || pathPart || "overview").replace(/^\//, "") || "overview";
+  if (slug.includes("USER_GUIDE") || href.includes("/guides/") || href.includes("user-guides")) {
+    slug = "user-guides";
+  } else if (href === "/docs" || slug === "docs") {
+    slug = "docs";
+  }
+  const navKey = `mac.${slug}`;
+  const table: Record<string, SidebarIconId> = {
+    overview: "dashboard",
+    organizations: "orgs",
+    programmes: "programmes",
+    "tuition-balance": "balance",
+    "opgb-ops": "settlement",
+    "project-download": "docs",
+    "my-card": "card",
+    "virtual-cards": "cards",
+    "openpay-cards-overview": "cards",
+    "platform-communications": "chat",
+    "ads-console": "ads",
+    "knowledge-base": "knowledge",
+    "platform-social": "social",
+    "system-backup": "backup",
+    "deployment-environment": "env",
+    "demo-logins": "demo",
+    "visitor-analytics": "visitors",
+    "platform-branding": "branding",
+    "sidebar-nav-icons": "branding",
+    "auth-session-policy": "auth",
+    "cron-ops": "cron",
+    "ug-momo-credentials": "momo",
+    "card-network": "network",
+    "payment-providers": "providers",
+    "mobile-money-providers": "momo",
+    "partner-integrations": "partner",
+    docs: "docs",
+    "user-guides": "guides",
+  };
+  return { navKey, iconId: table[slug] ?? "shield" };
+}
+
 function navActive(pathname: string, href: string): boolean {
   if (href === DEX_SIDEBAR_NAV.href) return pathnameIsDexHub(pathname);
   if (href === "/admin/master") return pathname === "/admin/master";
@@ -169,6 +228,7 @@ export default function MasterManagerShell({
   const { data: authMe } = useAuthMe();
   const adminWelcomeName =
     authMe?.admin?.name?.trim() || authMe?.admin?.email?.trim() || null;
+  const { collapsed, toggle } = useCollapsibleSidebar("odelhub-master-sidebar-collapsed");
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
@@ -188,84 +248,112 @@ export default function MasterManagerShell({
         </div>
       ) : null}
       <div className="flex min-h-0 flex-1">
-      <aside className="hidden w-56 shrink-0 flex-col border-r border-amber-500/15 bg-gradient-to-b from-[#15100c] to-[#0a0806] py-6 pl-4 pr-2 md:flex">
-        <div className="space-y-3 px-2 pb-6">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-400/90">Master</p>
-            <p className="mt-1 text-sm font-medium text-white">Manager console</p>
-            <p className="mt-2 text-[11px] leading-snug text-slate-500">ODEL HUB platform</p>
-          </div>
-          {adminWelcomeName ? (
+      <aside
+        className={`hidden shrink-0 flex-col border-r border-amber-500/15 bg-gradient-to-b from-[#15100c] to-[#0a0806] py-4 transition-[width] duration-200 md:flex ${
+          collapsed ? "w-14 items-center px-1.5" : "w-56 pl-4 pr-2"
+        }`}
+      >
+        <div className={`mb-4 flex w-full items-start ${collapsed ? "justify-center" : "justify-between gap-2 px-2"}`}>
+          {!collapsed ? (
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-400/90">Master</p>
+              <p className="mt-1 text-sm font-medium text-white">Manager console</p>
+              <p className="mt-2 text-[11px] leading-snug text-slate-500">ODEL HUB platform</p>
+            </div>
+          ) : null}
+          <SidebarCollapseToggle collapsed={collapsed} onToggle={toggle} accent="amber" />
+        </div>
+        {!collapsed && adminWelcomeName ? (
+          <div className="mb-4 px-2">
             <WelcomeBackStrip
               name={adminWelcomeName}
               role="master"
               previousLoginAt={authMe?.admin?.previousLoginAt}
               className="border-amber-500/20 bg-amber-950/20"
             />
-          ) : null}
-        </div>
+          </div>
+        ) : null}
 
-        <nav className="flex flex-1 flex-col gap-0.5 text-sm">
-          {nav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`rounded-lg px-3 py-2 transition-colors ${
-                navActive(pathname, item.href)
-                  ? "bg-amber-500/15 font-medium text-amber-100 ring-1 ring-amber-500/25"
-                  : "text-slate-400 hover:bg-white/[0.04] hover:text-white"
-              }`}
-            >
-              {item.label}
-              {item.desc ? <span className="block text-[11px] font-normal text-slate-600">{item.desc}</span> : null}
-            </Link>
-          ))}
-          <DashboardChatNavButton variant="master" />
-          <DashboardGuideNavLinks guides={AUDIENCE_GUIDE_LIST} />
+        <nav className={`flex flex-1 flex-col gap-0.5 overflow-y-auto text-sm ${collapsed ? "items-center" : ""}`}>
+          {nav.map((item) => {
+            const meta = masterIconForHref(item.href);
+            return (
+              <CollapsibleNavLink
+                key={item.href}
+                href={item.href}
+                label={item.label}
+                subtitle={!collapsed ? item.desc : undefined}
+                navKey={meta.navKey}
+                iconId={meta.iconId}
+                collapsed={collapsed}
+                active={navActive(pathname, item.href)}
+                accent="amber"
+              />
+            );
+          })}
+          {!collapsed ? (
+            <>
+              <DashboardChatNavButton variant="master" />
+              <DashboardGuideNavLinks guides={AUDIENCE_GUIDE_LIST} />
+            </>
+          ) : null}
         </nav>
 
-        <div className="mt-6 space-y-1 border-t border-amber-500/10 px-2 pt-4">
-          <p className="px-3 text-[10px] uppercase tracking-wider text-slate-600">All product sides</p>
-          {OPERATOR_ALL_SIDES_LINKS.filter((l) => l.kind !== "master").map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="block rounded-lg px-3 py-1.5 text-xs text-slate-400 hover:bg-white/[0.04] hover:text-amber-100"
-            >
-              {link.label}
-            </Link>
-          ))}
-          <p className="px-3 pt-3 text-[10px] uppercase tracking-wider text-slate-600">Operations</p>
-          <Link
-            href="/admin/profile"
-            className="block rounded-lg px-3 py-2 text-sm text-amber-200/85 hover:bg-amber-950/35 hover:text-amber-50"
-          >
-            Profile
-            <span className="block text-[11px] text-slate-600">Account &amp; password</span>
-          </Link>
-          <Link
-            href="/admin"
-            className="block rounded-lg px-3 py-2 text-sm text-cyan-200/80 hover:bg-cyan-950/40 hover:text-cyan-100"
-          >
-            Tuition hub
-            <span className="block text-[11px] text-slate-600">School admin view</span>
-          </Link>
-          <Link
-            href="/developers"
-            className="block rounded-lg px-3 py-2 text-sm text-emerald-200/80 hover:bg-emerald-950/40 hover:text-emerald-100"
-          >
-            Developers
-            <span className="block text-[11px] text-slate-600">Builder portal</span>
-          </Link>
-        </div>
+        {!collapsed ? (
+          <>
+            <div className="mt-6 space-y-1 border-t border-amber-500/10 px-2 pt-4">
+              <p className="px-3 text-[10px] uppercase tracking-wider text-slate-600">All product sides</p>
+              {OPERATOR_ALL_SIDES_LINKS.filter((l) => l.kind !== "master").map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="block rounded-lg px-3 py-1.5 text-xs text-slate-400 hover:bg-white/[0.04] hover:text-amber-100"
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <p className="px-3 pt-3 text-[10px] uppercase tracking-wider text-slate-600">Operations</p>
+              <Link
+                href="/admin/profile"
+                className="block rounded-lg px-3 py-2 text-sm text-amber-200/85 hover:bg-amber-950/35 hover:text-amber-50"
+              >
+                Profile
+                <span className="block text-[11px] text-slate-600">Account &amp; password</span>
+              </Link>
+              <Link
+                href="/admin"
+                className="block rounded-lg px-3 py-2 text-sm text-cyan-200/80 hover:bg-cyan-950/40 hover:text-cyan-100"
+              >
+                Tuition hub
+                <span className="block text-[11px] text-slate-600">School admin view</span>
+              </Link>
+              <Link
+                href="/developers"
+                className="block rounded-lg px-3 py-2 text-sm text-emerald-200/80 hover:bg-emerald-950/40 hover:text-emerald-100"
+              >
+                Developers
+                <span className="block text-[11px] text-slate-600">Builder portal</span>
+              </Link>
+            </div>
 
-        <button
-          type="button"
-          onClick={() => void logout()}
-          className="mx-2 mt-4 rounded-lg px-3 py-2 text-left text-sm text-slate-500 hover:bg-white/[0.04] hover:text-rose-200"
-        >
-          Logout
-        </button>
+            <button
+              type="button"
+              onClick={() => void logout()}
+              className="mx-2 mt-4 rounded-lg px-3 py-2 text-left text-sm text-slate-500 hover:bg-white/[0.04] hover:text-rose-200"
+            >
+              Logout
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            title="Logout"
+            onClick={() => void logout()}
+            className="mt-2 flex h-9 w-9 items-center justify-center rounded-lg text-[10px] font-bold text-rose-300/80 hover:bg-white/5"
+          >
+            ×
+          </button>
+        )}
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col bg-gradient-to-b from-[#100c0a]/80 to-transparent">

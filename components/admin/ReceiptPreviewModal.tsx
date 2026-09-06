@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import QRCode from "qrcode";
 import { ReceiptFeeBreakdown } from "@/components/receipt/ReceiptFeeBreakdown";
 import { ReceiptLetterhead } from "@/components/receipt/ReceiptLetterhead";
+import { BrandedQrImage } from "@/components/qr/BrandedQrImage";
 import type { ReceiptBreakdown } from "@/lib/receipt-lines";
 import type { ReceiptBranding } from "@/lib/receipt-branding-types";
 
@@ -76,7 +76,7 @@ export function ReceiptPreviewModal({
   onClose: () => void;
 }) {
   const [receipt, setReceipt] = useState<Receipt | null>(null);
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [verifyUrl, setVerifyUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -92,16 +92,10 @@ export function ReceiptPreviewModal({
       setReceipt(rec);
       const origin = typeof window !== "undefined" ? window.location.origin : "";
       const path = rec.verificationUrl.startsWith("/") ? rec.verificationUrl : `/${rec.verificationUrl}`;
-      const verify = `${origin}${path}`;
-      const dataUrl = await QRCode.toDataURL(verify, {
-        width: 180,
-        margin: 1,
-        color: { dark: "#0f172a", light: "#ffffff" },
-      });
-      setQrDataUrl(dataUrl);
+      setVerifyUrl(`${origin}${path}`);
     } catch (e) {
       setReceipt(null);
-      setQrDataUrl(null);
+      setVerifyUrl(null);
       setError(e instanceof Error ? e.message : "Failed to load");
     } finally {
       setLoading(false);
@@ -112,7 +106,7 @@ export function ReceiptPreviewModal({
     if (open && paymentId) void load();
     if (!open) {
       setReceipt(null);
-      setQrDataUrl(null);
+      setVerifyUrl(null);
       setError(null);
     }
   }, [open, paymentId, load]);
@@ -188,15 +182,13 @@ export function ReceiptPreviewModal({
             )}
           </div>
 
-          {qrDataUrl && receipt ? (
+          {verifyUrl && receipt ? (
             <div className="mt-8 flex flex-col items-center">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={qrDataUrl}
-                alt="Receipt verification QR code"
+              <BrandedQrImage
+                payload={verifyUrl}
+                alt="Receipt verification QR code with OPGB mark"
                 className="h-[140px] w-[140px]"
-                width={140}
-                height={140}
+                size={140}
               />
               <p className="mt-4 text-center text-sm text-slate-600">
                 Thank you for choosing {platformName}

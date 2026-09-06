@@ -2,12 +2,13 @@ import "server-only";
 
 import { prisma } from "@/lib/prisma";
 import { PLATFORM_SITE_UI_KEY } from "@/lib/site-ui-settings";
+import { PLATFORM_LOGO_PATH } from "@/lib/platform-logo-path";
 import {
   platformLogoContentType,
   type PlatformLogoContentType,
 } from "@/lib/validate-platform-logo";
 
-export const PLATFORM_LOGO_PATH = "/api/platform/logo";
+export { PLATFORM_LOGO_PATH };
 
 export function platformLogoUrl(uploadedAt: Date | string | null | undefined): string | null {
   if (!uploadedAt) return null;

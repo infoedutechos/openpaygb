@@ -1451,6 +1451,8 @@ model SiteUiSettings {
   copilotBubbleImageUploadedAt DateTime?
   /** Per-platform footer/support icons keyed by social link key (see lib/social-link-icons). */
   socialLinkIcons           Json     @default("{}")
+  /** Dashboard sidebar icon overrides: navKey → builtin iconId (see components/nav/sidebar-nav-icons). */
+  sidebarNavIconOverrides   Json     @default("{}")
   /**
    * When true (default), self-serve school workspaces stay **pending** until a platform master approves
    * (after the applicant verifies their registration email). When false, the workspace is activated

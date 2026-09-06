@@ -3,43 +3,47 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { CollapsibleNavLink } from "@/components/nav/CollapsibleNavLink";
 import { DashboardMobileChrome } from "@/components/nav/DashboardMobileChrome";
 import { OperatorAllSidesNav } from "@/components/nav/OperatorAllSidesNav";
+import { SidebarCollapseToggle } from "@/components/nav/SidebarCollapseToggle";
+import { useCollapsibleSidebar } from "@/hooks/useCollapsibleSidebar";
 import { USER_GUIDES_INDEX_HREF } from "@/lib/audience-guides";
 import { OPERATOR_ALL_SIDES_LINKS } from "@/lib/access-surfaces";
+import type { SidebarIconId } from "@/components/nav/sidebar-nav-icons";
 
-const DEV_NAV = [
-  { href: "/developers", label: "Developer hub" },
-  { href: "/developers/register", label: "Register / sign in" },
-  { href: "/developers/dashboard", label: "API dashboard" },
-  { href: "/developers/dashboard#api-keys", label: "Generated API keys" },
-  { href: "/developers/dashboard#opgb-card", label: "OPGB Card" },
-  { href: "/developers/dashboard#woocommerce", label: "WooCommerce" },
-  { href: "/integrations/woocommerce", label: "WooCommerce plugin" },
-  { href: "/opgb", label: "OpenPayGB provider" },
-  { href: "/opgb#integrate", label: "Integration guide" },
-  { href: "/developers/advertise", label: "Advertise (ads API)" },
-  { href: "/help/partner-api-overview", label: "Partner API docs" },
-  { href: "/api/docs/guides/USER_GUIDE_PARTNER_INTEGRATOR.md", label: "Integrator guide" },
-  { href: USER_GUIDES_INDEX_HREF, label: "All user guides" },
-  { href: "/help", label: "Help center" },
+const DEV_NAV: { href: string; label: string; navKey: string; iconId: SidebarIconId }[] = [
+  { href: "/developers", label: "Developer hub", navKey: "dev.hub", iconId: "dev" },
+  { href: "/developers/register", label: "Register / sign in", navKey: "dev.register", iconId: "auth" },
+  { href: "/developers/dashboard", label: "API dashboard", navKey: "dev.dashboard", iconId: "dashboard" },
+  { href: "/developers/dashboard#api-keys", label: "Generated API keys", navKey: "dev.api-keys", iconId: "api" },
+  { href: "/developers/dashboard#opgb-card", label: "OPGB Card", navKey: "dev.opgb-card", iconId: "card" },
+  { href: "/developers/dashboard#woocommerce", label: "WooCommerce", navKey: "dev.woocommerce", iconId: "woo" },
+  { href: "/integrations/woocommerce", label: "WooCommerce plugin", navKey: "dev.woocommerce-plugin", iconId: "woo" },
+  { href: "/opgb", label: "OpenPayGB provider", navKey: "dev.opgb", iconId: "shield" },
+  { href: "/opgb#integrate", label: "Integration guide", navKey: "dev.integrate", iconId: "docs" },
+  { href: "/developers/advertise", label: "Advertise (ads API)", navKey: "dev.advertise", iconId: "advertise" },
+  { href: "/help/partner-api-overview", label: "Partner API docs", navKey: "dev.partner-docs", iconId: "partner" },
+  { href: "/api/docs/guides/USER_GUIDE_PARTNER_INTEGRATOR.md", label: "Integrator guide", navKey: "dev.integrator", iconId: "guides" },
+  { href: USER_GUIDES_INDEX_HREF, label: "All user guides", navKey: "dev.guides", iconId: "guides" },
+  { href: "/help", label: "Help center", navKey: "dev.help", iconId: "knowledge" },
 ];
 
-const DASHBOARD_SECTIONS = [
-  { href: "/developers/dashboard#overview", label: "Overview" },
-  { href: "/developers/dashboard#settlement", label: "Settlement & cashout" },
-  { href: "/developers/dashboard#transactions", label: "Transactions" },
-  { href: "/developers/dashboard#fees", label: "Fees" },
-  { href: "/developers/dashboard#branding", label: "White-label" },
-  { href: "/developers/dashboard#api-keys", label: "Generated API keys" },
-  { href: "/developers/dashboard#webhooks", label: "Webhooks" },
-  { href: "/developers/dashboard#opgb-card", label: "OPGB Card (TON / MoMo)" },
-  { href: "/developers/dashboard#oauth", label: "OAuth & OPGB APIs" },
-  { href: "/developers/dashboard#woocommerce", label: "WooCommerce plugin" },
-  { href: "/integrations/woocommerce/odelhub-openpaygb", label: "Download · odelhub-openpaygb" },
-  { href: "/opgb#charges", label: "Create a charge" },
-  { href: "/opgb#webhooks", label: "Charge webhooks" },
-  { href: "/opgb#checkout", label: "Hosted checkout" },
+const DASHBOARD_SECTIONS: { href: string; label: string; navKey: string; iconId: SidebarIconId }[] = [
+  { href: "/developers/dashboard#overview", label: "Overview", navKey: "dev.dashboard__overview", iconId: "dashboard" },
+  { href: "/developers/dashboard#settlement", label: "Settlement & cashout", navKey: "dev.dashboard__settlement", iconId: "settlement" },
+  { href: "/developers/dashboard#transactions", label: "Transactions", navKey: "dev.dashboard__transactions", iconId: "ledger" },
+  { href: "/developers/dashboard#fees", label: "Fees", navKey: "dev.dashboard__fees", iconId: "fees" },
+  { href: "/developers/dashboard#branding", label: "White-label", navKey: "dev.dashboard__branding", iconId: "branding" },
+  { href: "/developers/dashboard#api-keys", label: "Generated API keys", navKey: "dev.api-keys", iconId: "api" },
+  { href: "/developers/dashboard#webhooks", label: "Webhooks", navKey: "dev.dashboard__webhooks", iconId: "network" },
+  { href: "/developers/dashboard#opgb-card", label: "OPGB Card (TON / MoMo)", navKey: "dev.opgb-card", iconId: "card" },
+  { href: "/developers/dashboard#oauth", label: "OAuth & OPGB APIs", navKey: "dev.dashboard__oauth", iconId: "auth" },
+  { href: "/developers/dashboard#woocommerce", label: "WooCommerce plugin", navKey: "dev.woocommerce", iconId: "woo" },
+  { href: "/integrations/woocommerce/odelhub-openpaygb", label: "Download · odelhub-openpaygb", navKey: "dev.woo-download", iconId: "backup" },
+  { href: "/opgb#charges", label: "Create a charge", navKey: "dev.charges", iconId: "pay" },
+  { href: "/opgb#webhooks", label: "Charge webhooks", navKey: "dev.charge-webhooks", iconId: "network" },
+  { href: "/opgb#checkout", label: "Hosted checkout", navKey: "dev.checkout", iconId: "payments" },
 ];
 
 const SIDEBAR_KEY = "odelhub-devs-sidebar-collapsed";
@@ -65,19 +69,8 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "";
   const showAllSidesBanner = pathname === "/developers" || pathname === "/developers/";
   const onDashboard = pathname.startsWith("/developers/dashboard");
-  const [collapsed, setCollapsed] = useState(false);
+  const { collapsed, toggle, expand } = useCollapsibleSidebar(SIDEBAR_KEY);
   const [hash, setHash] = useState("");
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    try {
-      const v = localStorage.getItem(SIDEBAR_KEY);
-      if (v === "1") setCollapsed(true);
-    } catch {
-      /* ignore */
-    }
-    setHydrated(true);
-  }, []);
 
   useEffect(() => {
     const sync = () => setHash(typeof window !== "undefined" ? window.location.hash : "");
@@ -85,27 +78,6 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
     window.addEventListener("hashchange", sync);
     return () => window.removeEventListener("hashchange", sync);
   }, [pathname]);
-
-  function toggleSidebar() {
-    setCollapsed((c) => {
-      const next = !c;
-      try {
-        localStorage.setItem(SIDEBAR_KEY, next ? "1" : "0");
-      } catch {
-        /* ignore */
-      }
-      return next;
-    });
-  }
-
-  function expandSidebar() {
-    setCollapsed(false);
-    try {
-      localStorage.setItem(SIDEBAR_KEY, "0");
-    } catch {
-      /* ignore */
-    }
-  }
 
   return (
     <div className="min-h-dvh bg-[#070b14] text-slate-200">
@@ -130,14 +102,7 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
               </Link>
             ))}
           </nav>
-          <button
-            type="button"
-            onClick={toggleSidebar}
-            className="rounded-lg border border-emerald-500/40 bg-emerald-950/40 px-2.5 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-900/50"
-            title={collapsed ? "Show sidebar" : "Hide sidebar"}
-          >
-            {collapsed ? "Show sidebar" : "Hide sidebar"}
-          </button>
+          <SidebarCollapseToggle collapsed={collapsed} onToggle={toggle} accent="emerald" />
         </div>
       </div>
 
@@ -174,136 +139,63 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
       <div className="mx-auto flex max-w-6xl gap-0 md:gap-4 px-0 md:px-4 py-0 md:py-8">
         {/* Desktop sidebar: full menu, or narrow always-visible strip when collapsed */}
         <aside
-          className={`relative hidden shrink-0 border-r border-white/10 bg-[#0a101f] md:block transition-[width] duration-200 ${
-            collapsed ? "w-12" : "w-56"
+          className={`relative hidden shrink-0 border-r border-white/10 bg-[#0a101f] transition-[width] duration-200 md:block ${
+            collapsed ? "w-14" : "w-56"
           }`}
           aria-label="Developers sidebar"
         >
-          {collapsed ? (
-            <div className="sticky top-4 flex flex-col items-center gap-2 p-2">
-              <button
-                type="button"
-                onClick={expandSidebar}
-                className="flex w-full flex-col items-center gap-1 rounded-lg border border-emerald-500/40 bg-emerald-950/50 px-1 py-3 text-[10px] font-bold uppercase tracking-wider text-emerald-200 hover:bg-emerald-900/60"
-                title="Expand sidebar menu"
-              >
-                <span aria-hidden className="text-base leading-none">
-                  ›
-                </span>
-                Menu
-              </button>
-            </div>
-          ) : (
-            <div className="sticky top-4 space-y-4 p-4">
-              <div className="flex items-center justify-between gap-2">
+          <div className={`sticky top-4 space-y-3 ${collapsed ? "p-2" : "p-4"}`}>
+            <div className={`flex items-center ${collapsed ? "justify-center" : "justify-between gap-2"}`}>
+              {!collapsed ? (
                 <p className="mb-0 text-[10px] font-bold uppercase tracking-wider text-emerald-400/90">Menu</p>
-                <button
-                  type="button"
-                  onClick={toggleSidebar}
-                  className="rounded border border-white/10 px-1.5 py-0.5 text-[10px] text-slate-400 hover:text-white"
-                >
-                  Collapse
-                </button>
-              </div>
-              <nav className="flex flex-col gap-0.5 text-sm">
-                {DEV_NAV.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`rounded-lg px-2.5 py-2 ${
-                      navActive(pathname, item.href, hash)
-                        ? "bg-emerald-500/15 text-emerald-100"
-                        : "text-slate-400 hover:bg-white/5 hover:text-white"
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </nav>
-              {onDashboard ? (
-                <div>
-                  <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Dashboard</p>
-                  <nav className="flex flex-col gap-0.5 text-sm">
-                    {DASHBOARD_SECTIONS.map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={(e) => {
-                          if (!item.href.includes("#")) return;
-                          const [base, section] = item.href.split("#");
-                          if (pathname.startsWith(base) && section) {
-                            e.preventDefault();
-                            window.location.hash = section;
-                            window.dispatchEvent(new HashChangeEvent("hashchange"));
-                          }
-                        }}
-                        className={`rounded-lg px-2.5 py-1.5 ${
-                          navActive(pathname, item.href, hash)
-                            ? "bg-cyan-500/15 text-cyan-100"
-                            : "text-slate-400 hover:bg-white/5 hover:text-white"
-                        }`}
-                      >
-                        {item.label}
-                      </Link>
-                    ))}
-                  </nav>
-                </div>
-              ) : (
-                <div>
-                  <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Quick links</p>
-                  <nav className="flex flex-col gap-0.5 text-sm">
-                    <Link
-                      href="/developers/dashboard#api-keys"
-                      className="rounded-lg px-2.5 py-1.5 text-slate-400 hover:bg-white/5 hover:text-emerald-100"
-                    >
-                      Generated API keys
-                    </Link>
-                    <Link
-                      href="/developers/dashboard#opgb-card"
-                      className="rounded-lg px-2.5 py-1.5 text-slate-400 hover:bg-white/5 hover:text-emerald-100"
-                    >
-                      OPGB Card (TON / MoMo)
-                    </Link>
-                    <Link
-                      href="/developers/dashboard#woocommerce"
-                      className="rounded-lg px-2.5 py-1.5 text-slate-400 hover:bg-white/5 hover:text-emerald-100"
-                    >
-                      WooCommerce plugin
-                    </Link>
-                    <Link
-                      href="/integrations/woocommerce"
-                      className="rounded-lg px-2.5 py-1.5 text-slate-400 hover:bg-white/5 hover:text-emerald-100"
-                    >
-                      /integrations/woocommerce
-                    </Link>
-                  </nav>
-                </div>
-              )}
-              <div>
-                <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Product sides</p>
-                <nav className="flex flex-col gap-0.5 text-xs">
-                  {OPERATOR_ALL_SIDES_LINKS.filter((l) => l.kind !== "developer")
-                    .slice(0, 8)
-                    .map((link) => (
-                      <Link
-                        key={link.href}
-                        href={link.href}
-                        className="rounded-md px-2 py-1.5 text-slate-500 hover:bg-white/5 hover:text-emerald-100"
-                      >
-                        {link.label}
-                      </Link>
-                    ))}
+              ) : null}
+              <SidebarCollapseToggle collapsed={collapsed} onToggle={toggle} accent="emerald" />
+            </div>
+            <nav className={`flex flex-col gap-0.5 text-sm ${collapsed ? "items-center" : ""}`}>
+              {DEV_NAV.map((item) => (
+                <CollapsibleNavLink
+                  key={item.href}
+                  href={item.href}
+                  label={item.label}
+                  navKey={item.navKey}
+                  iconId={item.iconId}
+                  collapsed={collapsed}
+                  active={navActive(pathname, item.href, hash)}
+                  accent="emerald"
+                  onClick={collapsed ? expand : undefined}
+                />
+              ))}
+            </nav>
+            {onDashboard ? (
+              <div className={collapsed ? "pt-2" : "border-t border-white/10 pt-3"}>
+                {!collapsed ? (
+                  <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Dashboard</p>
+                ) : null}
+                <nav className={`flex flex-col gap-0.5 text-sm ${collapsed ? "items-center" : ""}`}>
+                  {DASHBOARD_SECTIONS.map((s) => (
+                    <CollapsibleNavLink
+                      key={s.href}
+                      href={s.href}
+                      label={s.label}
+                      navKey={s.navKey}
+                      iconId={s.iconId}
+                      collapsed={collapsed}
+                      active={navActive(pathname, s.href, hash)}
+                      accent="emerald"
+                      onClick={collapsed ? expand : undefined}
+                    />
+                  ))}
                 </nav>
               </div>
-            </div>
-          )}
+            ) : null}
+          </div>
         </aside>
 
         <div className="min-w-0 flex-1 space-y-6 px-4 py-6 md:px-0 md:py-0">
-          {!hydrated ? null : collapsed ? (
+          {collapsed ? (
             <p className="hidden text-xs text-slate-500 md:block">
-              Sidebar collapsed — use the green <strong className="text-emerald-300">Menu</strong> strip on the left, or{" "}
-              <button type="button" onClick={expandSidebar} className="text-emerald-300 underline">
+              Sidebar collapsed — use ◂ / ▸ or{" "}
+              <button type="button" onClick={expand} className="text-emerald-300 underline">
                 expand sidebar
               </button>
               .

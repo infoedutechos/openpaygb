@@ -50,6 +50,10 @@ type AppInfo = {
   settlementBalanceUgx?: number;
 };
 
+const inputClass =
+  "mt-1 w-full rounded-lg border border-white/20 bg-black/40 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-cyan-400/50 focus:outline-none";
+const labelClass = "block text-xs font-medium text-slate-300";
+
 export default function SchoolSettlementPage() {
   const { schoolFetch, needsOrgSlug } = useSchoolAdminApi();
   const [loading, setLoading] = useState(true);
@@ -210,59 +214,69 @@ export default function SchoolSettlementPage() {
   }
 
   if (loading) {
-    return <p className="text-sm text-slate-500">Loading OpenPayGB settlement…</p>;
+    return <p className="text-sm text-slate-300">Loading OpenPayGB settlement…</p>;
   }
 
   const available = settlement?.availableBalanceUgx ?? app?.settlementBalanceUgx ?? 0;
 
   return (
-    <div className="space-y-6">
-      <header className="rounded-2xl border border-cyan-500/25 bg-cyan-50/60 p-5">
-        <p className="text-xs font-bold uppercase tracking-[0.15em] text-cyan-800">OpenPayGB · School merchant</p>
-        <h1 className="mt-1 text-2xl font-semibold text-slate-900">Settlement & cashout</h1>
-        <p className="mt-2 max-w-3xl text-sm text-slate-600">
+    <div className="space-y-6 text-slate-100">
+      <header className="rounded-2xl border border-cyan-500/35 bg-cyan-950/40 p-5">
+        <p className="text-xs font-bold uppercase tracking-[0.15em] text-cyan-300">OpenPayGB · School merchant</p>
+        <h1 className="mt-1 text-2xl font-semibold text-white">Settlement & cashout</h1>
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300">
           Confirmed merchant charges (hosted checkout / Partner API) credit this school&apos;s OpenPayGB settlement
           float. Cash out to MoMo when you want funds sent to the school float number. This is separate from tuition
           Cashbook / Outflow vouchers.
         </p>
         {app ? (
-          <p className="mt-2 font-mono text-xs text-slate-500">
-            Merchant app: {app.brandingName || app.name} · client_id {app.clientId}
+          <p className="mt-3 break-all font-mono text-xs text-cyan-100/90">
+            Merchant app: <span className="text-white">{app.brandingName || app.name}</span>
+            <span className="text-slate-500"> · </span>
+            client_id <span className="text-white">{app.clientId}</span>
           </p>
         ) : null}
         {provisioned ? (
-          <p className="mt-1 text-xs text-emerald-700">Merchant wallet was provisioned automatically for this school.</p>
+          <p className="mt-2 text-xs font-medium text-emerald-300">
+            Merchant wallet was provisioned automatically for this school.
+          </p>
         ) : null}
       </header>
 
-      {error ? <p className="text-sm text-rose-600">{error}</p> : null}
-      {message ? <p className="text-sm text-emerald-700">{message}</p> : null}
+      {error ? (
+        <p className="rounded-lg border border-rose-500/40 bg-rose-950/40 px-3 py-2 text-sm text-rose-200">{error}</p>
+      ) : null}
+      {message ? (
+        <p className="rounded-lg border border-emerald-500/30 bg-emerald-950/30 px-3 py-2 text-sm text-emerald-200">
+          {message}
+        </p>
+      ) : null}
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Kpi label="Available" value={formatUgx(available)} />
+        <Kpi label="Available" value={formatUgx(available)} accent="cyan" />
         <Kpi label="Pending cashouts" value={formatUgx(settlement?.pendingPayoutUgx ?? 0)} />
         <Kpi label="Paid out" value={formatUgx(settlement?.totalPaidOutUgx ?? 0)} />
-        <Kpi label="Lifetime net" value={formatUgx(settlement?.lifetimeMerchantNetUgx ?? 0)} />
+        <Kpi label="Lifetime net" value={formatUgx(settlement?.lifetimeMerchantNetUgx ?? 0)} accent="emerald" />
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">Cashout destination</h2>
+      <section className="rounded-2xl border border-white/15 bg-[#0a101f] p-5">
+        <h2 className="text-lg font-semibold text-white">Cashout destination</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <label className="block text-xs text-slate-600">
+          <label className={labelClass}>
             MoMo phone
             <input
               value={payoutPhone}
               onChange={(e) => setPayoutPhone(e.target.value)}
               placeholder="07… or 2567…"
-              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              className={inputClass}
             />
           </label>
-          <label className="block text-xs text-slate-600">
+          <label className={labelClass}>
             Network
             <select
               value={payoutNetwork}
               onChange={(e) => setPayoutNetwork(e.target.value as "MTN" | "AIRTEL")}
-              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              className={inputClass}
             >
               <option value="MTN">MTN</option>
               <option value="AIRTEL">Airtel</option>
@@ -273,16 +287,16 @@ export default function SchoolSettlementPage() {
           type="button"
           disabled={busy}
           onClick={() => void savePayoutDestination()}
-          className="mt-3 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          className="mt-3 rounded-lg border border-white/25 bg-white/5 px-3 py-2 text-sm font-medium text-white hover:bg-white/10 disabled:opacity-50"
         >
           Save destination
         </button>
       </section>
 
-      <section className="rounded-2xl border border-cyan-200 bg-cyan-50/40 p-5">
-        <h2 className="text-lg font-semibold text-cyan-950">Request cashout</h2>
+      <section className="rounded-2xl border border-cyan-500/30 bg-cyan-950/25 p-5">
+        <h2 className="text-lg font-semibold text-cyan-50">Request cashout</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
-          <label className="block text-xs text-slate-600">
+          <label className={labelClass}>
             Amount (UGX)
             <div className="mt-1 flex gap-2">
               <input
@@ -290,24 +304,24 @@ export default function SchoolSettlementPage() {
                 onChange={(e) => setCashoutAmount(e.target.value)}
                 inputMode="numeric"
                 placeholder="10000"
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                className={inputClass}
               />
               <button
                 type="button"
                 disabled={available < 1000}
                 onClick={() => setCashoutAmount(String(available))}
-                className="shrink-0 rounded-lg border border-cyan-300 px-2 text-xs text-cyan-800 disabled:opacity-40"
+                className="shrink-0 rounded-lg border border-cyan-400/40 bg-cyan-500/15 px-2 text-xs font-semibold text-cyan-100 disabled:opacity-40"
               >
                 Max
               </button>
             </div>
           </label>
-          <label className="block text-xs text-slate-600 sm:col-span-2">
+          <label className={`${labelClass} sm:col-span-2`}>
             Note (optional)
             <input
               value={cashoutNote}
               onChange={(e) => setCashoutNote(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+              className={inputClass}
             />
           </label>
         </div>
@@ -316,7 +330,7 @@ export default function SchoolSettlementPage() {
             type="button"
             disabled={busy || available < 1000 || !payoutPhone.trim()}
             onClick={() => void requestCashout()}
-            className="rounded-lg bg-cyan-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            className="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-500 disabled:opacity-50"
           >
             {busy ? "Requesting…" : "Request cashout"}
           </button>
@@ -324,7 +338,7 @@ export default function SchoolSettlementPage() {
             type="button"
             disabled={busy}
             onClick={() => void createTestCharge()}
-            className="rounded-lg border border-cyan-300 px-3 py-2 text-sm text-cyan-900"
+            className="rounded-lg border border-cyan-400/40 px-3 py-2 text-sm font-medium text-cyan-100 hover:bg-cyan-500/10"
           >
             Create test charge (5,000 UGX)
           </button>
@@ -332,7 +346,7 @@ export default function SchoolSettlementPage() {
             type="button"
             disabled={busy}
             onClick={() => void sendFeeReminders()}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700"
+            className="rounded-lg border border-white/20 px-3 py-2 text-sm font-medium text-slate-200 hover:bg-white/5"
           >
             Send Telegram fee reminders
           </button>
@@ -340,15 +354,15 @@ export default function SchoolSettlementPage() {
             type="button"
             disabled={busy}
             onClick={() => void load()}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700"
+            className="rounded-lg border border-white/20 px-3 py-2 text-sm font-medium text-slate-200 hover:bg-white/5"
           >
             Refresh
           </button>
         </div>
         {available < 1000 ? (
-          <p className="mt-3 text-xs text-amber-800">
+          <p className="mt-3 text-xs leading-relaxed text-amber-200">
             Balance below 1,000 UGX minimum. Create charges via Partner API or{" "}
-            <Link href="/opgb" className="underline">
+            <Link href="/opgb" className="font-semibold text-cyan-300 underline">
               /opgb
             </Link>{" "}
             ; confirmed payments credit this float.
@@ -356,25 +370,27 @@ export default function SchoolSettlementPage() {
         ) : null}
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">Cashout history</h2>
+      <section className="rounded-2xl border border-white/15 bg-[#0a101f] p-5">
+        <h2 className="text-lg font-semibold text-white">Cashout history</h2>
         <ul className="mt-3 space-y-2">
           {payouts.length === 0 ? (
-            <li className="text-sm text-slate-500">No cashout requests yet.</li>
+            <li className="text-sm text-slate-400">No cashout requests yet.</li>
           ) : (
             payouts.map((p) => (
               <li
                 key={p.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-100 px-3 py-2 text-sm"
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm"
               >
-                <span className="font-medium">{formatUgx(p.amountUgx)}</span>
-                <span className="text-xs text-slate-500">
+                <span className="font-semibold text-white">{formatUgx(p.amountUgx)}</span>
+                <span className="text-xs text-slate-300">
                   {p.network} {p.phone}
                 </span>
-                <span className="rounded-full border px-2 py-0.5 text-[10px] uppercase text-slate-600">{p.status}</span>
+                <span className="rounded-full border border-white/20 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-200">
+                  {p.status}
+                </span>
                 <span className="text-xs text-slate-400">{new Date(p.createdAt).toLocaleString()}</span>
                 {p.rejectionReason ? (
-                  <span className="w-full text-xs text-rose-600">Rejected: {p.rejectionReason}</span>
+                  <span className="w-full text-xs text-rose-300">Rejected: {p.rejectionReason}</span>
                 ) : null}
               </li>
             ))
@@ -382,43 +398,49 @@ export default function SchoolSettlementPage() {
         </ul>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="rounded-2xl border border-white/15 bg-[#0a101f] p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold text-slate-900">Merchant charges</h2>
-          <Link href="/opgb#charges" className="text-xs text-cyan-800 underline">
+          <h2 className="text-lg font-semibold text-white">Merchant charges</h2>
+          <Link href="/opgb#charges" className="text-xs font-medium text-cyan-300 underline">
             How to create a charge
           </Link>
         </div>
         <div className="mt-3 overflow-x-auto">
-          <table className="min-w-full text-left text-xs text-slate-700">
-            <thead className="border-b text-[10px] uppercase tracking-wider text-slate-500">
+          <table className="min-w-full text-left text-sm text-slate-200">
+            <thead className="border-b border-white/15 text-[11px] uppercase tracking-wider text-slate-400">
               <tr>
-                <th className="px-2 py-2">Created</th>
-                <th className="px-2 py-2">Status</th>
-                <th className="px-2 py-2">Order</th>
-                <th className="px-2 py-2">Customer paid</th>
-                <th className="px-2 py-2">OPGB fee</th>
-                <th className="px-2 py-2">School net</th>
-                <th className="px-2 py-2">Ref</th>
+                <th className="px-2 py-2.5 font-semibold">Created</th>
+                <th className="px-2 py-2.5 font-semibold">Status</th>
+                <th className="px-2 py-2.5 font-semibold">Order</th>
+                <th className="px-2 py-2.5 font-semibold">Customer paid</th>
+                <th className="px-2 py-2.5 font-semibold">OPGB fee</th>
+                <th className="px-2 py-2.5 font-semibold">School net</th>
+                <th className="px-2 py-2.5 font-semibold">Ref</th>
               </tr>
             </thead>
             <tbody>
               {charges.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-2 py-6 text-slate-500">
+                  <td colSpan={7} className="px-2 py-6 text-slate-400">
                     No merchant charges yet. Use Partner API keys from the Developers dashboard once linked.
                   </td>
                 </tr>
               ) : (
                 charges.map((c) => (
-                  <tr key={c.id} className="border-b border-slate-50">
-                    <td className="px-2 py-2 whitespace-nowrap">{new Date(c.createdAt).toLocaleString()}</td>
-                    <td className="px-2 py-2">{c.status}</td>
-                    <td className="px-2 py-2">{formatUgx(c.orderAmountUgx || c.amountUgx)}</td>
-                    <td className="px-2 py-2">{formatUgx(c.amountUgx)}</td>
-                    <td className="px-2 py-2">{formatUgx(c.platformFeeUgx || 0)}</td>
-                    <td className="px-2 py-2">{formatUgx(c.merchantNetUgx || 0)}</td>
-                    <td className="px-2 py-2 font-mono text-[10px]">{c.externalRef || c.description || "—"}</td>
+                  <tr key={c.id} className="border-b border-white/10">
+                    <td className="px-2 py-2.5 whitespace-nowrap text-slate-300">
+                      {new Date(c.createdAt).toLocaleString()}
+                    </td>
+                    <td className="px-2 py-2.5 font-medium text-white">{c.status}</td>
+                    <td className="px-2 py-2.5 text-white">{formatUgx(c.orderAmountUgx || c.amountUgx)}</td>
+                    <td className="px-2 py-2.5 text-white">{formatUgx(c.amountUgx)}</td>
+                    <td className="px-2 py-2.5 text-slate-300">{formatUgx(c.platformFeeUgx || 0)}</td>
+                    <td className="px-2 py-2.5 font-semibold text-emerald-300">
+                      {formatUgx(c.merchantNetUgx || 0)}
+                    </td>
+                    <td className="px-2 py-2.5 font-mono text-xs text-slate-300">
+                      {c.externalRef || c.description || "—"}
+                    </td>
                   </tr>
                 ))
               )}
@@ -427,13 +449,13 @@ export default function SchoolSettlementPage() {
         </div>
       </section>
 
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-slate-400">
         Ops queue:{" "}
-        <Link href="/admin/master/opgb-ops" className="text-cyan-800 underline">
+        <Link href="/admin/master/opgb-ops" className="font-medium text-cyan-300 underline">
           Master OPGB console
         </Link>
         . Developers twin:{" "}
-        <Link href="/developers/dashboard#settlement" className="text-cyan-800 underline">
+        <Link href="/developers/dashboard#settlement" className="font-medium text-cyan-300 underline">
           /developers/dashboard#settlement
         </Link>
         .
@@ -442,11 +464,27 @@ export default function SchoolSettlementPage() {
   );
 }
 
-function Kpi({ label, value }: { label: string; value: string }) {
+function Kpi({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: "cyan" | "emerald";
+}) {
+  const border =
+    accent === "cyan"
+      ? "border-cyan-500/35 bg-cyan-950/30"
+      : accent === "emerald"
+        ? "border-emerald-500/35 bg-emerald-950/30"
+        : "border-white/15 bg-[#0a101f]";
+  const valueColor =
+    accent === "cyan" ? "text-cyan-100" : accent === "emerald" ? "text-emerald-200" : "text-white";
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="text-[10px] uppercase tracking-wider text-slate-500">{label}</p>
-      <p className="mt-1 text-lg font-semibold text-slate-900">{value}</p>
+    <div className={`rounded-xl border p-4 ${border}`}>
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{label}</p>
+      <p className={`mt-1 text-xl font-semibold tabular-nums ${valueColor}`}>{value}</p>
     </div>
   );
 }

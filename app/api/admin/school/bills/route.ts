@@ -57,6 +57,7 @@ export async function GET(req: Request) {
         id: c.id,
         studentId: c.studentId,
         studentName: c.student?.name ?? "—",
+        schoolAccountId: c.schoolAccountId,
         accountName: c.schoolAccount?.name ?? "—",
         amountUgx: c.amountUgx,
         term: c.term,
@@ -151,6 +152,7 @@ export async function POST(req: Request) {
     const notes = baseNotes || `Set rounds: ${roundTag}`;
 
     let chargeCount = 0;
+    let skipped = 0;
     for (const studentId of studentIds) {
       for (const term of targetTerms) {
         const existing = await prisma.studentBillCharge.findFirst({
@@ -163,33 +165,38 @@ export async function POST(req: Request) {
           select: { id: true },
         });
         if (existing) {
-          await prisma.studentBillCharge.update({
-            where: { id: existing.id },
-            data: { amountUgx: body.amountUgx, notes, billingRound },
-          });
-        } else {
-          await prisma.studentBillCharge.create({
-            data: {
-              organizationId: auth.scope.organizationId,
-              studentId,
-              schoolAccountId: body.schoolAccountId,
-              sessionId,
-              term,
-              amountUgx: body.amountUgx,
-              notes,
-              billingRound,
-            },
-          });
+          // Avoid duplicating the same fee head for this student in the same term.
+          skipped++;
+          continue;
         }
+        await prisma.studentBillCharge.create({
+          data: {
+            organizationId: auth.scope.organizationId,
+            studentId,
+            schoolAccountId: body.schoolAccountId,
+            sessionId,
+            term,
+            amountUgx: body.amountUgx,
+            notes,
+            billingRound,
+          },
+        });
         chargeCount++;
       }
     }
 
     return NextResponse.json({
-      created: studentIds.length,
+      created: chargeCount,
+      skipped,
       charges: chargeCount,
       terms: targetTerms,
       billingRound,
+      message:
+        skipped > 0 && chargeCount === 0
+          ? "Already billed for this fee head in the selected term(s)."
+          : skipped > 0
+            ? `Assigned ${chargeCount}; skipped ${skipped} already billed.`
+            : undefined,
     });
   } catch (e) {
     return apiErrorResponse(e, { route: "POST /api/admin/school/bills" });

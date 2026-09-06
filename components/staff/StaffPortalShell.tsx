@@ -3,18 +3,22 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { CollapsibleNavLink } from "@/components/nav/CollapsibleNavLink";
 import { DashboardGuideNavLinks } from "@/components/nav/DashboardGuideNavLinks";
 import { DashboardMobileChrome } from "@/components/nav/DashboardMobileChrome";
+import { SidebarCollapseToggle } from "@/components/nav/SidebarCollapseToggle";
 import { WelcomeBackStrip } from "@/components/profile/WelcomeBackStrip";
+import { useCollapsibleSidebar } from "@/hooks/useCollapsibleSidebar";
 import { staffGuidesForPortal } from "@/lib/audience-guides";
+import type { SidebarIconId } from "@/components/nav/sidebar-nav-icons";
 
-const NAV: { href: string; label: string }[] = [
-  { href: "/staff", label: "Dashboard" },
-  { href: "/staff/profile", label: "My profile" },
-  { href: "/staff/card", label: "OpenPayGB Card" },
-  { href: "/staff/salary", label: "Salary history" },
-  { href: "/staff/advertise", label: "Advertise" },
-  { href: "/", label: "Lobby" },
+const NAV: { href: string; label: string; navKey: string; iconId: SidebarIconId }[] = [
+  { href: "/staff", label: "Dashboard", navKey: "staff.dashboard", iconId: "dashboard" },
+  { href: "/staff/profile", label: "My profile", navKey: "staff.profile", iconId: "profile" },
+  { href: "/staff/card", label: "OpenPayGB Card", navKey: "staff.card", iconId: "card" },
+  { href: "/staff/salary", label: "Salary history", navKey: "staff.salary", iconId: "salary" },
+  { href: "/staff/advertise", label: "Advertise", navKey: "staff.advertise", iconId: "advertise" },
+  { href: "/", label: "Lobby", navKey: "staff.lobby", iconId: "lobby" },
 ];
 
 function navActive(pathname: string, href: string): boolean {
@@ -32,6 +36,7 @@ export function StaffPortalShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const guides = staffGuidesForPortal();
   const [brief, setBrief] = useState<StaffBrief | null>(null);
+  const { collapsed, toggle } = useCollapsibleSidebar("odelhub-staff-sidebar-collapsed");
 
   useEffect(() => {
     if (pathname === "/staff/login" || pathname.startsWith("/staff/login/")) return;
@@ -58,42 +63,63 @@ export function StaffPortalShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-dvh bg-[#070b14] text-slate-200">
-      <aside className="hidden w-56 shrink-0 flex-col border-r border-white/10 bg-[#0a101f] py-6 pl-4 pr-2 md:flex">
-        <div className="space-y-3 px-2 pb-6">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-amber-300/90">Staff portal</p>
-            <p className="mt-1 text-sm text-slate-500">Profile & salary</p>
-          </div>
-          {brief ? (
+      <aside
+        className={`hidden shrink-0 flex-col border-r border-white/10 bg-[#0a101f] py-4 transition-[width] duration-200 md:flex ${
+          collapsed ? "w-14 items-center px-1.5" : "w-56 pl-4 pr-2"
+        }`}
+      >
+        <div className={`mb-4 flex w-full items-start ${collapsed ? "justify-center" : "justify-between gap-2 px-2"}`}>
+          {!collapsed ? (
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-wider text-amber-300/90">Staff portal</p>
+              <p className="mt-1 text-sm text-slate-500">Profile & salary</p>
+            </div>
+          ) : null}
+          <SidebarCollapseToggle collapsed={collapsed} onToggle={toggle} accent="amber" />
+        </div>
+        {!collapsed && brief ? (
+          <div className="mb-4 px-2">
             <WelcomeBackStrip
               name={brief.name}
               role="staff"
               previousLoginAt={brief.previousLoginAt}
             />
-          ) : null}
-        </div>
-        <nav className="flex flex-1 flex-col gap-0.5 text-sm">
+          </div>
+        ) : null}
+        <nav className={`flex flex-1 flex-col gap-0.5 text-sm ${collapsed ? "items-center" : ""}`}>
           {NAV.map((item) => (
-            <Link
+            <CollapsibleNavLink
               key={item.href}
               href={item.href}
-              className={`rounded-lg px-3 py-2 transition-colors ${
-                navActive(pathname, item.href)
-                  ? "bg-amber-500/15 font-medium text-amber-100"
-                  : "text-slate-400 hover:bg-white/5 hover:text-white"
-              }`}
-            >
-              {item.label}
-            </Link>
+              label={item.label}
+              navKey={item.navKey}
+              iconId={item.iconId}
+              collapsed={collapsed}
+              active={navActive(pathname, item.href)}
+              accent="amber"
+            />
           ))}
-          <DashboardGuideNavLinks guides={guides} />
-          <button
-            type="button"
-            onClick={() => void logout()}
-            className="mt-auto rounded-lg px-3 py-2 text-left text-slate-400 hover:bg-white/5 hover:text-white"
-          >
-            Log out
-          </button>
+          {!collapsed ? (
+            <>
+              <DashboardGuideNavLinks guides={guides} />
+              <button
+                type="button"
+                onClick={() => void logout()}
+                className="mt-auto rounded-lg px-3 py-2 text-left text-slate-400 hover:bg-white/5 hover:text-white"
+              >
+                Log out
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              title="Log out"
+              onClick={() => void logout()}
+              className="mt-2 flex h-9 w-9 items-center justify-center rounded-lg text-[10px] font-bold text-rose-300/80 hover:bg-white/5"
+            >
+              ×
+            </button>
+          )}
         </nav>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
@@ -126,7 +152,7 @@ export function StaffPortalShell({ children }: { children: React.ReactNode }) {
             </button>
           }
         />
-        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+        <main className="min-w-0 flex-1 overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8">{children}</main>
       </div>
     </div>
   );

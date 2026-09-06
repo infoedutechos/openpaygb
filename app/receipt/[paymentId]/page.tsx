@@ -1,5 +1,4 @@
 import Link from "next/link";
-import QRCode from "qrcode";
 import { prisma } from "@/lib/prisma";
 import { getAdminFromCookies } from "@/lib/auth";
 import { getStudentFromCookies } from "@/lib/student-auth";
@@ -10,6 +9,7 @@ import { buildStudentProgrammeProgress, getProgrammeDurationSummary } from "@/li
 import { buildReceiptBreakdown } from "@/lib/receipt-lines";
 import { buildReceiptLedger } from "@/lib/receipt-ledger";
 import { ReceiptViewPanel } from "@/components/receipt/ReceiptViewPanel";
+import { BrandedQrImage } from "@/components/qr/BrandedQrImage";
 import { ServerDbUnavailable } from "@/components/ui/ServerDbUnavailable";
 import { tryServerDb } from "@/lib/run-server-db";
 
@@ -114,18 +114,7 @@ export default async function ReceiptPage({
       return `ODEL/${year}/${String(seq).padStart(6, "0")}`;
     })();
   const verifyUrl = absoluteUrl(`/receipt/${paymentId}`);
-  let qrDataUrl: string | null = null;
-  if (verifyUrl.startsWith("http")) {
-    try {
-      qrDataUrl = await QRCode.toDataURL(verifyUrl, {
-        width: 168,
-        margin: 1,
-        color: { dark: "#e2e8f0", light: "#0f172a00" },
-      });
-    } catch {
-      qrDataUrl = null;
-    }
-  }
+  const showQr = verifyUrl.startsWith("http");
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 sm:px-0">
@@ -225,11 +214,17 @@ export default async function ReceiptPage({
             <dd>{issuedAt ? new Date(issuedAt).toLocaleString() : "—"}</dd>
           </div>
         </dl>
-        {qrDataUrl && (
+        {showQr && (
           <div className="mt-6 border-t border-[var(--border)] pt-4">
             <p className="text-xs text-slate-500">Verification (scan)</p>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={qrDataUrl} alt="Receipt verification QR" className="mt-2 h-40 w-40" />
+            <div className="mt-2 inline-block rounded-lg bg-white p-2">
+              <BrandedQrImage
+                payload={verifyUrl}
+                alt="Receipt verification QR with OPGB mark"
+                className="h-40 w-40"
+                size={168}
+              />
+            </div>
             <p className="mt-2 break-all font-mono text-[10px] text-slate-500">{verifyUrl}</p>
           </div>
         )}

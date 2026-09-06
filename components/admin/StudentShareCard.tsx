@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import QRCode from "qrcode";
 import { ModalHeader } from "@/components/nav/ModalHeader";
+import { buildBrandedQrDataUrl } from "@/lib/branded-qr";
 import {
   SHARE_CHANNELS,
   buildSharePayload,
@@ -61,13 +61,13 @@ export function StudentShareCard({ student, variant = "panel", onClose }: Props)
 
   useEffect(() => {
     let cancelled = false;
-    void QRCode.toDataURL(student.cardUrl, {
-      width: 220,
-      margin: 1,
-      color: { dark: "#0f172a", light: "#ffffff" },
-    }).then((url) => {
-      if (!cancelled) setQrDataUrl(url);
-    });
+    void buildBrandedQrDataUrl(student.cardUrl, { size: 280, margin: 2 })
+      .then((url) => {
+        if (!cancelled) setQrDataUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setQrDataUrl(null);
+      });
     return () => {
       cancelled = true;
     };
@@ -89,12 +89,37 @@ export function StudentShareCard({ student, variant = "panel", onClose }: Props)
         .box{border:1px solid #cbd5e1;border-radius:12px;padding:16px;margin-top:16px}
         .row{display:flex;justify-content:space-between;gap:12px;margin:6px 0;font-size:14px}
         .label{color:#64748b}
-        .qr{display:block;margin:16px auto;width:180px;height:180px}
+        .qr{display:block;margin:16px auto;width:200px;height:200px}
         .mono{font-family:ui-monospace,monospace;font-weight:700;letter-spacing:.06em}
+        @media print{body{padding:0}}
       </style></head><body>${node.innerHTML}</body></html>`);
     win.document.close();
     win.focus();
     win.print();
+  }
+
+  function downloadCard() {
+    if (qrDataUrl) {
+      const a = document.createElement("a");
+      a.href = qrDataUrl;
+      a.download = `${student.admissionNo || student.name || "student"}-card-qr.png`.replace(/\s+/g, "-");
+      a.click();
+      return;
+    }
+    const node = printRef.current;
+    if (!node) return;
+    const blob = new Blob(
+      [
+        `<!doctype html><html><head><meta charset="utf-8"><title>${student.name}</title></head><body>${node.innerHTML}</body></html>`,
+      ],
+      { type: "text/html" },
+    );
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${student.admissionNo || student.name || "student"}-card.html`.replace(/\s+/g, "-");
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   const shareButtons = SHARE_CHANNELS.filter((c) =>
@@ -106,6 +131,27 @@ export function StudentShareCard({ student, variant = "panel", onClose }: Props)
       ? "fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 sm:items-center sm:p-4"
       : "";
 
+  const printBtn = (
+    <button
+      type="button"
+      onClick={printCard}
+      className="inline-flex items-center justify-center rounded-lg bg-cyan-600 px-3 py-2 text-xs font-semibold text-white hover:bg-cyan-500"
+    >
+      Print
+    </button>
+  );
+
+  const downloadBtn = (
+    <button
+      type="button"
+      onClick={downloadCard}
+      disabled={!qrDataUrl}
+      className="rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-3 py-2 text-xs font-semibold text-emerald-100 hover:bg-emerald-500/25 disabled:opacity-40"
+    >
+      Download
+    </button>
+  );
+
   const card = (
     <div
       className={
@@ -116,25 +162,31 @@ export function StudentShareCard({ student, variant = "panel", onClose }: Props)
     >
       <div className="flex items-start justify-between gap-3">
         {variant === "modal" && onClose ? (
-          <ModalHeader
-            onBack={onClose}
-            title="Student details"
-            subtitle="Print this card or share the link via WhatsApp, Telegram, and other apps."
-          />
-        ) : (
-          <div>
-            <h2 className="text-lg font-semibold text-white">Student details</h2>
-            <p className="mt-1 text-xs text-slate-400">
-              Print this card or share the link via WhatsApp, Telegram, and other apps.
-            </p>
+          <div className="min-w-0 flex-1">
+            <ModalHeader
+              onBack={onClose}
+              title="Student details"
+              subtitle="Print this card or download the QR, then share the link via WhatsApp, Telegram, and other apps."
+              trailing={printBtn}
+            />
           </div>
+        ) : (
+          <>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg font-semibold text-white">Student details</h2>
+              <p className="mt-1 text-xs text-slate-400">
+                Print this card or download the QR, then share via WhatsApp, Telegram, and other apps.
+              </p>
+            </div>
+            <div className="shrink-0">{printBtn}</div>
+          </>
         )}
       </div>
 
       <div ref={printRef} className="mt-4 rounded-xl border border-white/10 bg-white p-4 text-slate-900">
         <h1 className="text-lg font-semibold">{student.name}</h1>
         <p className="muted text-sm text-slate-500">{student.organizationName}</p>
-        <div className="box mt-3 space-y-1 border border-slate-200 rounded-xl p-3">
+        <div className="box mt-3 space-y-1 rounded-xl border border-slate-200 p-3">
           <div className="row flex justify-between gap-3 text-sm">
             <span className="label text-slate-500">Admission / registration no.</span>
             <span className="mono font-mono font-bold tracking-wide">{student.admissionNo}</span>
@@ -158,7 +210,7 @@ export function StudentShareCard({ student, variant = "panel", onClose }: Props)
         </div>
         {qrDataUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={qrDataUrl} alt="Student card QR code" className="qr mx-auto mt-4 h-44 w-44" />
+          <img src={qrDataUrl} alt="Student card QR code with OPGB logo" className="qr mx-auto mt-4 h-52 w-52" />
         ) : (
           <p className="mt-4 text-center text-xs text-slate-500">Generating QR…</p>
         )}
@@ -166,13 +218,7 @@ export function StudentShareCard({ student, variant = "panel", onClose }: Props)
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={printCard}
-          className="rounded-lg bg-cyan-600 px-3 py-2 text-xs font-semibold text-white hover:bg-cyan-500"
-        >
-          Print card
-        </button>
+        {downloadBtn}
         <a
           href={student.cardUrl}
           target="_blank"
