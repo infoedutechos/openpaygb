@@ -24,10 +24,9 @@ describe("site-nav-menus", () => {
       "Register school",
       "Log in",
       "School admin",
-      "Developers",
     ]);
     expect(SITE_HEADER_UTILITY_LINKS.find((l) => l.label === "Log in")?.href).toBe("/login");
-    expect(SITE_HEADER_UTILITY_LINKS.find((l) => l.label === "Developers")?.href).toBe("/developers");
+    expect(SITE_HEADER_UTILITY_LINKS.find((l) => l.label === "Developers")).toBeUndefined();
   });
 
   it("defines footer columns for product lines and ecosystem", () => {
