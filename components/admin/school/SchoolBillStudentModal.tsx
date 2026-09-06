@@ -25,9 +25,18 @@ type Props = {
   open: boolean;
   onClose: () => void;
   onAssigned?: () => void;
+  /** Open Record Payment for the same student (mirrors Assign bill on pay modal). */
+  onRecordPayment?: () => void;
 };
 
-export function SchoolBillStudentModal({ studentId, studentName, open, onClose, onAssigned }: Props) {
+export function SchoolBillStudentModal({
+  studentId,
+  studentName,
+  open,
+  onClose,
+  onAssigned,
+  onRecordPayment,
+}: Props) {
   const { schoolFetch, organizationSlug } = useSchoolAdminApi();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [existing, setExisting] = useState<ExistingCharge[]>([]);
@@ -249,6 +258,18 @@ export function SchoolBillStudentModal({ studentId, studentName, open, onClose, 
         </div>
         {message ? <p className="mt-3 text-sm text-emerald-400">{message}</p> : null}
         {error ? <p className="mt-3 text-sm text-rose-400">{error}</p> : null}
+        {onRecordPayment ? (
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={onRecordPayment}
+              className="rounded-lg border border-cyan-500/40 bg-cyan-900/40 px-3 py-2 text-sm font-semibold text-cyan-100 hover:bg-cyan-800/50"
+            >
+              Record Payment
+            </button>
+            <span className="text-xs text-slate-500">Record cash/MoMo against this student’s bills.</span>
+          </div>
+        ) : null}
         <div className="mt-4 flex gap-2">
           <button
             type="button"

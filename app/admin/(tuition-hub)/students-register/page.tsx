@@ -137,6 +137,10 @@ export default function StudentsRegisterPage() {
           open
           onClose={() => setBillStudent(null)}
           onAssigned={bump}
+          onRecordPayment={() => {
+            setPayBillStudent(billStudent);
+            setBillStudent(null);
+          }}
         />
       ) : null}
       {actionStudent && !billStudent && !payBillStudent && !editStudentId ? (

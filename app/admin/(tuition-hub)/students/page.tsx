@@ -741,6 +741,10 @@ export default function AdminStudentsPage() {
           open
           onClose={() => setBillStudent(null)}
           onAssigned={() => void load(q)}
+          onRecordPayment={() => {
+            setPayBillStudent(billStudent);
+            setBillStudent(null);
+          }}
         />
       ) : null}
       {actionStudent && !billStudent && !payBillStudent && !editStudentId ? (
