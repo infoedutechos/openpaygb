@@ -1,5 +1,6 @@
 /**
  * Shared header dropdowns and footer column links (see docs/FOOTER_AND_HEADER_NAV.md).
+ * Public menus must not link to localhost or demo-only surfaces.
  */
 
 export type SiteNavLink = {
@@ -80,7 +81,6 @@ export const SITE_HEADER_MENUS: SiteNavMenu[] = [
     items: [
       { label: "Schools lobby", href: "/OdelPaySchools", description: "Active primary & secondary tenants" },
       { label: "Pay school fees", href: "/pay", description: "Term-based checkout per school" },
-      { label: "Demo school checkout", href: "/pay/riverside-demo", description: "Riverside Academy term fees" },
       { label: "Request workspace", href: "/admin/register?segment=schools", description: "Self-register your school" },
       { label: "Workspace status", href: "/school/workspace-status", description: "Track registration approval" },
       { label: "School admin", href: "/school/login", description: "Programmes, students, payments" },
@@ -95,12 +95,8 @@ export const SITE_HEADER_MENUS: SiteNavMenu[] = [
     href: "/AssessmentVerseOS",
     accent: "teal",
     items: [
-      { label: "AssessmentVerse lobby", href: "/AssessmentVerseOS", description: "Platform home on ODELPay HUB" },
-      { label: "Open local 5000", href: "http://127.0.0.1:5000/", description: "Vite platform catalog" },
-      { label: "Open Flask 5001", href: "http://127.0.0.1:5001/", description: "API and print desk" },
-      { label: "Sign in", href: "http://127.0.0.1:5000/login", description: "Student, staff, admin" },
-      { label: "Schools", href: "http://127.0.0.1:5000/schools", description: "Nursery, Primary, Secondary" },
-      { label: "Higher", href: "http://127.0.0.1:5000/higher", description: "Independent tertiary line" },
+      { label: "AssessmentVerse lobby", href: "/AssessmentVerseOS", description: "Overview on ODELPay HUB" },
+      { label: "Help center", href: "/help", description: "Guides and support" },
     ],
   },
   {
@@ -139,16 +135,13 @@ export const SITE_HEADER_MENUS: SiteNavMenu[] = [
     accent: "amber",
     items: [
       { label: "Dex Hub", href: "/dex", description: "Buy, swap, P2P, offramp" },
-      { label: "Get funds", href: "/dex/onramp", description: "Route to tuition / TON Connect" },
-      { label: "AMM swap", href: "/dex/amm", description: "Execute custodial swap" },
-      { label: "Offramp", href: "/dex/offramp", description: "Withdraw queue" },
-      { label: "P2P market", href: "/dex/p2p", description: "Escrow offers" },
       { label: "Play Hub", href: "/play", description: "Games — MAC active launch URL or built-in clicker" },
+      { label: "Tuition pay", href: "/pay", description: "Choose school and pay fees" },
     ],
   },
 ];
 
-/** Footer columns inspired by multi-column exchange footers (Atlantis Pro reference). */
+/** Footer columns — one job per column; no localhost or duplicate Help/guide spam. */
 export const SITE_FOOTER_COLUMNS: SiteFooterColumn[] = [
   {
     heading: "OdelPay — Higher",
@@ -158,9 +151,7 @@ export const SITE_FOOTER_COLUMNS: SiteFooterColumn[] = [
       { label: "Programmes", href: "/pay/default?programmes=1" },
       { label: "Receipts", href: "/receipt" },
       { label: "Register institution", href: "/admin/register?segment=higher" },
-      { label: "Student guide (higher)", href: "/help/guide-student-higher" },
-      { label: "Staff guide (higher)", href: "/help/guide-staff-higher" },
-      { label: "Admin guide (higher)", href: "/help/guide-admin-higher" },
+      { label: "Institution admin", href: "/school/login" },
     ],
   },
   {
@@ -170,34 +161,26 @@ export const SITE_FOOTER_COLUMNS: SiteFooterColumn[] = [
       { label: "Request workspace", href: "/admin/register?segment=schools" },
       { label: "Workspace status", href: "/school/workspace-status" },
       { label: "School admin", href: "/school/login" },
-      { label: "Demo term checkout", href: "/pay/riverside-demo" },
-      { label: "Student guide (schools)", href: "/help/guide-student-schools" },
-      { label: "Staff guide (schools)", href: "/help/guide-staff-schools" },
-      { label: "Admin guide (schools)", href: "/help/guide-admin-schools" },
+      { label: "Pay school fees", href: "/pay" },
     ],
   },
   {
     heading: "AssessmentVerse OS",
     links: [
       { label: "AssessmentVerse lobby", href: "/AssessmentVerseOS" },
-      { label: "Open local 5000", href: "http://127.0.0.1:5000/" },
-      { label: "Open Flask 5001", href: "http://127.0.0.1:5001/" },
-      { label: "Sign in", href: "http://127.0.0.1:5000/login" },
-      { label: "Schools", href: "http://127.0.0.1:5000/schools" },
-      { label: "Higher", href: "http://127.0.0.1:5000/higher" },
+      { label: "Help center", href: "/help" },
     ],
   },
   {
     heading: "Guides",
     links: [
+      { label: "All user guides", href: "/api/docs/guides/USER_GUIDE_INDEX.md" },
       { label: "Student guide (schools)", href: "/help/guide-student-schools" },
       { label: "Student guide (higher)", href: "/help/guide-student-higher" },
       { label: "Staff guide (schools)", href: "/help/guide-staff-schools" },
       { label: "Staff guide (higher)", href: "/help/guide-staff-higher" },
       { label: "Admin guide (schools)", href: "/help/guide-admin-schools" },
       { label: "Admin guide (higher)", href: "/help/guide-admin-higher" },
-      { label: "All user guides (index)", href: "/api/docs/guides/USER_GUIDE_INDEX.md" },
-      { label: "Help center", href: "/help" },
     ],
   },
   {
@@ -206,10 +189,10 @@ export const SITE_FOOTER_COLUMNS: SiteFooterColumn[] = [
       { label: "Help center", href: "/help" },
       { label: "Student sign in", href: "/student/login" },
       { label: "My dashboard", href: "/my/dashboard" },
-      { label: "Master console", href: "/admin/login?master=1" },
-      { label: "API health", href: "/api/health" },
-      { label: "Developer dashboard", href: "/developers" },
+      { label: "Log in", href: "/login" },
+      { label: "Developer hub", href: "/developers" },
       { label: "Register integrator app", href: "/developers/register" },
+      { label: "Master console", href: "/admin/login?master=1" },
     ],
   },
   {
@@ -231,7 +214,6 @@ export const SITE_FOOTER_COLUMNS: SiteFooterColumn[] = [
       { label: "Platform Privacy Policy", href: "/policies/privacy" },
       { label: "Risk Disclosure", href: "/policies/risk-disclosure" },
       { label: "Payment Provider Policy", href: "/policies/payment-providers" },
-      { label: "Help", href: "/help" },
     ],
   },
 ];

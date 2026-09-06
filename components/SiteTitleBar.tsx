@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useSearchParams } from "next/navigation";
-import { PLATFORM_BRAND_PAY } from "@/lib/platform-brand";
+import { PLATFORM_BRAND_NAME } from "@/lib/platform-brand";
 
 function pageLabel(pathname: string, masterLogin: boolean): string {
   if (pathname === "/") return "Home";
@@ -31,10 +31,10 @@ export function SiteTitleBar() {
     <div
       role="region"
       aria-label="Page context"
-      className="relative border-b border-ura-border/80 bg-gradient-to-r from-ura-navy/95 via-ura-blue-dark/30 to-ura-elevated/95 backdrop-blur-md"
+      className="relative border-b border-white/10 bg-gradient-to-r from-[#070b14]/95 via-[#0a1528]/90 to-[#0c1220]/95 backdrop-blur-md"
     >
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-ura-gold/35 to-transparent"
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent"
         aria-hidden
       />
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-sm">
@@ -42,17 +42,15 @@ export function SiteTitleBar() {
           className="flex min-w-0 items-baseline gap-2"
           style={{ fontFamily: "var(--font-display), var(--font-sans), sans-serif" }}
         >
-          <span className="truncate bg-gradient-to-r from-ura-gold via-ura-white to-ura-blue bg-clip-text font-bold tracking-tight text-transparent">
-            {PLATFORM_BRAND_PAY}
+          <span className="truncate bg-gradient-to-r from-cyan-200 via-white to-sky-200 bg-clip-text font-bold tracking-tight text-transparent">
+            {PLATFORM_BRAND_NAME}
           </span>
           <span className="hidden text-slate-500 sm:inline" aria-hidden>
             ·
           </span>
-          <span className="truncate text-xs font-semibold uppercase tracking-[0.2em] text-ura-gold/95">{label}</span>
+          <span className="truncate text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200/90">{label}</span>
         </div>
-        <p className="font-mono text-[10px] text-slate-500 md:text-xs">
-          UGX · TON · MoMo
-        </p>
+        <p className="font-mono text-[10px] text-slate-500 md:text-xs">UGX · TON · MoMo</p>
       </div>
     </div>
   );

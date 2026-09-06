@@ -88,7 +88,7 @@ export function SiteFooter({ settings, bottomNavClearance }: Props) {
         {settings.footerCopyrightVisible ? (
           <div className="mt-10 border-t border-[var(--border)] pt-6 text-xs text-slate-500">
             <p>
-              © {new Date().getFullYear()} ODELPay HUB · Tuition waiver programme ·{" "}
+              © {new Date().getFullYear()} ODELPay HUB · Tuition · Play · Dex ·{" "}
               <Link href="/" className="text-slate-400 hover:text-cyan-300 hover:underline">
                 Home
               </Link>

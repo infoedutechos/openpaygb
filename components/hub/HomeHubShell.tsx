@@ -21,7 +21,7 @@ const HUB_TAB_CLASS = {
     "data-[active=false]:text-slate-400 data-[active=false]:hover:bg-white/5 data-[active=false]:hover:text-white",
   play:
     "flex-1 rounded-lg py-2 text-[10px] font-bold uppercase tracking-wide transition-colors sm:text-xs " +
-    "data-[active=true]:bg-ura-panel-3/90 data-[active=true]:text-white data-[active=true]:ring-1 data-[active=true]:ring-[#f3ba2f]/25 " +
+    "data-[active=true]:bg-slate-800/90 data-[active=true]:text-white data-[active=true]:ring-1 data-[active=true]:ring-amber-400/25 " +
     "data-[active=false]:text-slate-400 data-[active=false]:hover:bg-white/5 data-[active=false]:hover:text-white",
   dex:
     "flex-1 rounded-lg py-2 text-[10px] font-bold uppercase tracking-wide transition-colors sm:text-xs " +
@@ -51,7 +51,6 @@ function HomeHubShellInner({ children }: { children: ReactNode }) {
   const setHub = useCallback(
     (next: HubKey) => {
       if (hidden[next]) return;
-      // Play Hub entry honors MAC active launch target (Telegram / external / built-in).
       if (next === "play") {
         router.push("/play");
         return;
@@ -76,14 +75,18 @@ function HomeHubShellInner({ children }: { children: ReactNode }) {
     );
   }
 
-  const showSwitcher = visibleShellHubs.length > 0;
+  /** Default marketing home: brand composition only — no competing dock/menu. */
+  const marketingHome = hub === "tuition";
+  const showSwitcher = !marketingHome && visibleShellHubs.length > 1;
+
+  if (marketingHome) {
+    return <div className="pb-8">{children}</div>;
+  }
 
   return (
     <div className="pb-40">
       {hub === "dex" ? (
         <DexHubMobileMenu />
-      ) : hub === "tuition" ? (
-        <TuitionHubMobileMenu />
       ) : (
         <TuitionHubMobileMenu title="Play Hub" subtitle="Active game from Master · Play Hub URLs" />
       )}
@@ -107,9 +110,7 @@ function HomeHubShellInner({ children }: { children: ReactNode }) {
             ))}
           </div>
         ) : null}
-        {hub === "tuition" && !hidden.tuition ? (
-          <TuitionHubBottomNav mode="slot" />
-        ) : hub === "play" && !hidden.play ? (
+        {hub === "play" && !hidden.play ? (
           <PlayHubBottomNav mode="slot" />
         ) : hub === "dex" && !hidden.dex ? (
           <DexHubBottomNav mode="slot" />
@@ -121,7 +122,7 @@ function HomeHubShellInner({ children }: { children: ReactNode }) {
 
 export function HomeHubShell({ children }: { children: ReactNode }) {
   return (
-    <Suspense fallback={<div className="pb-40">{children}</div>}>
+    <Suspense fallback={<div className="pb-8">{children}</div>}>
       <HomeHubShellInner>{children}</HomeHubShellInner>
     </Suspense>
   );

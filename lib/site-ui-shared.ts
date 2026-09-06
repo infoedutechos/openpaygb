@@ -188,7 +188,7 @@ export function mergeSocialLinks(stored: SocialLink[]): SocialLink[] {
         sortOrder: 500,
       }),
       ...s,
-      label: s.label?.trim() || prev?.label || s.key,
+      label: (s.label?.trim() || prev?.label || s.key).replace(/ODEL HUB/gi, "ODELPay HUB"),
     });
   }
   return [...byKey.values()].sort((a, b) => a.sortOrder - b.sortOrder || a.label.localeCompare(b.label));

@@ -14,7 +14,6 @@ const TUITION_DESTINATIONS = [
   { href: "/OdelPayUniversities", label: "Universities lobby" },
   { href: "/OdelPaySchools", label: "Schools lobby" },
   { href: "/pay", label: "Pay tuition / fees" },
-  { href: "/pay/riverside-demo", label: "Demo school checkout" },
   { href: "/receipt", label: "Receipts" },
   { href: "/admin/register?segment=schools", label: "Register school" },
   { href: "/admin/register?segment=higher", label: "Register higher institution" },
@@ -38,7 +37,7 @@ function active(pathname: string, href: string): boolean {
 
 /** Hidable full menu for OdelPay lobbies / home hub (complements bottom dock). */
 export function TuitionHubMobileMenu({
-  title = "OdelPay",
+  title = "ODELPay HUB",
   subtitle = "Schools · higher institutions · pay",
 }: Props) {
   const pathname = usePathname() ?? "";

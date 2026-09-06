@@ -64,8 +64,8 @@ export const PRODUCT_LINES: ProductLine[] = [
     surface: "user",
     primaryHref: "/AssessmentVerseOS",
     primaryLabel: "Open AssessmentVerse OS",
-    secondaryHref: "http://127.0.0.1:5000/",
-    secondaryLabel: "Open local 5000",
+    secondaryHref: "/help",
+    secondaryLabel: "Help center",
     accent: "teal",
   },
   {

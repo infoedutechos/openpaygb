@@ -67,7 +67,7 @@ export function SiteHeader() {
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400/90 to-sky-600 text-sm font-black text-slate-950 shadow-[0_0_24px_var(--glow)]"
             aria-hidden
           >
-            OH
+            OP
           </span>
           <span className="flex min-w-0 flex-col leading-tight">
             <span className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-cyan-200/90">

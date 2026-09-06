@@ -5,9 +5,10 @@ import { usePathname } from "next/navigation";
 import { SiteTitleBar } from "@/components/SiteTitleBar";
 import { useStandaloneApp } from "@/components/standalone/StandaloneAppProvider";
 
-/** Hide title bar only for embedded/standalone surfaces. */
+/** Hide title bar on home (brand lives in SiteHeader) and embedded/standalone surfaces. */
 function hidesTitleBar(pathname: string, standaloneAppId?: string | null): boolean {
   if (standaloneAppId) return true;
+  if (pathname === "/") return true;
   if (pathname === "/clicker" || pathname.startsWith("/clicker/")) return true;
   return false;
 }

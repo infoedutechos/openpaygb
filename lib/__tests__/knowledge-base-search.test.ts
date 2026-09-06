@@ -32,6 +32,7 @@ describe("platformHubFromPathname", () => {
   });
 
   it("hides assist shell on clicker", () => {
+    expect(platformAssistVisibleOnPath("/")).toBe(false);
     expect(platformAssistVisibleOnPath("/clicker")).toBe(false);
     expect(platformAssistVisibleOnPath("/pay")).toBe(true);
   });
