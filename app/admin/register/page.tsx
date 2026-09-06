@@ -26,6 +26,8 @@ function RegisterForm({ segment }: { segment: RegistrationSegment }) {
   const [contact, setContact] = useState("");
   const [website, setWebsite] = useState("");
   const [note, setNote] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [unitKind, setUnitKind] = useState<OrganizationUnitKind>("main_campus");
   const [operatesUnitKinds, setOperatesUnitKinds] = useState<OrganizationUnitKind[]>([]);
   const [parentSlug, setParentSlug] = useState("");
@@ -97,6 +99,14 @@ function RegisterForm({ segment }: { segment: RegistrationSegment }) {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Password and re-type password do not match.");
+      return;
+    }
     setBusy(true);
     try {
       const r = await fetch("/api/public/organization-register", {
@@ -113,6 +123,7 @@ function RegisterForm({ segment }: { segment: RegistrationSegment }) {
           parentOrganizationSlug: parentSlug.trim(),
           externalParentName: externalParentName.trim(),
           registrationSegment: segment,
+          adminPassword: password,
         }),
       });
       const j = (await r.json()) as {
@@ -185,7 +196,7 @@ function RegisterForm({ segment }: { segment: RegistrationSegment }) {
                       {" "}
                       Your workspace is <strong className="text-slate-400">activated automatically</strong> on submit.
                       {autoGenerateAdminLogin
-                        ? " You will receive a password-set link for school admin sign-in."
+                        ? " Use the password you set below to sign in at /school/login once the workspace is live."
                         : null}
                     </>
                   ) : (
@@ -203,8 +214,8 @@ function RegisterForm({ segment }: { segment: RegistrationSegment }) {
                   <strong className="text-slate-400">activated automatically</strong> (programmes and fees copied from
                   the platform template).
                   {autoGenerateAdminLogin
-                    ? " You will receive an email to set your school admin password."
-                    : " Sign in at /school/login when your admin account is ready."}
+                    ? " Use the password you set below to sign in at /school/login when your workspace is live."
+                    : " Sign in at /school/login with the password you set below when your admin account is ready."}
                 </>
               )}
             </p>
@@ -246,8 +257,34 @@ function RegisterForm({ segment }: { segment: RegistrationSegment }) {
                 className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[#070b14] px-3 py-2 text-sm text-white"
               />
               <p className="mt-1 text-[11px] text-slate-600">
-                ODELPay HUB sends a verification link with your registration details to this address.
+                ODELPay HUB sends a verification link with your registration details to this address. This email is
+                also your school admin login.
               </p>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-slate-400">Password (required)</label>
+              <input
+                type="password"
+                required
+                minLength={8}
+                autoComplete="new-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[#070b14] px-3 py-2 text-sm text-white"
+              />
+              <p className="mt-1 text-[11px] text-slate-600">At least 8 characters. Used for school admin sign-in.</p>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-slate-400">Re-type password (required)</label>
+              <input
+                type="password"
+                required
+                minLength={8}
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[#070b14] px-3 py-2 text-sm text-white"
+              />
             </div>
             <div>
               <label className="text-xs font-medium text-slate-400">School website (optional)</label>

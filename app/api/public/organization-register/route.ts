@@ -39,8 +39,15 @@ export async function POST(req: Request) {
       ...parsed.data,
       registrationContactEmail: normalizeRegistrationContactEmail(parsed.data.registrationContactEmail),
     };
+    const { adminPassword, ...orgInput } = body;
     const policy = await getSchoolWorkspaceRegistrationPolicy();
-    const org = await createPendingOrganization(body);
+    const org = await createPendingOrganization(orgInput);
+
+    const { maybeProvisionSchoolOrgAdmin } = await import("@/lib/provision-school-org-admin");
+    await maybeProvisionSchoolOrgAdmin(org.id, {
+      password: adminPassword,
+    });
+
     const contactEmail = body.registrationContactEmail;
 
     if (policy.deferEmailVerification) {

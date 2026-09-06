@@ -45,10 +45,12 @@ function refineOrgIntake<T extends z.ZodTypeAny>(schema: T) {
 
 export const pendingOrgBodySchema = refineOrgIntake(pendingOrgBaseSchema);
 
-/** Self-service school registration — contact email required for verification mail. */
+/** Self-service school registration — contact email + admin password required. */
 export const pendingOrgPublicBodySchema = refineOrgIntake(
   pendingOrgBaseSchema.extend({
     registrationContactEmail: z.string().email(),
+    /** School admin password chosen at registration (min 8). */
+    adminPassword: z.string().min(8).max(128),
   }),
 );
 

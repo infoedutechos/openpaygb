@@ -52,11 +52,6 @@ export const SITE_HEADER_UTILITY_LINKS: SiteHeaderUtilityLink[] = [
     variant: "admin",
     title: "Tuition hub for school / institution admins (not the developer portal)",
   },
-  {
-    label: "Developers",
-    href: "/developers",
-    title: "Builder portal — Partner API; open every product side",
-  },
 ];
 
 export const SITE_HEADER_MENUS: SiteNavMenu[] = [

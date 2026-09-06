@@ -15,13 +15,18 @@ function randomPassword(): string {
 
 /**
  * When Master policy allows, create org_admin for registration contact and email password-set link.
+ * Pass `password` when the registrant chose a password on the register form (skips invite email).
  */
-export async function maybeProvisionSchoolOrgAdmin(organizationId: string): Promise<{
+export async function maybeProvisionSchoolOrgAdmin(
+  organizationId: string,
+  opts?: { password?: string },
+): Promise<{
   created: boolean;
   emailSent: boolean;
   adminEmail: string | null;
 }> {
-  const enabled = await isSchoolWorkspaceAutoAdminLoginEnabled();
+  const passwordChosen = Boolean(opts?.password?.trim());
+  const enabled = passwordChosen || (await isSchoolWorkspaceAutoAdminLoginEnabled());
   if (!enabled) {
     return { created: false, emailSent: false, adminEmail: null };
   }
@@ -36,7 +41,8 @@ export async function maybeProvisionSchoolOrgAdmin(organizationId: string): Prom
       registrationContactEmail: true,
     },
   });
-  if (!org || org.tenantStatus !== "active") {
+  // Allow creating the admin while the workspace is still pending when the registrant set a password.
+  if (!org || (org.tenantStatus !== "active" && !passwordChosen)) {
     return { created: false, emailSent: false, adminEmail: null };
   }
 
@@ -50,7 +56,8 @@ export async function maybeProvisionSchoolOrgAdmin(organizationId: string): Prom
     return { created: false, emailSent: false, adminEmail: email };
   }
 
-  const passwordHash = await bcrypt.hash(randomPassword(), 10);
+  const plainPassword = opts?.password?.trim() || randomPassword();
+  const passwordHash = await bcrypt.hash(plainPassword, 10);
   const admin = await prisma.adminUser.create({
     data: {
       email,
@@ -60,6 +67,10 @@ export async function maybeProvisionSchoolOrgAdmin(organizationId: string): Prom
       organizationId: org.id,
     },
   });
+
+  if (passwordChosen) {
+    return { created: true, emailSent: false, adminEmail: email };
+  }
 
   await prisma.adminPasswordResetToken.deleteMany({ where: { adminUserId: admin.id } });
   const plainToken = newAdminResetTokenPlain();
