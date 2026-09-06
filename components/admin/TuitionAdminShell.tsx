@@ -16,6 +16,7 @@ import { CollapsibleNavLink } from "@/components/nav/CollapsibleNavLink";
 import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton";
 import { DashboardGuideNavLinks } from "@/components/nav/DashboardGuideNavLinks";
 import { DashboardMobileChrome } from "@/components/nav/DashboardMobileChrome";
+import { DashboardNotificationBell } from "@/components/nav/DashboardNotificationBell";
 import { SidebarCollapseToggle } from "@/components/nav/SidebarCollapseToggle";
 import { WelcomeBackStrip } from "@/components/profile/WelcomeBackStrip";
 import { adminRoleToProfileRole } from "@/lib/profile-mappers";
@@ -180,7 +181,10 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
               </p>
             </div>
           ) : null}
-          <SidebarCollapseToggle collapsed={collapsed} onToggle={toggle} accent="cyan" />
+          <div className={`flex items-center gap-1.5 ${collapsed ? "flex-col" : ""}`}>
+            <DashboardNotificationBell hub="admin" />
+            <SidebarCollapseToggle collapsed={collapsed} onToggle={toggle} accent="cyan" />
+          </div>
         </div>
         {!collapsed && adminWelcomeName && adminWelcomeRole ? (
           <div className="mb-4 px-2">
@@ -281,11 +285,14 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
           ]}
           afterSections={<DashboardChatNavButton variant="tuition" />}
           trailing={
-            isMaster ? (
-              <Link href="/admin/master" className="text-[11px] font-medium text-amber-400/90">
-                Manager
-              </Link>
-            ) : null
+            <div className="flex items-center gap-2">
+              <DashboardNotificationBell hub="admin" />
+              {isMaster ? (
+                <Link href="/admin/master" className="text-[11px] font-medium text-amber-400/90">
+                  Manager
+                </Link>
+              ) : null}
+            </div>
           }
           footer={
             <div className="space-y-2">

@@ -9,6 +9,8 @@ type Props = {
   org: MasterOrgRow;
   busyId: string | null;
   compact?: boolean;
+  manageOpen?: boolean;
+  onToggleManage?: () => void;
   onApprove: () => void;
   onReject: () => void;
   onReopen: () => void;
@@ -31,10 +33,34 @@ function WorkspacePortalLink({ org, compact }: { org: MasterOrgRow; compact?: bo
   );
 }
 
-export function MasterOrgActions({ org, busyId, compact, onApprove, onReject, onReopen }: Props) {
+export function MasterOrgActions({
+  org,
+  busyId,
+  compact,
+  manageOpen,
+  onToggleManage,
+  onApprove,
+  onReject,
+  onReopen,
+}: Props) {
   if (org.slug === "default") {
     return <span className="text-xs text-slate-500">{compact ? "template org" : "template"}</span>;
   }
+
+  const manageBtn =
+    onToggleManage ? (
+      <button
+        type="button"
+        onClick={onToggleManage}
+        className={
+          compact
+            ? "min-h-[44px] w-full rounded-lg border border-amber-500/40 bg-amber-950/40 px-3 py-2 text-xs font-semibold text-amber-100 hover:border-amber-400/60"
+            : "rounded border border-amber-500/40 bg-amber-950/40 px-2 py-1 text-xs font-semibold text-amber-100 hover:border-amber-400/60"
+        }
+      >
+        {manageOpen ? "Hide edit / password" : "Edit / set password"}
+      </button>
+    ) : null;
 
   if (org.tenantStatus === "pending") {
     return (
@@ -79,6 +105,7 @@ export function MasterOrgActions({ org, busyId, compact, onApprove, onReject, on
             Reject
           </button>
         </div>
+        {manageBtn}
         <WorkspacePortalLink org={org} compact={compact} />
       </div>
     );
@@ -97,6 +124,7 @@ export function MasterOrgActions({ org, busyId, compact, onApprove, onReject, on
         >
           Open tuition dashboard
         </Link>
+        {manageBtn}
         <WorkspacePortalLink org={org} compact={compact} />
       </div>
     );
@@ -117,10 +145,16 @@ export function MasterOrgActions({ org, busyId, compact, onApprove, onReject, on
         >
           Reopen for review
         </button>
+        {manageBtn}
         <WorkspacePortalLink org={org} compact={compact} />
       </div>
     );
   }
 
-  return <span className="text-xs text-slate-500">—</span>;
+  return (
+    <div className={compact ? "flex flex-col gap-2" : "flex flex-col gap-1"}>
+      {manageBtn}
+      <span className="text-xs text-slate-500">—</span>
+    </div>
+  );
 }

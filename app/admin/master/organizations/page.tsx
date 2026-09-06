@@ -59,6 +59,9 @@ export default function MasterOrganizationsPage() {
   const [adminOrgId, setAdminOrgId] = useState("");
   const [adminSendInviteEmail, setAdminSendInviteEmail] = useState(true);
   const [adminMsg, setAdminMsg] = useState<string | null>(null);
+  const [createAdminPassword, setCreateAdminPassword] = useState("");
+  const [createAdminPasswordConfirm, setCreateAdminPasswordConfirm] = useState("");
+  const [manageOrgId, setManageOrgId] = useState<string | null>(null);
 
   const [feeBusyId, setFeeBusyId] = useState<string | null>(null);
   const [feeDrafts, setFeeDrafts] = useState<Record<string, string>>({});
@@ -320,6 +323,20 @@ export default function MasterOrganizationsPage() {
     e.preventDefault();
     setCreateMsg(null);
     setError(null);
+    if (createAdminPassword || createAdminPasswordConfirm) {
+      if (createAdminPassword.length < 10) {
+        setError("Admin password must be at least 10 characters.");
+        return;
+      }
+      if (createAdminPassword !== createAdminPasswordConfirm) {
+        setError("Password and re-type password do not match.");
+        return;
+      }
+      if (!contact.trim()) {
+        setError("Registration contact email is required when setting an admin password.");
+        return;
+      }
+    }
     try {
       const r = await fetch("/api/master/organizations", {
         method: "POST",
@@ -330,6 +347,7 @@ export default function MasterOrganizationsPage() {
           slug,
           registrationContactEmail: contact || undefined,
           registrationNote: note,
+          ...(createAdminPassword ? { adminPassword: createAdminPassword } : {}),
         }),
       });
       const j = await r.json();
@@ -341,6 +359,8 @@ export default function MasterOrganizationsPage() {
       setSlug("");
       setContact("");
       setNote("");
+      setCreateAdminPassword("");
+      setCreateAdminPasswordConfirm("");
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Create failed");
@@ -461,6 +481,33 @@ export default function MasterOrganizationsPage() {
               rows={2}
               className="mt-1 w-full rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
             />
+          </div>
+          <div>
+            <label className="text-xs text-slate-500">Org admin password (optional)</label>
+            <div className="mt-1">
+              <PasswordRevealInput
+                value={createAdminPassword}
+                onChange={setCreateAdminPassword}
+                minLength={10}
+                autoComplete="new-password"
+                className="w-full rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
+              />
+            </div>
+            <p className="mt-1 text-[11px] text-slate-600">
+              Requires contact email. Creates/updates school admin login at /school/login (min 10 characters).
+            </p>
+          </div>
+          <div>
+            <label className="text-xs text-slate-500">Re-type password</label>
+            <div className="mt-1">
+              <PasswordRevealInput
+                value={createAdminPasswordConfirm}
+                onChange={setCreateAdminPasswordConfirm}
+                minLength={10}
+                autoComplete="new-password"
+                className="w-full rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
+              />
+            </div>
           </div>
           <div className="sm:col-span-2">
             <button
@@ -597,6 +644,8 @@ export default function MasterOrganizationsPage() {
         <p className="mt-2 text-xs text-slate-500">
           <strong className="text-slate-400">Favicon</strong>: upload <code className="text-cyan-200/80">favicon.ico</code>{" "}
           (or PNG ≤256KB). Shown on <code className="text-cyan-200/80">/pay/&lt;slug&gt;</code> when the tenant is active.
+          Use <strong className="text-slate-400">Edit / set password</strong> on each row to change name, contact, note, or
+          create/reset the school admin password.
         </p>
         {loading ? (
           <p className="mt-4 text-sm text-slate-500">Loading…</p>
@@ -621,6 +670,17 @@ export default function MasterOrganizationsPage() {
                   feeBusyId={feeBusyId}
                   walletBusyId={walletBusyId}
                   fxBusyId={fxBusyId}
+                  manageOpen={manageOrgId === o.id}
+                  onToggleManage={() => setManageOrgId((id) => (id === o.id ? null : o.id))}
+                  onManageSaved={() => void load()}
+                  onManageError={(msg) => {
+                    setError(msg);
+                    setCreateMsg(null);
+                  }}
+                  onManageMessage={(msg) => {
+                    setCreateMsg(msg);
+                    setError(null);
+                  }}
                   onWalletChange={(v) => setWalletDrafts((prev) => ({ ...prev, [o.id]: v }))}
                   onFeeChange={(v) => setFeeDrafts((prev) => ({ ...prev, [o.id]: v }))}
                   onFxKindChange={(v) => setFxKindDrafts((prev) => ({ ...prev, [o.id]: v }))}
@@ -685,10 +745,22 @@ export default function MasterOrganizationsPage() {
                       onReopen: () => void patchOrg(o.id, "reopen"),
                       onResendVerification: () => void resendVerification(o),
                     }}
+                    manageOpen={manageOrgId === o.id}
+                    onToggleManage={() => setManageOrgId((id) => (id === o.id ? null : o.id))}
+                    onManageSaved={() => void load()}
+                    onManageError={(msg) => {
+                      setError(msg);
+                      setCreateMsg(null);
+                    }}
+                    onManageMessage={(msg) => {
+                      setCreateMsg(msg);
+                      setError(null);
+                    }}
                     faviconInputRef={(el) => {
                       inputRefs.current[o.id] = el;
                     }}
                     onFaviconUploadClick={() => inputRefs.current[o.id]?.click()}
+                    colSpan={12}
                   />
                 ))}
               </tbody>

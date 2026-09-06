@@ -6,6 +6,7 @@ import { CollapsibleNavLink } from "@/components/nav/CollapsibleNavLink";
 import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton";
 import { DashboardGuideNavLinks } from "@/components/nav/DashboardGuideNavLinks";
 import { DashboardMobileChrome } from "@/components/nav/DashboardMobileChrome";
+import { DashboardNotificationBell } from "@/components/nav/DashboardNotificationBell";
 import { PageBackLink } from "@/components/nav/PageBackLink";
 import { SidebarCollapseToggle } from "@/components/nav/SidebarCollapseToggle";
 import { WelcomeBackStrip } from "@/components/profile/WelcomeBackStrip";
@@ -88,7 +89,10 @@ export function StudentPortalShell({
               <p className="mt-1 text-sm text-slate-500">Tuition & receipts</p>
             </div>
           ) : null}
-          <SidebarCollapseToggle collapsed={collapsed} onToggle={toggle} accent="cyan" />
+          <div className={`flex items-center gap-1.5 ${collapsed ? "flex-col" : ""}`}>
+            <DashboardNotificationBell hub="tuition" />
+            <SidebarCollapseToggle collapsed={collapsed} onToggle={toggle} accent="cyan" />
+          </div>
         </div>
         {!collapsed && studentProfile ? (
           <div className="mb-4 px-2">
@@ -181,6 +185,7 @@ export function StudentPortalShell({
             },
           ]}
           afterSections={<DashboardChatNavButton variant="student" />}
+          trailing={<DashboardNotificationBell hub="tuition" />}
           footer={
             <button
               type="button"

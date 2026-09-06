@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { CollapsibleNavLink } from "@/components/nav/CollapsibleNavLink";
 import { DashboardGuideNavLinks } from "@/components/nav/DashboardGuideNavLinks";
 import { DashboardMobileChrome } from "@/components/nav/DashboardMobileChrome";
+import { DashboardNotificationBell } from "@/components/nav/DashboardNotificationBell";
 import { SidebarCollapseToggle } from "@/components/nav/SidebarCollapseToggle";
 import { WelcomeBackStrip } from "@/components/profile/WelcomeBackStrip";
 import { useCollapsibleSidebar } from "@/hooks/useCollapsibleSidebar";
@@ -75,7 +75,10 @@ export function StaffPortalShell({ children }: { children: React.ReactNode }) {
               <p className="mt-1 text-sm text-slate-500">Profile & salary</p>
             </div>
           ) : null}
-          <SidebarCollapseToggle collapsed={collapsed} onToggle={toggle} accent="amber" />
+          <div className={`flex items-center gap-1.5 ${collapsed ? "flex-col" : ""}`}>
+            <DashboardNotificationBell hub="all" />
+            <SidebarCollapseToggle collapsed={collapsed} onToggle={toggle} accent="amber" />
+          </div>
         </div>
         {!collapsed && brief ? (
           <div className="mb-4 px-2">
@@ -143,13 +146,16 @@ export function StaffPortalShell({ children }: { children: React.ReactNode }) {
             },
           ]}
           trailing={
-            <button
-              type="button"
-              onClick={() => void logout()}
-              className="text-xs font-medium text-slate-400 hover:text-white"
-            >
-              Log out
-            </button>
+            <div className="flex items-center gap-2">
+              <DashboardNotificationBell hub="all" />
+              <button
+                type="button"
+                onClick={() => void logout()}
+                className="text-xs font-medium text-slate-400 hover:text-white"
+              >
+                Log out
+              </button>
+            </div>
           }
         />
         <main className="min-w-0 flex-1 overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8">{children}</main>

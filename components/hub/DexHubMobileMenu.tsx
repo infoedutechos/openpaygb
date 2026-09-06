@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { DashboardMobileChrome } from "@/components/nav/DashboardMobileChrome";
+import { DashboardNotificationBell } from "@/components/nav/DashboardNotificationBell";
 import { HUBS } from "@/lib/ecosystem/hubs";
 import { AUDIENCE_GUIDES, HELP_CENTER_HREF } from "@/lib/audience-guides";
 
@@ -53,6 +54,7 @@ export function DexHubMobileMenu() {
       backHref={pathname === "/dex" || pathname === "/opgb" ? "/" : "/dex"}
       backLabel={pathname === "/dex" || pathname === "/opgb" ? "Lobby" : "Dex Hub"}
       items={items}
+      trailing={<DashboardNotificationBell hub="dex" />}
     />
   );
 }

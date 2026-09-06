@@ -10,6 +10,7 @@ export type MasterOrgRow = {
   parentOrganization?: { name: string; slug: string } | null;
   tenantStatus: string;
   registrationContactEmail: string;
+  registrationNote?: string;
   registrationEmailVerifiedAt: string | null;
   destinationWallet: string;
   checkoutPlatformFeeUgx: number;

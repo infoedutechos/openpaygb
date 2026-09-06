@@ -18,6 +18,11 @@ type NotificationRow = {
 
 export type PlatformNotificationBellProps = {
   hub?: PlatformHub;
+  /**
+   * `floating` = fixed corner (legacy landing).
+   * `inline` = embed in dashboard chrome / sidebar (preferred for portals).
+   */
+  placement?: "floating" | "inline";
 };
 
 function resolveMediaUrl(url: string): string {
@@ -47,7 +52,10 @@ function formatDate(dateStr: string): string {
   }
 }
 
-export default function PlatformNotificationBell({ hub = "all" }: PlatformNotificationBellProps) {
+export default function PlatformNotificationBell({
+  hub = "all",
+  placement = "floating",
+}: PlatformNotificationBellProps) {
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<NotificationRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -142,10 +150,16 @@ export default function PlatformNotificationBell({ hub = "all" }: PlatformNotifi
     }
   }, [open]);
 
+  const inline = placement === "inline";
+
   return (
     <div
       ref={panelRef}
-      className="pointer-events-auto fixed z-[85] top-[max(0.75rem,env(safe-area-inset-top,0px))] right-[max(1.25rem,env(safe-area-inset-right,0px))]"
+      className={
+        inline
+          ? "relative pointer-events-auto z-[60]"
+          : "pointer-events-auto fixed z-[85] top-[max(0.75rem,env(safe-area-inset-top,0px))] right-[max(1.25rem,env(safe-area-inset-right,0px))]"
+      }
     >
       <button
         type="button"
@@ -153,22 +167,30 @@ export default function PlatformNotificationBell({ hub = "all" }: PlatformNotifi
           triggerHapticFeedback(window);
           setOpen((v) => !v);
         }}
-        className="relative flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-[#14171c]/95 text-white shadow-lg hover:bg-[#1a1f28]"
+        className={
+          inline
+            ? "relative flex h-9 w-9 items-center justify-center rounded-lg border border-white/15 bg-white/[0.06] text-white hover:bg-white/10"
+            : "relative flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-[#14171c]/95 text-white shadow-lg hover:bg-[#1a1f28]"
+        }
         aria-label="Notifications"
         aria-expanded={open}
       >
-        <span className="text-lg" aria-hidden>
+        <span className={inline ? "text-base" : "text-lg"} aria-hidden>
           🔔
         </span>
         {unread > 0 ? (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-amber-400 text-[10px] font-bold text-slate-950 flex items-center justify-center">
+          <span className="absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-amber-400 px-1 text-[10px] font-bold text-slate-950">
             {unread > 99 ? "99+" : unread}
           </span>
         ) : null}
       </button>
 
       {open ? (
-        <div className="absolute right-0 mt-2 w-[min(100vw-2rem,20rem)] max-h-[min(70vh,24rem)] overflow-hidden rounded-xl border border-white/10 bg-[#14171c] shadow-xl flex flex-col">
+        <div
+          className={`absolute right-0 mt-2 flex max-h-[min(70vh,24rem)] w-[min(100vw-2rem,20rem)] flex-col overflow-hidden rounded-xl border border-white/10 bg-[#14171c] shadow-xl ${
+            inline ? "z-[70]" : ""
+          }`}
+        >
           <div className="flex items-center justify-between border-b border-white/10 px-3 py-2">
             <span className="text-sm font-semibold text-white">
               Notifications

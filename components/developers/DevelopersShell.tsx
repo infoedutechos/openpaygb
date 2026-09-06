@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CollapsibleNavLink } from "@/components/nav/CollapsibleNavLink";
 import { DashboardMobileChrome } from "@/components/nav/DashboardMobileChrome";
+import { DashboardNotificationBell } from "@/components/nav/DashboardNotificationBell";
 import { OperatorAllSidesNav } from "@/components/nav/OperatorAllSidesNav";
 import { SidebarCollapseToggle } from "@/components/nav/SidebarCollapseToggle";
 import { useCollapsibleSidebar } from "@/hooks/useCollapsibleSidebar";
@@ -102,7 +103,10 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
               </Link>
             ))}
           </nav>
-          <SidebarCollapseToggle collapsed={collapsed} onToggle={toggle} accent="emerald" />
+          <div className="flex items-center gap-1.5">
+            <DashboardNotificationBell hub="dex" />
+            <SidebarCollapseToggle collapsed={collapsed} onToggle={toggle} accent="emerald" />
+          </div>
         </div>
       </div>
 
@@ -134,6 +138,7 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
             items: OPERATOR_ALL_SIDES_LINKS.map((l) => ({ href: l.href, label: l.label })),
           },
         ]}
+        trailing={<DashboardNotificationBell hub="dex" />}
       />
 
       <div className="mx-auto flex max-w-6xl gap-0 md:gap-4 px-0 md:px-4 py-0 md:py-8">
@@ -149,7 +154,10 @@ export function DevelopersShell({ children }: { children: React.ReactNode }) {
               {!collapsed ? (
                 <p className="mb-0 text-[10px] font-bold uppercase tracking-wider text-emerald-400/90">Menu</p>
               ) : null}
-              <SidebarCollapseToggle collapsed={collapsed} onToggle={toggle} accent="emerald" />
+              <div className={`flex items-center gap-1.5 ${collapsed ? "flex-col" : ""}`}>
+                <DashboardNotificationBell hub="dex" />
+                <SidebarCollapseToggle collapsed={collapsed} onToggle={toggle} accent="emerald" />
+              </div>
             </div>
             <nav className={`flex flex-col gap-0.5 text-sm ${collapsed ? "items-center" : ""}`}>
               {DEV_NAV.map((item) => (

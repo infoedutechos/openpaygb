@@ -1,6 +1,7 @@
 "use client";
 
 import { MasterOrgActions } from "@/components/admin/master-org/MasterOrgActions";
+import { MasterOrgEditPasswordPanel } from "@/components/admin/master-org/MasterOrgEditPasswordPanel";
 import { MasterOrgEmailVerify } from "@/components/admin/master-org/MasterOrgEmailVerify";
 import { MasterOrgFaviconField } from "@/components/admin/master-org/MasterOrgFaviconField";
 import { MasterOrgFeeField } from "@/components/admin/master-org/MasterOrgFeeField";
@@ -24,6 +25,11 @@ type Props = {
   feeBusyId: string | null;
   walletBusyId: string | null;
   fxBusyId: string | null;
+  manageOpen: boolean;
+  onToggleManage: () => void;
+  onManageSaved: () => void;
+  onManageError: (message: string) => void;
+  onManageMessage: (message: string) => void;
   onWalletChange: (v: string) => void;
   onFeeChange: (v: string) => void;
   onFxKindChange: (v: string) => void;
@@ -52,6 +58,11 @@ export function MasterOrgMobileCard({
   feeBusyId,
   walletBusyId,
   fxBusyId,
+  manageOpen,
+  onToggleManage,
+  onManageSaved,
+  onManageError,
+  onManageMessage,
   onWalletChange,
   onFeeChange,
   onFxKindChange,
@@ -131,10 +142,23 @@ export function MasterOrgMobileCard({
           org={org}
           busyId={busyId}
           compact
+          manageOpen={manageOpen}
+          onToggleManage={onToggleManage}
           onApprove={onApprove}
           onReject={onReject}
           onReopen={onReopen}
         />
+        {manageOpen ? (
+          <MasterOrgEditPasswordPanel
+            key={`${org.id}-${org.name}-${org.registrationContactEmail}`}
+            org={org}
+            registrationNote={org.registrationNote ?? ""}
+            busy={busyId === org.id}
+            onSaved={onManageSaved}
+            onError={onManageError}
+            onMessage={onManageMessage}
+          />
+        ) : null}
       </div>
     </article>
   );

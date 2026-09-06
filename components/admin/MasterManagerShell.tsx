@@ -6,6 +6,7 @@ import { CollapsibleNavLink } from "@/components/nav/CollapsibleNavLink";
 import { DashboardChatNavButton } from "@/components/nav/DashboardChatNavButton";
 import { DashboardGuideNavLinks } from "@/components/nav/DashboardGuideNavLinks";
 import { DashboardMobileChrome } from "@/components/nav/DashboardMobileChrome";
+import { DashboardNotificationBell } from "@/components/nav/DashboardNotificationBell";
 import { SidebarCollapseToggle } from "@/components/nav/SidebarCollapseToggle";
 import { WelcomeBackStrip } from "@/components/profile/WelcomeBackStrip";
 import { useAuthMe } from "@/hooks/useAuthMe";
@@ -267,7 +268,10 @@ export default function MasterManagerShell({
               <p className="mt-2 text-[11px] leading-snug text-slate-500">ODELPay HUB platform</p>
             </div>
           ) : null}
-          <SidebarCollapseToggle collapsed={collapsed} onToggle={toggle} accent="amber" />
+          <div className={`flex items-center gap-1.5 ${collapsed ? "flex-col" : ""}`}>
+            <DashboardNotificationBell hub="admin" />
+            <SidebarCollapseToggle collapsed={collapsed} onToggle={toggle} accent="amber" />
+          </div>
         </div>
         {!collapsed && adminWelcomeName ? (
           <div className="mb-4 px-2">
@@ -413,9 +417,12 @@ export default function MasterManagerShell({
             </>
           }
           trailing={
-            <Link href="/admin" className="text-[11px] font-medium text-cyan-400/80">
-              Tuition
-            </Link>
+            <div className="flex items-center gap-2">
+              <DashboardNotificationBell hub="admin" />
+              <Link href="/admin" className="text-[11px] font-medium text-cyan-400/80">
+                Tuition
+              </Link>
+            </div>
           }
           footer={
             <button
