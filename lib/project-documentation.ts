@@ -98,7 +98,7 @@ export async function buildUserGuidesDownload(): Promise<DocDownloadPayload> {
   const s = stamp();
   const manifest = {
     exportedAt: new Date().toISOString(),
-    app: "ODEL HUB Pay / OpenPayGB",
+    app: "ODELPay HUB Pay / OpenPayGB",
     bundle: "user-guides",
     files: [...USER_GUIDE_FILES],
   };
@@ -121,7 +121,7 @@ export async function buildFullDocumentationDownload(): Promise<DocDownloadPaylo
   const files = listAllDocumentationMarkdown();
   const manifest = {
     exportedAt: new Date().toISOString(),
-    app: "ODEL HUB Pay / OpenPayGB",
+    app: "ODELPay HUB Pay / OpenPayGB",
     bundle: "documentation",
     totalFiles: files.length,
     includes: [

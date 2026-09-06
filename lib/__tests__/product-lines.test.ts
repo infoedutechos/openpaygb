@@ -11,7 +11,7 @@ describe("product-lines", () => {
       "developers",
     ]);
     expect(PRODUCT_LINES).toHaveLength(5);
-    expect(PRODUCT_LINES.map((p) => p.title)).toContain("OdelPay — Higher Institutions");
+    expect(PRODUCT_LINES.map((p) => p.title)).toContain("OdelPay — Higher");
     expect(PRODUCT_LINES.map((p) => p.title)).toContain("OdelPay — Schools");
     expect(PRODUCT_LINES.map((p) => p.title)).toContain("AssessmentVerse OS");
     expect(PRODUCT_LINES.map((p) => p.title)).toContain("OpenPayGB");

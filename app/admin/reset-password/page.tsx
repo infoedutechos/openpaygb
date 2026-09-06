@@ -58,7 +58,7 @@ function ResetPasswordForm() {
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-500/30 bg-cyan-500/10 text-cyan-200">
               <OdelShieldIcon className="h-8 w-8" />
             </div>
-            <h1 className="text-2xl font-semibold tracking-tight text-white">ODEL HUB</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-white">ODELPay HUB</h1>
             <p className="mt-2 text-sm text-slate-500">Set a new admin password</p>
           </div>
 
@@ -123,7 +123,7 @@ function ResetPasswordForm() {
           )}
         </div>
       </div>
-      <footer className="py-6 text-center text-xs text-slate-600">© {new Date().getFullYear()} ODEL HUB</footer>
+      <footer className="py-6 text-center text-xs text-slate-600">© {new Date().getFullYear()} ODELPay HUB</footer>
     </div>
   );
 }

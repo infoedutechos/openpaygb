@@ -5,7 +5,7 @@ import HelpCenterWorkspace from "@/components/help/HelpCenterWorkspace";
 export const metadata: Metadata = {
   title: "Help center — Ask anything",
   description:
-    "ODEL HUB Help Center — ask the knowledge-base copilot about tuition, OpenPayGB, Dex, school admin, and more.",
+    "ODELPay HUB Help Center — ask the knowledge-base copilot about tuition, OpenPayGB, Dex, school admin, and more.",
 };
 
 export default function HelpCenterPage() {

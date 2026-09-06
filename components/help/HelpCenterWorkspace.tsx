@@ -26,7 +26,7 @@ type RecentChat = {
 const SUGGESTED = [
   {
     label: "Pay tuition",
-    prompt: "How do I pay tuition or school fees on ODEL HUB?",
+    prompt: "How do I pay tuition or school fees on ODELPay HUB?",
   },
   {
     label: "OpenPayGB Card",
@@ -66,8 +66,8 @@ export default function HelpCenterWorkspace() {
   const hub = hubFromParam(searchParams.get("hub"));
   const view = searchParams.get("view") === "library" ? "library" : "chat";
   const platform = useSupportPanelSettings(true);
-  const platformName = platform.platformDisplayName?.trim() || platform.shareDefaultTitle?.trim() || "ODEL HUB";
-  const copilotName = platform.copilotAssistantName?.trim() || "ODEL HUB Copilot";
+  const platformName = platform.platformDisplayName?.trim() || platform.shareDefaultTitle?.trim() || "ODELPay HUB";
+  const copilotName = platform.copilotAssistantName?.trim() || "ODELPay HUB Copilot";
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);

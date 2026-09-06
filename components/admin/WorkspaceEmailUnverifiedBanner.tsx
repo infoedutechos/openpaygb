@@ -20,7 +20,7 @@ export function WorkspaceEmailUnverifiedBanner() {
       <p className="mt-1 text-amber-100/90">
         Your school workspace contact{" "}
         <span className="font-mono text-amber-50">{org.registrationContactEmail}</span> has not been confirmed yet.
-        Check your inbox for the ODEL HUB verification link (and spam folder), or request a new link from the
+        Check your inbox for the ODELPay HUB verification link (and spam folder), or request a new link from the
         registration page.
       </p>
       <p className="mt-2 text-xs text-amber-200/80">

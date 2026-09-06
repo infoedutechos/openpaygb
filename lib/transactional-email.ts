@@ -11,12 +11,12 @@ export type SendTransactionalEmailInput = {
   logTag?: string;
 };
 
-/** Parse `ODEL HUB <noreply@domain.com>` or plain `noreply@domain.com`. */
+/** Parse `ODELPay HUB <noreply@domain.com>` or plain `noreply@domain.com`. */
 export function parseFromAddress(from: string): { name: string; email: string } {
   const trimmed = from.trim();
   const m = trimmed.match(/^(.+?)\s*<([^>]+)>$/);
   if (m) return { name: m[1].trim(), email: m[2].trim() };
-  return { name: "ODEL HUB", email: trimmed };
+  return { name: "ODELPay HUB", email: trimmed };
 }
 
 export function resolveTransactionalEmailProvider(opts: {

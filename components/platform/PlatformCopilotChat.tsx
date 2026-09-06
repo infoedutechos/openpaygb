@@ -57,8 +57,8 @@ export default function PlatformCopilotChat({
   const listRef = useRef<HTMLDivElement>(null);
   const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const copilotName = platform.copilotAssistantName?.trim() || "ODEL HUB Copilot";
-  const platformName = platform.shareDefaultTitle?.trim() || "ODEL HUB";
+  const copilotName = platform.copilotAssistantName?.trim() || "ODELPay HUB Copilot";
+  const platformName = platform.shareDefaultTitle?.trim() || "ODELPay HUB";
   const chatTitle = title ?? `${platformName} Help`;
   const chatSubtitle = subtitle ?? copilotName;
 
@@ -163,13 +163,13 @@ export default function PlatformCopilotChat({
         { role: "assistant", content: reply, kbCitations: data.citations },
       ]);
     } catch {
-      setError("Could not reach ODEL HUB Copilot. Please try again or use Talk to an agent.");
+      setError("Could not reach ODELPay HUB Copilot. Please try again or use Talk to an agent.");
       setMessages((m) => [
         ...m,
         {
           role: "assistant",
           content:
-            "ODEL HUB Copilot is having trouble connecting. You can still reach our team with **Talk to an agent** below.",
+            "ODELPay HUB Copilot is having trouble connecting. You can still reach our team with **Talk to an agent** below.",
         },
       ]);
     } finally {

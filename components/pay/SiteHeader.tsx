@@ -71,7 +71,7 @@ export function SiteHeader() {
           </span>
           <span className="flex min-w-0 flex-col leading-tight">
             <span className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-cyan-200/90">
-              ODEL HUB
+              ODELPay HUB
             </span>
             <span className="truncate text-sm font-semibold tracking-tight text-white transition-colors group-hover:text-cyan-100 sm:text-base">
               Tuition · Play · Dex

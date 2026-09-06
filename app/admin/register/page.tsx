@@ -165,7 +165,7 @@ function RegisterForm({ segment }: { segment: RegistrationSegment }) {
       <div className="relative flex flex-1 flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-lg space-y-8">
           <div className="text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300/80">ODEL HUB</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300/80">ODELPay HUB</p>
             <div className="mx-auto mb-5 mt-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-cyan-500/35 bg-gradient-to-br from-cyan-500/20 to-transparent text-cyan-100">
               <OdelShieldIcon className="h-9 w-9" />
             </div>
@@ -246,7 +246,7 @@ function RegisterForm({ segment }: { segment: RegistrationSegment }) {
                 className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[#070b14] px-3 py-2 text-sm text-white"
               />
               <p className="mt-1 text-[11px] text-slate-600">
-                ODEL HUB sends a verification link with your registration details to this address.
+                ODELPay HUB sends a verification link with your registration details to this address.
               </p>
             </div>
             <div>
@@ -312,7 +312,7 @@ function RegisterPageRouter() {
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%-10%,rgba(34,211,238,0.12),transparent)]" />
         <div className="relative mx-auto w-full max-w-3xl">
           <div className="mb-8 text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300/80">ODEL HUB</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300/80">ODELPay HUB</p>
           </div>
           <WorkspaceRegistrationSegmentPicker />
         </div>

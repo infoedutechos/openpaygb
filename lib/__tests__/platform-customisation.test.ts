@@ -13,11 +13,11 @@ function resolvedSeoDescription(b: { seoDescription: string }): string {
 
 describe("platform customisation SEO helpers", () => {
   it("resolves SEO title from display name when seoTitle blank", () => {
-    expect(resolvedSeoTitle({ platformDisplayName: "ODEL HUB", seoTitle: "" })).toContain("ODEL HUB");
+    expect(resolvedSeoTitle({ platformDisplayName: "ODELPay HUB", seoTitle: "" })).toContain("ODELPay HUB");
   });
 
   it("uses custom seoTitle when set", () => {
-    expect(resolvedSeoTitle({ platformDisplayName: "ODEL HUB", seoTitle: "Custom Title" })).toBe(
+    expect(resolvedSeoTitle({ platformDisplayName: "ODELPay HUB", seoTitle: "Custom Title" })).toBe(
       "Custom Title",
     );
   });

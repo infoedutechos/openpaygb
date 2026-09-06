@@ -20,7 +20,7 @@ describe("organization-registration-email", () => {
     expect(html).toContain("test-school");
     expect(html).toContain("admin@test.edu");
     expect(html).toContain("Please enable TON");
-    expect(html).toContain("ODEL HUB");
+    expect(html).toContain("ODELPay HUB");
   });
 
   it("includes registration details in plain text", () => {

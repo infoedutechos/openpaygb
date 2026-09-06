@@ -26,7 +26,7 @@ export function registrationSegmentFromTier(tier: InstitutionTier): Registration
 
 export function registrationSegmentTitle(segment: RegistrationSegment): string {
   return segment === "higher"
-    ? "OdelPay — Higher Institutions"
+    ? "OdelPay — Higher"
     : "OdelPay — Schools";
 }
 

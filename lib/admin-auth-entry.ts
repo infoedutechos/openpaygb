@@ -33,7 +33,7 @@ export function adminLoginPathForMode(mode: AdminLoginMode): string {
 
 export const ADMIN_LOGIN_COPY = {
   higher: {
-    title: "OdelPay — Higher Institutions",
+    title: "OdelPay — Higher",
     subtitle: "Universities, polytechnics, tertiary — sign in to your institution admin dashboard.",
     hint:
       "Register at /admin/register?segment=higher, confirm your email, then track your workspace at /school/workspace-status. When active, use the admin credentials sent to your contact email or shared by the platform master.",
@@ -48,7 +48,7 @@ export const ADMIN_LOGIN_COPY = {
   },
   master: {
     title: "Platform Master",
-    subtitle: "Sign in with your ODEL HUB platform operator credentials.",
+    subtitle: "Sign in with your ODELPay HUB platform operator credentials.",
     hint: "Master accounts manage all schools and higher institutions, approvals, FX, and integrations.",
     submit: "Sign in to master console",
   },

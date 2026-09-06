@@ -37,7 +37,7 @@ export async function HubMaintenanceGate({
 
   const [def, branding] = await Promise.all([Promise.resolve(HUBS[hub]), getPlatformBranding()]);
   const accent = HUB_ACCENT[hub];
-  const brand = branding.platformDisplayName || "ODEL HUB";
+  const brand = branding.platformDisplayName || "ODELPay HUB";
   const customMessage = branding.hubMaintenanceMessage.trim();
 
   return (

@@ -299,7 +299,7 @@ export function StudentTuitionFlow() {
   const { pay } = useTonPay();
 
   const orgSlug = me?.organizationSlug?.trim().toLowerCase() || "default";
-  const displayName = me?.organizationName?.trim() || "ODEL HUB";
+  const displayName = me?.organizationName?.trim() || "ODELPay HUB";
 
   useEffect(() => {
     void (async () => {
@@ -1291,7 +1291,7 @@ export function StudentTuitionFlow() {
             <div className="flex items-center gap-3">
               <OhShield />
               <span className="flex flex-col text-left leading-tight">
-                <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-cyan-200/90">ODEL HUB</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-cyan-200/90">ODELPay HUB</span>
                 <span className="text-xs font-semibold text-slate-400">{displayName}</span>
               </span>
             </div>

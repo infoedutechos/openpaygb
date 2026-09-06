@@ -85,7 +85,7 @@ export function tuitionDueReminderMessage(opts: TuitionDueTemplateOpts): string 
   lines.push(
     "",
     `<a href="${escapeHtml(getTmaAppUrl("pay"))}">Pay now in Mini App</a>`,
-    `<a href="${escapeHtml(absoluteUrl("/tma"))}">Open ODEL HUB Pay</a>`,
+    `<a href="${escapeHtml(absoluteUrl("/tma"))}">Open ODELPay HUB Pay</a>`,
   );
   return lines.join("\n");
 }

@@ -33,7 +33,7 @@ export default function AdminSettingsPage() {
           </p>
         ) : (
           <p className="mt-2 max-w-lg text-sm text-slate-400">
-            Your school&apos;s TON wallet, FX rates, and checkout processing fee are configured by the ODEL HUB platform
+            Your school&apos;s TON wallet, FX rates, and checkout processing fee are configured by the ODELPay HUB platform
             operator after workspace approval. Contact your platform master if you need changes. You can customize{" "}
             <a href="/admin/programmes" className="text-cyan-300 underline hover:text-cyan-200">
               programmes and fees

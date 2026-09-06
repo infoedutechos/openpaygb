@@ -143,10 +143,10 @@ function semesterKeyboard(code: string, year: number): ReplyMarkup {
 
 function tmaLandingMessage(): string {
   return [
-    "<b>ODEL HUB Pay</b>",
+    "<b>ODELPay HUB Pay</b>",
     "<i>Tuition • Wallet • Cards</i>",
     "",
-    "<b>Welcome to ODEL HUB Pay</b>",
+    "<b>Welcome to ODELPay HUB Pay</b>",
     "",
     "Pay Tuition Fees",
     "Manage OpenPayGB Card",
@@ -190,7 +190,7 @@ export async function handleTelegramUpdate(update: TelegramUpdate): Promise<void
         await sendMessageHtml(
           chatId,
           [
-            "<b>About ODEL HUB Pay</b>",
+            "<b>About ODELPay HUB Pay</b>",
             "",
             "OpenPayGB tuition, virtual cards, and receipts — built as a Telegram Mini App.",
             "",
@@ -242,7 +242,7 @@ async function dispatchCallback(
     await editMessageTextHtml(
       chatId,
       messageId,
-      `<b>ODEL HUB Pay</b>\n\nTap <b>Open App</b> to continue in the Mini App.`,
+      `<b>ODELPay HUB Pay</b>\n\nTap <b>Open App</b> to continue in the Mini App.`,
       tmaOpenAppInlineKeyboard(tab),
     );
     return;
@@ -266,7 +266,7 @@ async function dispatchCallback(
     await editMessageTextHtml(
       chatId,
       messageId,
-      "<b>ODEL Hub — main menu</b>\n\nChoose an option:",
+      "<b>ODELPay HUB — main menu</b>\n\nChoose an option:",
       mainMenuKeyboard()
     );
     return;
@@ -388,7 +388,7 @@ async function dispatchCallback(
       );
       return;
     }
-    const memo = `ODEL Hub - ${sum.programmeCode} Yr${year} Sem ${semester}`;
+    const memo = `ODELPay HUB - ${sum.programmeCode} Yr${year} Sem ${semester}`;
     const durationLine =
       sum.duration.durationYears > 0
         ? `<b>Year:</b> ${year} of ${sum.duration.durationYears} · <b>Semester:</b> ${semester} of ${sum.duration.semestersPerYear}`

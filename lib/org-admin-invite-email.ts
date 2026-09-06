@@ -16,9 +16,9 @@ export type OrgAdminInviteEmailDetails = {
 
 export function buildOrgAdminInviteEmailHtml(details: OrgAdminInviteEmailDetails, loginUrl: string): string {
   return `<div style="font-family:system-ui,-apple-system,sans-serif;max-width:560px;color:#0f172a;line-height:1.5">
-<p style="font-size:12px;font-weight:600;letter-spacing:0.2em;color:#0891b2;text-transform:uppercase">ODEL HUB</p>
+<p style="font-size:12px;font-weight:600;letter-spacing:0.2em;color:#0891b2;text-transform:uppercase">ODELPay HUB</p>
 <h1 style="font-size:20px;font-weight:600;margin:0 0 12px">Your school admin account is ready</h1>
-<p>Your workspace for <strong>${escapeHtml(details.schoolName)}</strong> has been approved. Set your password using the secure link below, then sign in to the ODEL HUB school admin dashboard.</p>
+<p>Your workspace for <strong>${escapeHtml(details.schoolName)}</strong> has been approved. Set your password using the secure link below, then sign in to the ODELPay HUB school admin dashboard.</p>
 <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden">
   <tbody>
     <tr style="background:#f8fafc"><td style="padding:6px 12px;color:#64748b;width:38%">School</td><td style="padding:6px 12px">${escapeHtml(details.schoolName)}</td></tr>
@@ -35,7 +35,7 @@ export function buildOrgAdminInviteEmailHtml(details: OrgAdminInviteEmailDetails
 
 export function buildOrgAdminInviteEmailText(details: OrgAdminInviteEmailDetails, loginUrl: string): string {
   return [
-    "ODEL HUB — Your school admin account is ready",
+    "ODELPay HUB — Your school admin account is ready",
     "",
     `School: ${details.schoolName}`,
     `Pay slug: ${details.schoolSlug}`,
@@ -56,7 +56,7 @@ export async function sendOrgAdminInviteEmail(
 
   const sent = await sendTransactionalEmail({
     to: details.adminEmail,
-    subject: `ODEL HUB — set your password for ${details.schoolName}`,
+    subject: `ODELPay HUB — set your password for ${details.schoolName}`,
     html: buildOrgAdminInviteEmailHtml(details, loginUrl),
     text: buildOrgAdminInviteEmailText(details, loginUrl),
     logTag: "[org-admin-invite]",

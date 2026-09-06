@@ -33,7 +33,7 @@ export default async function DexOnrampPage({ searchParams }: Props) {
           <Link href={HUBS.tuition.basePath} className="text-cyan-300 underline-offset-2 hover:underline">
             open checkout
           </Link>
-          ) — same rails as the rest of ODEL HUB.
+          ) — same rails as the rest of ODELPay HUB.
         </li>
       </ul>
       {returnPath ? (

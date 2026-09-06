@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ProductLineLanding } from "@/components/ecosystem/ProductLineLanding";
 
 export const metadata: Metadata = {
-  title: "ODEL HUB Developers",
+  title: "ODELPay HUB Developers",
   description: "Self-serve Partner API, OAuth app registry, Dex write API, and OPGB integrator docs.",
 };
 

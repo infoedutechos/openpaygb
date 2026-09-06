@@ -369,7 +369,7 @@ export default function MasterOrganizationsPage() {
       const sent = (j as { emailSent?: boolean }).emailSent;
       setAdminMsg(
         sent
-          ? `School admin created (${j.admin?.email ?? adminEmail}). An ODEL HUB invite email was sent with sign-in instructions.`
+          ? `School admin created (${j.admin?.email ?? adminEmail}). An ODELPay HUB invite email was sent with sign-in instructions.`
           : `School admin created (${j.admin?.email ?? adminEmail}). Email was not sent — share /school/login credentials manually (check RESEND_*).`,
       );
       setAdminEmail("");
@@ -449,7 +449,7 @@ export default function MasterOrganizationsPage() {
               className="mt-1 w-full rounded-md border border-[var(--border)] bg-[#0d1526] px-3 py-2 text-sm text-white"
             />
             <p className="mt-1 text-[11px] text-slate-600">
-              If provided, marked verified immediately (master-provisioned). Self-serve schools must click the ODEL HUB
+              If provided, marked verified immediately (master-provisioned). Self-serve schools must click the ODELPay HUB
               email link before you can approve.
             </p>
           </div>

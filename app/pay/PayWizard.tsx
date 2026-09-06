@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -199,7 +199,7 @@ export function PayWizard({
   institutionTier?: InstitutionTier;
 }) {
   const orgSlug = organizationSlug.trim().toLowerCase() || "default";
-  const displayName = organizationName?.trim() || "ODEL HUB";
+  const displayName = organizationName?.trim() || "ODELPay HUB";
   const periodLabels = academicPeriodLabels(institutionTier);
 
   const [step, setStep] = useState<FlowStep>("landing");
@@ -1496,7 +1496,7 @@ export function PayWizard({
             </header>
             <div className="space-y-4 pt-4">
               <h1 className="text-3xl font-semibold leading-tight text-white sm:text-4xl">
-                {displayName === "ODEL HUB" ? "ODEL HUB Tuition Program" : `${displayName} — Tuition`}
+                {displayName === "ODELPay HUB" ? "ODELPay HUB Tuition Program" : `${displayName} — Tuition`}
               </h1>
               <p className="text-lg text-slate-300">
                 Pay tuition with TON on-chain or {mobileMoneyRailsLabel} mobile money ({OPEN_PAY_BRAND} brand) at the same

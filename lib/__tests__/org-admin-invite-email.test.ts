@@ -19,7 +19,7 @@ describe("org-admin-invite-email", () => {
     expect(html).toContain("admin@school.ug");
     expect(html).toContain("reset-password?token=abc");
     expect(html).not.toContain("TempPass");
-    expect(html).toContain("ODEL HUB");
+    expect(html).toContain("ODELPay HUB");
   });
 
   it("includes school and credentials in plain text", () => {

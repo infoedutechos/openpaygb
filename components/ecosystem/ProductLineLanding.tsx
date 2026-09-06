@@ -1,9 +1,19 @@
 import Link from "next/link";
 import type { InstitutionTier } from "@prisma/client";
 import { DemoLoginDetailsPanel } from "@/components/demo/DemoLoginDetailsPanel";
+import { ProductBrandMark } from "@/components/ecosystem/ProductBrandMark";
 import { listPublicDemoLogins } from "@/lib/demo-logins";
 import { listActiveOrganizationsByTier } from "@/lib/organizations";
 import { productLineById, type ProductLineId } from "@/lib/ecosystem/product-lines";
+import type { ProductLogoId } from "@/lib/platform-brand";
+import { getProductLogoPublicUrls } from "@/lib/product-logos";
+
+const LINE_TO_LOGO: Partial<Record<ProductLineId, ProductLogoId>> = {
+  odelpay_higher: "higher",
+  odelpay_schools: "schools",
+  openpaygb: "openpaygb",
+  developers: "hub",
+};
 
 const ACCENT: Record<
   ProductLineId,
@@ -59,19 +69,37 @@ export async function ProductLineLanding({
 }) {
   const line = productLineById(lineId)!;
   const a = ACCENT[lineId];
-  const tenants = tenantTier ? await listActiveOrganizationsByTier(tenantTier) : [];
+  const [tenants, productLogos] = await Promise.all([
+    tenantTier ? listActiveOrganizationsByTier(tenantTier) : Promise.resolve([]),
+    getProductLogoPublicUrls(),
+  ]);
   const demoAudience =
     tenantTier === "school" ? "school" : tenantTier === "university" ? "university" : null;
   const demoSlots = demoAudience
     ? await listPublicDemoLogins({ audience: demoAudience })
     : [];
+  const logoId = LINE_TO_LOGO[lineId];
+  const logoUrl = logoId ? productLogos[logoId] : null;
 
   return (
     <div className="mx-auto max-w-3xl space-y-8 px-4 pb-24 pt-10">
       <header className={`rounded-3xl border ${a.border} ${a.bg} p-8 shadow-lg shadow-black/25`}>
-        <p className={`text-xs font-bold uppercase tracking-[0.22em] ${a.title}`}>{line.title}</p>
-        <p className="mt-1 text-sm font-medium text-slate-300">{line.subtitle}</p>
-        <h1 className="mt-4 text-2xl font-semibold text-white md:text-3xl">{line.title}</h1>
+        <div className="flex items-start gap-4">
+          {logoId && logoUrl ? (
+            <ProductBrandMark
+              product={logoId}
+              url={logoUrl}
+              label={line.title}
+              size={56}
+              className="h-14 w-14 shrink-0 rounded-2xl border border-white/10 bg-black/30 p-1.5"
+            />
+          ) : null}
+          <div className="min-w-0">
+            <p className={`text-xs font-bold uppercase tracking-[0.22em] ${a.title}`}>{line.title}</p>
+            <p className="mt-1 text-sm font-medium text-slate-300">{line.subtitle}</p>
+            <h1 className="mt-4 text-2xl font-semibold text-white md:text-3xl">{line.title}</h1>
+          </div>
+        </div>
         <p className="mt-3 text-sm leading-relaxed text-slate-400">{line.description}</p>
         <p className="mt-2 text-xs text-slate-500">
           <span className="font-semibold text-slate-400">Audience:</span> {line.audience}
@@ -94,7 +122,7 @@ export async function ProductLineLanding({
         </div>
         <p className="mt-4">
           <Link href="/" className="text-xs text-slate-500 hover:text-cyan-300 hover:underline">
-            ← ODEL HUB lobby
+            ← ODELPay HUB lobby
           </Link>
         </p>
       </header>

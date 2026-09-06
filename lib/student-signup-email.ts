@@ -35,7 +35,7 @@ export async function sendStudentSignupEmail(toEmail: string, plainToken: string
 
   const sent = await sendTransactionalEmail({
     to: toEmail,
-    subject: "ODEL HUB — confirm your student account",
+    subject: "ODELPay HUB — confirm your student account",
     html: `<p>Hi ${escapeHtml(toEmail)},</p>
 <p>Confirm your email to continue setting up your student portal (choose your school next).</p>
 <p><a href="${verifyUrl}">Confirm email and continue</a></p>

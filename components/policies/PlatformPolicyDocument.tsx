@@ -13,7 +13,7 @@ export function PlatformPolicyDocument({ policy, children }: Props) {
         href="/"
         className="text-sm font-medium text-cyan-300/90 hover:text-cyan-200 hover:underline"
       >
-        ← ODEL HUB home
+        ← ODELPay HUB home
       </Link>
 
       <header className="mt-6 border-b border-white/10 pb-6">

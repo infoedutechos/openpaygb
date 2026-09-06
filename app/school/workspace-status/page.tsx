@@ -131,7 +131,7 @@ function WorkspaceStatusInner() {
 
   return (
     <main className="mx-auto max-w-lg px-4 py-12 text-slate-200">
-      <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-400/90">ODEL HUB</p>
+      <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-400/90">ODELPay HUB</p>
       <h1 className="mt-2 text-2xl font-semibold text-white">Your workspace</h1>
       <p className="mt-2 text-sm text-slate-400">
         Verification status and next steps for your registration. Bookmark this page to check progress.

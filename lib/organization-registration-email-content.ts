@@ -35,11 +35,11 @@ export function buildWorkspaceRegistrationEmailHtml(
     : "";
 
   return `<div style="font-family:system-ui,-apple-system,sans-serif;max-width:560px;color:#0f172a;line-height:1.5">
-<p style="font-size:12px;font-weight:600;letter-spacing:0.2em;color:#0891b2;text-transform:uppercase">ODEL HUB</p>
+<p style="font-size:12px;font-weight:600;letter-spacing:0.2em;color:#0891b2;text-transform:uppercase">ODELPay HUB</p>
 <h1 style="font-size:20px;font-weight:600;margin:0 0 12px">Confirm your school workspace request</h1>
-<p>Thank you for registering with <strong>ODEL HUB Pay</strong>.</p>
+<p>Thank you for registering with <strong>ODELPay HUB Pay</strong>.</p>
 <div style="margin:16px 0;padding:14px 16px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;font-size:13px">
-  <p style="margin:0 0 8px;font-weight:600;color:#0c4a6e">About ODEL HUB</p>
+  <p style="margin:0 0 8px;font-weight:600;color:#0c4a6e">About ODELPay HUB</p>
   <ul style="margin:0;padding-left:18px;color:#334155">
     <li>Tuition and programme fee collection for schools</li>
     <li>Guest pay checkout (TON, mobile money where supported)</li>
@@ -69,11 +69,11 @@ export function buildWorkspaceRegistrationEmailText(
   verifyUrl: string,
 ): string {
   const lines = [
-    "ODEL HUB — Confirm your school workspace request",
+    "ODELPay HUB — Confirm your school workspace request",
     "",
-    "Thank you for registering with ODEL HUB Pay.",
+    "Thank you for registering with ODELPay HUB Pay.",
     "",
-    "About ODEL HUB:",
+    "About ODELPay HUB:",
     "- Tuition and programme fee collection for schools",
     "- Guest pay checkout (TON, mobile money where supported)",
     "- School admin dashboard — students, payments, programmes, receipts, reports",

@@ -8,7 +8,7 @@ import { SITE_FOOTER_COLUMNS } from "@/lib/ecosystem/site-nav-menus";
 import { linksForFooter, type PublicSiteUiSettings } from "@/lib/site-ui-shared";
 
 const DEFAULT_BLURB =
-  "ODEL HUB connects programme fees in UGX with TON and mobile-money settlement — OdelPay for institutions and schools, OpenPayGB for global wallet and Dex flows.";
+  "ODELPay HUB connects programme fees in UGX with TON and mobile-money settlement — OdelPay for institutions and schools, OpenPayGB for global wallet and Dex flows.";
 
 type Props = {
   settings: PublicSiteUiSettings;
@@ -40,7 +40,7 @@ export function SiteFooter({ settings, bottomNavClearance }: Props) {
   const blurb = settings.footerIntro.trim() || DEFAULT_BLURB;
   const footerLinks = linksForFooter(settings.socialLinks);
   const showCommunity = footerLinks.length > 0 || settings.shareEnabled;
-  const brand = settings.platformDisplayName?.trim() || settings.shareDefaultTitle?.trim() || "ODEL HUB";
+  const brand = settings.platformDisplayName?.trim() || settings.shareDefaultTitle?.trim() || "ODELPay HUB";
 
   return (
     <footer
@@ -88,7 +88,7 @@ export function SiteFooter({ settings, bottomNavClearance }: Props) {
         {settings.footerCopyrightVisible ? (
           <div className="mt-10 border-t border-[var(--border)] pt-6 text-xs text-slate-500">
             <p>
-              © {new Date().getFullYear()} ODEL HUB · Tuition waiver programme ·{" "}
+              © {new Date().getFullYear()} ODELPay HUB · Tuition waiver programme ·{" "}
               <Link href="/" className="text-slate-400 hover:text-cyan-300 hover:underline">
                 Home
               </Link>

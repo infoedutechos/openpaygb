@@ -587,7 +587,7 @@ export default function AdminProgrammesManager() {
           <p className="font-medium text-cyan-100">Tuition hub sign-in required</p>
           <p className="mt-2 text-slate-300">
             You are in the admin area with a different session. To load and edit programmes and fees, sign in with your
-            ODEL HUB tuition admin account (email and password).
+            ODELPay HUB tuition admin account (email and password).
           </p>
           <Link
             href={`/admin/login?next=${encodeURIComponent(pathname)}`}

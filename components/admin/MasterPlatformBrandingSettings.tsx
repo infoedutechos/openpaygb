@@ -15,14 +15,14 @@ type Branding = {
 };
 
 const EMPTY: Branding = {
-  platformDisplayName: "ODEL HUB",
+  platformDisplayName: "ODELPay HUB",
   seoTitle: "",
   seoDescription: "",
   themeAccentHex: "",
   homeHeroHeadline: "",
   homeHeroSubhead: "",
   hubMaintenanceMessage: "",
-  copilotAssistantName: "ODEL HUB Copilot",
+  copilotAssistantName: "ODELPay HUB Copilot",
 };
 
 export function MasterPlatformBrandingSettings() {

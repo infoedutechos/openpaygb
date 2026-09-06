@@ -129,7 +129,7 @@ describe("POST /api/public/checkout/ton-pay-transfer", () => {
       rail: PaymentRail.web,
       tonAmount: 1.5,
       destinationWallet: "UQDest_________________________________",
-      memo: "ODEL Hub memo",
+      memo: "ODELPay HUB memo",
     } as never);
 
     const r = await post({
@@ -146,7 +146,7 @@ describe("POST /api/public/checkout/ton-pay-transfer", () => {
         amount: 1.5,
         recipientAddr: "UQDest_________________________________",
         senderAddr: "UQAbcdefghijklmnopqrstuvwxyz",
-        commentToSender: "ODEL Hub memo",
+        commentToSender: "ODELPay HUB memo",
       }),
       { apiKey: "test" }
     );

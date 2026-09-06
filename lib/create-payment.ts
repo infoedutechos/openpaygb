@@ -182,7 +182,7 @@ export async function createPendingPayment(opts: {
       : "";
   const memo =
     opts.memo ||
-    `ODEL Hub - ${p.code} Yr${year} Sem ${semester}${bundleLabel}${installmentLabel}`;
+    `ODELPay HUB - ${p.code} Yr${year} Sem ${semester}${bundleLabel}${installmentLabel}`;
 
   const doc = await prisma.payment.create({
     data: {

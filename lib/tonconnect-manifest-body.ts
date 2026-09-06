@@ -10,7 +10,7 @@ export function buildTonConnectManifest(origin: string): TonConnectManifestBody 
   const base = origin.replace(/\/$/, "");
   return {
     url: base,
-    name: "ODEL HUB Pay",
+    name: "ODELPay HUB Pay",
     iconUrl: `${base}/api/manifest/tonconnect-icon`,
     termsOfUseUrl: `${base}/clicker/terms`,
     privacyPolicyUrl: `${base}/clicker/privacy`,

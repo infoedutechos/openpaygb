@@ -14,7 +14,7 @@ function quoteEnvValue(value: string): string {
 export async function buildVercelEnvExport(): Promise<string> {
   await warmDeploymentEnvCache();
   const lines: string[] = [
-    "# ODEL HUB — export for Vercel Environment Variables",
+    "# ODELPay HUB — export for Vercel Environment Variables",
     "# Generated from merged dashboard overrides + server process env.",
     "# Paste at: Vercel project → Settings → Environment Variables → Import .env",
     "# Review sensitive values before committing this file anywhere.",

@@ -269,9 +269,13 @@ export function MasterPlatformSocialSettings() {
       </p>
 
       <div className="mt-5 rounded-lg border border-white/10 bg-black/25 p-4">
-        <p className="text-xs font-semibold text-cyan-100">Site-wide logo (favicon &amp; link previews)</p>
+        <p className="text-xs font-semibold text-cyan-100">ODELPay HUB logo (favicon &amp; link previews)</p>
         <p className="mt-1 text-[11px] text-slate-500">
-          PNG, JPEG, WebP, or ICO · max 512KB · square works best (512×512). Served at{" "}
+          Primary hub logo. For separate Higher / Schools / OpenPayGB marks, use{" "}
+          <a href="#product-logos" className="text-cyan-300 underline">
+            Product logos
+          </a>
+          . PNG, JPEG, WebP, or ICO · max 512KB · square works best. Served at{" "}
           <code className="text-slate-400">/api/platform/logo</code>
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-4">

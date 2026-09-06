@@ -65,7 +65,7 @@ const nav: { href: string; label: string; desc?: string }[] = [
   {
     href: "/admin/master#platform-communications",
     label: "Chat & notifications",
-    desc: "Bell + ODEL HUB Copilot",
+    desc: "Bell + ODELPay HUB Copilot",
   },
   {
     href: "/admin/master#ads-console",
@@ -106,6 +106,11 @@ const nav: { href: string; label: string; desc?: string }[] = [
     href: "/admin/master#platform-branding",
     label: "Branding",
     desc: "Name, SEO, hero, accent",
+  },
+  {
+    href: "/admin/master#product-logos",
+    label: "Product logos",
+    desc: "Hub · Higher · Schools · OPGB",
   },
   {
     href: "/admin/master#sidebar-nav-icons",
@@ -196,6 +201,7 @@ function masterIconForHref(href: string): { navKey: string; iconId: SidebarIconI
     "demo-logins": "demo",
     "visitor-analytics": "visitors",
     "platform-branding": "branding",
+    "product-logos": "branding",
     "sidebar-nav-icons": "branding",
     "auth-session-policy": "auth",
     "cron-ops": "cron",
@@ -258,7 +264,7 @@ export default function MasterManagerShell({
             <div className="min-w-0">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-400/90">Master</p>
               <p className="mt-1 text-sm font-medium text-white">Manager console</p>
-              <p className="mt-2 text-[11px] leading-snug text-slate-500">ODEL HUB platform</p>
+              <p className="mt-2 text-[11px] leading-snug text-slate-500">ODELPay HUB platform</p>
             </div>
           ) : null}
           <SidebarCollapseToggle collapsed={collapsed} onToggle={toggle} accent="amber" />
@@ -359,7 +365,7 @@ export default function MasterManagerShell({
       <div className="flex min-w-0 flex-1 flex-col bg-gradient-to-b from-[#100c0a]/80 to-transparent">
         <DashboardMobileChrome
           title="Manager console"
-          subtitle="Master · ODEL HUB platform"
+          subtitle="Master · ODELPay HUB platform"
           accent="amber"
           panelId="master-manager-mobile-menu"
           backHref={pathname === "/admin/master" || pathname === "/admin/master/" ? "/admin" : "/admin/master"}

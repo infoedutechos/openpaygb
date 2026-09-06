@@ -42,7 +42,7 @@ const INSTITUTION_CARDS: CardDef[] = [
 const MASTER_CARD: CardDef = {
   mode: "master",
   title: "Platform Master",
-  subtitle: "ODEL HUB platform operator",
+  subtitle: "ODELPay HUB platform operator",
   border: "border-amber-500/35",
   bg: "bg-amber-950/20",
   titleClass: "text-amber-300/95",

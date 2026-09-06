@@ -100,7 +100,7 @@ export function MasterPaymentProviders() {
     >
       <h2 className="text-sm font-semibold text-violet-100">API payment providers</h2>
       <p className="mt-2 max-w-3xl text-xs leading-relaxed text-slate-400">
-        Platform PSPs and rails — services, external APIs, and ODEL HUB routes. Tick to allow checkout; untick to hide
+        Platform PSPs and rails — services, external APIs, and ODELPay HUB routes. Tick to allow checkout; untick to hide
         a rail even when credentials are set.         API keys live in{" "}
         <a href="#ug-momo-credentials" className="text-cyan-300 underline hover:text-cyan-200">
           Uganda MoMo API keys

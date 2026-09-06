@@ -15,7 +15,7 @@ describe("institution-tier", () => {
   });
 
   it("labels product lines for register UI", () => {
-    expect(registrationSegmentTitle("higher")).toContain("Higher Institutions");
+    expect(registrationSegmentTitle("higher")).toContain("Higher");
     expect(registrationSegmentTitle("schools")).toContain("Schools");
   });
 });

@@ -61,7 +61,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ paymentId: stri
   const institutionTier = organization?.institutionTier;
   const breakdown = buildReceiptBreakdown(payment, programme?.fees ?? [], institutionTier);
   const ledger = buildReceiptLedger({
-    organizationName: organization?.name ?? "ODEL HUB",
+    organizationName: organization?.name ?? "ODELPay HUB",
     studentName: payment.student.name ?? "Student",
     programmeName: programme?.name ?? payment.programmeCode,
     programmeCode: payment.programmeCode,

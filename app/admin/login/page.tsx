@@ -266,7 +266,7 @@ function AdminLoginForm() {
       <div className="relative flex flex-1 flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-lg space-y-8">
           <div className="text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300/80">ODEL HUB</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300/80">ODELPay HUB</p>
             <div className="mx-auto mb-5 mt-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-cyan-500/35 bg-gradient-to-br from-cyan-500/20 to-sky-600/10 text-cyan-100 shadow-[0_0_40px_-8px_rgba(34,211,238,0.35)]">
               <OdelShieldIcon className="h-9 w-9" />
             </div>
@@ -494,7 +494,7 @@ function AdminLoginForm() {
       </div>
 
       <footer className="relative py-6 text-center text-xs text-slate-600">
-        © {new Date().getFullYear()} ODEL HUB
+        © {new Date().getFullYear()} ODELPay HUB
       </footer>
 
       {forgotOpen ? (

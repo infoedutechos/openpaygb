@@ -114,7 +114,7 @@ export function ReceiptPreviewModal({
   if (!open) return null;
 
   const periodLabel = receipt?.branding?.periodLabel ?? "Semester";
-  const platformName = receipt?.branding?.platform.name ?? "ODEL HUB";
+  const platformName = receipt?.branding?.platform.name ?? "ODELPay HUB";
 
   return (
     <div

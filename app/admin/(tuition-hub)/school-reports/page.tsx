@@ -248,8 +248,8 @@ export default function SchoolReportsPage() {
       <div className="print:hidden">
         <h1 className="text-2xl font-semibold text-white">Reports</h1>
         <p className="text-sm text-slate-400">
-          Financial metrics and records — cash flow, P&amp;L, bills, payroll, accounts, and inventory. All
-          eight statements are live; pick a tile to generate.
+          Financial metrics and records — cash flow, P&amp;L, bills, payroll (staff salary export), accounts, and
+          inventory. Payroll here is a report, not a full PayRollMS sidebar module.
         </p>
       </div>
 

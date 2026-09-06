@@ -1,4 +1,4 @@
-/** Master Admin catalog — payment API providers, services, and ODEL HUB routes. */
+/** Master Admin catalog — payment API providers, services, and ODELPay HUB routes. */
 
 export type PaymentProviderCatalogEntry = {
   code: string;
@@ -194,7 +194,7 @@ export const PAYMENT_PROVIDER_CATALOG: PaymentProviderCatalogEntry[] = [
     name: "Telegram Mini App & bot",
     category: "messaging",
     paymentRail: "telegram",
-    brandLabel: "ODEL HUB Pay bot",
+    brandLabel: "ODELPay HUB Pay bot",
     services: ["Mini App checkout", "Payment notifications", "Tuition due reminders"],
     externalApis: ["Telegram Bot API", "Telegram Web App initData"],
     ourCheckoutApis: ["POST /api/tma/session", "GET /api/tma/me", "GET /api/tma/receipts"],

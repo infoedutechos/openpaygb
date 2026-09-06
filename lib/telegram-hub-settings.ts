@@ -11,7 +11,7 @@ import {
 } from "@/lib/site-ui-settings";
 
 export const TELEGRAM_HUB_CHANNEL_DEFAULTS = {
-  name: "ODEL HUB Official Channel",
+  name: "ODELPay HUB Official Channel",
   url: "https://t.me/+quY6fGi9uHxhNjhk",
   channelId: "-1003916461172",
 } as const;

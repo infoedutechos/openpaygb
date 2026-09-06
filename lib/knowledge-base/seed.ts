@@ -140,7 +140,7 @@ export const PLATFORM_KB_SEED: KnowledgeSeedArticle[] = [
     title: "Receipts and email delivery",
     summary: "View, download, and email payment receipts with dual platform + school branding.",
     body:
-      "After a confirmed payment, open the receipt link from checkout or student payment history. Preview and PDF show the ODEL HUB platform logo/support contacts (Master Admin Console) plus your school name, letterhead logo, and contacts (Settings → Receipt letterhead). PDF download: /api/receipts/{paymentId}/pdf. Receipt emails send when Brevo or Resend is configured.",
+      "After a confirmed payment, open the receipt link from checkout or student payment history. Preview and PDF show the ODELPay HUB platform logo/support contacts (Master Admin Console) plus your school name, letterhead logo, and contacts (Settings → Receipt letterhead). PDF download: /api/receipts/{paymentId}/pdf. Receipt emails send when Brevo or Resend is configured.",
     category: "tuition",
     tags: ["receipt", "pdf", "email", "brevo", "resend", "letterhead", "branding"],
     audience: "tuition",
@@ -188,7 +188,7 @@ export const PLATFORM_KB_SEED: KnowledgeSeedArticle[] = [
     title: "Guide: school administrators",
     summary: "Sessions, classes, bills, admission format, and receipt letterhead.",
     body:
-      "Full handbook: docs/guides/USER_GUIDE_ADMIN_SCHOOLS.md. Configure admission numbers and receipt letterhead under /admin/settings. Create students for auto admission numbers and printable QR cards. Receipts show ODEL HUB + school branding.",
+      "Full handbook: docs/guides/USER_GUIDE_ADMIN_SCHOOLS.md. Configure admission numbers and receipt letterhead under /admin/settings. Create students for auto admission numbers and printable QR cards. Receipts show ODELPay HUB + school branding.",
     category: "admin",
     tags: ["guide", "admin", "schools", "bills", "sessions"],
     audience: "admin",
@@ -296,7 +296,7 @@ export const PLATFORM_KB_SEED: KnowledgeSeedArticle[] = [
     title: "What is OPGB (OpenPay Global Token)?",
     summary: "Internal settlement token — Phase 1: 1 OPGB = 1 UGX.",
     body:
-      "OPGB is the universal **internal settlement asset** for ODEL HUB and OpenPayGB. Users pay in Mobile Money, TON, or card; the platform books balances in OPGB for accounting, cross-currency display, and Dex flows.\n\n**Phase 1:** 1 OPGB minor unit = 1 UGX on the ledger.\n\n**Where it shows:** student OPGB wallet, OpenPayGB card balance, Dex buy/sell quotes, tuition checkout when spending card balance.\n\nArchitecture detail: docs/OPGB_TOKEN_ECOSYSTEM.md",
+      "OPGB is the universal **internal settlement asset** for ODELPay HUB and OpenPayGB. Users pay in Mobile Money, TON, or card; the platform books balances in OPGB for accounting, cross-currency display, and Dex flows.\n\n**Phase 1:** 1 OPGB minor unit = 1 UGX on the ledger.\n\n**Where it shows:** student OPGB wallet, OpenPayGB card balance, Dex buy/sell quotes, tuition checkout when spending card balance.\n\nArchitecture detail: docs/OPGB_TOKEN_ECOSYSTEM.md",
     category: "opgb",
     tags: ["opgb", "settlement", "ugx", "wallet", "openpaygb"],
     audience: "dex",
@@ -366,8 +366,8 @@ export const PLATFORM_KB_SEED: KnowledgeSeedArticle[] = [
   {
     slug: "platform-terms-of-service",
     title: "Platform Terms of Service",
-    summary: "Legal terms for ODEL HUB, OdelPay, OpenPayGB, and Dex.",
-    body: "Full text: /policies/terms\n\nCovers acceptance, services, accounts, payments, acceptable use, disclaimers, and updates for the ODEL HUB platform (not the URAPearls Clicker app — see /clicker/terms).",
+    summary: "Legal terms for ODELPay HUB, OdelPay, OpenPayGB, and Dex.",
+    body: "Full text: /policies/terms\n\nCovers acceptance, services, accounts, payments, acceptable use, disclaimers, and updates for the ODELPay HUB platform (not the URAPearls Clicker app — see /clicker/terms).",
     category: "policies",
     tags: ["terms", "legal", "platform", "policies"],
     audience: "all",
@@ -377,7 +377,7 @@ export const PLATFORM_KB_SEED: KnowledgeSeedArticle[] = [
   {
     slug: "platform-privacy-policy",
     title: "Platform Privacy Policy",
-    summary: "How ODEL HUB handles personal and payment data.",
+    summary: "How ODELPay HUB handles personal and payment data.",
     body: "Full text: /policies/privacy\n\nCovers collection, use, sharing with PSPs, retention, and your rights. URAPearls Clicker privacy: /clicker/privacy.",
     category: "policies",
     tags: ["privacy", "data", "platform", "policies"],
@@ -409,10 +409,10 @@ export const PLATFORM_KB_SEED: KnowledgeSeedArticle[] = [
   },
   {
     slug: "integrate-odel-hub",
-    title: "Integrate with ODEL HUB",
+    title: "Integrate with ODELPay HUB",
     summary: "Self-serve developer registration, Partner API, and OPGB/Dex surfaces.",
     body:
-      "Third-party apps join the ODEL HUB ecosystem autonomously:\n\n1. **Register** — `POST /api/public/ecosystem/register-app` or `/developers/register` UI. You receive `clientId` + `clientSecret`.\n2. **Dashboard** — Sign in at `/developers/dashboard` to create **Partner API keys** and **webhook endpoints**.\n3. **Tuition / SIS** — See `docs/platform/SIS_INTEGRATION_COOKBOOK.md` and `docs/platform/PARTNER_API.md` for checkout + `payment.confirmed` webhooks.\n4. **OPGB / Dex** — Scoped keys: `dex:quote:read`, `dex:intent:create`, `opgb:balance:read`. Endpoints under `/api/partner/v1/dex/*` and `/api/partner/v1/opgb/balances`.\n5. **OAuth** — Authorization code + client credentials at `/api/oauth/authorize` and `/api/oauth/token`.\n6. **Branded OPGB app** — Set `brandingName` and `redirectUris` at registration; use payment intents to deep-link users into `/dex/buy` flows.",
+      "Third-party apps join the ODELPay HUB ecosystem autonomously:\n\n1. **Register** — `POST /api/public/ecosystem/register-app` or `/developers/register` UI. You receive `clientId` + `clientSecret`.\n2. **Dashboard** — Sign in at `/developers/dashboard` to create **Partner API keys** and **webhook endpoints**.\n3. **Tuition / SIS** — See `docs/platform/SIS_INTEGRATION_COOKBOOK.md` and `docs/platform/PARTNER_API.md` for checkout + `payment.confirmed` webhooks.\n4. **OPGB / Dex** — Scoped keys: `dex:quote:read`, `dex:intent:create`, `opgb:balance:read`. Endpoints under `/api/partner/v1/dex/*` and `/api/partner/v1/opgb/balances`.\n5. **OAuth** — Authorization code + client credentials at `/api/oauth/authorize` and `/api/oauth/token`.\n6. **Branded OPGB app** — Set `brandingName` and `redirectUris` at registration; use payment intents to deep-link users into `/dex/buy` flows.",
     category: "developers",
     tags: ["integrate", "partner", "oauth", "developers", "ecosystem"],
     audience: "dex",
@@ -457,10 +457,10 @@ export const PLATFORM_KB_SEED: KnowledgeSeedArticle[] = [
   },
   {
     slug: "platform-help-copilot",
-    title: "How ODEL HUB Copilot works",
-    summary: "ODEL HUB Copilot answers from help articles with direct links.",
+    title: "How ODELPay HUB Copilot works",
+    summary: "ODELPay HUB Copilot answers from help articles with direct links.",
     body:
-      "ODEL HUB Copilot answers from platform help articles (editable in Master Admin) and includes clickable links to tuition pay, school registration, student portal, and URAPearls. For account-specific help, use Talk to an agent in the chat.",
+      "ODELPay HUB Copilot answers from platform help articles (editable in Master Admin) and includes clickable links to tuition pay, school registration, student portal, and URAPearls. For account-specific help, use Talk to an agent in the chat.",
     category: "platform",
     tags: ["help", "copilot", "knowledge", "support"],
     audience: "all",

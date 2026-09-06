@@ -1,6 +1,6 @@
 import { absoluteUrl } from "@/lib/public-url";
 
-/** Telegram Mini App entry for ODEL HUB Pay / OpenPayGB tuition. */
+/** Telegram Mini App entry for ODELPay HUB Pay / OpenPayGB tuition. */
 export function getTmaAppUrl(startParam?: string): string {
   const base = absoluteUrl("/tma");
   if (!startParam?.trim()) return base;

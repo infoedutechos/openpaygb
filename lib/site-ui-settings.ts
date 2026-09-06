@@ -70,10 +70,10 @@ function rowToSettings(row: SiteUiDbRow): SiteUiSettingsRow {
     checkoutPlatformFeeDefaultUgx: row.checkoutPlatformFeeDefaultUgx,
     socialLinks,
     shareEnabled: row.shareEnabled,
-    shareDefaultTitle: row.shareDefaultTitle?.trim() || "ODEL HUB",
+    shareDefaultTitle: row.shareDefaultTitle?.trim() || "ODELPay HUB",
     shareDefaultText:
       row.shareDefaultText?.trim() ||
-      "Check out ODEL HUB — tuition payments, TON settlement, and our ecosystem hubs.",
+      "Check out ODELPay HUB — tuition payments, TON settlement, and our ecosystem hubs.",
     supportPhone: row.supportPhone?.trim() || process.env.NEXT_PUBLIC_SUPPORT_PHONE?.trim() || "",
     supportEmail: row.supportEmail?.trim() || process.env.NEXT_PUBLIC_SUPPORT_EMAIL?.trim() || "",
     communitySupportUrl:
@@ -85,11 +85,11 @@ function rowToSettings(row: SiteUiDbRow): SiteUiSettingsRow {
     showCommunitySupport: row.showCommunitySupport === false ? false : true,
     homeScreenEnabled: row.homeScreenEnabled ?? true,
     homeScreenShowOnHome: row.homeScreenShowOnHome ?? true,
-    homeScreenTitle: row.homeScreenTitle?.trim() || "ODEL HUB",
-    homeScreenShortName: row.homeScreenShortName?.trim() || "ODEL HUB",
+    homeScreenTitle: row.homeScreenTitle?.trim() || "ODELPay HUB",
+    homeScreenShortName: row.homeScreenShortName?.trim() || "ODELPay",
     homeScreenDescription:
       row.homeScreenDescription?.trim() ||
-      "Tuition, TON payments, Play & Dex — save ODEL HUB to your home screen or desktop.",
+      "Tuition, TON payments, Play & Dex — save ODELPay HUB to your home screen or desktop.",
     homeScreenThemeColor: row.homeScreenThemeColor?.trim() || "#0ea5e9",
     hasPlatformLogo: Boolean(logoAt),
     platformLogoUploadedAt: logoAt?.toISOString() ?? null,
@@ -97,8 +97,8 @@ function rowToSettings(row: SiteUiDbRow): SiteUiSettingsRow {
     hasCopilotBubbleImage: Boolean(bubbleAt),
     copilotBubbleImageUploadedAt: bubbleAt?.toISOString() ?? null,
     copilotBubbleImageUrl: copilotBubbleImageUrl(bubbleAt),
-    copilotAssistantName: row.copilotAssistantName?.trim() || "ODEL HUB Copilot",
-    platformDisplayName: "ODEL HUB",
+    copilotAssistantName: row.copilotAssistantName?.trim() || "ODELPay HUB Copilot",
+    platformDisplayName: "ODELPay HUB",
     themeAccentHex: "",
     homeHeroHeadline: "",
     homeHeroSubhead: "",
@@ -200,7 +200,7 @@ function defaultSiteUiRow(): Parameters<typeof rowToSettings>[0] {
     checkoutPlatformFeeDefaultUgx: -1,
     socialLinks: [],
     shareEnabled: true,
-    shareDefaultTitle: "ODEL HUB",
+    shareDefaultTitle: "ODELPay HUB",
     shareDefaultText: "",
     supportPhone: "",
     supportEmail: "",
@@ -210,12 +210,12 @@ function defaultSiteUiRow(): Parameters<typeof rowToSettings>[0] {
     showCommunitySupport: true,
     homeScreenEnabled: true,
     homeScreenShowOnHome: true,
-    homeScreenTitle: "ODEL HUB",
-    homeScreenShortName: "ODEL HUB",
+    homeScreenTitle: "ODELPay HUB",
+    homeScreenShortName: "ODELPay",
     homeScreenDescription: "",
     homeScreenThemeColor: "#0ea5e9",
     platformLogoUploadedAt: null,
-    copilotAssistantName: "ODEL HUB Copilot",
+    copilotAssistantName: "ODELPay HUB Copilot",
     socialLinkIcons: {},
   };
 }

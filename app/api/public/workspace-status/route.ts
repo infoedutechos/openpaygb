@@ -70,7 +70,7 @@ export async function GET(req: Request) {
       }
     } else if (org.tenantStatus === "rejected") {
       nextSteps =
-        "This workspace request was not approved. Contact ODEL HUB support if you believe this is an error.";
+        "This workspace request was not approved. Contact ODELPay HUB support if you believe this is an error.";
     } else if (!org.registrationEmailVerifiedAt && policy.deferEmailVerification) {
       nextSteps = policy.autoRegistrationEnabled
         ? "Your workspace is being prepared. Confirm your registration email when ready using the button below."

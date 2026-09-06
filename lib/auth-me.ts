@@ -26,7 +26,7 @@ export type AuthMeAdmin = {
 
 export type AuthMeJson = {
   admin: AuthMeAdmin | null;
-  /** Valid Pay (ODEL HUB tuition) JWT and matching `AdminUser` row. */
+  /** Valid Pay (ODELPay HUB tuition) JWT and matching `AdminUser` row. */
   tuitionSession: boolean;
   /** URA `admin_session` cookie or local dev `ACCESS_ADMIN` bypass — same gate as admin layout without Pay. */
   adminShellAccess: boolean;

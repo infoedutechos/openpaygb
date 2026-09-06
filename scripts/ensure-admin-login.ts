@@ -46,7 +46,7 @@ async function main() {
         })();
         org = await prisma.organization.create({
           data: {
-            name: "ODEL HUB (default tenant)",
+            name: "ODELPay HUB (default tenant)",
             slug: "default",
             destinationWallet: wallet,
             tenantStatus: OrganizationTenantStatus.active,

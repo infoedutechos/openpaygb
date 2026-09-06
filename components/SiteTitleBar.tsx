@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname, useSearchParams } from "next/navigation";
+import { PLATFORM_BRAND_PAY } from "@/lib/platform-brand";
 
 function pageLabel(pathname: string, masterLogin: boolean): string {
   if (pathname === "/") return "Home";
@@ -42,7 +43,7 @@ export function SiteTitleBar() {
           style={{ fontFamily: "var(--font-display), var(--font-sans), sans-serif" }}
         >
           <span className="truncate bg-gradient-to-r from-ura-gold via-ura-white to-ura-blue bg-clip-text font-bold tracking-tight text-transparent">
-            ODEL HUB Pay
+            {PLATFORM_BRAND_PAY}
           </span>
           <span className="hidden text-slate-500 sm:inline" aria-hidden>
             ·

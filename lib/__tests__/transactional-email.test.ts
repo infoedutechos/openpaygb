@@ -6,15 +6,15 @@ import {
 
 describe("parseFromAddress", () => {
   it("parses name and email", () => {
-    expect(parseFromAddress("ODEL HUB <noreply@odelhub.test>")).toEqual({
-      name: "ODEL HUB",
+    expect(parseFromAddress("ODELPay HUB <noreply@odelhub.test>")).toEqual({
+      name: "ODELPay HUB",
       email: "noreply@odelhub.test",
     });
   });
 
   it("defaults name for plain email", () => {
     expect(parseFromAddress("noreply@odelhub.test")).toEqual({
-      name: "ODEL HUB",
+      name: "ODELPay HUB",
       email: "noreply@odelhub.test",
     });
   });

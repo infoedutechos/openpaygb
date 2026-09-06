@@ -68,7 +68,7 @@ export default function AssessmentVerseOSPage() {
         </div>
         <p className="mt-4">
           <Link href="/" className="text-xs text-slate-500 hover:text-teal-300 hover:underline">
-            ← ODEL HUB lobby
+            ← ODELPay HUB lobby
           </Link>
         </p>
       </header>

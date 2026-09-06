@@ -3,7 +3,7 @@ import Script from "next/script";
 import "./tma.css";
 
 export const metadata = {
-  title: "ODEL HUB Pay",
+  title: "ODELPay HUB Pay",
   description: "OpenPayGB tuition, wallet, and virtual cards — Telegram Mini App",
 };
 

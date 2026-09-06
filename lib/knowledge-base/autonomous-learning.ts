@@ -52,7 +52,7 @@ export function buildAutoLearnedArticle(opts: {
       opts.query.trim(),
       "",
       "## Auto-learned answer",
-      "This answer was assembled automatically from related ODEL HUB help articles.",
+      "This answer was assembled automatically from related ODELPay HUB help articles.",
       "",
       ...sections,
       "",

@@ -21,7 +21,7 @@ export function buildSharePayload(
   const cleanUrl = url.trim();
   return {
     url: cleanUrl,
-    title: opts?.title?.trim() || "ODEL HUB",
+    title: opts?.title?.trim() || "ODELPay HUB",
     text: opts?.text?.trim() || "",
   };
 }

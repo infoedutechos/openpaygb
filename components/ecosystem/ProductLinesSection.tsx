@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { ProductBrandMark } from "@/components/ecosystem/ProductBrandMark";
 import { PRODUCT_LINE_ORDER, PRODUCT_LINES, type ProductLine, type ProductLineId } from "@/lib/ecosystem/product-lines";
 import type { HubKey } from "@/lib/ecosystem/hubs";
+import type { ProductLogoId } from "@/lib/platform-brand";
 
 /** Product-line cards map onto ecosystem hubs for hide toggles. */
 const PRODUCT_LINE_HUB: Record<ProductLineId, HubKey> = {
@@ -10,6 +12,13 @@ const PRODUCT_LINE_HUB: Record<ProductLineId, HubKey> = {
   assessmentverse_os: "tuition",
   openpaygb: "dex",
   developers: "developers",
+};
+
+const PRODUCT_LINE_LOGO: Partial<Record<ProductLineId, ProductLogoId>> = {
+  odelpay_higher: "higher",
+  odelpay_schools: "schools",
+  openpaygb: "openpaygb",
+  developers: "hub",
 };
 
 const ACCENT: Record<ProductLine["accent"], { border: string; bg: string; title: string; btn: string; btnGhost: string }> = {
@@ -74,12 +83,32 @@ function LineCta({
   );
 }
 
-function ProductLineCard({ line }: { line: ProductLine }) {
+function ProductLineCard({
+  line,
+  logoUrl,
+}: {
+  line: ProductLine;
+  logoUrl?: string | null;
+}) {
   const a = ACCENT[line.accent];
+  const logoId = PRODUCT_LINE_LOGO[line.id];
   return (
     <article className={`rounded-2xl border ${a.border} ${a.bg} p-6 shadow-lg shadow-black/20`}>
-      <p className={`text-xs font-bold uppercase tracking-[0.2em] ${a.title}`}>{line.title}</p>
-      <p className="mt-1 text-sm font-medium text-slate-300">{line.subtitle}</p>
+      <div className="flex items-start gap-3">
+        {logoId && logoUrl ? (
+          <ProductBrandMark
+            product={logoId}
+            url={logoUrl}
+            label={line.title}
+            size={44}
+            className="h-11 w-11 shrink-0 rounded-xl border border-white/10 bg-black/30 p-1"
+          />
+        ) : null}
+        <div className="min-w-0">
+          <p className={`text-xs font-bold uppercase tracking-[0.2em] ${a.title}`}>{line.title}</p>
+          <p className="mt-1 text-sm font-medium text-slate-300">{line.subtitle}</p>
+        </div>
+      </div>
       <p className="mt-3 text-sm leading-relaxed text-slate-400">{line.description}</p>
       <p className="mt-3 text-xs text-slate-500">
         <span className="font-semibold text-slate-400">Audience:</span> {line.audience}
@@ -106,8 +135,10 @@ function ProductLineCard({ line }: { line: ProductLine }) {
 
 export function ProductLinesSection({
   hubHidden,
+  productLogos,
 }: {
   hubHidden?: Partial<Record<HubKey, boolean>>;
+  productLogos?: Partial<Record<ProductLogoId, string | null>>;
 }) {
   const ordered = PRODUCT_LINE_ORDER.map((id) => PRODUCT_LINES.find((p) => p.id === id)!).filter(
     (line) => !hubHidden?.[PRODUCT_LINE_HUB[line.id]],
@@ -131,9 +162,16 @@ export function ProductLinesSection({
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {userLines.map((line) => (
-              <ProductLineCard key={line.id} line={line} />
-            ))}
+            {userLines.map((line) => {
+              const logoId = PRODUCT_LINE_LOGO[line.id];
+              return (
+                <ProductLineCard
+                  key={line.id}
+                  line={line}
+                  logoUrl={logoId ? productLogos?.[logoId] : null}
+                />
+              );
+            })}
           </div>
         </section>
       ) : null}
@@ -150,9 +188,16 @@ export function ProductLinesSection({
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {builderLines.map((line) => (
-              <ProductLineCard key={line.id} line={line} />
-            ))}
+            {builderLines.map((line) => {
+              const logoId = PRODUCT_LINE_LOGO[line.id];
+              return (
+                <ProductLineCard
+                  key={line.id}
+                  line={line}
+                  logoUrl={logoId ? productLogos?.[logoId] : null}
+                />
+              );
+            })}
           </div>
         </section>
       ) : null}

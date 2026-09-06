@@ -559,7 +559,7 @@ export async function buildDemoLoginsExport(format: DemoLoginsExportFormat): Pro
   }
 
   const md = [
-    `# ODEL HUB — Demo login details`,
+    `# ODELPay HUB — Demo login details`,
     ``,
     `Exported: ${new Date().toISOString()}`,
     ``,

@@ -156,7 +156,7 @@ export async function POST(req: Request) {
         phoneNumber: d.phone,
         amountUgx: doc.totalUgx,
         reference,
-        description: `ODEL HUB ${org.slug} tuition`,
+        description: `ODELPay HUB ${org.slug} tuition`,
         network: d.network,
       });
     } catch (e) {

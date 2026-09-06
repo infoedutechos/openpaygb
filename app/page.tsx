@@ -4,14 +4,22 @@ import { RequestSchoolWorkspaceCta } from "@/components/tuition/RequestSchoolWor
 import { SocialLinksRow } from "@/components/SocialLinksRow";
 import { ShareButton } from "@/components/ShareButton";
 import { SaveToHomeScreenCard } from "@/components/SaveToHomeScreenCard";
+import { ProductBrandMark } from "@/components/ecosystem/ProductBrandMark";
 import { ProductLinesSection } from "@/components/ecosystem/ProductLinesSection";
 import { SiteVisitorStats } from "@/components/hub/SiteVisitorStats";
 import { getPublicSiteUiSettings, linksForFooter } from "@/lib/site-ui-settings";
 import { getHubVisibilityState } from "@/lib/hub-visibility";
+import { getProductLogoPublicUrls } from "@/lib/product-logos";
+import { PLATFORM_BRAND_NAME } from "@/lib/platform-brand";
 
 export default async function HomePage() {
-  const [siteUi, hubHidden] = await Promise.all([getPublicSiteUiSettings(), getHubVisibilityState()]);
+  const [siteUi, hubHidden, productLogos] = await Promise.all([
+    getPublicSiteUiSettings(),
+    getHubVisibilityState(),
+    getProductLogoPublicUrls(),
+  ]);
   const communityLinks = linksForFooter(siteUi.socialLinks);
+  const brand = siteUi.platformDisplayName?.trim() || PLATFORM_BRAND_NAME;
 
   return (
     <HomeHubShell>
@@ -28,7 +36,16 @@ export default async function HomePage() {
         <div className="relative grid gap-10 md:grid-cols-[1.15fr_0.85fr] md:items-center">
           <div className="space-y-6">
             <p className="inline-flex items-center gap-2 rounded-full border border-cyan-400/25 bg-cyan-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200">
-              {siteUi.platformDisplayName?.trim() || "ODEL HUB"} · OdelPay · OpenPayGB · AssessmentVerse OS
+              {productLogos.hub ? (
+                <ProductBrandMark
+                  product="hub"
+                  url={productLogos.hub}
+                  label={brand}
+                  size={18}
+                  className="h-[18px] w-[18px] rounded"
+                />
+              ) : null}
+              {brand} · OdelPay · OpenPayGB · AssessmentVerse OS
             </p>
             <h1 className="text-3xl font-semibold leading-[1.08] text-white sm:text-4xl md:text-5xl lg:text-[3.25rem]">
               {siteUi.homeHeroHeadline?.trim() ? (
@@ -89,7 +106,7 @@ export default async function HomePage() {
             {(communityLinks.length > 0 || siteUi.shareEnabled) && (
               <div className="flex flex-wrap items-center gap-3 pt-2">
                 <SocialLinksRow links={communityLinks} />
-                <ShareButton variant="primary" label={`Share ${siteUi.platformDisplayName?.trim() || "ODEL HUB"}`} />
+                <ShareButton variant="primary" label={`Share ${siteUi.platformDisplayName?.trim() || "ODELPay HUB"}`} />
               </div>
             )}
           </div>
@@ -131,7 +148,7 @@ export default async function HomePage() {
 
       <SiteVisitorStats />
 
-      <ProductLinesSection hubHidden={hubHidden} />
+      <ProductLinesSection hubHidden={hubHidden} productLogos={productLogos} />
 
       <section className="grid gap-4 sm:grid-cols-3">
         {[

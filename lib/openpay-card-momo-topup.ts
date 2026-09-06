@@ -122,8 +122,8 @@ export async function startOpenPayCardMomoTopup(opts: {
       reference,
       description:
         opts.purpose === "issue"
-          ? "ODEL HUB OpenPayGB card activation"
-          : "ODEL HUB OpenPayGB card top-up",
+          ? "ODELPay HUB OpenPayGB card activation"
+          : "ODELPay HUB OpenPayGB card top-up",
       network: opts.network,
     });
     message = collect.message;
@@ -136,8 +136,8 @@ export async function startOpenPayCardMomoTopup(opts: {
       reference,
       description:
         opts.purpose === "issue"
-          ? "ODEL HUB OpenPayGB card activation"
-          : "ODEL HUB OpenPayGB card top-up",
+          ? "ODELPay HUB OpenPayGB card activation"
+          : "ODELPay HUB OpenPayGB card top-up",
       customerEmail: opts.customerEmail,
       customerName: opts.customerName,
     });
@@ -151,8 +151,8 @@ export async function startOpenPayCardMomoTopup(opts: {
       reference,
       description:
         opts.purpose === "issue"
-          ? "ODEL HUB OpenPayGB card activation"
-          : "ODEL HUB OpenPayGB card top-up",
+          ? "ODELPay HUB OpenPayGB card activation"
+          : "ODELPay HUB OpenPayGB card top-up",
     });
     message = collect.message;
     momoReference = collect.internal_reference?.trim() || reference;

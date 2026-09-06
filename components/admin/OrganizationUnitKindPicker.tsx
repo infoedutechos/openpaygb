@@ -88,7 +88,7 @@ export function OrganizationUnitKindPicker({
             This workspace is a {ORGANIZATION_UNIT_KIND_LABELS[unitKind]} of another school
           </p>
           <label className="block">
-            <span className="text-[11px] text-slate-500">Parent on ODEL HUB (slug)</span>
+            <span className="text-[11px] text-slate-500">Parent on ODELPay HUB (slug)</span>
             <input
               list="parent-org-options"
               value={parentSlug}
@@ -105,7 +105,7 @@ export function OrganizationUnitKindPicker({
             </datalist>
           </label>
           <label className="block">
-            <span className="text-[11px] text-slate-500">Or parent name (if not on ODEL HUB)</span>
+            <span className="text-[11px] text-slate-500">Or parent name (if not on ODELPay HUB)</span>
             <input
               value={externalParentName}
               onChange={(e) => onExternalParentChange(e.target.value)}

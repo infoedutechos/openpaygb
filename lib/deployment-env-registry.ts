@@ -400,7 +400,7 @@ export const DEPLOYMENT_ENV_GROUPS: EnvGroupDefinition[] = [
       {
         name: "TRANSACTIONAL_EMAIL_FROM",
         label: "From address (preferred)",
-        description: "Sender e.g. ODEL HUB <noreply@yourdomain.com>. Falls back to RESEND_FROM.",
+        description: "Sender e.g. ODELPay HUB <noreply@yourdomain.com>. Falls back to RESEND_FROM.",
         sensitive: false,
         requirement: "production",
       },

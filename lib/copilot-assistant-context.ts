@@ -15,8 +15,8 @@ let cache: CopilotAssistantContext | null = null;
 export async function getCopilotAssistantContext(): Promise<CopilotAssistantContext> {
   if (cache) return cache;
 
-  let assistantName = "ODEL HUB Copilot";
-  let platformName = "ODEL HUB";
+  let assistantName = "ODELPay HUB Copilot";
+  let platformName = "ODELPay HUB";
   let platformTagline =
     "Tuition payments, school workspaces, TON settlement, Play & Dex — one platform for schools and students.";
 

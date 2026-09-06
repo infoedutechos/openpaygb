@@ -28,14 +28,14 @@ export type ProductLine = {
 export const PRODUCT_LINES: ProductLine[] = [
   {
     id: "odelpay_higher",
-    title: "OdelPay — Higher Institutions",
+    title: "OdelPay — Higher",
     subtitle: "Universities & tertiary",
     description:
       "Programme fees by semester, TON and mobile-money checkout, receipts, and school admin tooling for universities and polytechnics.",
     audience: "Universities, polytechnics, tertiary colleges",
     surface: "user",
     primaryHref: "/OdelPayUniversities",
-    primaryLabel: "Open OdelPay Universities",
+    primaryLabel: "Open OdelPay Higher",
     secondaryHref: "/school/login",
     secondaryLabel: "Institution admin",
     accent: "cyan",
@@ -84,7 +84,7 @@ export const PRODUCT_LINES: ProductLine[] = [
   },
   {
     id: "developers",
-    title: "ODEL HUB Developers",
+    title: "ODELPay HUB Developers",
     subtitle: "Builder portal · all product sides",
     description:
       "Partner API keys, webhooks, and app registry. Developers can navigate every user-facing product side; each portal still requires its own audience sign-in.",

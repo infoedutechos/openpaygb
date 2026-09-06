@@ -14,7 +14,7 @@ export async function sendAdminPasswordResetEmail(toEmail: string, plainToken: s
 
   const sent = await sendTransactionalEmail({
     to: toEmail,
-    subject: "ODEL HUB — reset your admin password",
+    subject: "ODELPay HUB — reset your admin password",
     html: `<p>You requested a password reset for ${escapeHtml(toEmail)}.</p>
 <p><a href="${resetUrl}">Set a new password</a></p>
 <p>This link expires in one hour. If you did not request this, you can ignore this email.</p>

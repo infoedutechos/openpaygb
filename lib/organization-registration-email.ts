@@ -31,7 +31,7 @@ export async function sendOrganizationRegistrationEmail(
 
   const sent = await sendTransactionalEmail({
     to: toEmail,
-    subject: "ODEL HUB — confirm your school workspace request",
+    subject: "ODELPay HUB — confirm your school workspace request",
     html,
     text,
     logTag: "[organization-register]",

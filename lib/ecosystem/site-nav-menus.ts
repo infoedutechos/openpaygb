@@ -62,7 +62,7 @@ export const SITE_HEADER_UTILITY_LINKS: SiteHeaderUtilityLink[] = [
 export const SITE_HEADER_MENUS: SiteNavMenu[] = [
   {
     id: "odelpay_higher",
-    label: "OdelPay — Higher Institutions",
+    label: "OdelPay — Higher",
     href: "/OdelPayUniversities",
     accent: "cyan",
     items: [
@@ -100,7 +100,7 @@ export const SITE_HEADER_MENUS: SiteNavMenu[] = [
     href: "/AssessmentVerseOS",
     accent: "teal",
     items: [
-      { label: "AssessmentVerse lobby", href: "/AssessmentVerseOS", description: "Platform home on ODEL HUB" },
+      { label: "AssessmentVerse lobby", href: "/AssessmentVerseOS", description: "Platform home on ODELPay HUB" },
       { label: "Open local 5000", href: "http://127.0.0.1:5000/", description: "Vite platform catalog" },
       { label: "Open Flask 5001", href: "http://127.0.0.1:5001/", description: "API and print desk" },
       { label: "Sign in", href: "http://127.0.0.1:5000/login", description: "Student, staff, admin" },

@@ -15,13 +15,13 @@ vi.mock("@/utils/support-chat-fallback", () => ({
 
 vi.mock("@/lib/copilot-assistant-context", () => ({
   getCopilotAssistantContext: vi.fn(async () => ({
-    assistantName: "ODEL HUB Copilot",
-    platformName: "ODEL HUB",
+    assistantName: "ODELPay HUB Copilot",
+    platformName: "ODELPay HUB",
     platformTagline: "Tuition and payments",
     platformUrl: "http://localhost:3000",
   })),
   buildCopilotIntro: vi.fn(
-    () => "Hi — I'm **ODEL HUB Copilot** on ODEL HUB.",
+    () => "Hi — I'm **ODELPay HUB Copilot** on ODELPay HUB.",
   ),
 }));
 

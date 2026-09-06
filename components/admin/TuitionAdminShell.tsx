@@ -132,7 +132,7 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
       ? "Tuition sign-in pending"
       : "Admin"
     : schoolName ?? (authMe.admin.role === "master" ? "Platform overview" : "Admin");
-  const shellTitle = isSchoolAdmin ? schoolName! : "ODEL HUB";
+  const shellTitle = isSchoolAdmin ? schoolName! : "ODELPay HUB";
   const shellSubtitle = isSchoolAdmin ? "School dashboard" : tenantLabel;
   const adminWelcomeName =
     authMe?.admin?.name?.trim() || authMe?.admin?.email?.trim() || null;
@@ -174,7 +174,7 @@ function TuitionAdminShellInner({ children }: { children: React.ReactNode }) {
           </span>
           {!collapsed ? (
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold tracking-wide text-white">ODEL HUB</p>
+              <p className="text-sm font-semibold tracking-wide text-white">ODELPay HUB</p>
               <p className="truncate text-xs text-slate-400" title={tenantLabel}>
                 {tenantLabel}
               </p>

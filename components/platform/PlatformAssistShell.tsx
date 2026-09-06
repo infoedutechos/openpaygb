@@ -15,7 +15,7 @@ export default function PlatformAssistShell() {
 
   const hub = platformHubFromPathname(pathname);
   const chatTitle =
-    hub === "tuition" ? "Tuition Help" : hub === "admin" ? "Admin Help" : hub === "play" ? "URAPearls Help" : "ODEL HUB Help";
+    hub === "tuition" ? "Tuition Help" : hub === "admin" ? "Admin Help" : hub === "play" ? "URAPearls Help" : "ODELPay HUB Help";
 
   return (
     <>

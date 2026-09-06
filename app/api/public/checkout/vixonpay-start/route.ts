@@ -159,7 +159,7 @@ export async function POST(req: Request) {
         phone: vixonPhone,
         amountUgx: doc.totalUgx,
         reference,
-        description: `ODEL HUB ${org.slug} tuition`,
+        description: `ODELPay HUB ${org.slug} tuition`,
         customerEmail: customerEmail || undefined,
         customerName: customerName || undefined,
       });

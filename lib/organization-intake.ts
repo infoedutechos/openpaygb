@@ -35,7 +35,7 @@ function refineOrgIntake<T extends z.ZodTypeAny>(schema: T) {
       if (!hasParent) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Select a parent institution on ODEL HUB or enter the parent name",
+          message: "Select a parent institution on ODELPay HUB or enter the parent name",
           path: ["parentOrganizationSlug"],
         });
       }
@@ -117,7 +117,7 @@ export async function createPendingOrganization(input: PendingOrgInput) {
   if (input.parentOrganizationSlug?.trim()) {
     parentOrganizationId = await resolveParentOrganizationId(input.parentOrganizationSlug);
     if (!parentOrganizationId && !input.externalParentName?.trim()) {
-      throw new Error("Parent institution slug not found — enter the parent name if they are not on ODEL HUB");
+      throw new Error("Parent institution slug not found — enter the parent name if they are not on ODELPay HUB");
     }
   }
 

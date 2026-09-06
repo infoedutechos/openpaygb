@@ -4,7 +4,7 @@ import { buildSharePayload, shareChannelUrl } from "@/lib/social-share";
 describe("social-share", () => {
   it("builds telegram share url", () => {
     const payload = buildSharePayload("https://example.com/pay", {
-      title: "ODEL HUB",
+      title: "ODELPay HUB",
       text: "Pay tuition with TON",
     });
     const url = shareChannelUrl("telegram", payload);

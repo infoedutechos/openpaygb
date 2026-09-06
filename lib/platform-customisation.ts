@@ -5,6 +5,13 @@ import { prisma } from "@/lib/prisma";
 import { PLATFORM_SITE_UI_KEY } from "@/lib/site-ui-shared";
 import { withPrismaRetry } from "@/lib/prisma-retry";
 
+import {
+  PLATFORM_BRAND_NAME,
+  PLATFORM_COPILOT_NAME,
+  normalizeCopilotName,
+  normalizePlatformBrandName,
+} from "@/lib/platform-brand";
+
 export type PlatformBranding = {
   platformDisplayName: string;
   seoTitle: string;
@@ -26,14 +33,14 @@ export type PlatformAuthPolicy = {
 };
 
 export const DEFAULT_PLATFORM_BRANDING: PlatformBranding = {
-  platformDisplayName: "ODEL HUB",
+  platformDisplayName: PLATFORM_BRAND_NAME,
   seoTitle: "",
   seoDescription: "",
   themeAccentHex: "",
   homeHeroHeadline: "",
   homeHeroSubhead: "",
   hubMaintenanceMessage: "",
-  copilotAssistantName: "ODEL HUB Copilot",
+  copilotAssistantName: PLATFORM_COPILOT_NAME,
 };
 
 export const DEFAULT_PLATFORM_AUTH_POLICY: PlatformAuthPolicy = {
@@ -96,14 +103,18 @@ export async function getPlatformBranding(): Promise<PlatformBranding> {
     );
     if (!row) return { ...DEFAULT_PLATFORM_BRANDING };
     return {
-      platformDisplayName: row.platformDisplayName?.trim() || row.shareDefaultTitle?.trim() || DEFAULT_PLATFORM_BRANDING.platformDisplayName,
+      platformDisplayName: normalizePlatformBrandName(
+        row.platformDisplayName?.trim() || row.shareDefaultTitle?.trim() || DEFAULT_PLATFORM_BRANDING.platformDisplayName,
+      ),
       seoTitle: row.seoTitle?.trim() || "",
       seoDescription: row.seoDescription?.trim() || "",
       themeAccentHex: row.themeAccentHex?.trim() || "",
       homeHeroHeadline: row.homeHeroHeadline?.trim() || "",
       homeHeroSubhead: row.homeHeroSubhead?.trim() || "",
       hubMaintenanceMessage: row.hubMaintenanceMessage?.trim() || "",
-      copilotAssistantName: row.copilotAssistantName?.trim() || DEFAULT_PLATFORM_BRANDING.copilotAssistantName,
+      copilotAssistantName: normalizeCopilotName(
+        row.copilotAssistantName?.trim() || DEFAULT_PLATFORM_BRANDING.copilotAssistantName,
+      ),
     };
   } catch (e) {
     console.warn("[platform-branding] load failed, using defaults", e);

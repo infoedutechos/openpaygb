@@ -428,7 +428,7 @@ export async function buildProjectDownload(part: ProjectDownloadPart): Promise<D
 
   const manifest = {
     exportedAt: new Date().toISOString(),
-    app: "ODEL HUB Pay",
+    app: "ODELPay HUB Pay",
     bundle: "full",
     catalogue: "Master Admin → Docs & downloads (#project-download)",
     contents: [

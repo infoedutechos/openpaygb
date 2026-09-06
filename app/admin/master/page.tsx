@@ -20,6 +20,7 @@ import { MasterDeploymentEnvSettings } from "@/components/admin/MasterDeployment
 import { MasterDemoLoginsSettings } from "@/components/admin/MasterDemoLoginsSettings";
 import { MasterVisitorAnalyticsSettings } from "@/components/admin/MasterVisitorAnalyticsSettings";
 import { MasterPlatformBrandingSettings } from "@/components/admin/MasterPlatformBrandingSettings";
+import { MasterProductLogosSettings } from "@/components/admin/MasterProductLogosSettings";
 import { MasterSidebarNavIconsSettings } from "@/components/admin/MasterSidebarNavIconsSettings";
 import { MasterAuthSessionSettings } from "@/components/admin/MasterAuthSessionSettings";
 import { MasterCronOpsPanel } from "@/components/admin/MasterCronOpsPanel";
@@ -333,6 +334,7 @@ export default function MasterManagerOverviewPage() {
       <MasterDeploymentEnvSettings />
 
       <MasterPlatformBrandingSettings />
+      <MasterProductLogosSettings />
       <MasterSidebarNavIconsSettings />
 
       <MasterAuthSessionSettings />

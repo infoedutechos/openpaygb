@@ -1407,8 +1407,8 @@ model SiteUiSettings {
   socialLinks        Json     @default("[]")
   /** When false, hide global share UI. */
   shareEnabled       Boolean  @default(true)
-  shareDefaultTitle  String   @default("ODEL HUB")
-  shareDefaultText   String   @default("Check out ODEL HUB ? tuition payments, TON settlement, and our ecosystem hubs.")
+  shareDefaultTitle  String   @default("ODELPay HUB")
+  shareDefaultText   String   @default("Check out ODELPay HUB — tuition payments, TON settlement, and our ecosystem hubs.")
   /** Optional overrides; empty string = use deployment env in lib/site-ui-settings. */
   supportPhone       String   @default("")
   supportEmail       String   @default("")
@@ -1420,9 +1420,9 @@ model SiteUiSettings {
   /** PWA / Add to Home Screen ? master-editable install prompt on home page. */
   homeScreenEnabled       Boolean @default(true)
   homeScreenShowOnHome    Boolean @default(true)
-  homeScreenTitle         String  @default("ODEL HUB")
-  homeScreenShortName     String  @default("ODEL HUB")
-  homeScreenDescription   String  @default("Tuition, TON payments, Play & Dex ? save ODEL HUB to your home screen or desktop.")
+  homeScreenTitle         String  @default("ODELPay HUB")
+  homeScreenShortName     String  @default("ODELPay")
+  homeScreenDescription   String  @default("Tuition, Play & Dex — ODELPay HUB")
   homeScreenThemeColor    String  @default("#0ea5e9")
   /** When true, public Tuition Hub routes show a maintenance screen. */
   tuitionHubMaintenance Boolean @default(false)
@@ -1443,9 +1443,16 @@ model SiteUiSettings {
   dexHubHidden          Boolean @default(false)
   /** When true, Developers Hub is fully hidden. */
   developersHubHidden   Boolean @default(false)
-  /** Platform icon/logo (PNG, ICO, JPEG, WebP) ? favicon, PWA, share previews. */
+  /** Platform icon/logo (PNG, ICO, JPEG, WebP) — ODELPay HUB favicon, PWA, share previews. */
   platformLogo              Bytes?
   platformLogoUploadedAt    DateTime?
+  /** Independent product logos (MAC-configurable). */
+  odelPayHigherLogo              Bytes?
+  odelPayHigherLogoUploadedAt    DateTime?
+  odelPaySchoolsLogo             Bytes?
+  odelPaySchoolsLogoUploadedAt   DateTime?
+  openPayGbLogo                  Bytes?
+  openPayGbLogoUploadedAt        DateTime?
   /** Optional image on the floating Help copilot bubble (PNG, JPEG, WebP; square works best). */
   copilotBubbleImage        Bytes?
   copilotBubbleImageUploadedAt DateTime?
@@ -1467,7 +1474,7 @@ model SiteUiSettings {
    */
   schoolWorkspaceDeferEmailVerification Boolean @default(false)
   /** Floating help copilot display name. */
-  copilotAssistantName       String  @default("ODEL HUB Copilot")
+  copilotAssistantName       String  @default("ODELPay HUB Copilot")
   /** When false, students cannot opt in to OpenPayGB platform card or pay tuition with it. */
   openPayCardEnabled     Boolean @default(true)
   /** When false, guests cannot register for a platform card via email/phone OTP (Option B). */
@@ -1501,7 +1508,7 @@ model SiteUiSettings {
   /** When true, home page shows daily + total visitor counts (aggregates only). */
   showPublicVisitorStats      Boolean @default(true)
   /** Public brand name used in footer, metadata, maintenance screens. */
-  platformDisplayName         String  @default("ODEL HUB")
+  platformDisplayName         String  @default("ODELPay HUB")
   /** Optional SEO title override (empty = derive from platformDisplayName). */
   seoTitle                    String  @default("")
   /** Optional SEO / Open Graph description. */

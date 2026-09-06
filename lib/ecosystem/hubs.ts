@@ -1,5 +1,5 @@
 /**
- * Canonical ODEL HUB hub registry — extend by adding entries and UI will pick them up
+ * Canonical ODELPay HUB hub registry — extend by adding entries and UI will pick them up
  * from ordered lists (home switcher, headers, cross-links).
  */
 

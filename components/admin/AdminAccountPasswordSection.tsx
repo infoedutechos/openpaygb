@@ -30,7 +30,7 @@ export function AdminAccountPasswordSection({
         <h2 className="text-sm font-semibold text-white">{absentTitle}</h2>
         <p className="mt-2 text-sm text-slate-400">
           {absentHint ??
-            "Password changes use your ODEL HUB tuition admin email and password. If you only have another admin session in this browser, open Admin login and sign in with your tuition account."}{" "}
+            "Password changes use your ODELPay HUB tuition admin email and password. If you only have another admin session in this browser, open Admin login and sign in with your tuition account."}{" "}
           <Link href="/admin/login" className="text-cyan-400 underline">
             Admin login
           </Link>

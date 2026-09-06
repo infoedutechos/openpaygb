@@ -20,7 +20,7 @@ export async function buildRootMetadata(siteUi: PublicSiteUiSettings, baseUrl?: 
   const branding = await getPlatformBranding();
   const title = resolvedSeoTitle(branding);
   const description = resolvedSeoDescription(branding);
-  const siteName = branding.platformDisplayName || siteUi.shareDefaultTitle || "ODEL HUB";
+  const siteName = branding.platformDisplayName || siteUi.shareDefaultTitle || "ODELPay HUB";
 
   const ogImages: NonNullable<Metadata["openGraph"]>["images"] = siteUi.hasPlatformLogo
     ? [{ url: iconAbsolute, width: 512, height: 512, alt: siteName }]

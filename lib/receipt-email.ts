@@ -53,7 +53,7 @@ export async function sendReceiptEmailIfConfigured(paymentId: string): Promise<v
   const institutionTier = organization?.institutionTier;
   const breakdown = buildReceiptBreakdown(payment, programme?.fees ?? [], institutionTier);
   const ledger = buildReceiptLedger({
-    organizationName: organization?.name ?? "ODEL HUB",
+    organizationName: organization?.name ?? "ODELPay HUB",
     studentName: payment.student.name ?? "Student",
     programmeName: programme?.name ?? payment.programmeCode,
     programmeCode: payment.programmeCode,
@@ -87,7 +87,7 @@ export async function sendReceiptEmailIfConfigured(paymentId: string): Promise<v
 
   await sendTransactionalEmail({
     to: email,
-    subject: `ODEL HUB — payment confirmed (${payment.programmeCode})`,
+    subject: `ODELPay HUB — payment confirmed (${payment.programmeCode})`,
     html: `<p>Hi ${escapeHtml(payment.student.name)},</p>
 <p>Your payment is <strong>confirmed</strong>.</p>
 <ul>

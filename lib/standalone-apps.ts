@@ -127,7 +127,7 @@ export const STANDALONE_APPS: readonly StandaloneAppDefinition[] = [
   {
     id: "odelhub_devs",
     title: "OdelHub Devs",
-    subtitle: "ODEL HUB Developers",
+    subtitle: "ODELPay HUB Developers",
     description:
       "Self-serve app registry, Partner API keys, Dex payment intents, OPGB balance reads, OAuth client credentials, and webhook endpoints. Developers can open every product side; each portal still requires its own sign-in.",
     lobbyPath: "/developers",

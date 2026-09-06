@@ -32,7 +32,7 @@ export default function OpgbPlatformPage() {
   return (
     <OpgbLobbyChrome>
       <div className="mx-auto max-w-3xl space-y-8 pb-16">
-        <PageBackLink href="/" label="ODEL HUB lobby" />
+        <PageBackLink href="/" label="ODELPay HUB lobby" />
 
         <section className="rounded-3xl border border-violet-500/30 bg-gradient-to-br from-violet-950/50 to-slate-950/80 p-6 shadow-[0_24px_60px_rgba(0,0,0,0.4)] md:p-8">
           <p className="text-[0.65rem] font-bold uppercase tracking-[0.22em] text-violet-200/90">

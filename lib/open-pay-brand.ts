@@ -1,5 +1,5 @@
 /**
- * OpenPayGB — payer-facing mobile-money brand on ODEL HUB Pay.
+ * OpenPayGB — payer-facing mobile-money brand on ODELPay HUB Pay.
  * Technical payment rails (ledger + APIs): Mbiyo, LivePay, Relworx (East Africa MoMo).
  * TON is a separate on-chain rail, not under OpenPayGB.
  */

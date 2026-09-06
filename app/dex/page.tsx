@@ -6,7 +6,7 @@ import { HUBS } from "@/lib/ecosystem/hubs";
 export default function DexHubPage() {
   return (
     <div className="mx-auto max-w-xl space-y-8">
-      <PageBackLink href="/" label="ODEL HUB lobby" />
+      <PageBackLink href="/" label="ODELPay HUB lobby" />
       <div className="rounded-3xl border border-violet-500/25 bg-gradient-to-br from-violet-950/50 to-slate-950/80 p-6 shadow-[0_24px_60px_rgba(0,0,0,0.4)] md:p-8">
         <p className="text-[0.65rem] font-bold uppercase tracking-[0.22em] text-violet-200/90">Dex Hub</p>
         <h1 className="mt-2 text-2xl font-semibold text-white md:text-3xl">Onramp &amp; offramp</h1>

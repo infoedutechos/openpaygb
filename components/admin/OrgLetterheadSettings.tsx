@@ -118,7 +118,7 @@ export function OrgLetterheadSettings() {
       <h2 className="text-lg font-semibold text-white">Receipt letterhead</h2>
       <p className="mt-1 text-sm text-slate-400">
         School name, logo, and contact details appear on receipt Preview, public receipts, and PDF downloads — beside
-        the ODEL HUB platform logo and Master Admin support contacts.
+        the ODELPay HUB platform logo and Master Admin support contacts.
       </p>
       {error ? <p className="mt-3 text-sm text-rose-400">{error}</p> : null}
       {data ? (

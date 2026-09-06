@@ -95,7 +95,7 @@ export function ShareSheet({ open, onClose, shareUrl, title, text, className = "
         <div className="relative z-10 w-full max-w-md rounded-t-2xl border border-white/10 bg-[#12151c] p-4 shadow-2xl sm:rounded-2xl sm:mx-4">
           <div className="flex items-start justify-between gap-3 mb-4">
             <div>
-              <h2 className="text-base font-semibold text-white">Share ODEL HUB</h2>
+              <h2 className="text-base font-semibold text-white">Share ODELPay HUB</h2>
               <p className="mt-1 text-xs text-slate-500 line-clamp-2 break-all">{payload.url}</p>
             </div>
             <button

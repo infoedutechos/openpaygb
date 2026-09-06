@@ -143,7 +143,7 @@ export async function POST(req: Request) {
         msisdn: d.phone,
         amount: doc.totalUgx,
         reference,
-        description: `ODEL HUB ${org.slug} tuition`,
+        description: `ODELPay HUB ${org.slug} tuition`,
       });
     } catch (e) {
       await prisma.payment.deleteMany({ where: { id: doc.id, status: "pending" } }).catch(() => {});

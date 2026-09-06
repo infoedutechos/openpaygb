@@ -114,7 +114,7 @@ export async function POST(req: Request) {
         tenantStatus: org.tenantStatus,
       },
       message: emailSent
-        ? `Request received. Check your email for an ODEL HUB verification link with your registration details. ${afterVerifyMessage}`
+        ? `Request received. Check your email for an ODELPay HUB verification link with your registration details. ${afterVerifyMessage}`
         : "Request received. Configure RESEND_API_KEY and RESEND_FROM to send the verification email, or use the development link below.",
       emailSent,
       redirectUrl,

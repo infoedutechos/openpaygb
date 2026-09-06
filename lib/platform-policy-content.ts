@@ -14,19 +14,19 @@ export type PlatformPolicyDoc = {
 export const PLATFORM_TERMS: PlatformPolicyDoc = {
   slug: "terms",
   title: "Platform Terms of Service",
-  summary: "Terms governing use of ODEL HUB, OdelPay, OpenPayGB, and Dex services.",
+  summary: "Terms governing use of ODELPay HUB, OdelPay, OpenPayGB, and Dex services.",
   lastUpdated: "June 2026",
   sections: [
     {
       heading: "1. Acceptance",
       paragraphs: [
-        "By accessing or using ODEL HUB (including OdelPay tuition checkout, school admin tools, OpenPayGB wallet and card, Dex Hub, and developer APIs), you agree to these Platform Terms of Service and our Platform Privacy Policy. If you do not agree, do not use the platform.",
+        "By accessing or using ODELPay HUB (including OdelPay tuition checkout, school admin tools, OpenPayGB wallet and card, Dex Hub, and developer APIs), you agree to these Platform Terms of Service and our Platform Privacy Policy. If you do not agree, do not use the platform.",
       ],
     },
     {
       heading: "2. Services",
       paragraphs: [
-        "ODEL HUB is a multi-tenant payments and settlement platform. Institutions and schools operate separate workspaces; payers, students, and partners interact through published checkout flows, receipts, mobile-money and TON rails, OPGB ledger balances, and optional Dex liquidity tools.",
+        "ODELPay HUB is a multi-tenant payments and settlement platform. Institutions and schools operate separate workspaces; payers, students, and partners interact through published checkout flows, receipts, mobile-money and TON rails, OPGB ledger balances, and optional Dex liquidity tools.",
         "Features may change, be gated by master policy, or require separate institution approval. URAPearls / Clicker mini-app terms are separate — see /clicker/terms when using the Play Hub.",
       ],
     },
@@ -47,7 +47,7 @@ export const PLATFORM_TERMS: PlatformPolicyDoc = {
     {
       heading: "5. Acceptable use",
       paragraphs: [
-        "You may not use ODEL HUB for fraud, money laundering, sanctions evasion, unauthorized access, or interference with platform operations. We may suspend workspaces, API keys, or accounts that violate these terms or applicable law.",
+        "You may not use ODELPay HUB for fraud, money laundering, sanctions evasion, unauthorized access, or interference with platform operations. We may suspend workspaces, API keys, or accounts that violate these terms or applicable law.",
       ],
     },
     {
@@ -69,13 +69,13 @@ export const PLATFORM_TERMS: PlatformPolicyDoc = {
 export const PLATFORM_PRIVACY: PlatformPolicyDoc = {
   slug: "privacy",
   title: "Platform Privacy Policy",
-  summary: "How ODEL HUB collects, uses, and protects personal and payment data.",
+  summary: "How ODELPay HUB collects, uses, and protects personal and payment data.",
   lastUpdated: "June 2026",
   sections: [
     {
       heading: "1. Scope",
       paragraphs: [
-        "This policy covers ODEL HUB platform services: tuition checkout, student portal, school admin, receipts, OpenPayGB card and wallet, Dex Hub, developer dashboard, and related APIs. The URAPearls Clicker app has a separate privacy notice at /clicker/privacy.",
+        "This policy covers ODELPay HUB platform services: tuition checkout, student portal, school admin, receipts, OpenPayGB card and wallet, Dex Hub, developer dashboard, and related APIs. The URAPearls Clicker app has a separate privacy notice at /clicker/privacy.",
       ],
     },
     {
@@ -124,7 +124,7 @@ export const PLATFORM_RISK_DISCLOSURE: PlatformPolicyDoc = {
     {
       heading: "1. General",
       paragraphs: [
-        "ODEL HUB facilitates tuition and wallet payments. You are responsible for verifying amounts, institution details, and receipt accuracy before and after payment.",
+        "ODELPay HUB facilitates tuition and wallet payments. You are responsible for verifying amounts, institution details, and receipt accuracy before and after payment.",
       ],
     },
     {
@@ -158,13 +158,13 @@ export const PLATFORM_RISK_DISCLOSURE: PlatformPolicyDoc = {
 export const PLATFORM_PAYMENT_PROVIDER_POLICY: PlatformPolicyDoc = {
   slug: "payment-providers",
   title: "Payment Provider Policy",
-  summary: "How ODEL HUB selects, configures, and presents third-party payment rails.",
+  summary: "How ODELPay HUB selects, configures, and presents third-party payment rails.",
   lastUpdated: "June 2026",
   sections: [
     {
       heading: "1. Overview",
       paragraphs: [
-        "ODEL HUB routes collections and disbursements through licensed or contracted payment service providers (PSPs). The platform operator enables or disables rails per Master Admin policy. Institutions do not directly hold PSP credentials unless documented for a dedicated integration.",
+        "ODELPay HUB routes collections and disbursements through licensed or contracted payment service providers (PSPs). The platform operator enables or disables rails per Master Admin policy. Institutions do not directly hold PSP credentials unless documented for a dedicated integration.",
       ],
     },
     {

@@ -95,7 +95,7 @@ function StudentHome({
   return (
     <div>
       <header className="tma-header">
-        <p className="text-xs uppercase tracking-wider opacity-70">ODEL HUB Pay</p>
+        <p className="text-xs uppercase tracking-wider opacity-70">ODELPay HUB Pay</p>
         <h1 className="text-lg font-semibold">
           {greeting()} {s?.name.split(" ")[0] ?? data.telegram.firstName}
         </h1>
@@ -391,7 +391,7 @@ function MasterAdminApp({ data, tab, setTab }: { data: TmaMePayload; tab: string
     <div>
       {dashboard ? (
         <div className="space-y-3 p-4">
-          <h2 className="text-lg font-semibold">ODEL HUB Master Console</h2>
+          <h2 className="text-lg font-semibold">ODELPay HUB Master Console</h2>
           <div className="tma-card !m-0 grid grid-cols-2 gap-3 text-sm">
             <div>
               <p className="opacity-60">Active schools</p>
@@ -496,7 +496,7 @@ export default function TmaApp() {
   if (loading) {
     return (
       <div className="tma-root flex min-h-dvh items-center justify-center p-6 text-sm opacity-70">
-        Loading ODEL HUB Pay…
+        Loading ODELPay HUB Pay…
       </div>
     );
   }

@@ -161,7 +161,7 @@ export default function ParentPortalPage() {
 
       <p className="mt-10 text-center text-xs text-slate-500">
         <Link href="/" className="text-cyan-400 hover:underline">
-          ODEL HUB home
+          ODELPay HUB home
         </Link>
       </p>
     </main>

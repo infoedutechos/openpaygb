@@ -39,7 +39,7 @@ export function TmaReceipts() {
     const tg = (window as Window & {
       Telegram?: { WebApp?: { openTelegramLink?: (u: string) => void; openLink?: (u: string) => void } };
     }).Telegram?.WebApp;
-    const text = `ODEL HUB Pay receipt ${row.receiptNumber} — ${row.method} UGX ${row.amountUgx.toLocaleString()}`;
+    const text = `ODELPay HUB Pay receipt ${row.receiptNumber} — ${row.method} UGX ${row.amountUgx.toLocaleString()}`;
     const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(row.viewUrl)}&text=${encodeURIComponent(text)}`;
     if (tg?.openTelegramLink) tg.openTelegramLink(shareUrl);
     else if (tg?.openLink) tg.openLink(shareUrl);
